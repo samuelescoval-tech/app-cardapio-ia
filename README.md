@@ -1,220 +1,467 @@
 # Chef IA Studio
 
-Aplicação web para planejamento inteligente de eventos com IA, geração de cardápios, listas de compras e relatórios.
+Aplicação web para planejamento inteligente de eventos com IA, combinando um **motor local de logística** com geração de planejamento usando **Google Gemini API**.
 
-## Estado atual
+O sistema permite informar dados de um evento e gerar um planejamento com cardápio, lista de compras, utensílios, cronograma, equipe, orçamento estimado e resumo final.
 
-Projeto em fase de reorganização arquitetural:
-- ✅ Frontend estático reorganizado em `public/`
-- ✅ Backend Node.js + Express com tratamento robusto de JSON
-- ✅ Integração com Gemini API no backend
-- 🔄 Planejado: motor matemático local, histórico, PDF e imagens
+---
 
-## Stack
+## Status do projeto
 
-- HTML5, CSS3, JavaScript Vanilla
-- Node.js (v18+)
-- Express.js
-- Google Gemini API
-- GSAP (animações)
-- Swiper (carrossel)
-- jsPDF (relatórios)
+Projeto em desenvolvimento, atualmente em fase de **estabilização técnica e organização para portfólio**.
 
-## Instalação
+### Já implementado
 
-### Requisitos
+* Frontend organizado em `public/`
+* Backend Node.js + Express
+* Integração com Gemini API pelo backend
+* Rota de status da aplicação
+* Rota para geração de planejamento
+* Motor local de logística e cálculos operacionais
+* Prompt estruturado no backend
+* Tratamento e validação básica de JSON retornado pela IA
+* Renderização modular dos resultados
+* Histórico local com `localStorage`
+* Estrutura inicial de documentação e variáveis de ambiente
 
-- Node.js LTS (v24.16.0 recomendado)
-- npm
-- Chave de API do Google Gemini
+### Em melhoria
 
-### Setup
+* Validação mais forte dos dados de entrada
+* Refinamento dos cálculos do motor local
+* Melhorias no relatório/PDF
+* Melhor organização visual dos resultados
+* Logs mais claros no backend
+* Migração futura do SDK Gemini legado para SDK mais atual
+* Preparação para deploy público
 
-```bash
-# Clonar ou acessar o projeto
-cd app-cardapio-ia
+### Futuro
 
-# Instalar dependências
-npm install
+* Imagens via upload ou API gratuita
+* Exportação em PDF mais completa
+* Envio de relatório por e-mail
+* Banco de dados
+* Autenticação de usuários
+* Painel administrativo
+* Deploy público
+* Possível versão SaaS no futuro
 
-# Criar arquivo .env
-cat > .env << 'EOF'
-PORT=3000
-GEMINI_API_KEY=sua_chave_aqui
-GOOGLE_API_KEY=sua_chave_aqui
-AI_PROVIDER=gemini
-EOF
+---
 
-# Iniciar servidor
-npm start
-```
+## Stack utilizada
 
-Acesse: `http://localhost:3000`
+### Frontend
 
-## Variáveis de ambiente
+* HTML5
+* CSS3
+* JavaScript Vanilla
+* GSAP
+* Swiper
+* jsPDF
+* pptxgenjs
 
-Crie um arquivo `.env` na raiz do projeto:
+### Backend
 
-```env
-PORT=3000
+* Node.js
+* Express.js
+* dotenv
+* Google Gemini API
 
-# Provider principal
-GEMINI_API_KEY=sua_chave_aqui
-GOOGLE_API_KEY=sua_chave_aqui
+### Armazenamento atual
 
-# Seleção de provider
-AI_PROVIDER=gemini
-```
+* `localStorage` para histórico local
 
-**Nunca commitar `.env` para git!**
+---
 
 ## Estrutura do projeto
 
-```
-chef-ia-studio/
-├── public/                    # Arquivos estáticos servidos
+```txt
+app-cardapio-ia/
+├── public/
 │   ├── index.html
 │   ├── css/
 │   │   └── style.css
-│   ├── js/
-│   │   └── app.js
-│   └── assets/
-├── src/                       # Lógica do backend
+│   └── js/
+│       ├── storage.service.js
+│       ├── utils.js
+│       ├── render.js
+│       └── app.js
+├── src/
+│   ├── prompts/
+│   │   └── event.prompt.js
 │   ├── services/
-│   │   └── ai/
-│   │       └── gemini.service.js
-│   ├── utils/
-│   │   ├── extract-json.js
-│   │   └── validate-plan.js
-│   ├── routes/
-│   ├── controllers/
-│   └── middleware/
-├── legacy/                    # Versões anteriores
-│   ├── simple-current/        # Backup da versão simples
-│   └── advanced-claude-fragments/
-├── server.js                  # Entry point do backend
+│   │   ├── ai/
+│   │   │   └── gemini.service.js
+│   │   └── planning/
+│   │       └── motor.service.js
+│   └── utils/
+│       ├── extract-json.js
+│       └── validate-plan.js
+├── server.js
 ├── package.json
+├── package-lock.json
+├── .env.example
+├── .gitignore
 └── README.md
 ```
 
-## Funcionalidades
+---
 
-### Implementadas
+## Como funciona
 
-- ✅ Gerador de cardápios via IA
-- ✅ Captura de dados do evento (tipo, pessoas, restrições, estilo)
-- ✅ Renderização de resultados (cardápio, lista de compras, utensílios, resumo)
-- ✅ Tratamento robusto de JSON com fallback
-- ✅ Interface responsiva com tema luxe
+Fluxo principal:
 
-### Em desenvolvimento
-
-- 🔄 Motor matemático local para cálculos confiáveis
-- 🔄 Lista de compras organizada por setor
-- 🔄 Exportação em PDF
-- 🔄 Histórico local com localStorage
-
-### Futuras
-
-- ⏳ Imagens via Unsplash/Pexels
-- ⏳ Envio por e-mail via EmailJS
-- ⏳ Autenticação e banco de dados
-- ⏳ Painel administrativo
-- ⏳ Multi-provider (OpenAI, OpenRouter)
-
-## Fluxo de dados
-
-```
-Frontend (HTML/CSS/JS)
-         ↓
-    POST /gerar-cardapio
-         ↓
-    Backend Express
-         ↓
-    Gemini API
-         ↓
-    Resposta (JSON)
-         ↓
-    Validação + Fallback
-         ↓
-    Frontend renderiza resultado
+```txt
+Usuário preenche o formulário
+↓
+Frontend envia dados do evento
+↓
+Backend recebe em /gerar-cardapio
+↓
+Motor local calcula logística base
+↓
+Backend monta prompt estruturado
+↓
+Gemini gera planejamento
+↓
+Backend valida/normaliza resposta
+↓
+Frontend renderiza o relatório
+↓
+Histórico é salvo no localStorage
 ```
 
-## Desenvolvimento
+---
 
-### Testando a API
+## Requisitos
+
+* Node.js
+* npm
+* Conta no Google AI Studio
+* Chave da Gemini API
+
+---
+
+## Instalação
+
+Clone o repositório:
+
+```bash
+git clone https://github.com/samuelescoval-tech/app-cardapio-ia.git
+cd app-cardapio-ia
+```
+
+Instale as dependências:
+
+```bash
+npm install
+```
+
+Crie o arquivo `.env` a partir do exemplo:
+
+```bash
+cp .env.example .env
+```
+
+Edite o `.env` e configure sua chave:
+
+```env
+PORT=3000
+GEMINI_API_KEY=sua_chave_aqui
+GOOGLE_API_KEY=sua_chave_aqui
+AI_PROVIDER=gemini
+GEMINI_MODEL=gemini-flash-lite-latest
+```
+
+Inicie o servidor:
+
+```bash
+npm start
+```
+
+Acesse no navegador:
+
+```txt
+http://localhost:3000
+```
+
+---
+
+## Rotas disponíveis
+
+### Status da aplicação
+
+```txt
+GET /api/status
+```
+
+Retorna o estado básico da aplicação, incluindo configuração da IA e motor local.
+
+### Gerar planejamento
+
+```txt
+POST /gerar-cardapio
+```
+
+Exemplo de corpo esperado:
+
+```json
+{
+  "evento": {
+    "tipo": "Casamento",
+    "pessoas": "50",
+    "duracao": "5",
+    "refeicao": "Almoço ou jantar",
+    "restricoes": "Sem lactose",
+    "tema": "Clássico",
+    "orcamentoBase": "R$ 5000",
+    "alcool": "Com álcool moderado",
+    "estilo": "Elegante",
+    "obs": "Preferência por comida brasileira"
+  }
+}
+```
+
+---
+
+## Variáveis de ambiente
+
+O arquivo `.env` não deve ser enviado para o GitHub.
+
+Use `.env.example` como referência.
+
+### Obrigatórias agora
+
+```env
+PORT=3000
+GEMINI_API_KEY=sua_chave_aqui
+AI_PROVIDER=gemini
+```
+
+### Compatibilidade
+
+```env
+GOOGLE_API_KEY=sua_chave_aqui
+```
+
+### Futuras/opcionais
+
+```env
+OPENAI_API_KEY=
+OPENROUTER_API_KEY=
+UNSPLASH_ACCESS_KEY=
+PEXELS_API_KEY=
+EMAILJS_PUBLIC_KEY=
+SUPABASE_URL=
+FIREBASE_API_KEY=
+```
+
+Essas chaves não são necessárias para rodar a versão atual.
+
+---
+
+## Funcionalidades principais
+
+### Motor local de logística
+
+O projeto possui um motor local responsável por calcular:
+
+* quantidade base de comida;
+* salgados/canapés;
+* doces/sobremesas;
+* bebidas;
+* equipe;
+* espaço estimado;
+* utensílios;
+* custo por pessoa;
+* estimativa total.
+
+A IA não substitui esses cálculos. Ela complementa o planejamento.
+
+### Integração com IA
+
+A IA é usada para gerar:
+
+* cardápio;
+* receitas;
+* lista de compras;
+* locais sugeridos;
+* layout;
+* decoração;
+* cronograma;
+* equipe;
+* entretenimento;
+* lembrancinhas;
+* checklist;
+* orçamento;
+* resumo final.
+
+### Histórico local
+
+Os planejamentos gerados podem ser salvos no navegador usando `localStorage`.
+
+---
+
+## Segurança
+
+Boas práticas já consideradas:
+
+* Chaves ficam no backend, nunca no frontend.
+* `.env` está no `.gitignore`.
+* Chamadas para a IA passam pelo servidor Express.
+* Resposta da IA passa por extração e validação básica de JSON.
+* Conteúdo renderizado usa escape HTML em pontos importantes.
+
+Melhorias futuras:
+
+* Rate limit nas rotas públicas.
+* Validação forte de entrada.
+* Logs estruturados.
+* CORS configurado para produção.
+* Autenticação, caso o projeto vire produto público.
+
+---
+
+## Comandos úteis
+
+Iniciar servidor:
+
+```bash
+npm start
+```
+
+Reinstalar dependências:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+Verificar estrutura:
+
+```bash
+ls -la public/ src/
+```
+
+Testar status:
+
+```bash
+curl http://localhost:3000/api/status
+```
+
+Testar geração via API:
 
 ```bash
 curl -X POST http://localhost:3000/gerar-cardapio \
   -H "Content-Type: application/json" \
-  -d '{"prompt":"Planeje um evento de casamento para 50 pessoas"}'
+  -d '{
+    "evento": {
+      "tipo": "Casamento",
+      "pessoas": "50",
+      "duracao": "5",
+      "refeicao": "Almoço ou jantar",
+      "restricoes": "Nenhuma",
+      "tema": "Clássico",
+      "orcamentoBase": "R$ 5000",
+      "alcool": "Com álcool moderado",
+      "estilo": "Elegante",
+      "obs": "Evento familiar com jantar completo"
+    }
+  }'
 ```
-
-### Checklist antes de publicar
-
-- [ ] `npm install` roda sem erro
-- [ ] `npm start` sobe o servidor
-- [ ] `GET /` abre a aplicação
-- [ ] `POST /gerar-cardapio` responde JSON válido
-- [ ] Nenhuma chave exposta no frontend
-- [ ] `.env` está no `.gitignore`
-- [ ] Sem chamadas diretas a providers do navegador
-- [ ] Fallback JSON trata respostas ruins
-
-## Roadmap
-
-### Semana 1-2: Estabilização Base
-- [x] Corrigir HTML e estrutura
-- [x] Reorganizar em `public/` e `src/`
-- [x] Adicionar tratamento robusto de JSON
-
-### Semana 3-4: Motor Local
-- [ ] Implementar cálculos locais
-- [ ] Integrar com respostas da IA
-- [ ] Validação de dados
-
-### Semana 5-6: Recursos
-- [ ] Histórico com localStorage
-- [ ] Exportação em PDF
-- [ ] Imagens
-
-### Semana 7+: Produção
-- [ ] Temas adicionais
-- [ ] Deploy inicial
-- [ ] Documentação final
-
-## Comandos úteis
-
-```bash
-# Iniciar servidor em desenvolvimento
-npm start
-
-# Limpar e reinstalar dependências
-rm -rf node_modules package-lock.json
-npm install
-
-# Ver estrutura de pastas
-ls -la public/ src/
-
-# Verificar logs
-tail -f /tmp/npm-start.log
-```
-
-## Notas de segurança
-
-1. **Nunca exponha chaves no frontend**
-2. **Todas as chamadas de IA devem passar pelo backend**
-3. **Validar e sanitizar inputs sempre**
-4. **Rate limit nas rotas públicas** (futuro)
-5. **CORS explícito quando separar frontend/backend** (futuro)
-
-## Autor & Licença
-
-Projeto de portfólio - Uso privado
-
-Para questões técnicas, abra uma issue ou entre em contato.
 
 ---
 
-**Última atualização**: 2026-06-14  
-**Status**: Em desenvolvimento (Fase 1 - Estabilização)
+## Checklist de desenvolvimento
+
+Antes de avançar para novas funcionalidades:
+
+* [ ] `npm install` roda sem erro
+* [ ] `npm start` sobe o servidor
+* [ ] `GET /api/status` responde corretamente
+* [ ] Página inicial abre em `http://localhost:3000`
+* [ ] Formulário envia dados ao backend
+* [ ] Gemini responde
+* [ ] Resultado aparece na tela
+* [ ] Histórico local salva o planejamento
+* [ ] Nenhuma chave foi enviada ao GitHub
+* [ ] Console do navegador sem erro crítico
+* [ ] Terminal sem erro crítico
+
+---
+
+## Roadmap realista
+
+### Fase 1 — Estabilização
+
+* Testar o projeto localmente
+* Corrigir erros de execução
+* Atualizar README
+* Validar `.env.example`
+* Confirmar funcionamento do fluxo completo
+
+### Fase 2 — Qualidade técnica
+
+* Melhorar validação de entrada
+* Melhorar mensagens de erro
+* Melhorar logs
+* Refinar motor local
+* Revisar renderização dos resultados
+
+### Fase 3 — Portfólio
+
+* Melhorar apresentação visual
+* Criar prints ou GIF de demonstração
+* Escrever descrição para LinkedIn
+* Preparar deploy gratuito
+* Ajustar documentação para recrutadores/devs
+
+### Fase 4 — Funcionalidades futuras
+
+* PDF mais completo
+* Imagens
+* Envio por e-mail
+* Banco de dados
+* Login
+* Painel administrativo
+
+### Fase 5 — Produto
+
+Somente depois de estabilizar o projeto como portfólio:
+
+* Controle de usuários
+* Limites de uso
+* Logs profissionais
+* Segurança de produção
+* Pagamentos
+* Planos
+* SaaS
+
+---
+
+## Observação sobre monetização
+
+O Chef IA Studio tem potencial para evoluir para produto, consultoria ou template.
+
+No estágio atual, a prioridade é:
+
+```txt
+1. Funcionamento local
+2. Código organizado
+3. Documentação clara
+4. Demonstração pública
+5. Portfólio
+```
+
+Monetização deve ser considerada uma etapa futura, não o foco imediato.
+
+---
+
+## Autor
+
+Samuel Santos
+GitHub: `samuelescoval-tech`
+
+---
+
+**Status atual:** Em desenvolvimento — fase de estabilização e portfólio
+**Última atualização sugerida:** 2026-07
