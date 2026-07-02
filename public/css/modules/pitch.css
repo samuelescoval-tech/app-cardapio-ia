@@ -1,0 +1,404 @@
+/* ════════════════════════════════════════
+   PITCH PREMIUM
+════════════════════════════════════════ */
+
+#pitchSection{
+    position:relative;
+
+    z-index:20;
+
+    height:100vh;
+
+    overflow-y:auto;
+
+    scroll-snap-type:y mandatory;
+
+    color:var(--text);
+
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(212,175,55,.10),
+            transparent 28%
+        ),
+
+        radial-gradient(
+            circle at bottom right,
+            rgba(184,134,11,.08),
+            transparent 25%
+        ),
+
+        linear-gradient(
+            180deg,
+            #0f0f10 0%,
+            #151515 40%,
+            #1a1713 100%
+        );
+}
+
+/* slides */
+
+.pitch-slide{
+    position:relative;
+
+    z-index:5;
+
+    min-height:100vh;
+
+    scroll-snap-align:start;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    padding:80px 8%;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.06);
+}
+
+/* grid */
+
+.pitch-grid{
+    display:grid;
+
+    grid-template-columns:
+        1.05fr .95fr;
+
+    align-items:center;
+
+    gap:70px;
+
+    width:100%;
+    max-width:1250px;
+}
+
+/* text */
+
+.pitch-text h2{
+    font-family:'Playfair Display',serif;
+
+    font-size:
+        clamp(2.8rem,5vw,5rem);
+
+    line-height:1.02;
+
+    letter-spacing:-1px;
+
+    margin-bottom:24px;
+
+    color:#f7df95;
+
+    text-shadow:
+        0 0 10px rgba(212,175,55,.22),
+        0 0 30px rgba(212,175,55,.12),
+        0 6px 20px rgba(0,0,0,.55);
+}
+
+.pitch-text p{
+    max-width:620px;
+
+    font-size:1.1rem;
+
+    line-height:1.9;
+
+    color:rgba(255,255,255,0.78) !important;
+
+    text-shadow:
+        0 2px 10px rgba(0,0,0,0.45);
+}
+
+/* badges */
+
+.pdf-badges{
+    display:flex;
+    flex-wrap:wrap;
+
+    gap:12px;
+
+    margin-top:28px;
+}
+
+.pdf-badges span{
+    padding:12px 16px;
+
+    border-radius:999px;
+
+    color:#f7df95;
+
+    font-size:.82rem;
+    font-weight:700;
+
+    border:
+        1px solid rgba(212,175,55,.24);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(212,175,55,.18),
+            rgba(212,175,55,.06)
+        );
+}
+
+/* cards */
+
+.pdf-card{
+    margin-top:14px;
+
+    padding:22px;
+
+    border-radius:18px;
+
+    backdrop-filter:blur(14px);
+
+    background:
+        rgba(255,255,255,.06);
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.18);
+
+    transition:var(--transition);
+}
+
+.pdf-card:hover{
+    transform:translateY(-4px);
+
+    border-color:
+        rgba(212,175,55,.35);
+
+    background:
+        rgba(255,255,255,.09);
+}
+
+.pdf-card b{
+    display:block;
+
+    margin-bottom:6px;
+
+    color:#fff2c7;
+
+    font-size:1.05rem;
+}
+
+.pdf-card small{
+    color:
+        rgba(255,255,255,.65);
+
+    line-height:1.7;
+}
+
+/* imagens */
+
+.pitch-img-box{
+    perspective:1400px;
+}
+
+.pitch-img-box img{
+    width:100%;
+
+    display:block;
+
+    pointer-events:none;
+
+    border-radius:24px;
+
+    transform:
+        perspective(1200px)
+        rotateY(-5deg)
+        rotateX(2deg);
+
+    transition:var(--transition);
+
+    box-shadow:
+        0 30px 70px rgba(0,0,0,.45),
+        0 10px 30px rgba(212,175,55,.08);
+}
+
+.pitch-img-box img:hover{
+    transform:
+        perspective(1200px)
+        rotateY(0deg)
+        rotateX(0deg)
+        translateY(-6px);
+}
+
+/* math */
+
+.math-row{
+    display:grid;
+
+    grid-template-columns:
+        repeat(3,1fr);
+
+    gap:18px;
+
+    margin-top:35px;
+}
+
+.math-item{
+    padding:26px 18px;
+
+    border-radius:18px;
+
+    text-align:center;
+
+    backdrop-filter:blur(10px);
+
+    background:
+        rgba(255,255,255,.06);
+
+    border:
+        1px solid rgba(255,255,255,.08);
+}
+
+.math-item b{
+    display:block;
+
+    margin-bottom:10px;
+
+    font-size:2rem;
+
+    color:#f7df95;
+}
+
+/* ───────── FOOTER ───────── */
+
+.footer{
+    padding:40px 20px;
+
+    text-align:center;
+
+    background:#0f0f10;
+
+    color:rgba(255,255,255,.65);
+}
+
+.social-links{
+    margin-top:14px;
+
+    display:flex;
+    justify-content:center;
+    gap:14px;
+}
+
+.social-links a{
+    color:#f7df95;
+
+    text-decoration:none;
+
+    font-size:1.3rem;
+}
+
+/* ───────── RESPONSIVO ───────── */
+
+@media (max-width:900px){
+
+    .pitch-grid{
+        grid-template-columns:1fr;
+
+        gap:35px;
+    }
+
+    .pitch-img-box{
+        order:-1;
+    }
+
+    .pitch-text{
+        text-align:center;
+    }
+
+    .pitch-text p{
+        margin:0 auto;
+    }
+
+    .pdf-badges{
+        justify-content:center;
+    }
+
+    .math-row{
+        grid-template-columns:1fr;
+    }
+
+    .pitch-slide{
+        padding:60px 22px;
+    }
+}
+
+@media (max-width:768px){
+
+    .hero{
+        height:50vh;
+    }
+
+    .hero-title{
+        font-size:2.7rem;
+    }
+
+    .app-container{
+        margin-top:-30px;
+    }
+
+    .glass-panel{
+        padding:28px;
+    }
+
+    .mode-nav{
+        transform:
+            translateX(-50%)
+            scale(.92);
+    }
+}
+/* ════════════════════════════════════════
+   FIX GLOBAL TEXTOS ESCUROS NO PITCH
+════════════════════════════════════════ */
+
+#pitchSection p,
+#pitchSection span,
+#pitchSection small,
+#pitchSection li,
+#pitchSection div {
+    color: rgba(255,255,255,0.78);
+}
+
+/* títulos menores */
+#pitchSection .flabel {
+    color: #d4af37 !important;
+}
+
+/* títulos principais */
+#pitchSection h2 {
+    color: #f7df95 !important;
+}
+
+/* títulos dos cards */
+#pitchSection .pdf-card b {
+    color: #fff4cc !important;
+}
+
+/* textos internos dos cards */
+#pitchSection .pdf-card small,
+#pitchSection .pdf-card p {
+    color: rgba(255,255,255,0.68) !important;
+}
+
+/* itens matemáticos */
+#pitchSection .math-item {
+    color: rgba(255,255,255,0.82);
+}
+
+/* badges */
+#pitchSection .pdf-badges span {
+    color: #f7df95 !important;
+}
+
+/* navegação */
+.mode-nav .nav-btn {
+    color: rgba(255,255,255,0.75);
+}
+
+.mode-nav .nav-btn.active {
+    color: #111 !important;
+}

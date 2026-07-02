@@ -1,0 +1,58 @@
+/*────────────────────────────
+   CHEF IA — MASTER STUDIO
+   CSS PREMIUM FINAL LIMPO
+   TAG: css-theme, css-layout, css-result
+────────────────────────────*/
+
+/* ───────── ROOT ───────── */
+
+:root{
+    --gold:#d4af37;
+    --gold-dark:#b8860b;
+
+    --black:#121212;
+    --black-soft:#1a1a1a;
+
+    --bg:#fdfaf6;
+    --white:#ffffff;
+
+    --text:#f5efe6;
+    --text-soft:rgba(255,255,255,.72);
+
+    --shadow:
+        0 25px 60px rgba(0,0,0,.15);
+
+    --shadow-gold:
+        0 12px 35px rgba(184,134,11,.30);
+
+    --transition:
+        all .45s cubic-bezier(.4,0,.2,1);
+}
+
+/* ───────── RESET ───────── */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:'Montserrat',sans-serif;
+    background:var(--bg);
+    color:var(--black);
+
+    overflow-x:hidden;
+
+    line-height:1.6;
+}
+
+/* ───────── UTIL ───────── */
+
+.hidden{
+    display:none !important;
+}

@@ -1,0 +1,13 @@
+/* ==========================================================================
+   CHEF IA STUDIO | CSS ENTRYPOINT
+   TAG: css-entrypoint, css-modulos
+   --------------------------------------------------------------------------
+   Este arquivo apenas agrega os módulos visuais do app.
+   Ordem importa: base -> layout -> form -> pitch -> result.
+   ========================================================================== */
+
+@import url("modules/base.css");
+@import url("modules/layout.css");
+@import url("modules/form.css");
+@import url("modules/pitch.css");
+@import url("modules/result.css");

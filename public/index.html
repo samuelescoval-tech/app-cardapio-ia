@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chef IA — Master Studio</title>
+    
+    <!-- TAG: assets-externos | Bibliotecas visuais e fontes -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.0.5/swiper-bundle.min.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- TAG: libs-suporte | PDF, apresentacao e animacao -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gitbrent/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Swiper/11.0.5/swiper-bundle.min.js"></script>
+    <!-- TAG: chef-modulos | ordem obrigatoria: storage -> utils -> render -> app -->
+    <script defer src="js/storage.service.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/render.js"></script>
+    <script defer src="js/app.js"></script>
+</head>
+<body>
+
+    <!-- TAG: navegacao-modo | Alterna app e apresentacao -->
+    <nav class="mode-nav">
+        <button class="nav-btn active" id="btnApp" onclick="switchView('app')">👨‍🍳 GERADOR IA</button>
+        <button class="nav-btn" id="btnPitch" onclick="switchView('pitch')">📊 APRESENTAÇÃO</button>
+    </nav>
+
+    <!-- TAG: hero-dinamico | Capa visual compactavel -->
+    <header class="hero" id="mainHero">
+        <div class="slideshow">
+            <div class="slide active" style="background-image: url('https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2074')"></div>
+            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=2070')"></div>
+            <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069')"></div>
+        </div>
+        <div class="hero-content">
+            <h1 class="hero-title">Chef <span>IA</span> Studio</h1>
+            <p class="hero-sub">ARQUITETURA GASTRONÔMICA E LOGÍSTICA</p>
+        </div>
+        <button class="toggle-header" onclick="toggleHeader()">↕</button>
+    </header>
+
+    <!-- TAG: app-gerador | Formulario principal do evento -->
+    <main class="app-container" id="appSection">
+        <section class="glass-panel" id="formCard">
+            <h2 class="panel-title"><span>📝</span> Detalhes do Evento</h2>
+            
+            <div class="form-grid">
+                <div class="fgroup">
+                    <label class="flabel">Tipo de Evento</label>
+                    <input type="text" id="tipo" class="premium-input" placeholder="Ex: Casamento Real">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Convidados</label>
+                    <input type="number" id="pessoas" class="premium-input" placeholder="Total">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Duração do Evento</label>
+                    <input type="number" id="duracao" class="premium-input" min="1" max="24" placeholder="Ex: 4 horas">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Tipo de Refeição</label>
+                    <select id="refeicao" class="premium-input">
+                        <option value="Coquetel / Finger food">Coquetel / Finger food</option>
+                        <option value="Almoço ou jantar">Almoço ou jantar</option>
+                        <option value="Churrasco">Churrasco</option>
+                        <option value="Brunch / café da manhã">Brunch / café da manhã</option>
+                        <option value="Coffee break">Coffee break</option>
+                    </select>
+                </div>
+                <!-- NOVO CAMPO: Restrições -->
+                <div class="fgroup">
+                    <label class="flabel">Restrições Alimentares</label>
+                    <input type="text" id="restricoes" class="premium-input" placeholder="Ex: Veganos, Celíacos...">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Tema do Evento</label>
+                    <input type="text" id="tema" class="premium-input" placeholder="Ex: Tropical, Botânico, Anos 80...">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Orçamento Desejado</label>
+                    <input type="text" id="orcamentoBase" class="premium-input" placeholder="Ex: R$ 2.500 ou econômico">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Bebidas</label>
+                    <select id="alcool" class="premium-input">
+                        <option value="Sem álcool">Sem álcool</option>
+                        <option value="Com álcool moderado">Com álcool moderado</option>
+                        <option value="Com bar completo">Com bar completo</option>
+                    </select>
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Estilo do Serviço</label>
+                    <div class="style-grid">
+                        <input type="radio" name="estilo" id="s1" value="Simples" checked><label for="s1">🏡 Simples</label>
+                        <input type="radio" name="estilo" id="s2" value="Elegante"><label for="s2">🌸 Elegante</label>
+                        <input type="radio" name="estilo" id="s3" value="Premium"><label for="s3">👑 Premium</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAG: observacoes-ia | Contexto livre para o prompt -->
+            <div class="chat-box">
+                <label class="flabel">Observações Adicionais para a IA</label>
+                <div id="chatHistory" class="chat-history">
+                    <div class="bubble-ai">Informe detalhes como: "Quero foco em frutos do mar" ou "Decoração rústica".</div>
+                </div>
+                <div class="chat-input-wrap">
+                    <input type="text" id="userChat" class="premium-input" placeholder="Fale com o Chef...">
+                    <input type="file" id="importChef" accept=".chef" class="hidden" onchange="importarProjeto(event)">
+                    <button class="btn-util" onclick="document.getElementById('importChef').click()">📂</button>
+                </div>
+            </div>
+
+            <button class="btn-epic" id="btnGerar" onclick="gerarTudo()">⚙️ CALCULAR + GERAR PLANEJAMENTO COMPLETO</button>
+        </section>
+
+        <!-- TAG: historico-ui | FASE 1: Histórico Local -->
+        <section class="glass-panel historico-section" id="historicoSection">
+            <div class="historico-header">
+                <h2 class="panel-title"><span>📋</span> Seus Planejamentos Recentes</h2>
+                <button id="limpar-historico-btn" class="btn-secondary btn-small" onclick="limparHistoricoUI()">
+                    🗑️ Limpar Tudo
+                </button>
+            </div>
+            
+            <div id="historico-container" class="historico-container">
+                <p class="historico-vazio">Nenhum planejamento salvo ainda</p>
+            </div>
+        </section>
+
+        <!-- TAG: resultado-ia | Area preenchida por render.js -->
+        <div id="resultadoArea" class="hidden"></div>
+    </main>
+
+   <!-- TAG: pitch-comercial | Apresentacao do produto -->
+<section id="pitchSection" class="hidden">
+  <!-- Slide 1: Capa -->
+  <section class="pitch-slide pitch-cover">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">IA + AUTOMAÇÃO</span>
+        <h2>Gerador Inteligente de Cardápios e Planejamento de Eventos</h2>
+        <p>
+          Transformando ideias em eventos completos com o poder da Inteligência Artificial.
+        </p>
+        <div class="pdf-badges">
+          <span>Planejamento Completo</span>
+          <span>Cardápio Inteligente</span>
+          <span>Lista de Compras</span>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?q=80&w=2074"
+          alt="Evento gourmet"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 2: O Desafio -->
+  <section class="pitch-slide">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">O DESAFIO</span>
+        <h2>Organizar um evento exige tempo, precisão e estrutura</h2>
+        <p>
+          Sem ferramentas adequadas, erros são frequentes e o tempo se perde em tarefas repetitivas.
+        </p>
+        <div class="pdf-card">
+          <b>⏳ Perda de Tempo</b>
+          <small>Cálculos manuais, listas improvisadas e retrabalho constante.</small>
+        </div>
+        <div class="pdf-card">
+          <b>🛒 Compras Erradas</b>
+          <small>Comprar a mais ou a menos gera desperdício e prejuízo.</small>
+        </div>
+        <div class="pdf-card">
+          <b>📋 Falta de Organização</b>
+          <small>Sem estrutura clara, detalhes importantes são esquecidos.</small>
+        </div>
+        <div class="pdf-card">
+          <b>📈 Dificuldade de Escalar</b>
+          <small>O que funciona para 10 pessoas não serve para 100.</small>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070"
+          alt="Planejamento de evento"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 3: A Solução -->
+  <section class="pitch-slide pitch-solution">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">A SOLUÇÃO</span>
+        <h2>Um sistema que planeja por você</h2>
+        <p>
+          Com poucos dados informados pelo usuário, a IA gera automaticamente um planejamento completo
+          — do cardápio à lista de compras — em segundos.
+        </p>
+        <div class="pdf-card">
+          <b>✨ Cardápio Personalizado</b>
+          <small>Adaptado ao tipo de evento, estilo e restrições alimentares.</small>
+        </div>
+        <div class="pdf-card">
+          <b>⚖️ Cálculo Preciso</b>
+          <small>Quantidade por pessoa e total consolidado com base em regras inteligentes.</small>
+        </div>
+        <div class="pdf-card">
+          <b>🛒 Lista Organizada</b>
+          <small>Separação por categorias, unidades e prioridade de compra.</small>
+        </div>
+        <div class="pdf-card">
+          <b>📄 Relatório Final</b>
+          <small>Resumo completo do evento, pronto para salvar ou enviar.</small>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=2070"
+          alt="Solução inteligente"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 4: Como Funciona -->
+  <section class="pitch-slide">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">COMO FUNCIONA</span>
+        <h2>Do input ao planejamento completo</h2>
+        <p>
+          O processo é simples e intuitivo. O usuário informa os dados do evento e a IA cuida de todo o planejamento automaticamente.
+        </p>
+        <div class="math-row">
+          <div class="math-item"><b>1</b>Informar evento</div>
+          <div class="math-item"><b>2</b>IA seleciona receitas</div>
+          <div class="math-item"><b>3</b>Calcular relatório</div>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1556911073-a517e752729c?q=80&w=2070"
+          alt="Fluxo de trabalho"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 5: Cardápio Completo -->
+  <section class="pitch-slide">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">CARDÁPIO COMPLETO</span>
+        <h2>Pratos adaptados ao tipo de evento</h2>
+        <p>
+          O sistema cria pratos principais, acompanhamentos, sobremesas e bebidas — tudo adaptado ao tipo de evento: infantil, adulto, gala, corporativo e muito mais.
+        </p>
+        <div class="pdf-card">
+          <b>🍛 Pratos Principais</b>
+          <small>Receitas selecionadas conforme o perfil e estilo do evento.</small>
+        </div>
+        <div class="pdf-card">
+          <b>🥗 Acompanhamentos</b>
+          <small>Harmonizados com os pratos principais para uma experiência completa.</small>
+        </div>
+        <div class="pdf-card">
+          <b>🍰 Sobremesas & Bebidas</b>
+          <small>Opções variadas para fechar o evento com chave de ouro.</small>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2070"
+          alt="Cardápio completo"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 6: Cálculo e Lista -->
+  <section class="pitch-slide">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">CÁLCULO INTELIGENTE</span>
+        <h2>Base de consumo por pessoa e lista organizada</h2>
+        <p>
+          Cada ingrediente possui uma base de consumo calibrada. O sistema multiplica automaticamente pelo número de convidados e organiza tudo por categoria.
+        </p>
+        <div class="math-row">
+          <div class="math-item"><b>100g</b>Arroz por pessoa</div>
+          <div class="math-item"><b>50g</b>Feijão por pessoa</div>
+          <div class="math-item"><b>200g</b>Carne por pessoa</div>
+        </div>
+        <div class="pdf-card">
+          <b>Alimentos</b>
+          <small>Gramas, quilos e unidades.</small>
+        </div>
+        <div class="pdf-card">
+          <b>Bebidas</b>
+          <small>Litros, garrafas e caixinhas.</small>
+        </div>
+        <div class="pdf-card">
+          <b>Utensílios e apoio</b>
+          <small>Descartáveis, louças e itens de decoração.</small>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=2070"
+          alt="Lista de compras"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 7: Receitas e Imagens -->
+  <section class="pitch-slide">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">RECEITAS E IMAGENS</span>
+        <h2>Detalhamento completo para cozinhar e apresentar</h2>
+        <p>
+          Cada prato inclui ingredientes detalhados, modo de preparo passo a passo, rendimento e quantidade total produzida — pronto para cozinhar.
+        </p>
+        <div class="pdf-card">
+          <b>📌 Receitas completas</b>
+          <small>Ingredientes, preparo e rendimento.</small>
+        </div>
+        <div class="pdf-card">
+          <b>🖼️ Imagens com IA</b>
+          <small>Geração por IA, busca na web ou upload do usuário.</small>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1495195134817-aeb325a55b65?q=80&w=2070"
+          alt="Receitas e imagens"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 8: Relatório e Compartilhamento -->
+  <section class="pitch-slide">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">RELATÓRIO FINAL</span>
+        <h2>Um documento único para salvar, compartilhar ou enviar</h2>
+        <p>
+          O relatório consolida todas as informações em um único documento: quantidade por prato, média por pessoa, lista de compras e visão geral do planejamento.
+        </p>
+        <div class="pdf-card">
+          <b>📧 E-mail</b>
+          <small>Envio direto do cardápio e relatório.</small>
+        </div>
+        <div class="pdf-card">
+          <b>📤 Exportação</b>
+          <small>Salve em PDF ou outro formato.</small>
+        </div>
+        <div class="pdf-card">
+          <b>🔗 Compartilhamento</b>
+          <small>Repassar para equipe, cliente ou fornecedor.</small>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2070"
+          alt="Relatório e compartilhamento"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 9: Inteligência Evolutiva -->
+  <section class="pitch-slide">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">INTELIGÊNCIA EVOLUTIVA</span>
+        <h2>O sistema aprende com o uso</h2>
+        <p>
+          O sistema aprende com cada evento planejado, refinando sugestões e entendendo as preferências de cada usuário ao longo do tempo.
+        </p>
+        <div class="pdf-card">
+          <b>🧠 Aprendizado contínuo</b>
+          <small>Melhora sugestões e ajusta quantidades com base no histórico.</small>
+        </div>
+        <div class="pdf-card">
+          <b>👑 Painel administrativo</b>
+          <small>Super usuário com controle total do sistema.</small>
+        </div>
+        <div class="pdf-card">
+          <b>📊 Escalável</b>
+          <small>Funciona para eventos pessoais, buffets e empresas.</small>
+        </div>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070"
+          alt="Inteligência evolutiva"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+  <!-- Slide 10: Encerramento -->
+  <section class="pitch-slide pitch-end">
+    <div class="pitch-grid">
+      <div class="pitch-text">
+        <span class="flabel">ENCERRAMENTO</span>
+        <h2>Planejar eventos nunca foi tão simples</h2>
+        <p>
+          Com IA, precisão e automação, qualquer pessoa pode criar um evento completo com poucos cliques — seja um aniversário em casa ou um banquete corporativo.
+        </p>
+        <div class="pdf-badges">
+          <span>Planejamento</span>
+          <span>Automação</span>
+          <span>Inteligência</span>
+          <span>Escala</span>
+        </div>
+        <button class="btn-epic" style="width:auto; padding: 18px 34px;" onclick="switchView('app')">
+          VOLTAR AO APP
+        </button>
+      </div>
+      <div class="pitch-img-box">
+        <img
+          src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?q=80&w=2070"
+          alt="Encerramento elegante"
+          loading="lazy"
+        >
+      </div>
+    </div>
+  </section>
+
+</section> <!-- FECHA pitchSection -->
+
+    <!-- 5. RODAPÉ -->
+    <footer class="footer">
+        <p>© 2024 Chef IA Studio. Todos os direitos reservados.</p>
+        <div class="social-links">
+            <a href="#" title="Instagram">📸</a>
+            <a href="#" title="Facebook">📘</a>
+            <a href="#" title="LinkedIn">🔗</a>
+        </div>
+    </footer>
+
+    <!-- Script Principal -->
+</body>
+</html>
