@@ -1,6 +1,6 @@
 # Padroes de Qualidade, Interface e Priorizacao - Chef IA Studio
 
-<!-- CODEX:LER_SEMPRE
+<!-- CODEX:LER_POR_PROCESSO
 Ler o mapa de leitura, os principios de qualidade, os padroes de interface e a priorizacao antes de decidir ajuste visual, melhoria de fluxo ou refinamento de produto.
 -->
 
@@ -10,13 +10,8 @@ Depois da mudanca, atualizar pontos fortes, oportunidades, ajustes iterativos e 
 -->
 
 <!-- CODEX:MANTER_EM_LINHA
-Se este documento mudar por decisao de qualidade, interface ou priorizacao, alinhar HANDOFF_PROXIMA_ATUALIZACAO.md, ROADMAP_ATUAL.md e MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md quando aplicavel.
-Se criar novo criterio de validacao, alinhar tambem ANALISE_REQUISITOS_ATORES_CASOS_USO.md.
--->
-
-<!-- CODEX:FAZER
-Proxima atualizacao curta: executar a Porta de Passagem da demo controlada em docs/README.md e o Fluxo 6 em docs/FLUXOS_DE_PROCESSO.md.
-Registrar evidencias manuais ja feitas antes de enviar link temporario.
+Atualizar somente o padrao ou criterio alterado. Atualizar requisitos apenas se surgir novo criterio de aceite.
+Registrar no handoff se a mudanca afetar estado ou proximo passo.
 -->
 
 <!-- CODEX:MAPA_LEITURA
@@ -48,7 +43,7 @@ Ultima atualizacao: 2026-07-09
 - Evitar tecnologia nova se o problema pode ser resolvido com HTML, CSS, JS, Express e docs.
 - Manter motor local como fonte de numeros operacionais.
 - Manter Gemini como apoio criativo e estruturado, nao como unica fonte de calculo.
-- Usar a Arquitetura Residencial de Prompts como metodologia interna e proporcional, sem deixar a metafora aparecer mais que o evento.
+- Usar a Arquitetura Residencial de Prompts como referencia interna e proporcional; no runtime, preferir rotulos operacionais claros e nao expor a metafora.
 - Proteger `.env`, chave Gemini e acesso demo.
 - Atualizar documentacao viva quando uma decisao mudar fluxo, requisito, prioridade ou comportamento.
 - Consultar o Registro de testes e validacoes antes de repetir qualquer teste manual ou automatizado.
@@ -74,6 +69,8 @@ Ultima atualizacao: 2026-07-09
 - Nao chamar provedor de IA diretamente no navegador.
 - Nao remover motor local.
 - Nao transformar a metodologia de prompt em saida visivel para o usuario; ela deve organizar o raciocinio e o contrato.
+- Nao aceitar prompt arbitrario vindo do frontend; a rota recebe somente evento validado.
+- Nao pedir `motor_logistica` ao Gemini; o backend aplica a fonte oficial depois da validacao.
 - Nao criar agentes IA autonomos enquanto uma Unidade interna simples resolver o problema.
 - Manter ordem dos scripts no HTML: storage, utils, render, app.
 - Evitar dependencia nova sem justificativa clara.
@@ -85,7 +82,7 @@ Ultima atualizacao: 2026-07-09
 - Resposta backend esperada: `{ ok, provider, plano, meta }`.
 - Metadados importantes: `tempo_ms`, `schema_ok`, `motor_local`, `prompt_backend`.
 - Marcadores de requisitos: `RF-`, `RNF-`, `UC-`, `VAL-`, `AT-`.
-- O prompt backend usa: Terreno para dados do evento, Fundacao para objetivo, Comodo Central para foco do plano, Moradores para motor local, Visitantes para observacoes livres, Cercados para limites, Paredes para modulos, Seguranca para checagem e Telhado para JSON final.
+- O prompt backend traduz a metodologia para: Papel, Objetivo, Fontes Confiaveis, Dados do Evento, Dados Operacionais, Restricoes, Contrato e Criterios de Conclusao.
 - Unidades internas atuais: motor local, prompt backend, validador JSON, render, historico, acesso demo e PDF.
 
 ## Padroes de interface e coerencia
@@ -129,7 +126,7 @@ Ultima atualizacao: 2026-07-09
 | Backend Express funcionando | Permite proteger chave e prompt. |
 | Gemini isolado no backend | Evita exposicao de API key no navegador. |
 | Motor local implementado | Da confianca aos numeros operacionais. |
-| Prompt backend com metodologia interna | Organiza contexto, limites, fonte confiavel e entrega sem expor a metodologia ao usuario. |
+| Prompt backend operacional e proporcional | Organiza contexto, limites, fontes e contrato sem expor nem repetir a metafora ao usuario. |
 | Validacao e fallback de JSON | Evita que uma resposta ruim quebre a UI. |
 | Resultado rico renderizado | Mostra valor alem de um cardapio simples. |
 | Historico local | Permite recuperar planejamentos sem banco. |
@@ -207,15 +204,15 @@ Exemplo para acesso demo:
 
 ### Fila curta da proxima atualizacao
 
-1. P1 - Registrar evidencia dos testes manuais ja feitos: modal, geracao e PDF.
-2. P1 - Executar Porta de Passagem da demo controlada.
-3. P2 - Melhorar feedback de erros e validacao de entrada.
+1. P2 - Refinar multiplicadores do motor por tipo de refeicao.
+2. P3 - Separar pitch do `index.html`, se ainda reduzir complexidade real.
+3. P3 - Avaliar migracao do SDK Gemini somente com base estavel.
 
 ### Fila logo depois
 
-1. P2 - Ajustar responsividade do resultado.
-2. P3 - Separar pitch do `index.html`.
-3. P3 - Evoluir motor com adultos/criancas.
+1. P2 - Refinar regras de entrada conforme feedback real.
+2. P3 - Avaliar secoes recolhiveis para resultados extensos.
+3. P3 - Refinar PDF somente quando houver falha ou necessidade observada.
 
 ### Regra de decisao
 

@@ -1,8 +1,7 @@
 # Material de Apoio - Processos e Requisitos do Chef IA Studio
 
-<!-- CODEX:LER_SEMPRE
-Comecar pelo Mapa/GPS operacional em docs/README.md antes de usar este documento.
-Ler o Resumo vivo, Escopo atual, Gargalos e riscos atuais, e Documento de requisitos antes de decidir proximo trabalho.
+<!-- CODEX:LER_POR_PROCESSO
+Ler somente a secao relacionada ao processo, gargalo ou requisito em analise.
 Este e o mapa de processo: entradas, processos, saidas, stakeholders, gargalos e requisitos.
 -->
 
@@ -12,13 +11,8 @@ Depois da alteracao, atualizar Resumo vivo, Gargalos e requisitos afetados.
 -->
 
 <!-- CODEX:MANTER_EM_LINHA
-Se este documento mudar por causa de codigo ou decisao de produto, alinhar tambem HANDOFF_PROXIMA_ATUALIZACAO.md e ROADMAP_ATUAL.md.
-Se a mudanca for so uma referencia ou indice, alinhar docs/README.md.
--->
-
-<!-- CODEX:FAZER
-Proximo foco recomendado: executar a Porta de Passagem da demo controlada em docs/README.md e o Fluxo 6 em docs/FLUXOS_DE_PROCESSO.md.
-Registrar evidencias dos testes manuais ja feitos antes de enviar link temporario.
+Atualizar somente o processo, gargalo ou requisito alterado.
+Registrar no handoff se a mudanca afetar estado ou proximo passo.
 -->
 
 Documento vivo para orientar decisoes, processos, gargalos e requisitos do Chef IA Studio.
@@ -47,7 +41,7 @@ Regra: se uma informacao deste material contradisser o handoff ou o roadmap, ver
 Estado atual:
 
 - O app ja roda com frontend em `public/`, backend Express e Gemini via backend.
-- O fluxo principal usa `POST /gerar-cardapio`, motor local, prompt backend com Arquitetura Residencial de Prompts como estrutura interna, normalizacao/validacao de JSON, renderizacao rica, historico local e exportacao PDF inicial/expandida.
+- O fluxo principal usa `POST /gerar-cardapio`, validacao backend do evento, motor local, prompt operacional inspirado pela Arquitetura Residencial de Prompts, contrato JSON restrito, renderizacao rica, historico local e exportacao PDF inicial/expandida.
 - A protecao temporaria com `DEMO_ACCESS_KEY` esta ativa para teste controlado.
 - O acesso demo agora usa modal/tela de senha no frontend, sem `prompt()` nativo do navegador.
 - A rota real `/gerar-cardapio` ja foi validada com senha correta, retornando `ok`, `schema_ok`, `motor_local` e `prompt_backend`.
@@ -166,6 +160,8 @@ flowchart LR
 
     subgraph backendLane ["Lane: Backend Express"]
         validaSenha{"Header x-demo-access-key valido?"}
+        validaEvento{"Evento respeita contrato e limites?"}
+        retornaErro["Retorna 400 com campo e mensagem"]
         calculaMotor["Calcula motor local"]
         montaPrompt["Monta prompt backend"]
         chamaGemini["Chama servico Gemini"]
@@ -195,7 +191,10 @@ flowchart LR
     montaEvento --> enviaEvento
     enviaEvento --> validaSenha
     validaSenha -->|"Nao"| reportaAjuste
-    validaSenha -->|"Sim"| calculaMotor
+    validaSenha -->|"Sim"| validaEvento
+    validaEvento -->|"Nao"| retornaErro
+    retornaErro --> reportaAjuste
+    validaEvento -->|"Sim"| calculaMotor
     calculaMotor --> montaPrompt
     montaPrompt --> chamaGemini
     chamaGemini --> geraPlano
@@ -222,7 +221,10 @@ flowchart LR
 |---|---|---|---|---|
 | Entrada | Tipo de evento | Usuario | `public/js/app.js` | Campo obrigatorio. |
 | Entrada | Quantidade de pessoas | Usuario | `public/js/app.js` e motor local | Campo obrigatorio. |
-| Entrada | Duracao | Usuario | Motor local e prompt | Ainda precisa validacao melhor. |
+| Entrada | Quantidade de criancas | Usuario | `public/js/app.js` e motor local | Opcional; adultos sao derivados do total. |
+| Entrada | Pais, estado e cidade | Usuario | Evento e futura precificacao | Define recorte regional; sem catalogo, nenhum preco e exibido. |
+| Entrada | Data do evento | Usuario | Evento e futura precificacao | Define contexto temporal e futura atualizacao da base. |
+| Entrada | Duracao | Usuario | Motor local e prompt | Backend aceita inteiro de 1 a 24 ou usa o perfil do evento. |
 | Entrada | Refeicao | Usuario | Motor local e prompt | Afeta quantidades e cardapio. |
 | Entrada | Restricoes | Usuario | Prompt e plano | Afeta cardapio e alertas. |
 | Entrada | Tema | Usuario | Prompt | Afeta decoracao, layout e linguagem. |
@@ -249,7 +251,7 @@ flowchart LR
 | Gateway | Pergunta | Sim | Nao | Risco |
 |---|---|---|---|---|
 | D1 | O teste externo exige senha? | Abrir modal de senha demo e enviar header. | Gerar localmente sem senha. | Antes de repetir teste do modal, consultar registro no handoff. |
-| D2 | Tipo e pessoas foram informados? | Enviar evento ao backend. | Bloquear e pedir correcao. | Validacao ainda simples. |
+| D2 | Tipo, pessoas, duracao e textos respeitam os limites? | Calcular motor e montar prompt. | Retornar 400 com campo e mensagem. | Validado tambem por testes automatizados. |
 | D3 | Senha demo e valida? | Continuar geracao. | Retornar 401 e limpar senha salva. | Mensagem precisa ficar clara na UI. |
 | D4 | Gemini esta configurado? | Chamar modelo. | Retornar fallback controlado. | Falha de `.env` ou chave invalida. |
 | D5 | JSON veio valido? | Validar e renderizar. | Usar fallback e avisar. | Plano pode ficar generico. |
@@ -383,11 +385,11 @@ Saida:
 |---|---|---|---|
 | RF-01 | O app deve servir frontend por Express em `public/`. | Implementado | `npm start` abre `http://localhost:3000`. |
 | RF-02 | O app deve expor `GET /api/status`. | Implementado | Retorna `ok`, status da IA, demo e motor local. |
-| RF-03 | O app deve gerar planejamento por `POST /gerar-cardapio`. | Implementado | Retorna `{ ok, provider, plano, meta }`. |
+| RF-03 | O app deve gerar planejamento por `POST /gerar-cardapio`. | Implementado reforcado | Aceita evento validado e retorna `{ ok, provider, plano, meta }`; prompt arbitrario do cliente e rejeitado. |
 | RF-04 | A chave da IA deve ficar somente no backend. | Implementado | Nenhuma chamada direta de IA no frontend. |
-| RF-05 | O prompt principal deve ficar no backend. | Implementado reforcado | `src/prompts/event.prompt.js` monta o prompt e usa a metodologia de prompts como estrutura interna. |
+| RF-05 | O prompt principal deve ficar no backend. | Implementado reforcado | `src/prompts/event.prompt.js` usa secoes operacionais proporcionais e contrato explicito. |
 | RF-06 | O motor local deve calcular numeros operacionais. | Implementado inicial | Plano contem `motor_logistica`. |
-| RF-07 | A resposta da IA deve ser extraida, normalizada e validada. | Implementado reforcado | Falha gera fallback em vez de quebrar UI; campos principais chegam em formato previsivel. |
+| RF-07 | A resposta da IA deve ser extraida, normalizada e validada. | Implementado reforcado | Campos essenciais sao exigidos, campos externos descartados e falha gera fallback controlado. |
 | RF-08 | O resultado deve renderizar secoes completas. | Implementado em melhoria | Tela mostra cardapio, compras, cronograma, equipe, orcamento e extras. |
 | RF-09 | O app deve salvar historico local. | Implementado | Planejamento aparece em recentes. |
 | RF-10 | O app deve carregar planejamento do historico. | Implementado | Formulario e resultado sao preenchidos. |
@@ -395,7 +397,9 @@ Saida:
 | RF-12 | O teste externo deve poder exigir senha temporaria. | Implementado | Modal pede senha; sem senha ou senha incorreta, `/gerar-cardapio` retorna 401. |
 | RF-13 | A UI deve comunicar erros de forma clara. | Implementado em melhoria | Usuario entende senha invalida, servidor fora ou falha da IA. |
 | RF-14 | O PDF deve ser legivel em eventos realistas. | Pendente validacao | Quebras de pagina e textos ficam legiveis. |
-| RF-15 | O motor deve separar adultos e criancas no futuro proximo. | Pendente | Calculos consideram perfis diferentes. |
+| RF-15 | O motor deve separar adultos e criancas. | Implementado inicial | Consumo usa fator infantil; equipe, espaco e mesa preservam o total. |
+| RF-16 | O backend deve validar o evento antes do motor e da IA. | Implementado | Limites invalidos retornam HTTP 400 com campo e mensagem; corpo JSON e limitado a 20 KB. |
+| RF-17 | Todo valor financeiro exibido deve ter origem rastreavel. | Em implementacao | Regiao, moeda, fonte e data-base acompanham o preco; sem catalogo, mostrar `A cotar`. |
 
 ### Requisitos nao funcionais
 
@@ -414,7 +418,11 @@ Saida:
 
 - Motor local e fonte dos numeros operacionais.
 - IA complementa com criatividade, cardapio, decoracao, roteiro e explicacoes.
-- A Arquitetura Residencial de Prompts organiza o prompt backend, mas nao deve aparecer como conteudo final do planejamento.
+- A Arquitetura Residencial de Prompts orienta a hierarquia do prompt, mas o runtime usa rotulos operacionais e nunca devolve a metafora ao usuario.
+- Motor local e aplicado pelo backend; o Gemini nao deve devolver nem controlar `motor_logistica`.
+- `pessoas` e o total do evento; `criancas` e opcional e adultos sao derivados. Criancas usam fator inicial de consumo de 60%.
+- IA nao define preco. Motor calcula quantidades; catalogo fornece valores; indice oficial apenas atualiza uma base existente.
+- Banco de dados entra somente quando JSON/CSV nao atender regioes, historico, fornecedores ou administracao.
 - Teste externo deve ser curto, controlado e protegido por senha temporaria.
 - Historico em nuvem, login e pagamentos so entram depois de estabilidade local e demo publica simples.
 - O plano mestre recuperado e referencia historica; o estado atual vem do handoff e roadmap.
@@ -424,9 +432,8 @@ Saida:
 | Item | Motivo | Fase recomendada |
 |---|---|---|
 | Separar pitch do `index.html` | Reduz complexidade do arquivo principal | Depois de validar PDF. |
-| Adultos e criancas separados | Melhora calculo real de consumo | Evolucao do motor local. |
 | Secoes recolhiveis | Melhora leitura de resultado grande | Refinamento de UI. |
-| Validacao backend mais forte | Evita dados inconsistentes | Antes de demo publica. |
+| Refinar validacao backend conforme feedback | Ajustar limites e regras de negocio com evidencia real | Depois do primeiro ciclo de demo. |
 | Persistencia em nuvem | Historico multi-dispositivo | Futuro MVP publico. |
 | Login e limite de uso | Controle de abuso | Futuro produto publico. |
 | Pagamentos | Monetizacao | Futuro distante. |

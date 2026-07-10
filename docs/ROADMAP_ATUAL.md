@@ -1,17 +1,12 @@
 # Roadmap atual - Chef IA Studio
 
-<!-- CODEX:LER_SEMPRE
+<!-- CODEX:LER_POR_PROCESSO
 Ler depois do handoff para confirmar o que ja esta concluido e qual e a proxima atualizacao curta.
 Nao usar documentos historicos como prioridade se contradisserem este roadmap.
 -->
 
 <!-- CODEX:MANTER_EM_LINHA
-Quando uma prioridade mudar, atualizar tambem HANDOFF_PROXIMA_ATUALIZACAO.md e o Resumo vivo do MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md.
--->
-
-<!-- CODEX:FAZER
-Executar a Porta de Passagem da demo controlada em docs/README.md e o Fluxo 6 de docs/FLUXOS_DE_PROCESSO.md, sem repetir teste ja registrado.
-Evitar tecnologia nova sem necessidade.
+Quando uma prioridade mudar, atualizar a Proxima atualizacao curta do handoff.
 -->
 
 Atualizado apos a limpeza e continuidade do plano.
@@ -29,7 +24,7 @@ Atualizado apos a limpeza e continuidade do plano.
 - CSS modularizado em `public/css/modules/`.
 - Documentacao movida para `docs/`.
 - Prompt movido para o backend em `src/prompts/event.prompt.js`.
-- Prompt backend reformado com Arquitetura Residencial de Prompts como metodologia interna e proporcional.
+- Prompt backend inicialmente reformado com a metodologia e depois simplificado para rotulos operacionais proporcionais.
 - Motor matematico local criado em `src/services/planning/motor.service.js`.
 - Validacao do plano reforcada com normalizacao de arrays, decoracao, checklist, orcamento e resumo.
 - Historico local com `localStorage`.
@@ -50,23 +45,48 @@ Atualizado apos a limpeza e continuidade do plano.
 - Analise de requisitos, atores e casos de uso criada em `docs/ANALISE_REQUISITOS_ATORES_CASOS_USO.md`.
 - Diagramas complementares e analise tecnica criados em `docs/DIAGRAMAS_COMPLEMENTARES_ANALISE_TECNICA.md`.
 - Padroes de qualidade, interface e priorizacao criados em `docs/PADROES_QUALIDADE_PRIORIZACAO.md`.
+- Prompt de runtime simplificado para secoes operacionais, sem repetir a metafora nem pedir `motor_logistica` de volta ao Gemini.
+- Validacao backend de evento implementada com limites de pessoas, duracao e textos; prompt arbitrario do cliente foi bloqueado.
+- Validador do plano passou a exigir campos essenciais e descartar campos fora do contrato.
+- Suite automatizada adicionada com `node:test`, sem dependencia nova.
+- Resultado responsivo validado em desktop e mobile sem overflow horizontal.
+- Demo externa controlada concluida com retorno positivo e sem falha relatada.
+- Motor local evoluido para adultos e criancas, preservando `pessoas` como total e compatibilidade com historico.
 
 ## Proxima atualizacao curta
 
-1. Consultar a Janela de Previa e a Porta de Passagem da demo controlada em `docs/README.md`.
-2. Consultar o Registro de testes e validacoes em `HANDOFF_PROXIMA_ATUALIZACAO.md` antes de rodar qualquer nova bateria.
-3. Registrar evidencias dos testes manuais ja feitos pelo usuario, especialmente modal, geracao real e PDF.
-4. Seguir `FLUXOS_DE_PROCESSO.md`, Fluxo 6 - Demo controlada externa.
-5. Se nao houver falha aberta, preparar teste controlado para amigo com `DEMO_ACCESS_KEY` e link temporario.
+1. Coletar pais, estado, cidade e data do evento.
+2. Remover totais financeiros sem fonte comprovada.
+3. Exibir que a cotacao depende de catalogo regional com fonte e data-base.
+4. Preparar o contrato de um catalogo inicial para uma unica cidade.
+
+## Trilha de precificacao
+
+### Curto prazo
+
+- Quantidades continuam no motor local.
+- Precos sem fonte ficam como `A cotar`, nunca como valor real.
+- Todo preco futuro exige regiao, moeda, unidade, fonte, data-base e validade.
+- Primeiro catalogo deve cobrir uma unica cidade e ser validado contra cotacao real.
+
+### Medio prazo
+
+- Importacao de catalogo por CSV/JSON.
+- Multiplas referencias por item e faixas economica, media e sofisticada baseadas em mercado.
+- Atualizacao de bases antigas com indice oficial, sem usar inflacao como substituto de cotacao.
+
+### Longo prazo
+
+- Banco PostgreSQL quando houver varias regioes, historico, fornecedores ou painel administrativo.
+- Integracoes de cotacao, moedas, impostos e indices por pais.
+- Orcamento comercial somente com fontes e regras juridicas adequadas.
 
 ## Depois dessa atualizacao
 
-1. Melhorar validacao de entrada e feedback de erros.
-2. Ajustar responsividade do resultado.
+1. Criar e validar catalogo inicial de uma cidade.
+2. Retomar multiplicadores do motor por tipo de refeicao.
 3. Separar apresentacao/pitch do `index.html`, se ainda fizer sentido.
-4. Evoluir motor local para adultos/criancas separados.
-5. Reavaliar agentes IA somente se surgirem funcoes especializadas com entradas, saidas, gatilhos e validacoes proprias.
-6. Migrar SDK Gemini legado para `@google/genai` somente depois da base continuar estavel.
+4. Migrar SDK Gemini legado somente depois da base continuar estavel.
 
 ## Observacao sobre documentacao
 

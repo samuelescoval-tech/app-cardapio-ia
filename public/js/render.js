@@ -25,7 +25,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             <div class="result-header">
                 <div>
                     <h2>Planejamento para ${escapeHTML(pessoas)} pessoas</h2>
-                    <p>Cardapio, logistica, compras, equipe, roteiro e orcamento em um unico plano.</p>
+                    <p>Cardapio, logistica, compras, equipe, roteiro e contexto de precificacao em um unico plano.</p>
                 </div>
                 <button class="btn-print" onclick="baixarRelatorioPDF()">Baixar PDF</button>
             </div>
@@ -45,7 +45,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             ${entretenimento.length ? renderSecao("Entretenimento", renderListaCards(entretenimento, "note-card")) : ""}
             ${lembrancinhas.length ? renderSecao("Lembrancinhas", renderListaCards(lembrancinhas, "note-card")) : ""}
             ${dados.checklist ? renderChecklist(dados.checklist) : ""}
-            ${dados.orcamento ? renderOrcamento(dados.orcamento) : ""}
+            ${dados.orcamento && precificacaoEhConfiavel(dados.precificacao) ? renderOrcamento(dados.orcamento) : ""}
             ${dados.resumo_chef ? renderSecao("Resumo do Chef", `<div class="chef-summary">${escapeHTML(dados.resumo_chef)}</div>`) : ""}
         </div>
     `;
@@ -173,6 +173,8 @@ function baixarRelatorioPDF() {
 
     const motor = dados.motor_logistica || {};
     const premissas = motor.premissas || {};
+    const precificacao = dados.precificacao || motor.precificacao || null;
+    const precoConfiavel = precificacaoEhConfiavel(precificacao);
     const cardapio = normalizarArray(dados.cardapio);
     const compras = normalizarArray(dados.lista_compras);
     const receitas = normalizarArray(dados.receitas);
@@ -193,17 +195,21 @@ function baixarRelatorioPDF() {
     secao("Resumo executivo");
     cardResumo("Convidados", pessoas || "Nao informado", margem, y);
     cardResumo("Duracao", motor.duracao || "A definir", margem + 61, y);
-    cardResumo("Estimativa", motor.estimativa_total || "A definir", margem + 122, y);
+    cardResumo("Estimativa", precoConfiavel ? motor.estimativa_total : "A cotar", margem + 122, y);
     y += 24;
     if (motor.perfil) escrever(`Perfil: ${motor.perfil}`, { estilo: "bold" });
     if (motor.espaco) escrever(`Espaco recomendado: ${motor.espaco}`);
-    if (motor.custo_adulto) escrever(`Custo por pessoa: ${motor.custo_adulto}`);
+    if (precoConfiavel && motor.custo_adulto) escrever(`Custo por adulto: ${motor.custo_adulto}`);
+    if (precoConfiavel && premissas.criancas > 0 && motor.custo_crianca) escrever(`Custo por crianca: ${motor.custo_crianca}`);
     if (dados.resumo_chef) escrever(dados.resumo_chef);
 
     secao("Dados do evento");
     lista([
         `Tipo: ${evento?.tipo || premissas.tipo || "Nao informado"}`,
         `Convidados: ${pessoas || evento?.pessoas || premissas.pessoas || "Nao informado"}`,
+        premissas.criancas > 0 ? `Publico: ${premissas.adultos} adultos e ${premissas.criancas} criancas` : "",
+        `Localidade: ${localidadePrecificacao(precificacao)}`,
+        `Data do evento: ${evento?.dataEvento || precificacao?.data_evento || "Nao informada"}`,
         `Duracao: ${evento?.duracao || premissas.duracao_horas || motor.duracao || "Nao informado"}`,
         `Refeicao: ${evento?.refeicao || premissas.refeicao || "Nao informado"}`,
         `Estilo: ${evento?.estilo || premissas.estilo || "Nao informado"}`,
@@ -282,17 +288,20 @@ function baixarRelatorioPDF() {
         listaOuVazio(itens);
     });
 
-    secao("Cenarios de orcamento");
-    const orcamento = dados.orcamento || {};
-    ["economico", "medio", "sofisticado"].forEach(chave => {
-        const tier = orcamento[chave];
-        escrever(rotuloOrcamento(chave), { estilo: "bold" });
-        if (!tier || typeof tier !== "object") {
-            escrever("Nao informado no plano.", { cor: [120, 110, 98] });
-            return;
-        }
-        listaOuVazio(Object.entries(tier).map(([item, valor]) => `${item}: ${valor}`));
-    });
+    secao("Precificacao");
+    if (!precoConfiavel) {
+        escrever(precificacao?.mensagem || "Valores financeiros indisponiveis sem catalogo regional rastreavel.", { cor: [120, 110, 98] });
+        escrever(`Regiao: ${localidadePrecificacao(precificacao)}`);
+    } else {
+        const orcamento = dados.orcamento || {};
+        ["economico", "medio", "sofisticado"].forEach(chave => {
+            const tier = orcamento[chave];
+            escrever(rotuloOrcamento(chave), { estilo: "bold" });
+            listaOuVazio(tier && typeof tier === "object" ? Object.entries(tier).map(([item, valor]) => `${item}: ${valor}`) : []);
+        });
+        escrever(`Fonte: ${precificacao.fonte}`);
+        escrever(`Data-base: ${precificacao.data_base}`);
+    }
 
     const nomeEvento = motor.premissas?.tipo || "evento";
     const nomeArquivo = `chef-ia-${slugPDF(nomeEvento)}.pdf`;
@@ -391,12 +400,53 @@ function renderMotorLogistica(motor) {
                 ${renderMetricGroup("Bebidas", bebidas)}
                 ${renderMetricGroup("Staff", staff)}
             </div>
-            <div class="finance-strip">
-                <div><span>Custo / Pessoa</span><strong>${escapeHTML(motor.custo_adulto || "A definir")}</strong></div>
-                <div><span>Estimativa</span><strong>${escapeHTML(motor.estimativa_total || "A definir")}</strong></div>
-            </div>
+            ${renderFinanceStrip(motor)}
         </section>
     `;
+}
+
+function renderFinanceStrip(motor) {
+    const precificacao = motor.precificacao || null;
+    if (!precificacaoEhConfiavel(precificacao)) {
+        return `
+            <div class="finance-strip finance-pending">
+                <div>
+                    <span>Precificacao</span>
+                    <strong>A cotar</strong>
+                    <small>${escapeHTML(precificacao?.mensagem || "Catalogo regional ainda nao configurado.")}</small>
+                </div>
+                <div>
+                    <span>Regiao</span>
+                    <strong>${escapeHTML(localidadePrecificacao(precificacao))}</strong>
+                    <small>Sem fonte e data-base, nenhum valor e exibido.</small>
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="finance-strip">
+            <div><span>Custo / Adulto</span><strong>${escapeHTML(motor.custo_adulto || "A cotar")}</strong></div>
+            ${motor.premissas?.criancas > 0 ? `<div><span>Custo / Crianca</span><strong>${escapeHTML(motor.custo_crianca || "A cotar")}</strong></div>` : ""}
+            <div><span>Estimativa</span><strong>${escapeHTML(motor.estimativa_total || "A cotar")}</strong></div>
+        </div>
+    `;
+}
+
+function precificacaoEhConfiavel(precificacao) {
+    return Boolean(
+        precificacao &&
+        precificacao.status === "disponivel" &&
+        precificacao.moeda &&
+        Object.values(precificacao.regiao || {}).some(Boolean) &&
+        precificacao.fonte &&
+        precificacao.data_base
+    );
+}
+
+function localidadePrecificacao(precificacao) {
+    const regiao = precificacao?.regiao || {};
+    return [regiao.cidade, regiao.estado, regiao.pais].filter(Boolean).join(" / ") || "Nao informada";
 }
 
 function renderResumoExecutivo(dados, pessoas, cardapio, compras) {
@@ -404,14 +454,15 @@ function renderResumoExecutivo(dados, pessoas, cardapio, compras) {
     const motor = dados.motor_logistica || {};
     const staff = normalizarArray(motor.staff);
     const garcons = staff.find(s => /gar[cç]om|servi/i.test(s.funcao || s.item || s.nome || ""));
-    const estimativa = motor.estimativa_total || dados.orcamento?.medio?.total || "A definir";
+    const precoConfiavel = precificacaoEhConfiavel(dados.precificacao || motor.precificacao);
+    const estimativa = precoConfiavel ? (motor.estimativa_total || dados.orcamento?.medio?.total || "A cotar") : "A cotar";
 
     const cards = [
         ["Convidados", total || pessoas, "base do calculo"],
         ["Pratos", cardapio.length || "-", "itens do cardapio"],
         ["Compras", compras.length || "-", "itens consolidados"],
         ["Equipe", garcons?.quantidade || staff.length || "-", "servico recomendado"],
-        ["Orcamento", estimativa, "estimativa com margem"]
+        ["Orcamento", estimativa, precoConfiavel ? "fonte e data-base validadas" : "sem catalogo regional"]
     ];
 
     return `
@@ -551,7 +602,6 @@ function renderLocais(locais) {
                         <p>${escapeHTML(local.capacidade || "")}</p>
                         <p class="ok">${escapeHTML(local.pros || "")}</p>
                         <p class="warn">${escapeHTML(local.contras || "")}</p>
-                        <strong>${escapeHTML(local.custo || "")}</strong>
                     </article>
                 `).join("")}
             </div>
@@ -619,9 +669,9 @@ function renderUtensiliosDetalhados(utensilios, pessoas) {
             <div class="utensil-head"><span>Item</span><span>Qtd.</span><span>Uso</span></div>
             ${detalhados.map(item => `
                 <div class="utensil-row">
-                    <span>${escapeHTML(item.item || item.nome || "Utensilio")}</span>
-                    <strong>${escapeHTML(item.quantidade || "Conferir")}</strong>
-                    <small>${escapeHTML(item.uso || item.observacao || "operacao")}</small>
+                    <span data-label="Item">${escapeHTML(item.item || item.nome || "Utensilio")}</span>
+                    <strong data-label="Qtd.">${escapeHTML(item.quantidade || "Conferir")}</strong>
+                    <small data-label="Uso">${escapeHTML(item.uso || item.observacao || "operacao")}</small>
                 </div>
             `).join("")}
         </div>

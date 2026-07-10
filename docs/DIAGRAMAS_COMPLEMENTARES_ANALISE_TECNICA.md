@@ -1,6 +1,6 @@
 # Diagramas Complementares e Analise Tecnica - Chef IA Studio
 
-<!-- CODEX:LER_SEMPRE
+<!-- CODEX:LER_POR_PROCESSO
 Ler este documento quando a tarefa pedir diagramas complementares, sequencia, atividade, viabilidade, SGPD/LGPD, mapeamento, fluxo logico ou analise tecnica de complementaridade.
 Este arquivo complementa FLUXOS_DE_PROCESSO.md e ANALISE_REQUISITOS_ATORES_CASOS_USO.md.
 -->
@@ -11,12 +11,8 @@ Depois da mudanca, atualizar o diagrama e a tabela de status dos artefatos.
 -->
 
 <!-- CODEX:MANTER_EM_LINHA
-Se este documento mudar por decisao de produto ou arquitetura, alinhar README.md, HANDOFF_PROXIMA_ATUALIZACAO.md, ROADMAP_ATUAL.md, FLUXOS_DE_PROCESSO.md e MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md quando aplicavel.
--->
-
-<!-- CODEX:FAZER
-Proximo uso recomendado: validar o modal de acesso demo no navegador e revisar o PDF real antes de teste externo.
-Depois validar complementaridade com UC-03, UC-04, UC-06, Fluxo 2, Fluxo 3 e Fluxo 4.
+Atualizar este documento apenas quando um diagrama ou decisao tecnica representada aqui mudar.
+Registrar no handoff somente se a mudanca afetar o estado atual.
 -->
 
 Documento de apoio para artefatos complementares que nao cabiam claramente nos documentos anteriores.

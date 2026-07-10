@@ -1,6 +1,6 @@
 # Analise de Requisitos, Atores e Casos de Uso - Chef IA Studio
 
-<!-- CODEX:LER_SEMPRE
+<!-- CODEX:LER_POR_PROCESSO
 Ler este documento quando a proxima tarefa envolver comportamento do usuario, validacao, requisitos, atores ou mudanca no fluxo de uso.
 Ele complementa MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md com casos de uso e criterios de validacao.
 -->
@@ -11,13 +11,8 @@ Depois da mudanca, atualizar o caso de uso afetado, requisito relacionado e dado
 -->
 
 <!-- CODEX:MANTER_EM_LINHA
-Se este documento mudar por decisao de produto, alinhar tambem MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md, HANDOFF_PROXIMA_ATUALIZACAO.md e ROADMAP_ATUAL.md.
-Se criar novo requisito, manter IDs coerentes com RF/RNF do material de apoio.
--->
-
-<!-- CODEX:FAZER
-Proximo foco recomendado ligado a casos de uso: executar VAL-13 Porta de Passagem da demo controlada.
-Antes disso, consultar o Registro de testes e validacoes e registrar evidencias manuais de UC-04, UC-06 e geracao.
+Atualizar somente o caso, requisito ou validacao afetado. Manter IDs coerentes com RF/RNF.
+Registrar no handoff se a mudanca afetar estado ou proximo passo.
 -->
 
 Documento vivo para organizar atores, requisitos, casos de uso, validacoes, dados de uso geral e fluxo de uso do Chef IA Studio.
@@ -48,11 +43,11 @@ Este documento existe para orientar mudancas de comportamento do produto. Ele na
 
 | Ator | Requisitos ligados | Resultado esperado |
 |---|---|---|
-| AT-01 Dono do projeto | RF-01 a RF-15, RNF-01, RNF-03, RNF-07 | Saber o que esta pronto, o que falta e qual proximo passo executar. |
+| AT-01 Dono do projeto | RF-01 a RF-16, RNF-01, RNF-03, RNF-07 | Saber o que esta pronto, o que falta e qual proximo passo executar. |
 | AT-02 Usuario testador | RF-02, RF-03, RF-08, RF-11, RF-12, RF-13, RF-14 | Acessar, gerar, entender erros e baixar PDF sem confusao. |
 | AT-03 Organizador de eventos | RF-06, RF-08, RF-11, RF-15 | Receber um plano acionavel, com numeros, compras, equipe e cronograma. |
 | AT-04 Assistente tecnico | RNF-01, RNF-03, RNF-04, RNF-07 | Fazer mudancas pequenas, alinhadas e documentadas. |
-| AT-05 Backend Express | RF-02, RF-03, RF-04, RF-05, RF-07, RF-12 | Coordenar fluxo com seguranca e fallback. |
+| AT-05 Backend Express | RF-02, RF-03, RF-04, RF-05, RF-07, RF-12, RF-16 | Coordenar fluxo com seguranca, validacao e fallback. |
 | AT-06 Motor local | RF-06, RF-15 | Garantir calculos consistentes e evoluiveis. |
 | AT-07 Gemini | RF-03, RF-05, RF-07 | Gerar JSON utilizavel e detalhado. |
 | AT-08 Navegador/localStorage | RF-09, RF-10 | Salvar e recuperar historico no mesmo navegador. |
@@ -181,16 +176,21 @@ Regras:
 
 | Campo | Origem | Obrigatorio | Uso principal | Validacao atual | Validacao desejada |
 |---|---|---|---|---|---|
-| `tipo` | Formulario | Sim | Perfil do evento e prompt | Presenca no frontend | Minimo de caracteres e mensagem clara. |
-| `pessoas` | Formulario | Sim | Motor local e titulo do resultado | Presenca no frontend | Inteiro positivo com limite razoavel. |
-| `duracao` | Formulario | Nao | Motor e cronograma | Campo numerico com min/max HTML | Padrao claro se vazio. |
+| `tipo` | Formulario | Sim | Perfil do evento e prompt | 2 a 80 caracteres no backend | Refinar mensagens conforme feedback. |
+| `pessoas` | Formulario | Sim | Motor local e titulo do resultado | Inteiro de 1 a 5000 no backend | Reavaliar limite com uso real. |
+| `criancas` | Formulario | Nao | Derivar adultos e ajustar consumo | Inteiro de 0 ate o total de `pessoas`; vazio vale 0 | Reavaliar fator infantil com uso real. |
+| `duracao` | Formulario | Nao | Motor e cronograma | Inteiro de 1 a 24; vazio usa perfil do evento | Manter coerencia com motor. |
+| `dataEvento` | Formulario | Nao | Contexto temporal da precificacao | Data valida em `AAAA-MM-DD` | Tornar obrigatoria quando houver catalogo. |
+| `pais` | Formulario | Nao | Moeda e regras regionais | Texto ate 60 caracteres; padrao Brasil | Evoluir quando houver varios paises. |
+| `estado` | Formulario | Nao | Recorte regional de preco | Texto ate 80 caracteres | Padronizar sigla/identificador no futuro. |
+| `cidade` | Formulario | Nao | Catalogo local de preco | Texto ate 120 caracteres | Vincular ao catalogo quando existir. |
 | `refeicao` | Formulario | Nao | Cardapio e quantidades | Select | Opcoes coerentes com motor. |
-| `restricoes` | Formulario | Nao | Prompt e alertas | Texto livre | Sanitizacao e limite de tamanho. |
-| `tema` | Formulario | Nao | Decoracao e linguagem | Texto livre | Limite de tamanho. |
-| `orcamentoBase` | Formulario | Nao | Orcamento e cenarios | Texto livre | Normalizacao de moeda ou faixa. |
+| `restricoes` | Formulario | Nao | Prompt e alertas | Texto normalizado, maximo 500 caracteres | Refinar semantica no futuro. |
+| `tema` | Formulario | Nao | Decoracao e linguagem | Texto normalizado, maximo 120 caracteres | Manter. |
+| `orcamentoBase` | Formulario | Nao | Orcamento e cenarios | Texto normalizado, maximo 80 caracteres | Normalizacao de moeda ou faixa. |
 | `alcool` | Formulario | Nao | Bebidas e equipe | Select | Opcoes coerentes com motor. |
 | `estilo` | Formulario | Sim | Multiplicadores e acabamento | Radio com padrao | Manter padrao se nenhum marcado. |
-| `obs` | Formulario | Nao | Contexto livre do prompt | Texto livre | Limite e mensagem de ajuda. |
+| `obs` | Formulario | Nao | Contexto livre do prompt | Texto normalizado, maximo 1000 caracteres e tratado como dado | Refinar mensagem de ajuda. |
 
 ### Payload principal
 
@@ -199,6 +199,11 @@ Regras:
   "evento": {
     "tipo": "aniversario",
     "pessoas": "30",
+    "criancas": "8",
+    "dataEvento": "2026-09-20",
+    "pais": "Brasil",
+    "estado": "Sao Paulo",
+    "cidade": "Campinas",
     "duracao": "4",
     "refeicao": "Almoco ou jantar",
     "restricoes": "sem frutos do mar",
@@ -244,6 +249,8 @@ Regras:
 | VAL-11 | PDF e legivel. | Validacao visual manual. | Textos, secoes e quebras de pagina estao aceitaveis. |
 | VAL-12 | Documentacao fica alinhada. | Depois de mudanca relevante. | Handoff, roadmap e docs vivos refletem o novo estado. |
 | VAL-13 | Porta de Passagem da demo controlada esta pronta. | Antes de enviar link temporario para amigo/testador. | Registro de testes consultado, evidencias manuais registradas, `DEMO_ACCESS_KEY` ativa e escopo do teste definido. |
+| VAL-14 | Backend valida e limita o evento antes do motor e da IA. | Em todo `POST /gerar-cardapio`. | Evento invalido retorna 400 com `campo`; prompt arbitrario sem evento nao e aceito. |
+| VAL-15 | Evento misto preserva total e separa consumo. | Ao calcular evento com criancas. | Adultos sao derivados; consumo infantil usa fator 60%; equipe, espaco e mesa usam total. |
 
 ## Casos de uso gerais
 
@@ -283,10 +290,10 @@ Regras:
 | Atores secundarios | Backend Express, motor local, Gemini |
 | Pre-condicoes | Dados minimos informados e acesso demo resolvido |
 | Gatilho | Clique em calcular/gerar planejamento |
-| Fluxo principal | Frontend envia evento; backend calcula motor; monta prompt; chama Gemini; valida JSON; aplica motor; retorna plano |
+| Fluxo principal | Frontend envia evento; backend valida entrada; calcula motor; monta prompt; chama Gemini; restringe e valida JSON; aplica motor; retorna plano |
 | Fluxo alternativo | Falha da IA ou JSON invalido; backend retorna fallback controlado |
 | Saida | Planejamento normalizado |
-| Validacao | VAL-05, VAL-06, VAL-07 |
+| Validacao | VAL-05, VAL-06, VAL-07, VAL-14 |
 | Status | Implementado |
 
 ### UC-04 - Validar acesso demo
@@ -406,6 +413,7 @@ Regras:
 | RF-13 | UC-02, UC-04, UC-03 |
 | RF-14 | UC-06 |
 | RF-15 | UC-03, UC-05 |
+| RF-16 | UC-02, UC-03 |
 | RNF-01 | UC-10 |
 | RNF-02 | UC-04, UC-10 |
 | RNF-03 | UC-10 |
@@ -415,12 +423,11 @@ Regras:
 
 | Pendencia | Motivo | Quando resolver |
 |---|---|---|
-| Definir limites exatos de `pessoas` e `duracao` | Evitar eventos absurdos ou custo alto | Na melhoria de validacao de entrada |
+| Reavaliar os limites atuais de `pessoas` (1-5000) e `duracao` (1-24) com uso real | Confirmar que os limites atendem os eventos alvo | Depois do primeiro ciclo de demo |
 | Definir formato padrao de `orcamentoBase` | Permitir calculo e comparacao melhor | Na evolucao do motor local |
 | Registrar evidencia do modal de senha ja testado | Fechar UC-04 sem repetir teste desnecessario | Antes de executar VAL-13 |
 | Registrar evidencia do PDF ja testado | Confirmar UC-06 sem repetir teste desnecessario | Antes de executar VAL-13 |
 | Executar Porta de Passagem da demo controlada | Passar de validacao interna para teste externo pequeno | Proxima atualizacao curta |
-| Separar adultos e criancas | Melhorar precisao do motor | Fase de evolucao do motor |
 
 ## Atualizacao deste documento
 

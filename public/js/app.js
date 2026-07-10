@@ -146,12 +146,17 @@ async function gerarTudo() {
     // 1. Captura de Campos (Nova Interface + Antiga)
     const tipo = document.getElementById('tipo').value;
     const pessoas = document.getElementById('pessoas').value;
+    const criancas = document.getElementById('criancas')?.value || "0";
     const estilo = document.querySelector('input[name="estilo"]:checked')?.value || "Não informado";
     
     // Se você tiver esses IDs no HTML, ele pega, senão usa padrão
     const restricoes = document.getElementById('restricoes')?.value || "Nenhuma";
     const obs = document.getElementById('userChat')?.value || "Sem observações adicionais";
     const duracao = document.getElementById('duracao')?.value || "padrao do evento";
+    const dataEvento = document.getElementById('dataEvento')?.value || "";
+    const pais = document.getElementById('pais')?.value || "Brasil";
+    const estado = document.getElementById('estado')?.value || "";
+    const cidade = document.getElementById('cidade')?.value || "";
     const refeicao = document.getElementById('refeicao')?.value || "Nao informado";
     const tema = document.getElementById('tema')?.value || "Nao informado";
     const alcool = document.getElementById('alcool')?.value || "Nao informado";
@@ -168,10 +173,15 @@ async function gerarTudo() {
     const evento = {
         tipo,
         pessoas,
+        criancas,
         estilo,
         restricoes,
         obs,
         duracao,
+        dataEvento,
+        pais,
+        estado,
+        cidade,
         refeicao,
         tema,
         alcool,
@@ -207,6 +217,7 @@ async function gerarTudo() {
             headers,
             body: JSON.stringify({ evento })
         });
+        const resposta = await response.json().catch(() => ({}));
 
         if (response.status === 401) {
             demoAccessRequired = true;
@@ -214,8 +225,9 @@ async function gerarTudo() {
             throw new Error("Senha temporária inválida. Tente gerar novamente e informe a senha correta.");
         }
 
-        if (!response.ok) throw new Error("Erro no servidor.");
-        const resposta = await response.json();
+        if (!response.ok) {
+            throw new Error(resposta.error || "Erro no servidor.");
+        }
 
         // Nova estrutura: { ok, provider, plano, meta }
         // Compatibilidade: se for JSON direto, passa como está
@@ -304,9 +316,14 @@ function carregarDoHistorico(id) {
     const evento = entrada.evento;
     document.getElementById('tipo').value = evento.tipo || '';
     document.getElementById('pessoas').value = evento.pessoas || '';
+    document.getElementById('criancas').value = evento.criancas || '';
     document.getElementById('restricoes').value = evento.restricoes || '';
     document.getElementById('userChat').value = evento.obs || '';
     document.getElementById('duracao').value = evento.duracao || '';
+    document.getElementById('dataEvento').value = evento.dataEvento || '';
+    document.getElementById('pais').value = evento.pais || 'Brasil';
+    document.getElementById('estado').value = evento.estado || '';
+    document.getElementById('cidade').value = evento.cidade || '';
     document.getElementById('refeicao').value = evento.refeicao || '';
     document.getElementById('tema').value = evento.tema || '';
     document.getElementById('orcamentoBase').value = evento.orcamentoBase || '';

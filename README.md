@@ -1,6 +1,6 @@
 # Chef IA Studio
 
-Aplicacao web para planejamento de eventos com IA. O sistema combina um motor local de calculos operacionais com o Gemini no backend para gerar cardapio, lista de compras, cronograma, equipe, utensilios, orcamento e resumo do evento.
+Aplicacao web para planejamento de eventos com IA. O sistema combina um motor local de calculos operacionais com o Gemini no backend para gerar cardapio, lista de compras, cronograma, equipe, utensilios e resumo do evento. Valores financeiros ficam como `A cotar` enquanto nao houver catalogo regional rastreavel.
 
 ## Estado Atual
 
@@ -14,9 +14,13 @@ Projeto em fase de portfolio/MVP local. A prioridade atual e rodar bem, manter a
 - Rota `POST /gerar-cardapio`
 - Integracao com Gemini pelo backend
 - Prompt principal em `src/prompts/event.prompt.js`
-- Prompt backend estruturado pela Arquitetura Residencial de Prompts como metodologia interna e proporcional
+- Prompt backend com secoes operacionais derivadas da Arquitetura Residencial de Prompts
 - Motor local em `src/services/planning/motor.service.js`
-- Tratamento de JSON com extracao, normalizacao, validacao e fallback
+- Validacao backend dos dados do evento, com limites e mensagens por campo
+- Tratamento de JSON com contrato restrito, normalizacao, validacao e fallback
+- Testes automatizados com o test runner nativo do Node.js
+- Contexto de precificacao com pais, estado, cidade e data do evento
+- Bloqueio de valores financeiros sem fonte e data-base
 - Renderizacao modular em `public/js/render.js`
 - Historico local com `localStorage`
 - Exportacao PDF inicial com `jsPDF`
@@ -25,7 +29,7 @@ Projeto em fase de portfolio/MVP local. A prioridade atual e rodar bem, manter a
 
 ### Em melhoria
 
-- Validacao de entrada
+- Refinamento das regras de negocio para entrada
 - Refinamento visual do relatorio/PDF
 - Melhorias de layout e responsividade
 - Testes manuais recorrentes
@@ -117,7 +121,9 @@ app-cardapio-ia/
 │   │       └── motor.service.js
 │   └── utils/
 │       ├── extract-json.js
+│       ├── validate-event.js
 │       └── validate-plan.js
+├── test/
 ├── docs/
 ├── server.js
 ├── package.json
@@ -132,8 +138,9 @@ app-cardapio-ia/
 Frontend
   ↓ POST /gerar-cardapio
 Backend Express
+  ↓ valida e normaliza o evento
   ↓ calcula motor local
-Prompt backend com metodologia interna
+Prompt backend com secoes operacionais
   ↓ chama Gemini
 Extracao + normalizacao + validacao JSON
   ↓ aplica motor local ao plano
@@ -143,7 +150,7 @@ Frontend renderiza resultado
 
 Motor local = numeros operacionais.
 Gemini = criatividade, detalhamento e organizacao do planejamento.
-Arquitetura Residencial de Prompts = estrutura interna do prompt, sem aparecer como conteudo final para o usuario.
+Arquitetura Residencial de Prompts = referencia metodologica proporcional; o prompt de runtime usa nomes operacionais e nao expoe a metafora ao usuario.
 
 ## Testes Manuais
 
@@ -174,7 +181,7 @@ Validacao feita em 2026-07-02:
 - Fluxo completo validado em Chrome headless: formulario, geracao, historico e PDF
 - Download real de PDF confirmado em `/tmp/chef-ia-downloads/chef-ia-download-teste.pdf`
 - PDF refinado com cabecalho visual, cards de resumo, secoes destacadas e rodape
-- PDF expandido com dados do evento, receitas, utensilios, local, layout, decoracao, entretenimento, lembrancinhas, checklist e cenarios de orcamento
+- PDF expandido com dados do evento, receitas, utensilios, local, layout, decoracao, entretenimento, lembrancinhas e checklist; cenarios financeiros antigos agora ficam ocultos sem fonte rastreavel
 - PDF agora mantem as secoes principais mesmo quando algum bloco vier vazio, exibindo mensagem de "Nao informado"
 
 Validacao feita em 2026-07-08:

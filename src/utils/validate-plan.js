@@ -1,14 +1,17 @@
-const CAMPOS_ARRAY = [
-  "cardapio",
-  "receitas",
-  "lista_compras",
-  "utensilios",
-  "local",
+const CAMPOS_ARRAY_TEXTO = [
   "layout",
-  "cronograma",
   "equipe_obs",
   "entretenimento",
   "lembrancinhas"
+];
+
+const CAMPOS_OBRIGATORIOS = [
+  "cardapio",
+  "lista_compras",
+  "cronograma",
+  "decoracao",
+  "checklist",
+  "resumo_chef"
 ];
 
 function validarPlano(data) {
@@ -16,18 +19,31 @@ function validarPlano(data) {
     throw new Error("Plano inválido.");
   }
 
-  const plano = { ...data };
+  const ausentes = CAMPOS_OBRIGATORIOS.filter(campo => !Object.hasOwn(data, campo));
+  if (ausentes.length) {
+    throw new Error(`Plano incompleto. Campos ausentes: ${ausentes.join(", ")}.`);
+  }
 
-  CAMPOS_ARRAY.forEach(campo => {
-    plano[campo] = normalizarArray(plano[campo]);
+  const plano = {};
+
+  CAMPOS_ARRAY_TEXTO.forEach(campo => {
+    plano[campo] = normalizarArrayTexto(data[campo]);
   });
 
-  plano.motor_logistica = ehObjeto(plano.motor_logistica) ? plano.motor_logistica : null;
-  plano.servico_mesa = ehObjeto(plano.servico_mesa) ? plano.servico_mesa : null;
-  plano.decoracao = normalizarDecoracao(plano.decoracao);
-  plano.checklist = normalizarChecklist(plano.checklist);
-  plano.orcamento = normalizarOrcamento(plano.orcamento);
-  plano.resumo_chef = textoSeguro(plano.resumo_chef, "Resumo indisponível.");
+  plano.cardapio = normalizarObjetos(data.cardapio, normalizarCardapio);
+  plano.receitas = normalizarObjetos(data.receitas, normalizarReceita);
+  plano.lista_compras = normalizarObjetos(data.lista_compras, normalizarCompra);
+  plano.utensilios = normalizarObjetos(data.utensilios, normalizarUtensilio);
+  plano.local = normalizarObjetos(data.local, normalizarLocal);
+  plano.cronograma = normalizarObjetos(data.cronograma, normalizarCronograma);
+
+  plano.motor_logistica = null;
+  plano.servico_mesa = null;
+  plano.precificacao = null;
+  plano.decoracao = normalizarDecoracao(data.decoracao);
+  plano.checklist = normalizarChecklist(data.checklist);
+  plano.orcamento = null;
+  plano.resumo_chef = textoSeguro(data.resumo_chef, "Resumo indisponível.");
 
   return plano;
 }
@@ -47,15 +63,18 @@ function criarFallback(mensagem) {
     lembrancinhas: [],
     checklist: null,
     orcamento: null,
+    precificacao: null,
     motor_logistica: null,
     servico_mesa: null,
     resumo_chef: mensagem || "A IA não retornou um plano válido desta vez."
   };
 }
 
-function normalizarArray(valor) {
+function normalizarArrayTexto(valor) {
   if (Array.isArray(valor)) {
-    return valor.filter(item => item !== null && item !== undefined && item !== "");
+    return valor
+      .map(item => textoSeguro(item, ""))
+      .filter(Boolean);
   }
 
   if (typeof valor === "string" && valor.trim()) {
@@ -65,13 +84,78 @@ function normalizarArray(valor) {
   return [];
 }
 
+function normalizarObjetos(valor, normalizador) {
+  if (!Array.isArray(valor)) return [];
+  return valor.map(normalizador).filter(Boolean);
+}
+
+function normalizarCardapio(valor) {
+  if (!ehObjeto(valor)) return null;
+  return {
+    nome: textoSeguro(valor.nome, ""),
+    categoria: textoSeguro(valor.categoria, ""),
+    descricao: textoSeguro(valor.descricao, ""),
+    emoji: textoSeguro(valor.emoji, ""),
+    quantidade: textoSeguro(valor.quantidade, ""),
+    ingredientes: normalizarArrayTexto(valor.ingredientes)
+  };
+}
+
+function normalizarReceita(valor) {
+  if (!ehObjeto(valor)) return null;
+  return {
+    nome: textoSeguro(valor.nome, ""),
+    preparo: textoSeguro(valor.preparo, ""),
+    tempo: textoSeguro(valor.tempo, ""),
+    rendimento: textoSeguro(valor.rendimento, "")
+  };
+}
+
+function normalizarCompra(valor) {
+  if (!ehObjeto(valor)) return null;
+  return {
+    item: textoSeguro(valor.item, ""),
+    quantidade: textoSeguro(valor.quantidade, ""),
+    setor: textoSeguro(valor.setor, "Outros"),
+    prioridade: textoSeguro(valor.prioridade, "media")
+  };
+}
+
+function normalizarUtensilio(valor) {
+  if (!ehObjeto(valor)) return null;
+  return {
+    item: textoSeguro(valor.item, ""),
+    quantidade: textoSeguro(valor.quantidade, ""),
+    uso: textoSeguro(valor.uso, "")
+  };
+}
+
+function normalizarLocal(valor) {
+  if (!ehObjeto(valor)) return null;
+  return {
+    tipo: textoSeguro(valor.tipo, ""),
+    capacidade: textoSeguro(valor.capacidade, ""),
+    pros: textoSeguro(valor.pros, ""),
+    contras: textoSeguro(valor.contras, ""),
+    recomendado: valor.recomendado === true
+  };
+}
+
+function normalizarCronograma(valor) {
+  if (!ehObjeto(valor)) return null;
+  return {
+    hora: textoSeguro(valor.hora, ""),
+    atividade: textoSeguro(valor.atividade, ""),
+    descricao: textoSeguro(valor.descricao, "")
+  };
+}
+
 function normalizarDecoracao(valor) {
   if (!ehObjeto(valor)) return null;
 
   return {
-    ...valor,
-    temas: normalizarArray(valor.temas),
-    itens: normalizarArray(valor.itens),
+    temas: normalizarArrayTexto(valor.temas),
+    itens: normalizarArrayTexto(valor.itens),
     iluminacao: textoSeguro(valor.iluminacao, "")
   };
 }
@@ -80,21 +164,9 @@ function normalizarChecklist(valor) {
   if (!ehObjeto(valor)) return null;
 
   return {
-    ...valor,
-    pre: normalizarArray(valor.pre),
-    durante: normalizarArray(valor.durante),
-    pos: normalizarArray(valor.pos)
-  };
-}
-
-function normalizarOrcamento(valor) {
-  if (!ehObjeto(valor)) return null;
-
-  return {
-    ...valor,
-    economico: ehObjeto(valor.economico) ? valor.economico : {},
-    medio: ehObjeto(valor.medio) ? valor.medio : {},
-    sofisticado: ehObjeto(valor.sofisticado) ? valor.sofisticado : {}
+    pre: normalizarArrayTexto(valor.pre),
+    durante: normalizarArrayTexto(valor.durante),
+    pos: normalizarArrayTexto(valor.pos)
   };
 }
 

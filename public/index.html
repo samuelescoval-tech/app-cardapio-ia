@@ -70,15 +70,35 @@
             <div class="form-grid">
                 <div class="fgroup">
                     <label class="flabel">Tipo de Evento</label>
-                    <input type="text" id="tipo" class="premium-input" placeholder="Ex: Casamento Real">
+                    <input type="text" id="tipo" class="premium-input" minlength="2" maxlength="80" placeholder="Ex: Casamento Real">
                 </div>
                 <div class="fgroup">
                     <label class="flabel">Convidados</label>
-                    <input type="number" id="pessoas" class="premium-input" placeholder="Total">
+                    <input type="number" id="pessoas" class="premium-input" min="1" max="5000" placeholder="Total">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Criancas (ate 12 anos)</label>
+                    <input type="number" id="criancas" class="premium-input" min="0" max="5000" placeholder="Opcional">
                 </div>
                 <div class="fgroup">
                     <label class="flabel">Duração do Evento</label>
                     <input type="number" id="duracao" class="premium-input" min="1" max="24" placeholder="Ex: 4 horas">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Data do Evento</label>
+                    <input type="date" id="dataEvento" class="premium-input">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">País</label>
+                    <input type="text" id="pais" class="premium-input" maxlength="60" value="Brasil">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Estado</label>
+                    <input type="text" id="estado" class="premium-input" maxlength="80" placeholder="Ex: São Paulo">
+                </div>
+                <div class="fgroup">
+                    <label class="flabel">Cidade</label>
+                    <input type="text" id="cidade" class="premium-input" maxlength="120" placeholder="Ex: Campinas">
                 </div>
                 <div class="fgroup">
                     <label class="flabel">Tipo de Refeição</label>
@@ -93,15 +113,15 @@
                 <!-- NOVO CAMPO: Restrições -->
                 <div class="fgroup">
                     <label class="flabel">Restrições Alimentares</label>
-                    <input type="text" id="restricoes" class="premium-input" placeholder="Ex: Veganos, Celíacos...">
+                    <input type="text" id="restricoes" class="premium-input" maxlength="500" placeholder="Ex: Veganos, Celíacos...">
                 </div>
                 <div class="fgroup">
                     <label class="flabel">Tema do Evento</label>
-                    <input type="text" id="tema" class="premium-input" placeholder="Ex: Tropical, Botânico, Anos 80...">
+                    <input type="text" id="tema" class="premium-input" maxlength="120" placeholder="Ex: Tropical, Botânico, Anos 80...">
                 </div>
                 <div class="fgroup">
                     <label class="flabel">Orçamento Desejado</label>
-                    <input type="text" id="orcamentoBase" class="premium-input" placeholder="Ex: R$ 2.500 ou econômico">
+                    <input type="text" id="orcamentoBase" class="premium-input" maxlength="80" placeholder="Ex: R$ 2.500 ou econômico">
                 </div>
                 <div class="fgroup">
                     <label class="flabel">Bebidas</label>
@@ -128,7 +148,7 @@
                     <div class="bubble-ai">Informe detalhes como: "Quero foco em frutos do mar" ou "Decoração rústica".</div>
                 </div>
                 <div class="chat-input-wrap">
-                    <input type="text" id="userChat" class="premium-input" placeholder="Fale com o Chef...">
+                    <input type="text" id="userChat" class="premium-input" maxlength="1000" placeholder="Fale com o Chef...">
                     <input type="file" id="importChef" accept=".chef" class="hidden" onchange="importarProjeto(event)">
                     <button class="btn-util" onclick="document.getElementById('importChef').click()">📂</button>
                 </div>

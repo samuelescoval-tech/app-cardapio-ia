@@ -1,6 +1,6 @@
 # Fluxos de Processo - Chef IA Studio
 
-<!-- CODEX:LER_SEMPRE
+<!-- CODEX:LER_POR_PROCESSO
 Ler este documento quando a tarefa envolver fluxo de uso, fluxo tecnico, acesso demo, geracao, PDF, historico ou documentacao.
 Este arquivo existe para deixar os fluxos faceis de achar sem procurar dentro dos documentos maiores.
 -->
@@ -13,18 +13,13 @@ Antes de mexer em documentacao, conferir o Fluxo 5.
 -->
 
 <!-- CODEX:MANTER_EM_LINHA
-Se qualquer fluxo aqui mudar, alinhar MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md e ANALISE_REQUISITOS_ATORES_CASOS_USO.md.
-Se a mudanca alterar prioridade ou retomada, alinhar tambem HANDOFF_PROXIMA_ATUALIZACAO.md e ROADMAP_ATUAL.md.
--->
-
-<!-- CODEX:FAZER
-Proxima atualizacao curta: consultar o Registro de testes e validacoes no handoff antes de repetir Fluxo 2, Fluxo 3 ou Fluxo 4.
-Registrar evidencias dos testes manuais ja feitos e preparar teste externo controlado se nao houver falha aberta.
+Atualizar somente o fluxo alterado. Atualizar requisitos apenas se o comportamento esperado mudar.
+Registrar no handoff se a mudanca afetar estado ou proximo passo.
 -->
 
 Documento dedicado aos fluxos do Chef IA Studio.
 
-Ultima atualizacao: 2026-07-09
+Ultima atualizacao: 2026-07-10
 
 ## Onde estavam antes
 
@@ -131,6 +126,8 @@ flowchart TD
     montarEvento["Montar objeto evento"]
     enviar["POST /gerar-cardapio"]
     validarSenha{"Senha demo valida?"}
+    validarEvento{"Evento valido?"}
+    erroEntrada["Retornar 400 com campo e mensagem"]
     calcularMotor["calcularMotorEvento"]
     montarPrompt["montarPromptPlanejamento"]
     chamarGemini["gerarPlano no Gemini"]
@@ -149,7 +146,10 @@ flowchart TD
     montarEvento --> enviar
     enviar --> validarSenha
     validarSenha -->|"Nao"| fim
-    validarSenha -->|"Sim"| calcularMotor
+    validarSenha -->|"Sim"| validarEvento
+    validarEvento -->|"Nao"| erroEntrada
+    erroEntrada --> fim
+    validarEvento -->|"Sim"| calcularMotor
     calcularMotor --> montarPrompt
     montarPrompt --> chamarGemini
     chamarGemini --> extrair
@@ -169,6 +169,7 @@ Arquivos principais:
 - `src/prompts/event.prompt.js`
 - `src/services/ai/gemini.service.js`
 - `src/utils/extract-json.js`
+- `src/utils/validate-event.js`
 - `src/utils/validate-plan.js`
 - `public/js/render.js`
 - `public/js/storage.service.js`
@@ -176,6 +177,7 @@ Arquivos principais:
 Validacoes ligadas:
 
 - `VAL-03`
+- `VAL-14`
 - `VAL-05`
 - `VAL-06`
 - `VAL-07`

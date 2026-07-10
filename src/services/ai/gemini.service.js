@@ -60,7 +60,21 @@ async function gerarPlano(prompt) {
     }
 
     // 2. Validar e normalizar
-    dados = validarPlano(dados);
+    try {
+      dados = validarPlano(dados);
+    } catch (validationError) {
+      console.warn("⚠️ Resposta fora do contrato:", validationError.message);
+      return {
+        ok: false,
+        provider: "gemini",
+        plano: criarFallback(validationError.message),
+        meta: {
+          erro: validationError.message,
+          tempo_ms: Date.now() - inicio,
+          schema_ok: false
+        }
+      };
+    }
 
     return {
       ok: true,

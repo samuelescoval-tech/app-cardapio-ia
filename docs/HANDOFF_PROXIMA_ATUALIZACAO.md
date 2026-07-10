@@ -1,37 +1,39 @@
 # Handoff - Proxima Atualizacao do Chef IA Studio
 
 <!-- CODEX:LER_SEMPRE
-Comecar pelo Mapa/GPS operacional em docs/README.md; depois ler este handoff.
-Ler este documento no inicio de toda retomada. Ele resume o estado real mais recente e evita voltar para fase antiga.
-Priorizar: Estado atual em uma frase, Registro de testes e validacoes, Proxima atualizacao curta e Cuidados para a proxima rodada.
-Antes de repetir qualquer teste, conferir o Registro de testes e validacoes deste arquivo.
+Ler somente Estado atual em uma frase, ultimo registro relevante e Proxima atualizacao curta.
+Consultar docs/README.md apenas se houver duvida sobre onde encontrar informacao especializada.
 -->
 
 <!-- CODEX:MANTER_EM_LINHA
-Quando codigo, fluxo, validacao ou prioridade mudar, atualizar este handoff junto com ROADMAP_ATUAL.md e MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md.
+Atualizar este handoff quando estado, decisao, teste relevante ou proximo passo mudar.
+Atualizar roadmap apenas se a prioridade mudar; outros documentos apenas se o contrato especifico deles mudar.
 -->
 
 <!-- CODEX:FAZER
-Proxima atualizacao curta: executar a Porta de Passagem da demo controlada em docs/README.md e Fluxo 6 de docs/FLUXOS_DE_PROCESSO.md.
-Nao repetir teste ja registrado sem mudanca relacionada, ambiente novo ou pedido explicito do usuario.
+Proxima atualizacao recomendada: escolher uma cidade piloto e montar um catalogo pequeno com fontes e data-base reais.
+Aguardar decisao do usuario antes de iniciar.
 -->
 
 Este documento resume o estado real do projeto para continuar a proxima rodada sem perder contexto.
 
 ## Estado atual em uma frase
 
-O app ja gera planejamento de evento com Gemini via backend, usa motor matematico local como fonte de numeros, monta o prompt com a Arquitetura Residencial de Prompts como metodologia interna, renderiza um resultado rico, salva historico local e tem modal de acesso demo; a proxima fase curta deve consultar o registro de testes, registrar evidencias manuais ja feitas e preparar a demo controlada se nao houver falha aberta.
+O app gera planejamento com Gemini, calcula quantidades localmente, coleta regiao/data e mostra `A cotar` quando nao existe fonte financeira rastreavel; a proxima recomendacao e validar um catalogo real para uma cidade piloto.
 
 ## O que foi modificado
 
 - Conexao com Gemini estabilizada no backend usando `GEMINI_API_KEY` ou `GOOGLE_API_KEY`.
 - Modelo configuravel por `.env` com `GEMINI_MODEL`.
-- `server.js` passou a aceitar dados estruturados do evento em `/gerar-cardapio`.
+- `server.js` aceita somente dados estruturados do evento em `/gerar-cardapio`; prompt arbitrario enviado pelo cliente e rejeitado.
 - Prompt saiu do frontend e foi para `src/prompts/event.prompt.js`.
-- `src/prompts/event.prompt.js` passou a organizar a geracao por Terreno, Fundacao, Comodo Central, Moradores, Visitantes, Cercados, Paredes, Seguranca e Telhado, sem expor esses nomes no resultado final.
+- `src/prompts/event.prompt.js` foi simplificado para Papel, Objetivo, Fontes Confiaveis, Dados, Restricoes, Contrato e Criterios de Conclusao; a metodologia permanece como referencia interna, sem pesar no runtime.
+- O Gemini nao devolve mais `motor_logistica`; `aplicarMotorAoPlano()` injeta sempre a versao oficial calculada no backend.
+- `src/utils/validate-event.js` valida tipo, pessoas, duracao e limites de texto antes do motor e da IA.
 - Criado motor local em `src/services/planning/motor.service.js` para calcular alimentos, bebidas, equipe, espaco, custo e utensilios.
 - Resultado da IA recebe reforco do motor local antes de ir para o frontend.
-- `src/utils/validate-plan.js` reforcou a normalizacao de arrays, decoracao, checklist, orcamento e resumo antes da renderizacao.
+- `src/utils/validate-plan.js` exige campos essenciais, normaliza a resposta e descarta campos fora do contrato antes da renderizacao.
+- Testes automatizados em `test/` cobrem prompt, entrada, plano e rejeicao de prompt arbitrario.
 - `public/js/app.js` ficou focado em formulario, navegacao e chamada ao backend.
 - `public/js/render.js` ficou responsavel pela montagem visual do planejamento.
 - `public/js/render.js` tambem gera PDF textual inicial com `jsPDF`, usando o ultimo plano renderizado.
@@ -51,13 +53,14 @@ Fluxo principal:
 1. Usuario preenche o formulario em `public/index.html`.
 2. `public/js/app.js` monta o objeto `evento`.
 3. O frontend envia `POST /gerar-cardapio`.
-4. `server.js` calcula o motor local com `calcularMotorEvento(evento)`.
-5. `src/prompts/event.prompt.js` monta o prompt completo para Gemini usando a metodologia de prompts como estrutura interna.
-6. `src/services/ai/gemini.service.js` chama o modelo.
-7. `src/utils/extract-json.js` e `src/utils/validate-plan.js` extraem, normalizam e validam o JSON.
-8. `aplicarMotorAoPlano()` injeta dados calculados no plano.
-9. `public/js/render.js` exibe o planejamento completo.
-10. `public/js/storage.service.js` salva e carrega o historico local.
+4. `src/utils/validate-event.js` valida e normaliza o evento.
+5. `server.js` calcula o motor local com `calcularMotorEvento(evento)`.
+6. `src/prompts/event.prompt.js` monta o prompt operacional para Gemini.
+7. `src/services/ai/gemini.service.js` chama o modelo.
+8. `src/utils/extract-json.js` e `src/utils/validate-plan.js` extraem, restringem, normalizam e validam o JSON.
+9. `aplicarMotorAoPlano()` injeta os dados oficiais calculados no plano.
+10. `public/js/render.js` exibe o planejamento completo.
+11. `public/js/storage.service.js` salva e carrega o historico local.
 
 ## Arquivos principais
 
@@ -66,7 +69,9 @@ Fluxo principal:
 - `src/services/planning/motor.service.js`: calculos locais do evento.
 - `src/prompts/event.prompt.js`: prompt de planejamento.
 - `src/utils/extract-json.js`: extracao robusta de JSON da resposta da IA.
+- `src/utils/validate-event.js`: validacao e normalizacao dos dados recebidos do frontend.
 - `src/utils/validate-plan.js`: validacao/normalizacao do plano.
+- `test/`: testes automatizados do contrato, entrada e rota.
 - `public/index.html`: formulario, pitch e estrutura visual da pagina.
 - `public/js/app.js`: bootstrap, formulario, navegacao e fetch.
 - `public/js/render.js`: renderizacao do resultado.
@@ -110,31 +115,34 @@ Formato esperado para novos registros: data, escopo, comando ou forma de teste, 
 - Em 2026-07-09, `npm start` dentro do sandbox subiu o processo, mas a porta nao ficou acessivel para outros comandos por isolamento de rede. Nao contar como validacao real de localhost.
 - Em 2026-07-09, `npm start` fora do sandbox subiu `http://localhost:3000`; `curl /api/status` fora do sandbox retornou HTTP 200, `ok: true`, Gemini configurado, `demo_access.required: true`, `motor_local: true` e `prompt_backend: true`.
 - Em 2026-07-09, Chrome headless carregou `http://localhost:3000` e confirmou markup principal da pagina e do modal `demoAccessModal`. Nao foi feita nova geracao Gemini nem novo PDF nesta rodada porque o usuario informou que estes testes ja haviam sido feitos e pediu registro para evitar repeticao.
+- Em 2026-07-10, `npm test` passou com 4 arquivos de teste cobrindo prompt operacional, validacao do evento, restricao do plano e rejeicao de prompt arbitrario; `node --check` passou para `server.js`, `public/js/app.js`, `validate-event.js` e `validate-plan.js`.
+- Em 2026-07-10, o teste local do prompt confirmou ausencia de `motor_logistica` no contrato da IA, ausencia das etiquetas metaforicas no runtime e presenca das secoes operacionais.
+- Em 2026-07-10, a geracao real do novo contrato respondeu HTTP 200, `schema_ok: true`, motor local aplicado, 7 itens de cardapio, 12 compras, 4 locais e 5 momentos no cronograma. A variacao de cronograma foi classificada como qualidade editorial nao bloqueante; `schema_ok` permanece ligado a estrutura e tipos.
+- Em 2026-07-10, a responsividade do resultado foi ajustada em `result.css` e `render.js`: cabecalho, grids, textos longos, servico, orcamento e tabela de utensilios passaram a adaptar o conteudo no mobile. Capturas locais e auditoria DOM em 390x844 e 1440x1000 confirmaram zero elementos fora do viewport e zero overflow horizontal.
+- Em 2026-07-10, o usuario confirmou que enviou a demo controlada para outra pessoa, o app funcionou corretamente e a pessoa avaliou a experiencia de forma positiva. Nenhuma falha foi relatada; nao repetir essa passagem sem mudanca relacionada ou novo feedback.
+- Em 2026-07-10, o formulario ganhou `criancas` opcional mantendo `pessoas` como total. O backend deriva adultos, aplica fator infantil de 60% ao consumo, restringe alcool aos adultos e mantem equipe, espaco e servico de mesa pelo total. `npm test` passou com 5 arquivos, incluindo regressao de evento antigo e evento misto.
+- Em 2026-07-10, pais, estado, cidade e data do evento entraram no contrato. Custos fixos sem referencia foram removidos do motor e do prompt; o backend descarta orcamento da IA e a tela/PDF mostram `A cotar` sem fonte e data-base. Uma captura dirigida confirmou que historicos antigos tambem nao reapresentam totais sem rastreabilidade.
 
 Ainda falta registrar ou validar depois da proxima rodada:
 
 - Evidencia do acabamento visual do PDF em navegador aberto pelo usuario, se esse teste ja foi feito.
-- Evidencia da validacao visual do modal demo em navegador aberto pelo usuario, se esse teste ja foi feito.
-- Responsividade em desktop e mobile.
 - Exportacao PDF apos ajustes visuais, se houver.
 
 ## Proxima atualizacao curta
 
-Objetivo: deixar o app pronto para teste externo controlado sem repetir testes ja feitos.
+Objetivo recomendado: validar o modelo financeiro com poucos dados reais antes de criar banco.
 
-1. Consultar a Janela de Previa e a Porta de Passagem da demo controlada em `docs/README.md`.
-2. Consultar este Registro de testes e validacoes antes de rodar nova bateria.
-3. Registrar evidencias dos testes manuais ja feitos pelo usuario: modal, geracao real, historico e PDF.
-4. Seguir `docs/FLUXOS_DE_PROCESSO.md`, Fluxo 6 - Demo controlada externa.
-5. Se nao houver falha aberta, preparar link temporario protegido por `DEMO_ACCESS_KEY`.
+1. Escolher uma cidade piloto.
+2. Coletar um catalogo pequeno com item, unidade, moeda, fonte, data-base e validade.
+3. Comparar um evento calculado com uma cotacao real.
+4. So depois decidir importacao CSV/JSON e regras de atualizacao por inflacao.
 
 Nao fazer nesta atualizacao:
 
 - Separar pitch do `index.html`.
-- Evoluir motor com adultos/criancas.
 - Migrar SDK Gemini.
 - Criar login, banco, pagamento ou SaaS.
-- Abrir tunel para amigo antes de consultar o registro e confirmar que nao ha falha aberta em geracao ou PDF.
+- Reabrir prompt ou interface sem mudanca de contrato necessaria.
 
 ## Possibilidades de melhoria dentro do plano
 
@@ -149,13 +157,9 @@ Nao fazer nesta atualizacao:
 ## Cuidados para a proxima rodada
 
 - `.env` nao deve ser commitado.
-- `docs/` foi reduzido para evitar duplicacao; o estado atual valido esta em `README.md`, `docs/ROADMAP_ATUAL.md`, `CLEANUP_AUDIT.md` e neste handoff.
+- Este handoff e a unica leitura obrigatoria de retomada; codigo e testes continuam sendo a fonte do comportamento real.
 - `docs/planoCompletoChefia.md` e `docs/PLANO_CONTINUACAO.md` foram recuperados como referencias historicas/plano mestre. Antes de executar qualquer item antigo, conferir se ele ainda bate com o roadmap atual.
-- `docs/FLUXOS_DE_PROCESSO.md` deve ser atualizado quando mudar fluxo principal, geracao, acesso demo, PDF ou atualizacao documental.
-- `docs/MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md` deve ser atualizado quando mudarem fluxo, requisitos, gargalos, stakeholders ou decisoes de processo.
-- `docs/ANALISE_REQUISITOS_ATORES_CASOS_USO.md` deve ser atualizado quando mudarem atores, casos de uso, campos, validacoes ou comportamento do usuario.
-- `docs/DIAGRAMAS_COMPLEMENTARES_ANALISE_TECNICA.md` deve ser atualizado quando mudarem privacidade/dados, viabilidade, sequencia, atividade, mapeamento, fluxo logico ou complementaridade tecnica.
-- `docs/PADROES_QUALIDADE_PRIORIZACAO.md` deve ser atualizado quando mudarem padroes de interface, normas internas, oportunidades, pontos fortes, ajustes iterativos ou criterio de prioridade.
+- Atualizar documento especializado somente quando a mudanca alterar diretamente seu fluxo, requisito, regra ou decisao.
 - `legacy/simple-current/` deve permanecer como referencia visual por enquanto.
 - `public/js/prompt.js` foi removido de proposito.
 - `public/css/style.css` esta pequeno porque agora importa os modulos em `public/css/modules/`.
