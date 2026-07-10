@@ -7,6 +7,8 @@ const { montarPromptPlanejamento } = require('./src/prompts/event.prompt');
 const { calcularMotorEvento, aplicarMotorAoPlano } = require('./src/services/planning/motor.service');
 
 const app = express();
+const demoAccessKey = process.env.DEMO_ACCESS_KEY;
+
 app.use(express.json());
 
 // Serve os arquivos estáticos da pasta public/
@@ -16,6 +18,9 @@ app.get('/api/status', (req, res) => {
     res.json({
         ok: true,
         ai: getGeminiStatus(),
+        demo_access: {
+            required: Boolean(demoAccessKey)
+        },
         planning: {
             motor_local: true,
             prompt_backend: true
@@ -25,6 +30,13 @@ app.get('/api/status', (req, res) => {
 
 app.post('/gerar-cardapio', async (req, res) => {
     try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({
+                ok: false,
+                error: "Senha de teste inválida ou ausente."
+            });
+        }
+
         console.log('📨 Requisição recebida:', JSON.stringify(req.body).substring(0, 200));
         
         const evento = req.body.evento;

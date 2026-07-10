@@ -9,6 +9,104 @@
 /* TAG: estado-slideshow */
 let curSlide = 0;
 const slides = document.querySelectorAll('.slide');
+let demoAccessRequired = false;
+let demoAccessMessage = "";
+
+async function inicializarAcessoDemo() {
+    try {
+        const response = await fetch('/api/status');
+        const status = await response.json();
+        demoAccessRequired = Boolean(status.demo_access?.required);
+    } catch (error) {
+        console.warn('Não foi possível verificar acesso demo:', error.message);
+    }
+}
+
+async function obterDemoAccessKey() {
+    if (!demoAccessRequired) return null;
+
+    const key = sessionStorage.getItem('chef_ia_demo_access_key');
+    if (!key) {
+        return solicitarDemoAccessKey();
+    }
+
+    return key.trim();
+}
+
+function solicitarDemoAccessKey() {
+    const modal = document.getElementById('demoAccessModal');
+    const input = document.getElementById('demoAccessInput');
+    const error = document.getElementById('demoAccessError');
+    const submit = document.getElementById('demoAccessSubmit');
+    const cancel = document.getElementById('demoAccessCancel');
+    const close = document.getElementById('demoAccessClose');
+
+    if (!modal || !input || !error || !submit || !cancel || !close) {
+        return Promise.resolve(null);
+    }
+
+    return new Promise(resolve => {
+        const finalizar = valor => {
+            modal.classList.add('hidden');
+            document.body.classList.remove('modal-open');
+            modal.removeEventListener('keydown', handleKeydown);
+            submit.onclick = null;
+            cancel.onclick = null;
+            close.onclick = null;
+            input.oninput = null;
+            resolve(valor);
+        };
+
+        const confirmar = () => {
+            const key = input.value.trim();
+            if (!key) {
+                error.textContent = "Informe a senha temporaria para continuar.";
+                input.focus();
+                return;
+            }
+
+            sessionStorage.setItem('chef_ia_demo_access_key', key);
+            demoAccessMessage = "";
+            finalizar(key);
+        };
+
+        const cancelar = () => finalizar(null);
+
+        function handleKeydown(event) {
+            if (event.key === "Escape") cancelar();
+            if (event.key === "Enter") confirmar();
+        }
+
+        input.value = "";
+        error.textContent = demoAccessMessage;
+        submit.onclick = confirmar;
+        cancel.onclick = cancelar;
+        close.onclick = cancelar;
+        input.oninput = () => {
+            error.textContent = "";
+        };
+
+        document.body.classList.add('modal-open');
+        modal.classList.remove('hidden');
+        modal.addEventListener('keydown', handleKeydown);
+        requestAnimationFrame(() => input.focus());
+    });
+}
+
+function limparDemoAccessKey(message = "") {
+    sessionStorage.removeItem('chef_ia_demo_access_key');
+    demoAccessMessage = message;
+}
+
+function exibirErroResultado(resultadoArea, mensagem) {
+    resultadoArea.classList.remove('hidden');
+    resultadoArea.innerHTML = `
+        <div class="glass-panel error-panel">
+            <p><strong>Não foi possível gerar o planejamento.</strong></p>
+            <p>${escapeHTML(mensagem)}</p>
+        </div>
+    `;
+}
 
 /* TAG: animacao-hero */
 setInterval(() => {
@@ -67,19 +165,6 @@ async function gerarTudo() {
         return;
     }
 
-    // Feedback visual
-    btn.disabled = true;
-    btn.innerText = "⚙️ CALCULANDO LOGISTICA + IA...";
-    document.getElementById('mainHero').classList.add('collapsed');
-    
-    resultadoArea.classList.remove('hidden');
-    resultadoArea.innerHTML = `
-        <div class="glass-panel" style="text-align:center; border-top: 4px solid var(--gold);">
-            <p><strong>O Chef IA está arquitetando seu evento...</strong></p>
-            <p style="font-size:0.8rem; opacity:0.7;">Calculando logística para ${pessoas} convidados (${estilo})</p>
-        </div>
-    `;
-
     const evento = {
         tipo,
         pessoas,
@@ -94,12 +179,40 @@ async function gerarTudo() {
     };
 
     try {
+        const demoAccessKey = await obterDemoAccessKey();
+        if (demoAccessRequired && !demoAccessKey) {
+            exibirErroResultado(resultadoArea, "A demo esta protegida. Informe a senha temporaria para gerar o planejamento.");
+            return;
+        }
+
+        // Feedback visual
+        btn.disabled = true;
+        btn.innerText = "⚙️ CALCULANDO LOGISTICA + IA...";
+        document.getElementById('mainHero').classList.add('collapsed');
+
+        resultadoArea.classList.remove('hidden');
+        resultadoArea.innerHTML = `
+            <div class="glass-panel" style="text-align:center; border-top: 4px solid var(--gold);">
+                <p><strong>O Chef IA está arquitetando seu evento...</strong></p>
+                <p style="font-size:0.8rem; opacity:0.7;">Calculando logística para ${pessoas} convidados (${estilo})</p>
+            </div>
+        `;
+
+        const headers = { "Content-Type": "application/json" };
+        if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
+
         // 2. Chamada ao Servidor (Back-end)
         const response = await fetch("/gerar-cardapio", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({ evento })
         });
+
+        if (response.status === 401) {
+            demoAccessRequired = true;
+            limparDemoAccessKey("Senha temporaria invalida. Confira a senha e tente novamente.");
+            throw new Error("Senha temporária inválida. Tente gerar novamente e informe a senha correta.");
+        }
 
         if (!response.ok) throw new Error("Erro no servidor.");
         const resposta = await response.json();
@@ -117,7 +230,7 @@ async function gerarTudo() {
         }
 
         // 3. Exibição com visual premium e seções completas
-        exibirResultadoLuxo(dadosIA, pessoas);
+        exibirResultadoLuxo(dadosIA, pessoas, evento);
 
         // TAG: integracao-historico | FASE 1
         // Salvar evento + plano no histórico
@@ -128,7 +241,7 @@ async function gerarTudo() {
 
     } catch (error) {
         console.error(error);
-        resultadoArea.innerHTML = `<p style="color:red; text-align:center;">Erro ao conectar com o servidor Node.js. Detalhes: ${error.message}</p>`;
+        exibirErroResultado(resultadoArea, `Detalhes: ${error.message}`);
     } finally {
         btn.disabled = false;
         btn.innerText = "⚙️ CALCULAR + GERAR PLANEJAMENTO COMPLETO";
@@ -206,6 +319,10 @@ function carregarDoHistorico(id) {
     // Scroll para o formulário
     document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
 
+    if (entrada.plano) {
+        exibirResultadoLuxo(entrada.plano, evento.pessoas || '', evento);
+    }
+
     console.log('✅ Planejamento carregado:', id);
 }
 
@@ -242,6 +359,8 @@ function limparHistoricoUI() {
 
 /* TAG: init-historico | Chamar ao carregar página */
 document.addEventListener('DOMContentLoaded', function() {
+    inicializarAcessoDemo();
+
     // Renderizar histórico ao carregar
     setTimeout(() => {
         renderizarHistorico();

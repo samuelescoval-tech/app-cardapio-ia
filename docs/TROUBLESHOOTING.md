@@ -1,5 +1,14 @@
 # 🔧 GUIA DE TROUBLESHOOTING — Chef IA Studio
 
+<!-- CODEX:LER_POR_PROCESSO
+Ler este documento quando houver erro no npm start, navegador, carregamento de arquivos, /api/status ou /gerar-cardapio.
+Depois de corrigir erro real, atualizar o caso correspondente se a solucao nova for reutilizavel.
+-->
+
+<!-- CODEX:MANTER_EM_LINHA
+Se um comando de teste oficial mudar, alinhar tambem HANDOFF_PROXIMA_ATUALIZACAO.md e README.md.
+-->
+
 ## ❌ Servidor não sobe (`npm start`)
 
 ### Erro: `EADDRINUSE: address already in use :::3000`

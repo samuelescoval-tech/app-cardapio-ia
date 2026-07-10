@@ -1,26 +1,35 @@
+const CAMPOS_ARRAY = [
+  "cardapio",
+  "receitas",
+  "lista_compras",
+  "utensilios",
+  "local",
+  "layout",
+  "cronograma",
+  "equipe_obs",
+  "entretenimento",
+  "lembrancinhas"
+];
+
 function validarPlano(data) {
-  if (!data || typeof data !== "object") {
+  if (!ehObjeto(data)) {
     throw new Error("Plano inválido.");
   }
 
-  if (!Array.isArray(data.cardapio)) data.cardapio = [];
-  if (!Array.isArray(data.receitas)) data.receitas = [];
-  if (!Array.isArray(data.lista_compras)) data.lista_compras = [];
-  if (!Array.isArray(data.utensilios)) data.utensilios = [];
-  if (!Array.isArray(data.local)) data.local = [];
-  if (!Array.isArray(data.layout)) data.layout = [];
-  if (!Array.isArray(data.cronograma)) data.cronograma = [];
-  if (!Array.isArray(data.equipe_obs)) data.equipe_obs = [];
-  if (!Array.isArray(data.entretenimento)) data.entretenimento = [];
-  if (!Array.isArray(data.lembrancinhas)) data.lembrancinhas = [];
-  if (!data.motor_logistica || typeof data.motor_logistica !== "object") data.motor_logistica = null;
-  if (!data.servico_mesa || typeof data.servico_mesa !== "object") data.servico_mesa = null;
-  if (!data.decoracao || typeof data.decoracao !== "object") data.decoracao = null;
-  if (!data.checklist || typeof data.checklist !== "object") data.checklist = null;
-  if (!data.orcamento || typeof data.orcamento !== "object") data.orcamento = null;
-  if (typeof data.resumo_chef !== "string") data.resumo_chef = "Resumo indisponível.";
+  const plano = { ...data };
 
-  return data;
+  CAMPOS_ARRAY.forEach(campo => {
+    plano[campo] = normalizarArray(plano[campo]);
+  });
+
+  plano.motor_logistica = ehObjeto(plano.motor_logistica) ? plano.motor_logistica : null;
+  plano.servico_mesa = ehObjeto(plano.servico_mesa) ? plano.servico_mesa : null;
+  plano.decoracao = normalizarDecoracao(plano.decoracao);
+  plano.checklist = normalizarChecklist(plano.checklist);
+  plano.orcamento = normalizarOrcamento(plano.orcamento);
+  plano.resumo_chef = textoSeguro(plano.resumo_chef, "Resumo indisponível.");
+
+  return plano;
 }
 
 function criarFallback(mensagem) {
@@ -42,6 +51,61 @@ function criarFallback(mensagem) {
     servico_mesa: null,
     resumo_chef: mensagem || "A IA não retornou um plano válido desta vez."
   };
+}
+
+function normalizarArray(valor) {
+  if (Array.isArray(valor)) {
+    return valor.filter(item => item !== null && item !== undefined && item !== "");
+  }
+
+  if (typeof valor === "string" && valor.trim()) {
+    return [valor.trim()];
+  }
+
+  return [];
+}
+
+function normalizarDecoracao(valor) {
+  if (!ehObjeto(valor)) return null;
+
+  return {
+    ...valor,
+    temas: normalizarArray(valor.temas),
+    itens: normalizarArray(valor.itens),
+    iluminacao: textoSeguro(valor.iluminacao, "")
+  };
+}
+
+function normalizarChecklist(valor) {
+  if (!ehObjeto(valor)) return null;
+
+  return {
+    ...valor,
+    pre: normalizarArray(valor.pre),
+    durante: normalizarArray(valor.durante),
+    pos: normalizarArray(valor.pos)
+  };
+}
+
+function normalizarOrcamento(valor) {
+  if (!ehObjeto(valor)) return null;
+
+  return {
+    ...valor,
+    economico: ehObjeto(valor.economico) ? valor.economico : {},
+    medio: ehObjeto(valor.medio) ? valor.medio : {},
+    sofisticado: ehObjeto(valor.sofisticado) ? valor.sofisticado : {}
+  };
+}
+
+function textoSeguro(valor, fallback) {
+  if (typeof valor !== "string") return fallback;
+  const texto = valor.trim();
+  return texto || fallback;
+}
+
+function ehObjeto(valor) {
+  return Boolean(valor) && typeof valor === "object" && !Array.isArray(valor);
 }
 
 module.exports = { validarPlano, criarFallback };

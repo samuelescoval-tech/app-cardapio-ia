@@ -21,6 +21,8 @@ function getGeminiStatus() {
 }
 
 async function gerarPlano(prompt) {
+  const inicio = Date.now();
+
   try {
     if (!genAI) {
       throw new Error("GEMINI_API_KEY ou GOOGLE_API_KEY não configurada no .env");
@@ -51,6 +53,7 @@ async function gerarPlano(prompt) {
         plano: criarFallback(extractError.message),
         meta: {
           erro: extractError.message,
+          tempo_ms: Date.now() - inicio,
           schema_ok: false
         }
       };
@@ -64,7 +67,7 @@ async function gerarPlano(prompt) {
       provider: "gemini",
       plano: dados,
       meta: {
-        tempo_ms: Date.now(),
+        tempo_ms: Date.now() - inicio,
         schema_ok: true
       }
     };
@@ -75,7 +78,8 @@ async function gerarPlano(prompt) {
       provider: "gemini",
       plano: criarFallback("Erro ao conectar com o Gemini. Verifique sua chave de API."),
       meta: {
-        erro: error.message
+        erro: error.message,
+        tempo_ms: Date.now() - inicio
       }
     };
   }

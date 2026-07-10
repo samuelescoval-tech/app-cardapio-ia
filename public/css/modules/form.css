@@ -195,6 +195,110 @@
         0 20px 45px rgba(184,134,11,.45);
 }
 
+/* ───────── ACESSO DEMO ───────── */
+
+body.modal-open{
+    overflow:hidden;
+}
+
+.access-modal{
+    position:fixed;
+    inset:0;
+    z-index:100000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(18,18,18,.72);
+    backdrop-filter:blur(10px);
+}
+
+.access-modal-card{
+    position:relative;
+    width:min(100%,460px);
+    background:white;
+    color:var(--black);
+    border-radius:24px;
+    border-top:8px solid var(--gold);
+    box-shadow:0 28px 80px rgba(0,0,0,.35);
+    padding:36px;
+}
+
+.access-modal-card h2{
+    margin:10px 0 12px;
+    font-family:'Playfair Display',serif;
+    font-size:1.9rem;
+    line-height:1.1;
+}
+
+.access-modal-card p{
+    color:#5f5b54;
+    margin-bottom:22px;
+}
+
+.access-modal-close{
+    position:absolute;
+    top:16px;
+    right:16px;
+    width:34px;
+    height:34px;
+    border:none;
+    border-radius:50%;
+    background:#f2f2f2;
+    color:#333;
+    cursor:pointer;
+    font-weight:900;
+}
+
+.access-modal-close:hover{
+    background:#e6e6e6;
+}
+
+.access-modal-error{
+    min-height:20px;
+    margin:8px 0 18px !important;
+    color:#b42318 !important;
+    font-size:.88rem;
+    font-weight:700;
+}
+
+.access-modal-actions{
+    display:flex;
+    gap:12px;
+    justify-content:flex-end;
+}
+
+.access-modal-actions .btn-secondary,
+.access-modal-actions .btn-epic{
+    width:auto;
+    min-width:130px;
+    padding:14px 18px;
+}
+
+.error-panel{
+    border-top-color:#b42318;
+    text-align:center;
+}
+
+.error-panel strong{
+    color:#b42318;
+}
+
+@media (max-width:620px){
+    .access-modal-card{
+        padding:30px 22px 24px;
+    }
+
+    .access-modal-actions{
+        flex-direction:column-reverse;
+    }
+
+    .access-modal-actions .btn-secondary,
+    .access-modal-actions .btn-epic{
+        width:100%;
+    }
+}
+
 /* ───────── RESULTADOS ───────── */
 
 .dish-card{

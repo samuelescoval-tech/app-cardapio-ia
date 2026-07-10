@@ -23,6 +23,25 @@
 </head>
 <body>
 
+    <!-- TAG: acesso-demo-modal | Senha temporaria para teste controlado -->
+    <div class="access-modal hidden" id="demoAccessModal" role="dialog" aria-modal="true" aria-labelledby="demoAccessTitle">
+        <div class="access-modal-card">
+            <button type="button" class="access-modal-close" id="demoAccessClose" aria-label="Fechar">X</button>
+            <span class="flabel">Acesso demo</span>
+            <h2 id="demoAccessTitle">Teste protegido do Chef IA Studio</h2>
+            <p>Informe a senha temporaria para gerar o planejamento. Ela fica salva apenas nesta sessao do navegador.</p>
+
+            <label class="flabel" for="demoAccessInput">Senha temporaria</label>
+            <input type="password" id="demoAccessInput" class="premium-input" autocomplete="current-password" placeholder="Digite a senha de teste">
+            <p class="access-modal-error" id="demoAccessError" role="alert"></p>
+
+            <div class="access-modal-actions">
+                <button type="button" class="btn-secondary" id="demoAccessCancel">Cancelar</button>
+                <button type="button" class="btn-epic" id="demoAccessSubmit">Continuar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- TAG: navegacao-modo | Alterna app e apresentacao -->
     <nav class="mode-nav">
         <button class="nav-btn active" id="btnApp" onclick="switchView('app')">👨‍🍳 GERADOR IA</button>

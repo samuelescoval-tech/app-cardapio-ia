@@ -69,8 +69,9 @@ git status --short
 
 ### Documentation
 - [x] README.md atualizado com stack
-- [x] docs/FASE1_COMPLETA.md criado
-- [x] docs/FASE2_QUICKSTART.md criado
+- [x] docs/README.md atualizado como indice enxuto
+- [x] docs/HANDOFF_PROXIMA_ATUALIZACAO.md atualizado
+- [x] docs/ROADMAP_ATUAL.md atualizado
 - [ ] CONTRIBUIR.md (opcional, para colaboradores)
 - [ ] LICENSE (recomendado: MIT)
 
@@ -153,14 +154,12 @@ git status --short
 git config user.email "seu_email@github.com"
 git config user.name "Seu Nome"
 
-git commit -m "feat: FASE 1 completa - Histórico local com localStorage
+git commit -m "chore: estabiliza Chef IA Studio
 
-- Implementado storage.service.js com 7 funções localStorage
-- Integrado ao app.js com renderização de cards
-- Adicionado UI com grid responsivo e CSS novos
-- Testes validados: save, render, load, delete, clear
-- Documentação: FASE1_COMPLETA.md
-- Próxima: FASE 2 - PDF Export"
+- Backend Express com Gemini e motor local
+- Historico local e exportacao PDF inicial
+- Documentacao enxuta e alinhada
+- README, handoff e roadmap atualizados"
 ```
 
 ### 6️⃣ Setup GitHub (2 min)

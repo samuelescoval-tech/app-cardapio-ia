@@ -1,7 +1,7 @@
 {
   "name": "app-cardapio-ia",
   "version": "1.0.0",
-  "description": "",
+  "description": "Aplicacao web para planejamento de eventos com IA. O sistema combina um motor local de calculos operacionais com o Gemini no backend para gerar cardapio, lista de compras, cronograma, equipe, utensilios, orcamento e resumo do evento.",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -14,5 +14,18 @@
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
-  }
+  },
+  "directories": {
+    "doc": "docs"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samuelescoval-tech/app-cardapio-ia.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/samuelescoval-tech/app-cardapio-ia/issues"
+  },
+  "homepage": "https://github.com/samuelescoval-tech/app-cardapio-ia#readme"
 }

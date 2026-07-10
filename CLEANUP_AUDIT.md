@@ -24,11 +24,43 @@ Arquivos que mais pesavam manutencao antes desta limpeza:
 
 ## Movido para `app-cardapio-ia/docs/`
 
-- `FASE3_COMPLETA.md`
-- `STATUS.md`
-- `PROXIMOS_PASSOS.md`
 - `TROUBLESHOOTING.md`
-- `deep-research-report.md`
+- `HANDOFF_PROXIMA_ATUALIZACAO.md`
+- `ROADMAP_ATUAL.md`
+- `SEGURANCA_GITHUB.md`
+
+## Documentacao redundante removida depois
+
+Em 2026-07-02, `docs/` foi reduzido para evitar arquivos com a mesma funcao ou informacao antiga.
+
+Removidos:
+
+- Guias de fase ja executada: `FASE1_COMPLETA.md`, `FASE2_QUICKSTART.md`, `FASE3_COMPLETA.md`, `QUICK_START_FASE1.md`.
+- Resumos e indices redundantes: `RESUMO_2MIN.md`, `RESUMO_SESSAO_FINAL.md`, `README_CONTINUACAO.md`, `VISAO_GERAL.md`, `STATUS.md`.
+- Checklists/roteiros antigos: `CHECKLIST_PROXIMO_PASSO.md`, `PROXIMOS_PASSOS.md`, `RECOMENDACAO_GITHUB.md`.
+- Pesquisas/planos longos desatualizados: `deep-research-report.md`.
+
+Recuperados como referencia historica depois da limpeza:
+
+- `PLANO_CONTINUACAO.md`: roteiro de fases original.
+- `planoCompletoChefia.md`: plano mestre/diagnostico arquitetural original.
+
+Documentos ativos em `docs/`:
+
+- `README.md`
+- `HANDOFF_PROXIMA_ATUALIZACAO.md`
+- `ROADMAP_ATUAL.md`
+- `FLUXOS_DE_PROCESSO.md`
+- `MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md`
+- `ANALISE_REQUISITOS_ATORES_CASOS_USO.md`
+- `DIAGRAMAS_COMPLEMENTARES_ANALISE_TECNICA.md`
+- `PADROES_QUALIDADE_PRIORIZACAO.md`
+- `TROUBLESHOOTING.md`
+- `SEGURANCA_GITHUB.md`
+
+Referencias recuperadas em `docs/`:
+
+- `PLANO_CONTINUACAO.md`
 - `planoCompletoChefia.md`
 
 ## Limpeza estrutural aplicada
@@ -48,8 +80,8 @@ Arquivos que mais pesavam manutencao antes desta limpeza:
 ## Proxima quebra recomendada
 
 1. Mover a apresentacao para `public/pitch.html` ou `public/js/pitch.js`.
-2. Adicionar historico local (`localStorage`) para eventos recentes.
-3. Criar exportacao PDF mais completa.
+2. Refinar exportacao PDF depois de teste visual no navegador.
+3. Evoluir motor local para adultos/criancas e validacao de entrada.
 4. So depois remover o legado que nao for mais util.
 
 ## CSS quebrado em modulos
