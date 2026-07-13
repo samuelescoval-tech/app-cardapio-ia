@@ -260,6 +260,15 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - Operacao alta, historico, recarga, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas passaram.
 - O proximo passo continua sendo teste com pessoa usuaria; tecnicamente, os baselines corporativo, infantil e casamento estao registrados.
 
+### Evidencia do pre-teste tecnico 4
+
+- O primeiro churrasco revelou que bebidas do cardapio/compras podiam ficar abaixo dos litros oficiais do motor: 18/48 L nao alcoolicos e 30/56 L alcoolicos.
+- Prompt, backend e E2E agora conferem separadamente os litros. O backend nao inventa distribuicao: mantem o plano e registra deficit exato como revisao.
+- O churrasco final passou com 18 pratos, 15 receitas, 30 compras, cobertura 29/29 e zero compras derivadas.
+- A opcao vegetariana ficou em `Prato Principal` e foi ligada a receita de grelha separada. Bebidas fecharam 48/48 L nao alcoolicos e 56/56 L alcoolicos para adultos.
+- Operacao media com churrasqueiro e estacao de grelha, historico, mobile 400/400 e PDF A4 pesquisavel de 7 paginas passaram.
+- Quatro baselines tecnicos estao registrados: corporativo, infantil, casamento e churrasco. Falta atendimento domiciliar antes da consolidacao tecnica.
+
 ## Proxima atualizacao curta
 
 O usuario escolheu teste controlado e pausou o Spoonacular por custo:

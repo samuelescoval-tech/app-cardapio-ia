@@ -269,6 +269,7 @@ Regras:
 | VAL-21 | Contexto avancado e opcional, controlado e retrocompativel. | Ao preencher, validar, salvar e carregar evento. | Horario usa HH:MM; servico, faixa, infraestrutura e prioridade usam opcoes permitidas; defaults mantem projetos antigos; tela e PDF mostram valores especificos. |
 | VAL-22 | Operacao e calculada sem inventar capacidade local. | Depois da validacao do evento. | Nivel possui fatores; equipe muda por formato; fluxo e estacoes respeitam infraestrutura; horario e momentos do perfil formam o cronograma; campos a confirmar geram pendencias. |
 | VAL-23 | Restricoes e bar possuem cobertura semantica minima. | Depois da resposta da IA e antes de exibir o plano. | Resumo nao promete seguranca alimentar nem inventa restricao; almoco/jantar vegetariano possui `Prato Principal`; bar completo possui ao menos duas bebidas alcoolicas e duas nao alcoolicas; falha gera revisao visivel. |
+| VAL-24 | Bebidas cobrem os totais oficiais do motor. | Depois de aplicar o motor ao plano. | Soma em litros do cardapio atinge separadamente bebidas nao alcoolicas e alcoolicas; deficit permanece visivel como revisao e nao e preenchido artificialmente pelo backend. |
 
 ## Casos de uso gerais
 
@@ -311,7 +312,7 @@ Regras:
 | Fluxo principal | Frontend envia evento; backend valida entrada; seleciona diretriz; calcula motor e operacao; monta prompt; chama Gemini; restringe e valida JSON; aplica motor; retorna plano |
 | Fluxo alternativo | Falha da IA ou JSON invalido; backend retorna fallback controlado |
 | Saida | Planejamento normalizado |
-| Validacao | VAL-05, VAL-06, VAL-07, VAL-14, VAL-22, VAL-23 |
+| Validacao | VAL-05, VAL-06, VAL-07, VAL-14, VAL-22, VAL-23, VAL-24 |
 | Status | Implementado |
 
 ### UC-04 - Validar acesso demo

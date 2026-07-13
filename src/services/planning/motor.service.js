@@ -85,13 +85,69 @@ function calcularMotorEvento(evento = {}, diretrizCulinaria = null) {
 }
 
 function aplicarMotorAoPlano(plano, motor) {
-  return {
+  const resultado = {
     ...plano,
     motor_logistica: motor,
     servico_mesa: motor.servico_mesa,
     orcamento: null,
     precificacao: motor.precificacao
   };
+  validarCoberturaBebidas(resultado, motor);
+  return resultado;
+}
+
+function validarCoberturaBebidas(plano, motor) {
+  const relatorio = plano.qualidade_culinaria;
+  if (!relatorio || !Array.isArray(relatorio.avisos) || !Array.isArray(plano.cardapio)) return;
+
+  const bebidas = plano.cardapio.filter(item => /bebida/i.test(item.categoria || ""));
+  const atual = bebidas.reduce((totais, item) => {
+    const litros = litrosDaQuantidade(item.quantidade);
+    if (ehBebidaAlcoolica(item)) totais.alcoolicas += litros;
+    else totais.naoAlcoolicas += litros;
+    return totais;
+  }, { alcoolicas: 0, naoAlcoolicas: 0 });
+  const esperado = {
+    naoAlcoolicas: litrosDoMotor(motor, "Bebidas nao alcoolicas"),
+    alcoolicas: litrosDoMotor(motor, "Bebidas alcoolicas")
+  };
+
+  registrarDeficitBebida(relatorio, "nao alcoolicas", atual.naoAlcoolicas, esperado.naoAlcoolicas);
+  registrarDeficitBebida(relatorio, "alcoolicas", atual.alcoolicas, esperado.alcoolicas);
+}
+
+function registrarDeficitBebida(relatorio, rotulo, atual, esperado) {
+  if (esperado <= 0 || atual + 0.01 >= esperado) return;
+  relatorio.avisos.push(`Bebidas ${rotulo} abaixo da estimativa do motor: ${formatarLitros(atual)}/${formatarLitros(esperado)} L.`);
+  relatorio.status = "revisar";
+}
+
+function litrosDoMotor(motor, item) {
+  return litrosDaQuantidade(motor?.bebidas?.find(entrada => entrada.item === item)?.quantidade);
+}
+
+function litrosDaQuantidade(valor) {
+  const texto = String(valor || "").toLowerCase();
+  const correspondencia = texto.match(/\d+(?:[.,]\d+)?/);
+  if (!correspondencia) return 0;
+  const numero = Number(correspondencia[0].replace(",", "."));
+  if (!Number.isFinite(numero)) return 0;
+  if (/\bml\b/.test(texto)) return numero / 1000;
+  if (/\bl\b|litro/.test(texto.replace(/(\d)l\b/, "$1 l"))) return numero;
+  return 0;
+}
+
+function ehBebidaAlcoolica(item) {
+  const texto = String([item?.nome, item?.descricao].filter(Boolean).join(" "))
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+  if (/sem alcool|nao alcool/.test(texto)) return false;
+  return /cerveja|vinho|espumante|caipirinha|cachaca|gin|vodka|whisky|uisque|drink alcool|coquetel alcool/.test(texto);
+}
+
+function formatarLitros(valor) {
+  return String(Math.round(valor * 10) / 10).replace(".", ",");
 }
 
 function criarEstadoPrecificacao(evento) {

@@ -328,6 +328,8 @@ function validarResultadoCiclo(result, scenario) {
   if (/bar completo/.test(normalizarTextoBusca(scenario.alcool)) && result.bebidasNaoAlcoolicas < 2) {
     erros.push(`bar completo com bebidas nao alcoolicas ${result.bebidasNaoAlcoolicas}/2`);
   }
+  const avisosBebidas = result.avisosDetalhes.filter(aviso => /Bebidas .* abaixo da estimativa do motor/i.test(aviso));
+  if (avisosBebidas.length) erros.push(avisosBebidas.join("; "));
   if (erros.length) throw new Error(`${scenario.id}: ${erros.join("; ")}`);
 }
 

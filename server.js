@@ -70,6 +70,10 @@ async function gerarCardapioHandler(req, res) {
                 motor_local: true,
                 prompt_backend: true,
                 historicos_culinarios_considerados: contextoVariedade.historicos_considerados,
+                qualidade_culinaria: resposta.plano.qualidade_culinaria?.status !== "revisar",
+                qualidade_culinaria_status: resposta.plano.qualidade_culinaria?.status || "nao_avaliado",
+                ajustes_culinarios: resposta.plano.qualidade_culinaria?.ajustes?.length || 0,
+                avisos_culinarios: resposta.plano.qualidade_culinaria?.avisos?.length || 0,
                 variedade_culinaria_status: resposta.plano.variedade_culinaria?.status || "nao_avaliado",
                 repeticoes_culinarias_a_revisar: resposta.plano.variedade_culinaria?.repeticoes_a_revisar?.length || 0
             };

@@ -138,6 +138,19 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Interface e documentos: historico recarregado, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas e 60.401 bytes.
 - Decisao: aprovado como baseline tecnico depois da correcao; teste com pessoa usuaria continua necessario para validar clareza e utilidade real.
 
+### Pre-teste tecnico 4 - E2E de churrasco
+
+- Data: 2026-07-13.
+- Cenario: churrasco para 50 pessoas, sendo 10 criancas, estacoes/ilhas, cozinha limitada, alcool moderado e opcao vegetariana na grelha.
+- Primeira divergencia: o cardapio e as compras cobriam apenas 18/48 L de bebidas nao alcoolicas e 30/56 L de alcoolicas, apesar de o motor exibir os totais oficiais.
+- Correcao: o prompt passou a exigir soma separada dos litros; o backend compara cardapio com o motor e gera revisao com deficit exato; o E2E bloqueia a divergencia.
+- Resultado final: 18 pratos, 15 receitas, 30 compras, cobertura 29/29 e nenhuma compra derivada.
+- Grelha: picanha, frango, linguica e `Prato Principal` vegetariano; a receita vegetal determina preparo separado.
+- Bebidas: 16 L de agua e 32 L de refrigerante totalizam 48 L nao alcoolicos; cerveja totaliza os 56 L alcoolicos estimados somente para adultos.
+- Operacao: complexidade media, 6 frentes de equipe, 4 estacoes incluindo grelha, 6 etapas de fluxo, 9 momentos e nenhuma confirmacao pendente.
+- Interface e documentos: historico recarregado, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas e 59.042 bytes.
+- Decisao: aprovado como quarto baseline tecnico; o proximo cenario e atendimento domiciliar.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

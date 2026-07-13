@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { calcularMotorEvento } = require("../src/services/planning/motor.service");
+const { calcularMotorEvento, aplicarMotorAoPlano } = require("../src/services/planning/motor.service");
 
 const eventoBase = {
   tipo: "Aniversario",
@@ -82,4 +82,53 @@ test("motor transforma o contexto avancado em operacao deterministica", () => {
   assert.equal(motor.operacao.status, "dimensionado");
   assert.equal(motor.operacao.cronograma_operacional[4].hora, "19:30");
   assert.ok(motor.staff.some(item => item.funcao === "Passe e montagem de pratos"));
+});
+
+test("motor sinaliza quando cardapio nao cobre os litros oficiais de bebidas", () => {
+  const motor = calcularMotorEvento({
+    tipo: "Churrasco",
+    pessoas: 50,
+    criancas: 10,
+    duracao: 5,
+    refeicao: "Churrasco",
+    alcool: "Com alcool moderado"
+  });
+  const plano = {
+    cardapio: [
+      { categoria: "Bebida", nome: "Cerveja artesanal", quantidade: "30 L" },
+      { categoria: "Bebida", nome: "Suco natural", quantidade: "10 L" },
+      { categoria: "Bebida", nome: "Agua mineral", quantidade: "8 L" }
+    ],
+    qualidade_culinaria: { status: "aprovado", ajustes: [], avisos: [] }
+  };
+
+  const resultado = aplicarMotorAoPlano(plano, motor);
+
+  assert.equal(resultado.qualidade_culinaria.status, "revisar");
+  assert.match(resultado.qualidade_culinaria.avisos.join(" "), /nao alcoolicas.*18\/48 L/i);
+  assert.match(resultado.qualidade_culinaria.avisos.join(" "), /alcoolicas.*30\/56 L/i);
+});
+
+test("motor aceita distribuicao de bebidas que atinge os totais oficiais", () => {
+  const motor = calcularMotorEvento({
+    tipo: "Churrasco",
+    pessoas: 50,
+    criancas: 10,
+    duracao: 5,
+    refeicao: "Churrasco",
+    alcool: "Com alcool moderado"
+  });
+  const plano = {
+    cardapio: [
+      { categoria: "Bebida", nome: "Cerveja artesanal", quantidade: "56 L" },
+      { categoria: "Bebida", nome: "Suco natural", quantidade: "20 L" },
+      { categoria: "Bebida", nome: "Agua mineral", quantidade: "28 L" }
+    ],
+    qualidade_culinaria: { status: "aprovado", ajustes: [], avisos: [] }
+  };
+
+  const resultado = aplicarMotorAoPlano(plano, motor);
+
+  assert.equal(resultado.qualidade_culinaria.status, "aprovado");
+  assert.deepEqual(resultado.qualidade_culinaria.avisos, []);
 });
