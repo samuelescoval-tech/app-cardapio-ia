@@ -115,13 +115,16 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - Cinco eventos com contexto avancado passaram na interface; uma recarga real preservou os cinco historicos e o mobile ficou sem overflow. Cinco PDFs A4 de 7 a 8 paginas contem operacao e roteiro legiveis.
 - Variedade final infantil confirmou 8 pratos novos, 3 repeticoes essenciais e 2 repeticoes evitaveis sinalizadas. A auditoria normaliza plural sem confundir tecnicas diferentes.
 - Suite final: 11 arquivos de teste aprovados, sintaxe valida e `git diff --check` aprovado.
+- Cinco baselines tecnicos controlados foram consolidados em 2026-07-13: corporativo, infantil, casamento, churrasco e atendimento domiciliar.
+- O atendimento domiciliar confirmou operacao baixa e revelou apenas perda de unidade em bebidas numericas; o backend recupera `L` sem alterar valores, e a repeticao passou com 13 itens, 11 receitas, cobertura 29/29, historico, mobile e PDF A4.
 
 ## Proxima atualizacao curta
 
-1. Preparar e executar 3 a 5 testes controlados conforme `PLANO_TESTES_CONTROLADOS.md`.
-2. Registrar feedback por evento e corrigir somente falhas reproduzidas que afetem geracao, historico, PDF, compras ou operacao.
-3. Manter Spoonacular desativado e fora do ciclo atual; a integracao opcional fica preservada para reavaliacao futura de custo e beneficio.
-4. Nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao dos testes.
+1. Executar o primeiro teste acompanhado com uma pessoa usuaria conforme `PLANO_TESTES_CONTROLADOS.md`.
+2. Registrar feedback e evidencia por evento, separando falha reproduzivel de preferencia editorial.
+3. Corrigir somente falhas que afetem geracao, historico, PDF, compras ou operacao; completar 3 a 5 pessoas antes de nova expansao.
+4. Manter Spoonacular desativado e fora do ciclo atual; a integracao opcional fica preservada para reavaliacao futura de custo e beneficio.
+5. Nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao dos testes com usuarios.
 
 Em 2026-07-13, o usuario informou que a chave Spoonacular exposta foi rotacionada. A auditoria local passou nos 11 arquivos de teste, na sintaxe e em `git diff --check`; depois da revisao de custo, o usuario decidiu pausar a consulta real por ser um servico pago. Isso nao bloqueia os testes controlados do MVP.
 

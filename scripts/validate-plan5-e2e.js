@@ -226,7 +226,18 @@ async function main() {
       process.stdout.write(`[${index + 1}/${scenarios.length}] ${scenario.id}: gerando...\n`);
       const result = await gerarScenario(cdp, scenario);
       if (!result.ok) throw new Error(`${scenario.id}: ${result.error}`);
-      validarResultadoCiclo(result, scenario);
+      try {
+        validarResultadoCiclo(result, scenario);
+      } catch (error) {
+        fs.writeFileSync(summaryPath, JSON.stringify({
+          generated_at: new Date().toISOString(),
+          failure: error.message,
+          scenario: result,
+          downloadDir
+        }, null, 2));
+        process.stdout.write(`DIAGNOSTICO ${summaryPath}\n`);
+        throw error;
+      }
 
       await cdp.evaluate("baixarRelatorioPDF(); true");
       const pdfPath = path.join(downloadDir, result.pdfFile);
@@ -404,6 +415,14 @@ async function gerarScenario(cdp, scenario) {
         principalVegetariano: (plano.cardapio || []).some(item => /prato principal/.test(normalizar(item.categoria)) && /vegetar|vegano/.test(normalizar([item.nome, item.descricao].join(' ')))),
         bebidasAlcoolicas: bebidas.filter(ehAlcoolica).length,
         bebidasNaoAlcoolicas: bebidas.filter(item => !ehAlcoolica(item)).length,
+        bebidasDetalhes: bebidas.map(item => ({
+          nome: item.nome || '',
+          quantidade: item.quantidade || '',
+          alcoolica: ehAlcoolica(item)
+        })),
+        comprasBebidasDetalhes: (plano.lista_compras || [])
+          .filter(item => /bebida/.test(normalizar([item.setor, item.natureza].join(' '))))
+          .map(item => ({ item: item.item || '', quantidade: item.quantidade || '' })),
         variedade: plano.variedade_culinaria?.status || 'sem_historico',
         historicosConsiderados: plano.variedade_culinaria?.historicos_considerados || 0,
         pratosNovos: plano.variedade_culinaria?.pratos_novos || 0,

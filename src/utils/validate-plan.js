@@ -194,6 +194,10 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
   );
   plano.cardapio.forEach((prato, indice) => {
     const rotulo = prato.nome || `item ${indice + 1}`;
+    if (/^bebida$/i.test(prato.categoria) && quantidadeSomenteNumerica(prato.quantidade)) {
+      prato.quantidade = `${prato.quantidade} L`;
+      registrarAjuste(relatorio, `Unidade em litros recuperada no cardapio: ${rotulo}.`);
+    }
     if (!prato.id || ids.has(prato.id)) {
       throw new Error(`Cardapio com id ausente ou duplicado: ${rotulo}.`);
     }
@@ -289,6 +293,10 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
     if (!["ingrediente", "bebida", "operacional"].includes(compra.natureza.toLowerCase())) {
       compra.natureza = "ingrediente";
       registrarAjuste(relatorio, `Natureza de compra normalizada: ${compra.item}.`);
+    }
+    if ((/^bebida$/i.test(compra.natureza) || /^bebidas$/i.test(compra.setor)) && quantidadeSomenteNumerica(compra.quantidade)) {
+      compra.quantidade = `${compra.quantidade} L`;
+      registrarAjuste(relatorio, `Unidade em litros recuperada na compra: ${compra.item}.`);
     }
     if (!compra.origens.length && compra.natureza.toLowerCase() === "operacional") {
       compra.origens = ["operacao"];
@@ -394,6 +402,10 @@ function chaveCulinaria(valor) {
 
 function quantidadeEhVaga(valor) {
   return /a gosto|a definir|a cotar|conforme (necessario|necessaria)|quanto baste|suficiente/i.test(String(valor || ""));
+}
+
+function quantidadeSomenteNumerica(valor) {
+  return /^\s*\d+(?:[.,]\d+)?\s*$/.test(String(valor || ""));
 }
 
 function criarCompraDerivada(ingrediente, prato) {

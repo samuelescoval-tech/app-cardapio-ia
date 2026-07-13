@@ -18,7 +18,7 @@ Este documento resume o estado real do projeto para continuar a proxima rodada s
 
 ## Estado atual em uma frase
 
-Os Planos 1 a 10 foram concluidos: o ciclo funcional/editorial esta validado de formulario a PDF, e qualquer proxima etapa depende de nova decisao do usuario.
+Os Planos 1 a 10 e os cinco baselines tecnicos foram concluidos; a proxima porta e executar testes acompanhados com pessoas usuarias, sem Spoonacular e sem publicar cada ajuste.
 
 ## O que foi modificado
 
@@ -269,15 +269,26 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - Operacao media com churrasqueiro e estacao de grelha, historico, mobile 400/400 e PDF A4 pesquisavel de 7 paginas passaram.
 - Quatro baselines tecnicos estao registrados: corporativo, infantil, casamento e churrasco. Falta atendimento domiciliar antes da consolidacao tecnica.
 
+### Evidencia do pre-teste tecnico 5
+
+- O atendimento domiciliar para 5 adultos reproduziu perda de unidade: cardapio e compras continham `1` e `1,4`, mas sem `L`, fazendo a verificacao do motor registrar zero litro.
+- O validador agora recupera somente a unidade ausente em quantidades numericas de itens explicitamente classificados como Bebida, sem alterar os valores; o prompt reforca `L` ou `ml` e a regressao cobre o contrato.
+- O E2E passou a persistir diagnostico detalhado em `/tmp` quando uma porta falha, incluindo bebidas do cardapio e da lista de compras.
+- A repeticao final passou com 13 itens, 11 receitas, 34 compras, cobertura 29/29, 1/1 L nao alcoolico e 1,4/1,4 L alcoolico.
+- Seis compras foram derivadas automaticamente; observar a recorrencia nos testes com usuarios antes de mudar novamente o prompt.
+- Operacao baixa, historico, recarga, mobile 400/400 e PDF A4 pesquisavel de 7 paginas passaram.
+- Os cinco baselines tecnicos estao consolidados: corporativo, infantil, casamento, churrasco e atendimento domiciliar. A proxima evidencia necessaria e de uso acompanhado por pessoas reais.
+
 ## Proxima atualizacao curta
 
-O usuario escolheu teste controlado e pausou o Spoonacular por custo:
+O usuario escolheu teste controlado, pausou o Spoonacular por custo e concluiu os cinco baselines tecnicos:
 
-1. Iniciar 3 a 5 testes de evento conforme `PLANO_TESTES_CONTROLADOS.md`.
-2. Registrar feedback por evento e separar falha tecnica de preferencia editorial.
-3. Corrigir somente falhas observadas, sem ampliar escopo por antecipacao.
-4. Consolidar os resultados antes de decidir expansao culinaria ou produto comercial.
-5. Manter Spoonacular no backlog ate existir decisao explicita sobre custo e beneficio.
+1. Selecionar a primeira pessoa testadora e um evento realista.
+2. Acompanhar uma geracao principal pela interface usando a ficha de `PLANO_TESTES_CONTROLADOS.md`.
+3. Registrar notas, evidencia e gravidade sem expor chaves ou dados pessoais desnecessarios.
+4. Corrigir somente falhas reproduzidas; preferencias isoladas permanecem em observacao.
+5. Repetir ate completar 3 a 5 pessoas e somente entao consolidar a decisao seguinte.
+6. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
 
 Nao fazer nesta atualizacao:
 

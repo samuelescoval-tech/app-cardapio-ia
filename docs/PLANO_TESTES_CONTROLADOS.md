@@ -151,6 +151,20 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Interface e documentos: historico recarregado, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas e 59.042 bytes.
 - Decisao: aprovado como quarto baseline tecnico; o proximo cenario e atendimento domiciliar.
 
+### Pre-teste tecnico 5 - E2E de atendimento domiciliar
+
+- Data: 2026-07-13.
+- Cenario: brunch elegante para 5 adultos, buffet self-service, cozinha completa no local, conforto como prioridade e alcool moderado.
+- Falha reproduzida: a IA retornou os valores corretos de bebidas, `1` e `1,4`, mas sem a unidade; por isso, o motor interpretou ambos como zero litro.
+- Correcao: quantidades puramente numericas de itens e compras classificados como Bebida recebem apenas a unidade `L`, sem alterar ou inventar o valor; o prompt passou a proibir numero isolado nesses campos.
+- Diagnostico: o E2E agora grava o resultado detalhado em `/tmp` quando uma porta de validacao falha.
+- Resultado final: 13 itens, 11 receitas completas, 34 compras e cobertura de 29/29 ingredientes.
+- Compras: 6 itens foram derivados do cardapio; a cobertura ficou completa e o volume deve ser observado nos testes com usuarios, sem nova alteracao antecipada.
+- Bebidas: 1 L de suco e 1,4 L de espumante cobrem exatamente os totais oficiais do motor.
+- Operacao: complexidade baixa, 4 frentes de equipe, 6 etapas de fluxo, 3 estacoes, 10 momentos e nenhuma confirmacao pendente.
+- Interface e documentos: historico recarregado com campos avancados, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas e 57.169 bytes.
+- Decisao: aprovado como quinto baseline tecnico; os cinco perfis representativos estao prontos para o inicio dos testes acompanhados com pessoas usuarias.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

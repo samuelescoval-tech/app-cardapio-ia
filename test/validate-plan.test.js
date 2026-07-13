@@ -304,6 +304,32 @@ test("aceita bebida pronta sem lista artificial de ingredientes", () => {
   assert.equal(plano.qualidade_culinaria.avisos.some(aviso => /Ingredientes ausentes/.test(aviso)), false);
 });
 
+test("recupera litros quando bebida e compra chegam com quantidade numerica", () => {
+  const entrada = planoValido();
+  entrada.cardapio[0] = {
+    ...entrada.cardapio[0],
+    nome: "Espumante Brut",
+    categoria: "Bebida",
+    tipo_execucao: "pronto",
+    quantidade: "1.4",
+    ingredientes: []
+  };
+  entrada.receitas = entrada.receitas.filter(receita => receita.cardapio_id !== "prato-1");
+  entrada.lista_compras[0] = {
+    item: "Espumante Brut",
+    quantidade: "1.4",
+    setor: "Bebidas",
+    natureza: "bebida",
+    origens: ["prato-1"]
+  };
+
+  const plano = validarPlano(entrada);
+
+  assert.equal(plano.cardapio[0].quantidade, "1.4 L");
+  assert.equal(plano.lista_compras[0].quantidade, "1.4 L");
+  assert.match(plano.qualidade_culinaria.ajustes.join(" "), /Unidade em litros recuperada/);
+});
+
 test("avisa sobre receita ausente sem descartar o evento", () => {
   const entrada = planoValido();
   entrada.receitas = entrada.receitas.filter(receita => receita.cardapio_id !== "prato-2");
