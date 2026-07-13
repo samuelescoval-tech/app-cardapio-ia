@@ -51,6 +51,7 @@ function validarPlano(data, contexto = {}) {
   if (resumo.ajuste) {
     registrarAjuste(plano.qualidade_culinaria, resumo.ajuste);
   }
+  validarRequisitosDoEvento(plano, contexto.evento, plano.qualidade_culinaria);
 
   return plano;
 }
@@ -509,12 +510,11 @@ function normalizarResumoChef(valor, evento) {
   const original = textoSeguro(valor, "Resumo indisponível.");
   if (!ehObjeto(evento)) return { texto: original, ajuste: null };
 
-  const resumoNormalizado = chaveCulinaria(original);
+  const resumoNormalizado = normalizarTextoBusca(original);
   const restricoes = textoSeguro(evento.restricoes, "Nenhuma");
-  const restricoesNormalizadas = chaveCulinaria(restricoes);
+  const restricoesNormalizadas = normalizarTextoBusca(restricoes);
   const possuiRestricao = restricoesNormalizadas && !/^(nenhuma|nao informado|nao informada)$/.test(restricoesNormalizadas);
-  const promessaAbsoluta = /atende rigorosamente|cumpre rigorosamente|garant|assegur/.test(resumoNormalizado)
-    && /restri|alergen|gluten|lactose|celiac|contamin/.test(resumoNormalizado);
+  const promessaAbsoluta = temPromessaAlimentarAbsoluta(resumoNormalizado);
   const restricaoInventada = [
     /gluten|celiac/,
     /lactose/,
@@ -536,6 +536,57 @@ function normalizarResumoChef(valor, evento) {
   }
 
   return { texto: original, ajuste: null };
+}
+
+function temPromessaAlimentarAbsoluta(texto) {
+  return String(texto || "")
+    .split(/[.!?]+/)
+    .some(frase => /atende rigorosamente|cumpre rigorosamente|garant|assegur/.test(frase)
+      && /restri|alergen|gluten|lactose|celiac|contamin/.test(frase));
+}
+
+function validarRequisitosDoEvento(plano, evento, relatorio) {
+  if (!ehObjeto(evento)) return;
+
+  const restricoes = normalizarTextoBusca(evento.restricoes);
+  const refeicao = normalizarTextoBusca(evento.refeicao);
+  const alcool = normalizarTextoBusca(evento.alcool);
+  const itens = plano.cardapio.map(item => ({
+    categoria: normalizarTextoBusca(item.categoria),
+    texto: normalizarTextoBusca([item.nome, item.descricao].filter(Boolean).join(" "))
+  }));
+
+  const exigePrincipalVegetariano = /vegetar|vegano/.test(restricoes) && /almoco|jantar/.test(refeicao);
+  const possuiPrincipalVegetariano = itens.some(item => /prato principal/.test(item.categoria) && /vegetar|vegano/.test(item.texto));
+  if (exigePrincipalVegetariano && !possuiPrincipalVegetariano) {
+    registrarAviso(relatorio, "Restricao vegetariana ou vegana sem opcao identificada em Prato Principal.");
+  }
+
+  const bebidas = itens.filter(item => /bebida/.test(item.categoria));
+  const alcoolicas = bebidas.filter(item => ehBebidaAlcoolica(item.texto));
+  const naoAlcoolicas = bebidas.filter(item => !ehBebidaAlcoolica(item.texto));
+  if (/bar completo/.test(alcool) && alcoolicas.length < 2) {
+    registrarAviso(relatorio, `Bar completo abaixo do minimo de bebidas alcoolicas: ${alcoolicas.length}/2.`);
+  } else if (!/sem alcool|nao alcool/.test(alcool) && /alcool|bar/.test(alcool) && !alcoolicas.length) {
+    registrarAviso(relatorio, "Evento com alcool sem bebida alcoolica identificada no cardapio.");
+  }
+
+  if (/bar completo/.test(alcool) && naoAlcoolicas.length < 2) {
+    registrarAviso(relatorio, `Bar completo abaixo do minimo de bebidas nao alcoolicas: ${naoAlcoolicas.length}/2.`);
+  }
+}
+
+function ehBebidaAlcoolica(texto) {
+  const normalizado = normalizarTextoBusca(texto);
+  if (/sem alcool|nao alcool/.test(normalizado)) return false;
+  return /cerveja|vinho|espumante|caipirinha|cachaca|gin|vodka|whisky|uisque|drink alcool|coquetel alcool/.test(normalizado);
+}
+
+function normalizarTextoBusca(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
 
 function construirResumoSeguro(evento, restricoes) {

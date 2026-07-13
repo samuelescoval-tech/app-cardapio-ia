@@ -250,6 +250,16 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - Operacao media, historico, recarga dos campos avancados, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas passaram.
 - Nenhuma mudanca de codigo foi necessaria. O proximo baseline tecnico recomendado e casamento; teste com usuario real continua sendo a porta de validacao do produto.
 
+### Evidencia do pre-teste tecnico 3
+
+- O primeiro casamento utilizavel mostrou duas lacunas semanticas: opcao vegetariana apenas na Entrada e bar completo com uma unica bebida alcoolica.
+- Prompt, backend e E2E agora exigem `Prato Principal` vegetariano/vegano em almoco ou jantar e bar completo com duas bebidas alcoolicas e duas nao alcoolicas.
+- A matriz aumenta deterministicamente o minimo de `Bebida` para 4 quando houver bar completo; no casamento, o total minimo passou de 14 para 15.
+- A regra textual deixou de confundir promessa sobre a experiencia do evento com garantia alimentar; promessa e restricao precisam estar na mesma frase para bloquear o resumo.
+- O casamento final passou com 15 pratos, 12 receitas, 37 compras, cobertura 37/37, zero compras derivadas, prato principal vegetariano e bar 2+2.
+- Operacao alta, historico, recarga, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas passaram.
+- O proximo passo continua sendo teste com pessoa usuaria; tecnicamente, os baselines corporativo, infantil e casamento estao registrados.
+
 ## Proxima atualizacao curta
 
 O usuario escolheu teste controlado e pausou o Spoonacular por custo:

@@ -28,6 +28,18 @@ test("perfil-base do evento nao e substituido por refeicao ou tema", () => {
   assert.ok(diretriz.elementos_esperados.includes("duas bases de prato principal"));
 });
 
+test("bar completo amplia a composicao minima de bebidas", () => {
+  const diretriz = obterDiretrizCulinaria({
+    tipo: "Casamento",
+    refeicao: "Almoco ou jantar",
+    alcool: "Com bar completo"
+  });
+  const bebidas = diretriz.composicao_minima.find(item => item.category === "Bebida");
+
+  assert.equal(bebidas.minimum, 4);
+  assert.equal(diretriz.quantidade_total_minima, 15);
+});
+
 test("atendimento domiciliar recebe perfil proprio e modificador de brunch", () => {
   const diretriz = obterDiretrizCulinaria({
     tipo: "Atendimento domiciliar",

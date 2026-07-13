@@ -148,6 +148,49 @@ test("adiciona cuidado profissional quando o resumo restrito e coerente", () => 
   assert.match(plano.qualidade_culinaria.ajustes.join(" "), /Aviso de seguranca alimentar/i);
 });
 
+test("nao confunde garantia do evento com garantia alimentar em outra frase", () => {
+  const entrada = planoValido();
+  entrada.resumo_chef = "A operacao busca garantir um evento memoravel. Restricoes alimentares exigem conferencia profissional e cuidado com contaminacao cruzada.";
+
+  const plano = validarPlano(entrada, {
+    evento: { restricoes: "Opcao vegetariana" }
+  });
+
+  assert.equal(plano.resumo_chef, entrada.resumo_chef);
+  assert.equal(plano.qualidade_culinaria.ajustes.some(ajuste => /Resumo do Chef substituido/.test(ajuste)), false);
+});
+
+test("avisa quando jantar vegetariano nao possui prato principal compativel", () => {
+  const entrada = planoValido();
+
+  const plano = validarPlano(entrada, {
+    evento: {
+      restricoes: "Uma opcao vegetariana",
+      refeicao: "Almoco ou jantar",
+      alcool: "Sem alcool"
+    }
+  });
+
+  assert.match(plano.qualidade_culinaria.avisos.join(" "), /sem opcao identificada em Prato Principal/i);
+});
+
+test("avisa quando bar completo nao possui variedade minima", () => {
+  const entrada = planoValido();
+  entrada.cardapio[0].categoria = "Bebida";
+  entrada.cardapio[0].nome = "Caipirinha tropical";
+
+  const plano = validarPlano(entrada, {
+    evento: {
+      restricoes: "Nenhuma",
+      refeicao: "Almoco ou jantar",
+      alcool: "Com bar completo"
+    }
+  });
+
+  assert.match(plano.qualidade_culinaria.avisos.join(" "), /bebidas alcoolicas: 1\/2/i);
+  assert.match(plano.qualidade_culinaria.avisos.join(" "), /bebidas nao alcoolicas: 0\/2/i);
+});
+
 test("recupera ingredientes do prato a partir da receita sem inventar conteudo", () => {
   const entrada = planoValido();
   const ingredientesReceita = entrada.receitas[0].ingredientes.map(item => ({ ...item }));

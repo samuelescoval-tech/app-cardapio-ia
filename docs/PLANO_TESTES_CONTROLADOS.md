@@ -123,6 +123,21 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Decisao: aprovado como baseline tecnico; nenhuma correcao adicional de codigo.
 - Proxima porta tecnica: validar o cenario de casamento, que acrescenta escala, bar completo, publico misto e opcao vegetariana.
 
+### Pre-teste tecnico 3 - E2E de casamento
+
+- Data: 2026-07-13.
+- Cenario: casamento para 100 pessoas, sendo 15 criancas, servico empratado, cozinha de apoio limitada, opcao vegetariana e bar completo.
+- Falhas encontradas na primeira amostra utilizavel: a opcao vegetariana estava apenas na Entrada e o bar tinha uma unica bebida alcoolica.
+- Correcao de contrato: almoco ou jantar com restricao vegetariana exige identificacao em `Prato Principal`; bar completo exige duas bebidas alcoolicas e duas nao alcoolicas.
+- Correcao da matriz: o minimo de `Bebida` sobe de 3 para 4 quando houver bar completo; no casamento, o total minimo sobe de 14 para 15 itens.
+- Correcao de teste: promessa sobre a experiencia do evento e permitida; promessa alimentar absoluta continua bloqueada quando estiver na mesma frase de restricao ou alergenico.
+- Resultado final: 15 pratos, 12 receitas, 37 compras e cobertura de 37/37 ingredientes, sem compra derivada.
+- Inclusao: um `Prato Principal` vegetariano identificado.
+- Bar: duas bebidas alcoolicas e duas nao alcoolicas; estimativa de alcool continua restrita aos 85 adultos.
+- Operacao: complexidade alta, 5 frentes de equipe, 6 etapas de fluxo, 3 estacoes, 10 momentos e nenhuma confirmacao pendente.
+- Interface e documentos: historico recarregado, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas e 60.401 bytes.
+- Decisao: aprovado como baseline tecnico depois da correcao; teste com pessoa usuaria continua necessario para validar clareza e utilidade real.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

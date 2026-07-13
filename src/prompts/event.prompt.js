@@ -110,7 +110,8 @@ CONTRATO DA RESPOSTA
 ORIENTACOES DE CONTEUDO
 - Entregue no minimo ${diretriz.quantidade_total_minima} itens no cardapio e cumpra o minimo de cada categoria da DIRETRIZ CULINARIA LOCAL. Essa composicao substitui qualquer faixa fixa.
 - Antes de responder, conte os itens do cardapio por categoria e compare um a um com composicao_minima. Se alguma categoria estiver abaixo do minimo, complete essa categoria antes de gerar receitas e compras.
-- Quando o evento pedir alcool ou bar, inclua ao menos uma bebida alcoolica coerente na categoria Bebida, alem das opcoes nao alcoolicas; consumo e quantidade de alcool continuam restritos aos adultos conforme DADOS OPERACIONAIS.
+- Quando o evento pedir alcool moderado, inclua ao menos uma bebida alcoolica coerente na categoria Bebida. Quando pedir bar completo, a composicao minima ja exige pelo menos quatro Bebidas: inclua ao menos duas alcoolicas distintas e ao menos duas nao alcoolicas. O total minimo e piso, nao limite maximo; consumo e quantidade de alcool continuam restritos aos adultos conforme DADOS OPERACIONAIS.
+- Quando almoco ou jantar pedir opcao vegetariana ou vegana, inclua ao menos um item identificado como vegetariano ou vegano na categoria Prato Principal. Entrada, salada ou acompanhamento isolado nao substitui o prato principal.
 - Cada item do cardapio deve ter id unico, quantidade final e ingredientes atomicos com quantidade e unidade. Nao agrupe "sal, azeite e pimenta" em um ingrediente.
 - Nenhum item de preparo ou montagem pode ter ingredientes vazio. Para alimento comprado pronto, informe o proprio produto e a quantidade como ingrediente; bebida pronta pode permanecer sem ficha de ingredientes.
 - Classifique tipo_execucao como preparo quando houver cocao ou tecnica culinaria, montagem quando houver combinacao/finalizacao e pronto somente para produto realmente pronto para servir.

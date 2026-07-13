@@ -310,7 +310,7 @@ function validarResultadoCiclo(result, scenario) {
   if (result.desktopOverflow) erros.push("overflow horizontal no desktop");
   if (result.recipeCards !== result.receitas) erros.push(`cards de receita ${result.recipeCards}/${result.receitas}`);
   if (result.shoppingItems !== result.compras) erros.push(`itens de compra ${result.shoppingItems}/${result.compras}`);
-  if (/atende rigorosamente|cumpre rigorosamente|garant|assegur/.test(resumo) && /restri|alergen|gluten|lactose|celiac|contamin/.test(resumo)) {
+  if (temPromessaAlimentarAbsoluta(resumo)) {
     erros.push("resumo contem promessa alimentar absoluta");
   }
   if (/gluten|celiac/.test(resumo) && !/gluten|celiac/.test(restricoes)) {
@@ -318,6 +318,15 @@ function validarResultadoCiclo(result, scenario) {
   }
   if (!/^(nenhuma|nao informado|nao informada)$/.test(restricoes) && !/contaminacao cruzada|conferencia profissional/.test(resumo)) {
     erros.push("resumo restrito sem cuidado profissional");
+  }
+  if (/vegetar|vegano/.test(restricoes) && /almoco|jantar/.test(normalizarTextoBusca(scenario.refeicao)) && !result.principalVegetariano) {
+    erros.push("restricao vegetariana sem Prato Principal identificado");
+  }
+  if (/bar completo/.test(normalizarTextoBusca(scenario.alcool)) && result.bebidasAlcoolicas < 2) {
+    erros.push(`bar completo com bebidas alcoolicas ${result.bebidasAlcoolicas}/2`);
+  }
+  if (/bar completo/.test(normalizarTextoBusca(scenario.alcool)) && result.bebidasNaoAlcoolicas < 2) {
+    erros.push(`bar completo com bebidas nao alcoolicas ${result.bebidasNaoAlcoolicas}/2`);
   }
   if (erros.length) throw new Error(`${scenario.id}: ${erros.join("; ")}`);
 }
@@ -327,6 +336,13 @@ function normalizarTextoBusca(valor) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+function temPromessaAlimentarAbsoluta(texto) {
+  return String(texto || "")
+    .split(/[.!?]+/)
+    .some(frase => /atende rigorosamente|cumpre rigorosamente|garant|assegur/.test(frase)
+      && /restri|alergen|gluten|lactose|celiac|contamin/.test(frase));
 }
 
 async function gerarScenario(cdp, scenario) {
@@ -363,6 +379,13 @@ async function gerarScenario(cdp, scenario) {
       const secoes = Array.from(document.querySelectorAll('#resultadoArea h3')).map(el => el.textContent.trim());
       const operacao = plano.motor_logistica?.operacao || null;
       const slug = slugPDF(plano.motor_logistica?.premissas?.tipo || s.tipo);
+      const normalizar = valor => String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      const ehAlcoolica = item => {
+        const texto = normalizar([item.nome, item.descricao].filter(Boolean).join(' '));
+        if (/sem alcool|nao alcool/.test(texto)) return false;
+        return /cerveja|vinho|espumante|caipirinha|cachaca|gin|vodka|whisky|uisque|drink alcool|coquetel alcool/.test(texto);
+      };
+      const bebidas = (plano.cardapio || []).filter(item => /bebida/.test(normalizar(item.categoria)));
       return {
         ok: true,
         id: s.id,
@@ -376,6 +399,9 @@ async function gerarScenario(cdp, scenario) {
         ajustesDetalhes: plano.qualidade_culinaria?.ajustes || [],
         coberturaCulinaria: plano.qualidade_culinaria?.cobertura || {},
         resumoChef: plano.resumo_chef || '',
+        principalVegetariano: (plano.cardapio || []).some(item => /prato principal/.test(normalizar(item.categoria)) && /vegetar|vegano/.test(normalizar([item.nome, item.descricao].join(' ')))),
+        bebidasAlcoolicas: bebidas.filter(ehAlcoolica).length,
+        bebidasNaoAlcoolicas: bebidas.filter(item => !ehAlcoolica(item)).length,
         variedade: plano.variedade_culinaria?.status || 'sem_historico',
         historicosConsiderados: plano.variedade_culinaria?.historicos_considerados || 0,
         pratosNovos: plano.variedade_culinaria?.pratos_novos || 0,

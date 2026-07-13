@@ -11,7 +11,7 @@ function obterDiretrizCulinaria(evento = {}) {
   const contextoRefeicao = normalizar(evento.refeicao);
   const contextoTema = normalizar(evento.tema);
   const contextoCompleto = normalizar([
-    evento.tipo, evento.refeicao, evento.tema, evento.restricoes, evento.estilo, evento.obs
+    evento.tipo, evento.refeicao, evento.tema, evento.restricoes, evento.estilo, evento.alcool, evento.obs
   ].filter(Boolean).join(" "));
 
   const perfil = matriz.profiles.find(item =>
@@ -26,6 +26,7 @@ function obterDiretrizCulinaria(evento = {}) {
     item.match.some(termo => contextoTema.includes(normalizar(termo)))
   );
   const contextoOperacional = construirContextoOperacional(evento);
+  const composicaoMinima = ajustarComposicaoAoEvento(perfil.composition, evento);
 
   return {
     matriz_version: matriz.version,
@@ -51,8 +52,8 @@ function obterDiretrizCulinaria(evento = {}) {
       evitar: tema.avoid
     } : null,
     contexto_operacional: contextoOperacional,
-    quantidade_total_minima: perfil.composition.reduce((total, item) => total + item.minimum, 0),
-    composicao_minima: perfil.composition,
+    quantidade_total_minima: composicaoMinima.reduce((total, item) => total + item.minimum, 0),
+    composicao_minima: composicaoMinima,
     orientacoes: [
       ...matriz.principles,
       ...perfil.guidance,
@@ -62,6 +63,16 @@ function obterDiretrizCulinaria(evento = {}) {
     ],
     fontes: selecionarFontes(contextoCompleto)
   };
+}
+
+function ajustarComposicaoAoEvento(composicao, evento) {
+  const barCompleto = normalizar(evento.alcool).includes("bar completo");
+  return composicao.map(item => ({
+    ...item,
+    minimum: barCompleto && normalizar(item.category) === "bebida"
+      ? Math.max(item.minimum, 4)
+      : item.minimum
+  }));
 }
 
 function construirContextoOperacional(evento) {
