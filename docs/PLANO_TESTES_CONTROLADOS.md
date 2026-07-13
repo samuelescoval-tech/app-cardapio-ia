@@ -109,6 +109,20 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Ponto a observar: 22 compras foram recuperadas automaticamente. A cobertura final ficou completa, mas o volume de recuperacao deve ser comparado com os proximos testes antes de alterar o prompt.
 - Proxima porta: primeiro teste com uma pessoa usuaria e preenchimento da ficha de feedback.
 
+### Pre-teste tecnico 2 - E2E infantil com restricao
+
+- Data: 2026-07-13.
+- Cenario: festa infantil para 30 pessoas, sendo 20 criancas, com orientacao de evitar amendoim.
+- Resultado: 13 pratos, 11 receitas, 30 compras e cobertura de 30/30 ingredientes.
+- Compras: nenhuma compra precisou ser derivada automaticamente nesta amostra.
+- Alergenicos: amendoim nao apareceu no cardapio, receitas ou compras; o resumo orienta conferencia profissional de rotulos, preparo e contaminacao cruzada.
+- Operacao: complexidade media, 3 frentes de equipe, 6 etapas de fluxo, 3 estacoes, 9 momentos e nenhuma confirmacao pendente.
+- Interface e historico: 16 secoes renderizadas, um projeto salvo e recarregado com todos os campos avancados.
+- Mobile: viewport e largura do documento em 400 px, sem overflow horizontal.
+- PDF: A4, 7 paginas, 57.334 bytes, texto pesquisavel e restricao visivel.
+- Decisao: aprovado como baseline tecnico; nenhuma correcao adicional de codigo.
+- Proxima porta tecnica: validar o cenario de casamento, que acrescenta escala, bar completo, publico misto e opcao vegetariana.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

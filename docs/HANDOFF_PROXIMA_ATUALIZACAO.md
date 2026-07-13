@@ -242,6 +242,14 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - A repeticao com o codigo atual passou: 13 pratos, 11 receitas, 29 compras, 30/30 ingredientes cobertos, operacao media, historico recarregado, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas.
 - A IA omitiu 22 compras na ultima amostra; o backend recuperou todas sem aviso. Monitorar o volume nos proximos testes antes de mudar o prompt.
 
+### Evidencia do pre-teste tecnico 2
+
+- O E2E infantil com 30 pessoas, 20 criancas e orientacao de evitar amendoim passou com 13 pratos, 11 receitas, 30 compras e cobertura 30/30.
+- Nenhuma compra precisou ser derivada. Amendoim nao apareceu no cardapio, receitas ou lista de compras.
+- O resumo seguro preservou a restricao informada e exibiu conferencia profissional de rotulos, preparo e contaminacao cruzada.
+- Operacao media, historico, recarga dos campos avancados, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas passaram.
+- Nenhuma mudanca de codigo foi necessaria. O proximo baseline tecnico recomendado e casamento; teste com usuario real continua sendo a porta de validacao do produto.
+
 ## Proxima atualizacao curta
 
 O usuario escolheu teste controlado e pausou o Spoonacular por custo:
