@@ -226,6 +226,13 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - **Planejado:** executar 3 a 5 testes com usuarios conforme `PLANO_TESTES_CONTROLADOS.md` e corrigir somente falhas reproduzidas.
 - **Nao alterado:** motor deterministico, contrato culinario, prompt Gemini, autenticacao, precificacao, banco, pagamentos e deploy.
 
+### Evidencia do pre-teste tecnico 0
+
+- `/api/status` confirmou Gemini configurado, senha demo obrigatoria, motor local e operacao deterministica ativos; Spoonacular permaneceu desativado.
+- Uma unica geracao corporativa de baseline respondeu `ok: true`, com 13 itens, 23/23 ingredientes cobertos e 7 receitas completas.
+- O status culinario ficou `revisar` por faltar ficha para `Frutas da estacao fatiadas`, item de montagem. O aviso foi considerado valido e nao motivou mudanca de codigo.
+- Interface, historico, operacao renderizada e PDF continuam reservados ao primeiro teste controlado com usuario.
+
 ## Proxima atualizacao curta
 
 O usuario escolheu teste controlado e pausou o Spoonacular por custo:

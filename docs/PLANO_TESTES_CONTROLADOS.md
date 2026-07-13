@@ -79,6 +79,21 @@ Corrigir no ciclo somente quando a falha for reproduzivel e afetar um destes pon
 
 Preferencias editoriais isoladas, novas categorias e expansoes de repertorio entram no backlog ate aparecer um padrao entre os testes.
 
+## Execucoes registradas
+
+### Pre-teste tecnico 0 - evento corporativo
+
+- Data: 2026-07-13.
+- Objetivo: confirmar o baseline antes de envolver usuarios reais.
+- Ambiente: Gemini configurado, acesso demo ativo, motor local e operacao deterministica declarados no status; Spoonacular desativado.
+- Cenario: evento corporativo para 40 adultos, coffee break, opcao vegana e sem lactose, tema profissional contemporaneo.
+- Resultado: geracao concluida com 13 itens e cobertura de 23/23 ingredientes.
+- Receitas: 7 cobertas e completas; 8 itens classificados com preparo ou montagem.
+- Revisao: ficha ausente para `Frutas da estacao fatiadas`, classificada como montagem.
+- Decisao: nao alterar o validador; manter o aviso e observar se o mesmo problema aparece em testes de usuario.
+- Limite da evidencia: este pre-teste de API nao aprovou interface, historico, operacao renderizada ou PDF.
+- Proxima porta: executar o primeiro teste real pela interface usando a ficha de feedback deste documento.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.
