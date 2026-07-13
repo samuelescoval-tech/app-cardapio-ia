@@ -89,18 +89,6 @@
                     <input type="date" id="dataEvento" class="premium-input">
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">País</label>
-                    <input type="text" id="pais" class="premium-input" maxlength="60" value="Brasil">
-                </div>
-                <div class="fgroup">
-                    <label class="flabel">Estado</label>
-                    <input type="text" id="estado" class="premium-input" maxlength="80" placeholder="Ex: São Paulo">
-                </div>
-                <div class="fgroup">
-                    <label class="flabel">Cidade</label>
-                    <input type="text" id="cidade" class="premium-input" maxlength="120" placeholder="Ex: Campinas">
-                </div>
-                <div class="fgroup">
                     <label class="flabel">Tipo de Refeição</label>
                     <select id="refeicao" class="premium-input">
                         <option value="Coquetel / Finger food">Coquetel / Finger food</option>
@@ -120,10 +108,6 @@
                     <input type="text" id="tema" class="premium-input" maxlength="120" placeholder="Ex: Tropical, Botânico, Anos 80...">
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Orçamento Desejado</label>
-                    <input type="text" id="orcamentoBase" class="premium-input" maxlength="80" placeholder="Ex: R$ 2.500 ou econômico">
-                </div>
-                <div class="fgroup">
                     <label class="flabel">Bebidas</label>
                     <select id="alcool" class="premium-input">
                         <option value="Sem álcool">Sem álcool</option>
@@ -140,6 +124,79 @@
                     </div>
                 </div>
             </div>
+
+            <details class="advanced-options" id="advancedEventOptions">
+                <summary>
+                    <span>⚙️ Opções avançadas do evento</span>
+                    <small>Horário, serviço, público, infraestrutura, prioridade e localização</small>
+                </summary>
+                <div class="form-grid advanced-grid">
+                    <div class="fgroup">
+                        <label class="flabel" for="horarioInicio">Horário de início</label>
+                        <input type="time" id="horarioInicio" class="premium-input">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="formatoServico">Formato do serviço</label>
+                        <select id="formatoServico" class="premium-input">
+                            <option value="A definir pelo Chef IA">A definir pelo Chef IA</option>
+                            <option value="Buffet self-service">Buffet self-service</option>
+                            <option value="Buffet com equipe servindo">Buffet com equipe servindo</option>
+                            <option value="Empratado">Empratado</option>
+                            <option value="Coquetel circulante">Coquetel circulante</option>
+                            <option value="Estacoes ou ilhas">Estações ou ilhas</option>
+                            <option value="Compartilhado a mesa">Compartilhado à mesa</option>
+                        </select>
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="faixaEtaria">Faixa etária predominante</label>
+                        <select id="faixaEtaria" class="premium-input">
+                            <option value="Publico misto">Público misto</option>
+                            <option value="Predominantemente adultos">Predominantemente adultos</option>
+                            <option value="Predominantemente infantil">Predominantemente infantil</option>
+                            <option value="Adolescentes e jovens">Adolescentes e jovens</option>
+                            <option value="Adultos e idosos">Adultos e idosos</option>
+                        </select>
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="infraestrutura">Infraestrutura disponível</label>
+                        <select id="infraestrutura" class="premium-input">
+                            <option value="A confirmar">A confirmar</option>
+                            <option value="Cozinha completa no local">Cozinha completa no local</option>
+                            <option value="Cozinha de apoio limitada">Cozinha de apoio limitada</option>
+                            <option value="Sem cozinha no local">Sem cozinha no local</option>
+                            <option value="Producao externa com finalizacao">Produção externa com finalização</option>
+                        </select>
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="prioridade">Prioridade do planejamento</label>
+                        <select id="prioridade" class="premium-input">
+                            <option value="Equilibrio geral">Equilíbrio geral</option>
+                            <option value="Variedade culinaria">Variedade culinária</option>
+                            <option value="Praticidade de servico">Praticidade de serviço</option>
+                            <option value="Apresentacao">Apresentação</option>
+                            <option value="Conforto dos convidados">Conforto dos convidados</option>
+                            <option value="Economia operacional">Economia operacional</option>
+                        </select>
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="pais">País</label>
+                        <input type="text" id="pais" class="premium-input" maxlength="60" value="Brasil">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="estado">Estado</label>
+                        <input type="text" id="estado" class="premium-input" maxlength="80" placeholder="Ex: São Paulo">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="cidade">Cidade</label>
+                        <input type="text" id="cidade" class="premium-input" maxlength="120" placeholder="Ex: Campinas">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="orcamentoBase">Orçamento desejado</label>
+                        <input type="text" id="orcamentoBase" class="premium-input" maxlength="80" placeholder="Ex: R$ 2.500 ou econômico">
+                    </div>
+                </div>
+                <p class="advanced-note">Se não souber algum detalhe, mantenha a opção padrão. O Chef IA registrará a premissa sem inventar infraestrutura.</p>
+            </details>
 
             <!-- TAG: observacoes-ia | Contexto livre para o prompt -->
             <div class="chat-box">
@@ -494,7 +551,7 @@
 
     <!-- 5. RODAPÉ -->
     <footer class="footer">
-        <p>© 2024 Chef IA Studio. Todos os direitos reservados.</p>
+        <p>© 2026 Chef IA Studio. Todos os direitos reservados.</p>
         <div class="social-links">
             <a href="#" title="Instagram">📸</a>
             <a href="#" title="Facebook">📘</a>

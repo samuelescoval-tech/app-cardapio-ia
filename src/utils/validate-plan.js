@@ -7,6 +7,7 @@ const CAMPOS_ARRAY_TEXTO = [
 
 const CAMPOS_OBRIGATORIOS = [
   "cardapio",
+  "receitas",
   "lista_compras",
   "cronograma",
   "decoracao",
@@ -14,7 +15,7 @@ const CAMPOS_OBRIGATORIOS = [
   "resumo_chef"
 ];
 
-function validarPlano(data) {
+function validarPlano(data, contexto = {}) {
   if (!ehObjeto(data)) {
     throw new Error("Plano inválido.");
   }
@@ -45,6 +46,8 @@ function validarPlano(data) {
   plano.orcamento = null;
   plano.resumo_chef = textoSeguro(data.resumo_chef, "Resumo indisponível.");
 
+  plano.qualidade_culinaria = validarCoerenciaCulinaria(plano, contexto.diretrizCulinaria);
+
   return plano;
 }
 
@@ -66,6 +69,19 @@ function criarFallback(mensagem) {
     precificacao: null,
     motor_logistica: null,
     servico_mesa: null,
+    qualidade_culinaria: {
+      status: "falha",
+      ajustes: [],
+      avisos: [mensagem || "A IA não retornou um plano válido desta vez."],
+      cobertura: {
+        ingredientes_total: 0,
+        ingredientes_cobertos: 0,
+        compras_derivadas: 0,
+        pratos_com_preparo: 0,
+        receitas_cobertas: 0,
+        receitas_completas: 0
+      }
+    },
     resumo_chef: mensagem || "A IA não retornou um plano válido desta vez."
   };
 }
@@ -91,24 +107,39 @@ function normalizarObjetos(valor, normalizador) {
 
 function normalizarCardapio(valor) {
   if (!ehObjeto(valor)) return null;
+  const categoria = textoSeguro(valor.categoria, "");
   return {
+    id: textoSeguro(valor.id, ""),
     nome: textoSeguro(valor.nome, ""),
-    categoria: textoSeguro(valor.categoria, ""),
+    categoria,
+    tipo_execucao: normalizarTipoExecucao(valor.tipo_execucao, categoria),
     descricao: textoSeguro(valor.descricao, ""),
     emoji: textoSeguro(valor.emoji, ""),
     quantidade: textoSeguro(valor.quantidade, ""),
-    ingredientes: normalizarArrayTexto(valor.ingredientes)
+    ingredientes: normalizarObjetos(valor.ingredientes, normalizarIngrediente)
   };
 }
 
 function normalizarReceita(valor) {
   if (!ehObjeto(valor)) return null;
+  const preparoPassos = normalizarArrayTexto(valor.preparo_passos);
+  const preparoLegado = textoSeguro(valor.preparo, "");
   return {
+    cardapio_id: textoSeguro(valor.cardapio_id, ""),
     nome: textoSeguro(valor.nome, ""),
-    preparo: textoSeguro(valor.preparo, ""),
+    ingredientes: normalizarObjetos(valor.ingredientes, normalizarIngrediente),
+    preparo_passos: preparoPassos.length ? preparoPassos : preparoLegado ? [preparoLegado] : [],
+    preparo: preparoLegado || preparoPassos.join(" "),
     tempo: textoSeguro(valor.tempo, ""),
-    rendimento: textoSeguro(valor.rendimento, "")
+    rendimento: textoSeguro(valor.rendimento, ""),
+    quantidade_total: textoSeguro(valor.quantidade_total, "")
   };
+}
+
+function normalizarTipoExecucao(valor, categoria) {
+  const tipo = textoSeguro(valor, "").toLowerCase();
+  if (["preparo", "montagem", "pronto"].includes(tipo)) return tipo;
+  return /^bebida$/i.test(categoria) ? "pronto" : "preparo";
 }
 
 function normalizarCompra(valor) {
@@ -117,8 +148,308 @@ function normalizarCompra(valor) {
     item: textoSeguro(valor.item, ""),
     quantidade: textoSeguro(valor.quantidade, ""),
     setor: textoSeguro(valor.setor, "Outros"),
+    natureza: textoSeguro(valor.natureza, "ingrediente"),
+    origens: normalizarArrayTexto(valor.origens),
     prioridade: textoSeguro(valor.prioridade, "media")
   };
+}
+
+function normalizarIngrediente(valor) {
+  if (!ehObjeto(valor)) return null;
+  return {
+    item: textoSeguro(valor.item, ""),
+    quantidade: textoSeguro(valor.quantidade, ""),
+    unidade: textoSeguro(valor.unidade, "")
+  };
+}
+
+function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
+  if (!plano.cardapio.length) {
+    throw new Error("Plano sem itens de cardapio.");
+  }
+
+  const relatorio = {
+    status: "aprovado",
+    ajustes: [],
+    avisos: [],
+    cobertura: {
+      ingredientes_total: 0,
+      ingredientes_cobertos: 0,
+      compras_derivadas: 0,
+      pratos_com_preparo: 0,
+      receitas_cobertas: 0,
+      receitas_completas: 0
+    }
+  };
+  const ids = new Set();
+  const receitasInformadasPorPrato = new Map(
+    plano.receitas
+      .filter(receita => receita.cardapio_id)
+      .map(receita => [receita.cardapio_id, receita])
+  );
+  plano.cardapio.forEach((prato, indice) => {
+    const rotulo = prato.nome || `item ${indice + 1}`;
+    if (!prato.id || ids.has(prato.id)) {
+      throw new Error(`Cardapio com id ausente ou duplicado: ${rotulo}.`);
+    }
+    ids.add(prato.id);
+
+    if (!prato.nome || !prato.categoria) {
+      throw new Error(`Cardapio sem nome ou categoria: ${rotulo}.`);
+    }
+    if (!prato.quantidade) {
+      registrarAviso(relatorio, `Quantidade final ausente no prato ${rotulo}.`);
+    }
+    const prontoSemIngredientes = prato.tipo_execucao === "pronto" && /^bebida$/i.test(prato.categoria);
+    if (!prato.ingredientes.length && !prontoSemIngredientes) {
+      const receitaInformada = receitasInformadasPorPrato.get(prato.id);
+      if (receitaInformada?.ingredientes?.length) {
+        prato.ingredientes = receitaInformada.ingredientes.map(ingrediente => ({ ...ingrediente }));
+        registrarAjuste(relatorio, `Ingredientes do prato recuperados da receita: ${rotulo}.`);
+      } else {
+        registrarAviso(relatorio, `Ingredientes ausentes no prato ${rotulo}.`);
+      }
+    }
+    if (prato.tipo_execucao !== "pronto") {
+      relatorio.cobertura.pratos_com_preparo += 1;
+    } else if (!/^bebida$/i.test(prato.categoria) && prato.ingredientes.length > 1) {
+      registrarAviso(relatorio, `Revisar classificacao como pronto: ${rotulo}.`);
+    }
+
+    prato.ingredientes.forEach(ingrediente => {
+      if (!ingrediente.item || !ingrediente.quantidade || !ingrediente.unidade) {
+        registrarAviso(relatorio, `Ingrediente incompleto no prato ${rotulo}: ${ingrediente.item || "sem nome"}.`);
+      } else if (quantidadeEhVaga(ingrediente.quantidade)) {
+        registrarAviso(relatorio, `Ingrediente sem quantidade verificavel no prato ${rotulo}: ${ingrediente.item}.`);
+      }
+    });
+  });
+
+  const pratosPorId = new Map(plano.cardapio.map(prato => [prato.id, prato]));
+  const receitasPorPrato = new Map();
+  plano.receitas = plano.receitas.filter(receita => {
+    if (!receita.cardapio_id || !ids.has(receita.cardapio_id)) {
+      registrarAviso(relatorio, `Receita sem prato valido foi separada para revisao: ${receita.nome || "sem nome"}.`);
+      return false;
+    }
+    const prato = pratosPorId.get(receita.cardapio_id);
+    if (!receita.nome) {
+      receita.nome = prato.nome;
+      registrarAjuste(relatorio, `Nome da receita recuperado: ${prato.nome}.`);
+    }
+    if (!receita.ingredientes.length && prato.ingredientes.length) {
+      receita.ingredientes = prato.ingredientes.map(ingrediente => ({ ...ingrediente }));
+      registrarAjuste(relatorio, `Ingredientes da receita recuperados do prato: ${prato.nome}.`);
+    }
+    if (!receita.quantidade_total && prato.quantidade) {
+      receita.quantidade_total = prato.quantidade;
+      registrarAjuste(relatorio, `Quantidade total da receita recuperada: ${prato.nome}.`);
+    }
+    if (!receita.preparo_passos.length || !receita.tempo || !receita.rendimento) {
+      registrarAviso(relatorio, `Receita incompleta para ${receita.cardapio_id}.`);
+    } else {
+      relatorio.cobertura.receitas_completas += 1;
+    }
+    receitasPorPrato.set(receita.cardapio_id, receita);
+    return true;
+  });
+
+  plano.cardapio.forEach(prato => {
+    if (prato.tipo_execucao === "pronto") return;
+    if (receitasPorPrato.has(prato.id)) {
+      relatorio.cobertura.receitas_cobertas += 1;
+    } else {
+      registrarAviso(relatorio, `Receita ausente para ${prato.nome}.`);
+    }
+  });
+
+  const compras = new Map();
+  plano.lista_compras.forEach(compra => {
+    const chave = chaveCulinaria(compra.item);
+    if (!chave) {
+      registrarAviso(relatorio, "Compra sem nome foi separada para revisao.");
+      return;
+    }
+    if (compras.has(chave)) {
+      const existente = compras.get(chave);
+      existente.origens = unirOrigens(existente.origens, compra.origens);
+      if (quantidadeEhVaga(existente.quantidade) && !quantidadeEhVaga(compra.quantidade)) {
+        existente.quantidade = compra.quantidade;
+      }
+      registrarAjuste(relatorio, `Compra duplicada consolidada: ${compra.item}.`);
+      return;
+    }
+
+    compra.origens = compra.origens.filter(origem => origem === "operacao" || ids.has(origem));
+    if (!["ingrediente", "bebida", "operacional"].includes(compra.natureza.toLowerCase())) {
+      compra.natureza = "ingrediente";
+      registrarAjuste(relatorio, `Natureza de compra normalizada: ${compra.item}.`);
+    }
+    if (!compra.origens.length && compra.natureza.toLowerCase() === "operacional") {
+      compra.origens = ["operacao"];
+      registrarAjuste(relatorio, `Origem operacional adicionada: ${compra.item}.`);
+    }
+    compras.set(chave, compra);
+  });
+
+  plano.cardapio.forEach(prato => {
+    prato.ingredientes.forEach(ingrediente => {
+      if (!ingrediente.item) return;
+      relatorio.cobertura.ingredientes_total += 1;
+      const chave = chaveCulinaria(ingrediente.item);
+      let compra = compras.get(chave);
+
+      if (!compra) {
+        compra = criarCompraDerivada(ingrediente, prato);
+        compras.set(chave, compra);
+        relatorio.cobertura.compras_derivadas += 1;
+        registrarAjuste(relatorio, `Compra derivada do cardapio: ${ingrediente.item}.`);
+      } else {
+        if (!compra.origens.includes(prato.id)) {
+          compra.origens.push(prato.id);
+          registrarAjuste(relatorio, `Origem adicionada em ${compra.item}: ${prato.id}.`);
+        }
+        if (compra.derivada_do_cardapio) {
+          compra.quantidade = somarQuantidadeDerivada(compra.quantidade, ingrediente);
+        } else if ((!compra.quantidade || quantidadeEhVaga(compra.quantidade)) && ingrediente.quantidade) {
+          compra.quantidade = formatarQuantidadeIngrediente(ingrediente);
+          registrarAjuste(relatorio, `Quantidade recuperada do cardapio: ${compra.item}.`);
+        }
+      }
+      relatorio.cobertura.ingredientes_cobertos += 1;
+    });
+  });
+  plano.lista_compras = Array.from(compras.values());
+  plano.lista_compras.forEach(compra => {
+    if (!compra.quantidade || quantidadeEhVaga(compra.quantidade)) {
+      registrarAviso(relatorio, `Compra sem quantidade verificavel: ${compra.item}.`);
+    }
+  });
+
+  if (diretrizCulinaria) {
+    const totalMinimo = Number(diretrizCulinaria.quantidade_total_minima) || 0;
+    if (plano.cardapio.length < totalMinimo) {
+      registrarAviso(relatorio, `Cardapio abaixo da composicao minima: ${plano.cardapio.length}/${totalMinimo} itens.`);
+    }
+
+    const faltas = (diretrizCulinaria.composicao_minima || []).flatMap(regra => {
+      const atual = plano.cardapio.filter(prato => chaveCulinaria(prato.categoria) === chaveCulinaria(regra.category)).length;
+      return atual < regra.minimum ? [`${regra.category} ${atual}/${regra.minimum}`] : [];
+    });
+    if (faltas.length) {
+      registrarAviso(relatorio, `Cardapio sem cobertura de categorias: ${faltas.join(", ")}.`);
+    }
+  }
+
+  validarCompletudeEvento(plano, relatorio);
+
+  return relatorio;
+}
+
+function validarCompletudeEvento(plano, relatorio) {
+  const secoes = [
+    ["utensilios", plano.utensilios, 1],
+    ["local", plano.local, 4],
+    ["layout", plano.layout, 2],
+    ["cronograma", plano.cronograma, 4],
+    ["equipe_obs", plano.equipe_obs, 3],
+    ["entretenimento", plano.entretenimento, 3],
+    ["lembrancinhas", plano.lembrancinhas, 3]
+  ];
+  secoes.forEach(([nome, conteudo, minimo]) => {
+    const quantidade = Array.isArray(conteudo) ? conteudo.length : 0;
+    if (quantidade < minimo) {
+      registrarAviso(relatorio, `Secao do evento abaixo do minimo: ${nome} ${quantidade}/${minimo}.`);
+    }
+  });
+  const temas = plano.decoracao?.temas?.length || 0;
+  const itensDecoracao = plano.decoracao?.itens?.length || 0;
+  if (temas < 2 || itensDecoracao < 4 || !plano.decoracao?.iluminacao) {
+    registrarAviso(relatorio, `Decoracao abaixo do minimo: ${temas}/2 temas e ${itensDecoracao}/4 itens.`);
+  }
+  const pre = plano.checklist?.pre?.length || 0;
+  const durante = plano.checklist?.durante?.length || 0;
+  const pos = plano.checklist?.pos?.length || 0;
+  if (pre < 4 || durante < 3 || pos < 2) {
+    registrarAviso(relatorio, `Checklist abaixo do minimo: pre ${pre}/4, durante ${durante}/3, pos ${pos}/2.`);
+  }
+}
+
+function chaveCulinaria(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(" ")
+    .map(palavra => palavra.length > 3 && palavra.endsWith("s") ? palavra.slice(0, -1) : palavra)
+    .join(" ")
+    .trim();
+}
+
+function quantidadeEhVaga(valor) {
+  return /a gosto|a definir|a cotar|conforme (necessario|necessaria)|quanto baste|suficiente/i.test(String(valor || ""));
+}
+
+function criarCompraDerivada(ingrediente, prato) {
+  return {
+    item: ingrediente.item,
+    quantidade: formatarQuantidadeIngrediente(ingrediente),
+    setor: inferirSetor(ingrediente.item),
+    natureza: /^bebida$/i.test(prato.categoria) ? "bebida" : "ingrediente",
+    origens: [prato.id],
+    prioridade: "media",
+    derivada_do_cardapio: true
+  };
+}
+
+function formatarQuantidadeIngrediente(ingrediente) {
+  const quantidade = textoSeguro(ingrediente.quantidade, "Revisar");
+  const unidade = textoSeguro(ingrediente.unidade, "");
+  if (!unidade || chaveCulinaria(quantidade).endsWith(chaveCulinaria(unidade))) return quantidade;
+  return `${quantidade} ${unidade}`;
+}
+
+function somarQuantidadeDerivada(atual, ingrediente) {
+  const unidade = textoSeguro(ingrediente.unidade, "");
+  const numeroAtual = extrairNumero(atual);
+  const numeroNovo = extrairNumero(ingrediente.quantidade);
+  if (!unidade || numeroAtual === null || numeroNovo === null || !chaveCulinaria(atual).endsWith(chaveCulinaria(unidade))) {
+    return atual;
+  }
+  const total = Math.round((numeroAtual + numeroNovo) * 100) / 100;
+  return `${String(total).replace(".", ",")} ${unidade}`;
+}
+
+function extrairNumero(valor) {
+  const correspondencia = String(valor || "").match(/\d+(?:[.,]\d+)?/);
+  if (!correspondencia) return null;
+  const numero = Number(correspondencia[0].replace(",", "."));
+  return Number.isFinite(numero) ? numero : null;
+}
+
+function inferirSetor(item) {
+  const chave = chaveCulinaria(item);
+  if (/agua|suco|refrigerante|cerveja|vinho|espumante/.test(chave)) return "Bebidas";
+  if (/carne|frango|peixe|salmao|tilapia|linguica|bacon/.test(chave)) return "Acougue";
+  if (/leite|queijo|manteiga|creme|iogurte|requeijao/.test(chave)) return "Frios";
+  if (/pao|brioche|torrada|massa folhada/.test(chave)) return "Padaria";
+  if (/tomate|cebola|alho|batata|fruta|folha|alface|rucula|legume|limao|morango|amora|erva|coentro|manjericao/.test(chave)) return "Hortifruti";
+  return "Mercearia";
+}
+
+function unirOrigens(primeiras, segundas) {
+  return Array.from(new Set([...(primeiras || []), ...(segundas || [])]));
+}
+
+function registrarAjuste(relatorio, mensagem) {
+  relatorio.ajustes.push(mensagem);
+  if (relatorio.status === "aprovado") relatorio.status = "ajustado";
+}
+
+function registrarAviso(relatorio, mensagem) {
+  relatorio.avisos.push(mensagem);
+  relatorio.status = "revisar";
 }
 
 function normalizarUtensilio(valor) {

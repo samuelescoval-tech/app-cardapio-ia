@@ -1,7 +1,15 @@
 # 📋 Plano de Continuação — Chef IA Studio
 
+<!-- CODEX:ARQUIVO_HISTORICO
+Este documento preserva o plano proposto em 2026-07-02, mas nao representa o estado atual.
+Nao executar suas fases sem confirmar HANDOFF_PROXIMA_ATUALIZACAO.md e ROADMAP_ATUAL.md.
+-->
+
+> **Aviso de atualização — 2026-07-13:** este plano está desatualizado e deve ser usado apenas como referência histórica. Os Planos atuais 1 a 10 foram concluídos; qualquer nova etapa depende de decisão do usuário. O quadro válido está em `ROADMAP_ATUAL.md` e a retomada está em `HANDOFF_PROXIMA_ATUALIZACAO.md`.
+
 **Data:** 2026-07-02  
-**Status:** Fundação 100% funcional, próximas 5 fases mapeadas
+**Status original:** Fundação 100% funcional, próximas 5 fases mapeadas
+**Status atual:** Documento histórico; não usar como roteiro de execução. Etapa viva: 10 de 10 planos concluídos, sem Plano 11 automático.
 
 ---
 
@@ -14,7 +22,7 @@ O Chef IA Studio completou a **Fase de Estabilização** com sucesso:
 - ✅ Motor matemático local operacional
 - ✅ Estrutura modular clara (public/, src/, legacy/, docs/)
 
-**Próximo objetivo:** Evoluir para **Fase de Recursos** implementando 5 features críticas em sequência.
+**Próximo objetivo histórico:** a proposta abaixo foi substituída pelo ciclo atual. Para execução, seguir apenas Planos 9 e 10 registrados no roadmap vivo.
 
 ---
 
@@ -931,11 +939,11 @@ Quando implementar:
 
 ---
 
-**Próximo passo:** Começar FASE 1 (Histórico Local)  
+**Próximo passo original (não executar):** Começar FASE 1 (Histórico Local)
 **Tempo:** 3-4 horas  
 **Impacto:** Alto (retenção de usuários)
 
 ---
 
 *Atualizado em 2026-07-02*  
-*Próxima revisão: Após completar FASE 1*
+*Revisão atual: consultar `HANDOFF_PROXIMA_ATUALIZACAO.md` e `ROADMAP_ATUAL.md`.*

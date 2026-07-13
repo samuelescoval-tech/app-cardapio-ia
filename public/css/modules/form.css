@@ -56,6 +56,72 @@
         0 0 0 5px rgba(212,175,55,.12);
 }
 
+.advanced-options{
+    margin:-6px 0 26px;
+    border:1px solid rgba(180,137,62,.28);
+    border-radius:18px;
+    background:#fffdf8;
+    overflow:hidden;
+}
+
+.advanced-options summary{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:18px;
+    padding:18px 20px;
+    cursor:pointer;
+    color:#3d3428;
+    font-weight:800;
+    list-style:none;
+}
+
+.advanced-options summary::-webkit-details-marker{
+    display:none;
+}
+
+.advanced-options summary::after{
+    content:'+';
+    flex:0 0 auto;
+    color:var(--gold-dark);
+    font-size:1.4rem;
+}
+
+.advanced-options[open] summary::after{
+    content:'−';
+}
+
+.advanced-options summary small{
+    margin-left:auto;
+    color:#817666;
+    font-size:.72rem;
+    font-weight:500;
+}
+
+.advanced-grid{
+    margin:0;
+    padding:4px 20px 20px;
+}
+
+.advanced-note{
+    margin:0 20px 20px;
+    color:#776b5b;
+    font-size:.78rem;
+    line-height:1.5;
+}
+
+@media (max-width:700px){
+    .advanced-options summary{
+        align-items:flex-start;
+        flex-wrap:wrap;
+    }
+
+    .advanced-options summary small{
+        width:calc(100% - 30px);
+        margin-left:0;
+    }
+}
+
 /* ───────── RADIO ───────── */
 
 .style-grid{

@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0",
+  "catalog_id": "br-sp-sao-paulo",
+  "status": "draft",
+  "updated_at": "2026-07-10T22:38:03-03:00",
+  "market": {
+    "country": "Brasil",
+    "state": "SP",
+    "city": "Sao Paulo",
+    "currency": "BRL"
+  },
+  "policy": {
+    "max_age_days": 30,
+    "refresh_mode": "manual",
+    "missing_value_behavior": "quote_required",
+    "display_type": "reference_range"
+  },
+  "sources": [
+    {
+      "id": "ceagesp",
+      "name": "CEAGESP - Cotacoes no atacado",
+      "url": "https://ceagesp.gov.br/cotacoes/",
+      "role": "regional_wholesale",
+      "categories": ["produce"]
+    },
+    {
+      "id": "dieese_conab",
+      "name": "DIEESE/Conab - Cesta basica por cidade",
+      "url": "https://www.dieese.org.br/cesta/",
+      "role": "city_average",
+      "categories": ["grocery", "butcher", "produce"]
+    },
+    {
+      "id": "procon_sp",
+      "name": "Procon-SP - Comparacao de precos",
+      "url": "https://www.procon.sp.gov.br/",
+      "role": "retail_check",
+      "categories": ["grocery", "butcher", "beverage"]
+    },
+    {
+      "id": "ibge_ipca",
+      "name": "IBGE - IPCA",
+      "url": "https://www.ibge.gov.br/estatisticas/economicas/precos-e-custos/9256-indice-nacional-de-precos-ao-consumidor-amplo.html",
+      "role": "inflation_update",
+      "categories": ["inflation"]
+    }
+  ],
+  "items": [
+    {
+      "id": "arroz_branco",
+      "name": "Arroz branco tipo 1",
+      "category": "grocery",
+      "unit": "kg",
+      "status": "missing",
+      "source_hint": ["dieese_conab", "procon_sp"],
+      "reference": null
+    },
+    {
+      "id": "file_frango",
+      "name": "File de frango resfriado",
+      "category": "butcher",
+      "unit": "kg",
+      "status": "missing",
+      "source_hint": ["dieese_conab", "procon_sp"],
+      "reference": null
+    },
+    {
+      "id": "agua_500ml",
+      "name": "Agua mineral sem gas 500 ml",
+      "category": "beverage",
+      "unit": "unit",
+      "status": "missing",
+      "source_hint": ["procon_sp"],
+      "reference": null
+    },
+    {
+      "id": "tomate_pizzadoro_2a",
+      "name": "Tomate Pizzadoro 2A",
+      "category": "produce",
+      "unit": "kg",
+      "status": "reference",
+      "source_hint": ["ceagesp"],
+      "reference": {
+        "source_id": "ceagesp",
+        "date": "2026-07-08",
+        "price_type": "wholesale_average",
+        "value": 3.19,
+        "min": 2.90,
+        "max": 3.53,
+        "evidence": "Tabela LEGUMES: menor 2,90; comum 3,19; maior 3,53 por kg."
+      }
+    },
+    {
+      "id": "batata_lavada_especial",
+      "name": "Batata lavada especial",
+      "category": "produce",
+      "unit": "kg",
+      "status": "reference",
+      "source_hint": ["ceagesp"],
+      "reference": {
+        "source_id": "ceagesp",
+        "date": "2026-07-08",
+        "price_type": "wholesale_average",
+        "value": 4.42,
+        "min": 3.71,
+        "max": 4.93,
+        "evidence": "Tabela DIVERSOS: menor 3,71; comum 4,42; maior 4,93 por kg."
+      }
+    }
+  ]
+}

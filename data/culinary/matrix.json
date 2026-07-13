@@ -1,0 +1,310 @@
+{
+  "version": "2026-07-12-plan6",
+  "status": "event-taxonomy",
+  "principles": [
+    "Preservar a identidade do tipo de evento antes de aplicar tema, refeicao ou estilo.",
+    "Adequar o cardapio ao tipo de servico, duracao, publico, horario, infraestrutura e restricoes.",
+    "Usar comidas tipicas como repertorio orientador, nunca como lista obrigatoria ou receita a copiar.",
+    "Combinar variedade de categorias, tecnicas, texturas e ingredientes dominantes.",
+    "Manter alternativas inclusivas e identificar claramente restricoes alimentares relevantes."
+  ],
+  "sources": [
+    {
+      "name": "Senac SP - Planejamento de Alimentos e Bebidas para Eventos",
+      "url": "https://www.sp.senac.br/cursos-livres/curso-de-planejamento-de-alimentos-e-bebidas-para-eventos",
+      "use": "Tipologia de eventos, tipos de servico e elaboracao do cardapio por publico, duracao, combinacao, infraestrutura e recursos."
+    },
+    {
+      "name": "Ministerio da Saude - Guia para elaboracao de refeicoes saudaveis em eventos",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/guia_elaboracao_refeicoes_saudaveis_eventos.pdf",
+      "use": "Variedade, alimentos in natura e atencao a restricoes alimentares e culturais."
+    },
+    {
+      "name": "Senac SP - Montagem de Mesas de Buffet e Coffee Break",
+      "url": "https://www.sp.senac.br/cursos-livres/curso-de-montagem-de-mesas-de-buffet-e-coffee-break-presencial-ead",
+      "use": "Diferenciacao entre buffet, coffee break, mise en place e fluxo de servico."
+    }
+  ],
+  "profiles": [
+    {
+      "id": "casamento_refeicao",
+      "match": ["casamento", "noivado", "bodas"],
+      "identity": "Celebracao com recepcao, progressao de servico e encerramento festivo; o menu precisa atender perfis diversos sem perder unidade.",
+      "service": "buffet, franco-americano ou empratado",
+      "service_moments": ["recepcao e boas-vindas", "entrada", "refeicao principal", "bolo, doces ou sobremesa", "cafe ou encerramento"],
+      "required_features": ["duas bases de prato principal", "acompanhamentos complementares", "opcao alimentar inclusiva", "bebidas nao alcoolicas durante todo o evento"],
+      "essential_repetitions": ["agua", "bolo de casamento"],
+      "typical_foods": {
+        "Boas-vindas": ["canapes", "bruschettas", "mini porcoes"],
+        "Entrada": ["salada composta", "creme ou sopa conforme o clima", "antepasto"],
+        "Prato Principal": ["ave ou peixe", "carne", "massa, risoto ou preparo vegetal"],
+        "Acompanhamento": ["arroz ou risoto", "legumes", "batatas ou outra guarnicao"],
+        "Sobremesa": ["bolo", "doces de festa", "sobremesa de colher ou empratada"],
+        "Bebida": ["agua", "sucos", "refrigerantes", "espumante ou vinho quando solicitado"]
+      },
+      "optional_features": ["ilha gastronomica", "mesa de antepastos", "ceia ou lanche da madrugada", "bar de coqueteis"],
+      "avoid": ["cardapio formado apenas por petiscos", "duas proteinas com o mesmo molho ou guarnicao", "alcool sem equivalente nao alcoolico"],
+      "composition": [
+        { "category": "Boas-vindas", "minimum": 2 },
+        { "category": "Entrada", "minimum": 2 },
+        { "category": "Prato Principal", "minimum": 2 },
+        { "category": "Acompanhamento", "minimum": 3 },
+        { "category": "Sobremesa", "minimum": 2 },
+        { "category": "Bebida", "minimum": 3 }
+      ],
+      "guidance": ["Equilibrar preparacoes leves e substanciosas.", "Planejar a passagem entre recepcao, refeicao e celebracao."]
+    },
+    {
+      "id": "corporativo_coffee_break",
+      "match": ["corporativo", "empresa", "workshop", "networking", "congresso", "seminario", "treinamento"],
+      "identity": "Evento orientado a reuniao, conteudo ou relacionamento profissional; alimentos devem sustentar a agenda sem interromper circulacao e concentracao.",
+      "service": "coffee break, buffet leve ou finger food",
+      "service_moments": ["recepcao ou welcome coffee", "intervalo principal", "reposicao de bebidas", "encerramento leve quando a duracao exigir"],
+      "required_features": ["itens consumidos com pouco manuseio", "opcoes doces e salgadas", "fruta ou preparacao fresca", "alternativa inclusiva identificada", "bebidas quentes e frias quando compativel com o horario"],
+      "essential_repetitions": ["agua", "cafe"],
+      "typical_foods": {
+        "Entrada": ["mini sanduiches", "paes de queijo", "tortas ou quiches em porcao", "salgados assados"],
+        "Acompanhamento": ["frutas porcionadas", "iogurte ou alternativa vegetal", "castanhas somente sem restricao"],
+        "Sobremesa": ["bolo simples", "biscoitos", "mini doces"],
+        "Bebida": ["cafe", "cha", "agua", "sucos"]
+      },
+      "optional_features": ["welcome coffee", "working lunch", "itens embalados individualmente quando operacionalmente necessario"],
+      "avoid": ["preparacoes com molho que dificultem consumo em pe", "aromas muito intensos em sala fechada", "cardapio predominantemente doce"],
+      "composition": [
+        { "category": "Entrada", "minimum": 4 },
+        { "category": "Acompanhamento", "minimum": 2 },
+        { "category": "Sobremesa", "minimum": 3 },
+        { "category": "Bebida", "minimum": 4 }
+      ],
+      "guidance": ["Priorizar consumo rapido, reposicao simples e servico silencioso.", "Ajustar peso e quantidade a duracao e ao intervalo da agenda."]
+    },
+    {
+      "id": "churrasco",
+      "match": ["churrasco", "churrascaria", "grelhado"],
+      "identity": "Confraternizacao centrada na grelha, com entradas de espera, variedade de proteinas e acompanhamentos brasileiros compartilhados.",
+      "service": "buffet informal com grelha e reposicao continua",
+      "service_moments": ["petiscos enquanto a grelha inicia", "primeira rodada de grelhados", "servico principal com acompanhamentos", "sobremesa e encerramento"],
+      "required_features": ["variedade de proteinas", "opcao vegetal de grelha", "acompanhamentos frescos e quentes", "molhos ou temperos separados", "bebidas e hidratacao continuas"],
+      "essential_repetitions": ["agua", "arroz", "farofa", "vinagrete"],
+      "typical_foods": {
+        "Entrada": ["pao de alho", "queijo coalho", "linguica ou aperitivo de grelha"],
+        "Prato Principal": ["carne bovina", "frango", "suino", "legumes ou espetinho vegetal"],
+        "Acompanhamento": ["arroz", "farofa", "vinagrete", "mandioca", "salada de batata ou maionese"],
+        "Salada": ["folhas", "tomate", "salada fresca sazonal"],
+        "Sobremesa": ["frutas", "pudim", "doce brasileiro"],
+        "Bebida": ["agua", "sucos", "refrigerantes", "cerveja ou caipirinha quando solicitado"]
+      },
+      "optional_features": ["estacao de molhos", "pao e antepastos", "abacaxi grelhado", "aperitivos de boteco"],
+      "avoid": ["somente carnes vermelhas", "todos os acompanhamentos com maionese", "vegetais preparados na mesma superficie sem cuidado quando houver restricao"],
+      "composition": [
+        { "category": "Entrada", "minimum": 2 },
+        { "category": "Prato Principal", "minimum": 4 },
+        { "category": "Acompanhamento", "minimum": 5 },
+        { "category": "Salada", "minimum": 2 },
+        { "category": "Sobremesa", "minimum": 2 },
+        { "category": "Bebida", "minimum": 3 }
+      ],
+      "guidance": ["Variar cortes, tecnicas e proteinas sem inflar o numero de pratos.", "Sincronizar entradas e acompanhamentos com a producao continua da grelha."]
+    },
+    {
+      "id": "infantil_aniversario",
+      "match": ["infantil", "crianca", "kids"],
+      "identity": "Festa de curta ou media duracao com porcoes menores, alimentos reconheciveis, servico seguro e momentos ligados ao parabens.",
+      "service": "buffet informal com porcoes pequenas",
+      "service_moments": ["recepcao e lanches", "salgados ou refeicao curta", "parabens, bolo e doces", "hidratacao durante toda a festa"],
+      "required_features": ["porcoes adequadas a criancas", "opcoes de facil consumo", "fruta ou preparacao fresca", "agua e bebida sem alcool", "alergenicos claramente sinalizados"],
+      "essential_repetitions": ["agua", "bolo de aniversario"],
+      "typical_foods": {
+        "Entrada": ["mini salgados assados ou fritos", "mini sanduiches", "pao de queijo", "palitos de legumes conforme a idade"],
+        "Prato Principal": ["mini pizza", "mini lanche", "massa simples ou refeicao curta quando o horario exigir"],
+        "Acompanhamento": ["milho", "batata assada", "frutas porcionadas"],
+        "Sobremesa": ["bolo", "brigadeiro ou docinho", "gelatina ou fruta"],
+        "Bebida": ["agua", "suco", "bebida sem alcool"]
+      },
+      "optional_features": ["estacao de montagem supervisionada", "picolé ou sorvete conforme estrutura", "lembrancinha com alimento embalado e identificado"],
+      "avoid": ["alcool", "alimentos duros ou com risco para a faixa etaria", "amendoim ou castanhas sem confirmacao", "excesso de itens apenas acucarados"],
+      "composition": [
+        { "category": "Entrada", "minimum": 4 },
+        { "category": "Prato Principal", "minimum": 1 },
+        { "category": "Acompanhamento", "minimum": 2 },
+        { "category": "Sobremesa", "minimum": 3 },
+        { "category": "Bebida", "minimum": 3 }
+      ],
+      "guidance": ["Adaptar textura, tamanho e temperatura a idade informada.", "Tema deve orientar nomes e apresentacao, nao substituir variedade e seguranca."]
+    },
+    {
+      "id": "atendimento_domiciliar",
+      "match": ["atendimento domiciliar", "chef em casa", "jantar em casa", "almoco em casa", "evento residencial"],
+      "identity": "Refeicao personalizada em residencia, com progressao curta, acabamento cuidadoso e operacao compativel com a cozinha disponivel.",
+      "service": "empratado, travessas compartilhadas ou buffet residencial",
+      "service_moments": ["boas-vindas", "entrada", "prato principal", "sobremesa", "cafe ou encerramento"],
+      "required_features": ["sequencia coerente de pratos", "mise en place possivel na residencia", "uma alternativa para restricoes informadas", "plano de finalizacao e limpeza"],
+      "essential_repetitions": ["agua", "cafe"],
+      "typical_foods": {
+        "Boas-vindas": ["petisco pequeno", "pao, pasta ou antepasto"],
+        "Entrada": ["salada", "sopa ou creme", "entrada quente ou fria"],
+        "Prato Principal": ["carne, ave ou peixe", "massa, risoto ou preparo vegetal"],
+        "Acompanhamento": ["arroz ou grao", "legumes", "guarnicao de raiz ou batata"],
+        "Salada": ["folhas ou vegetais sazonais"],
+        "Sobremesa": ["sobremesa de colher", "bolo ou torta", "fruta trabalhada"],
+        "Bebida": ["agua", "suco ou refresco", "vinho ou drinque quando solicitado"]
+      },
+      "optional_features": ["menu degustacao curto", "harmonizacao", "servico em travessas", "brunch residencial"],
+      "avoid": ["tecnicas incompatíveis com a cozinha informada", "muitos itens de finalizacao simultanea", "menu longo para evento de curta duracao"],
+      "composition": [
+        { "category": "Boas-vindas", "minimum": 1 },
+        { "category": "Entrada", "minimum": 2 },
+        { "category": "Prato Principal", "minimum": 2 },
+        { "category": "Acompanhamento", "minimum": 3 },
+        { "category": "Salada", "minimum": 1 },
+        { "category": "Sobremesa", "minimum": 2 },
+        { "category": "Bebida", "minimum": 2 }
+      ],
+      "guidance": ["Limitar tecnicas concorrentes no fogao e forno.", "Valorizar sazonalidade e apresentacao sem criar logistica de buffet grande."]
+    },
+    {
+      "id": "aniversario_geral",
+      "match": ["aniversario", "festa adulta", "festa de adulto"],
+      "identity": "Confraternizacao festiva e flexivel, normalmente estruturada entre recepcao, comida de circulacao ou refeicao e momento do bolo.",
+      "service": "buffet informal ou coquetel",
+      "service_moments": ["recepcao", "petiscos ou refeicao", "parabens, bolo e sobremesas", "encerramento"],
+      "required_features": ["itens de circulacao", "opcao substanciosa quando a duracao exigir", "bolo ou sobremesa central", "bebidas coerentes com o publico"],
+      "essential_repetitions": ["agua", "bolo de aniversario"],
+      "typical_foods": {
+        "Entrada": ["salgados", "canapes", "petiscos compartilhados"],
+        "Prato Principal": ["massa", "lanche", "prato de buffet conforme horario"],
+        "Acompanhamento": ["salada", "guarnicao quente", "frutas"],
+        "Sobremesa": ["bolo", "doces de festa", "sobremesa complementar"],
+        "Bebida": ["agua", "sucos", "refrigerantes", "bebidas alcoolicas quando solicitadas"]
+      },
+      "optional_features": ["ilha gastronomica", "mesa de boteco", "ceia", "bar tematico"],
+      "avoid": ["menu leve demais para festa longa", "repetir a mesma base em todos os salgados"],
+      "composition": [
+        { "category": "Entrada", "minimum": 4 },
+        { "category": "Prato Principal", "minimum": 1 },
+        { "category": "Acompanhamento", "minimum": 2 },
+        { "category": "Sobremesa", "minimum": 3 },
+        { "category": "Bebida", "minimum": 3 }
+      ],
+      "guidance": ["Adaptar peso e formato ao horario e a duracao.", "Usar o tema para selecionar alternativas coerentes dentro da estrutura da festa."]
+    },
+    {
+      "id": "evento_refeicao_geral",
+      "match": [],
+      "identity": "Evento sem tipologia reconhecida; adotar uma refeicao equilibrada e explicitar as premissas usadas.",
+      "service": "buffet",
+      "service_moments": ["recepcao", "entrada", "refeicao principal", "sobremesa", "encerramento"],
+      "required_features": ["variedade de categorias", "opcao inclusiva", "bebidas nao alcoolicas", "sequencia adequada a duracao"],
+      "essential_repetitions": ["agua"],
+      "typical_foods": {
+        "Entrada": ["entrada fria", "entrada quente"],
+        "Prato Principal": ["uma proteina", "uma alternativa vegetal"],
+        "Acompanhamento": ["grao ou arroz", "legumes", "guarnicao"],
+        "Salada": ["folhas ou vegetais"],
+        "Sobremesa": ["sobremesa cremosa", "fruta ou doce assado"],
+        "Bebida": ["agua", "suco", "outra bebida adequada ao publico"]
+      },
+      "optional_features": ["boas-vindas", "ilha gastronomica", "cafe de encerramento"],
+      "avoid": ["assumir tradicao cultural nao informada", "repetir ingredientes dominantes"],
+      "composition": [
+        { "category": "Entrada", "minimum": 2 },
+        { "category": "Prato Principal", "minimum": 2 },
+        { "category": "Acompanhamento", "minimum": 3 },
+        { "category": "Salada", "minimum": 1 },
+        { "category": "Sobremesa", "minimum": 2 },
+        { "category": "Bebida", "minimum": 3 }
+      ],
+      "guidance": ["Oferecer variedade de sabores, texturas e temperaturas.", "Identificar no resumo que o tipo de evento precisa de maior detalhamento."]
+    }
+  ],
+  "meal_modifiers": [
+    {
+      "id": "coquetel_finger_food",
+      "match": ["coquetel", "finger food"],
+      "guidance": ["Priorizar porcoes pequenas, consumo em pe e reposicao por ondas.", "Incluir ao menos uma opcao mais substanciosa se o evento atravessar um horario de refeicao."],
+      "signals": ["canapes", "mini porcoes", "espetinhos", "copinhos ou cumbucas"]
+    },
+    {
+      "id": "almoco_jantar",
+      "match": ["almoco", "jantar"],
+      "guidance": ["Preservar entrada, principal, acompanhamentos e sobremesa.", "Ajustar peso, temperatura e ritmo ao horario e a duracao."],
+      "signals": ["entrada", "prato principal", "guarnicoes", "sobremesa"]
+    },
+    {
+      "id": "churrasco_refeicao",
+      "match": ["churrasco"],
+      "guidance": ["Dar protagonismo a grelha, entradas de espera e acompanhamentos compartilhados.", "Prever fluxo continuo e alternativa vegetal."],
+      "signals": ["grelhados", "farofa", "vinagrete", "saladas"]
+    },
+    {
+      "id": "brunch_cafe_manha",
+      "match": ["brunch", "cafe da manha"],
+      "guidance": ["Combinar panificacao, frutas, bebidas quentes e preparacoes salgadas leves.", "No brunch, incluir pelo menos uma preparacao quente mais substanciosa."],
+      "signals": ["paes", "frutas", "ovos ou quiche", "bolo", "cafe e sucos"]
+    },
+    {
+      "id": "coffee_break",
+      "match": ["coffee break", "coffee"],
+      "guidance": ["Servir itens de consumo rapido em intervalo definido, com bebidas quentes e frias.", "Evitar preparacoes que exijam talheres complexos ou longa permanencia."],
+      "signals": ["cafe e cha", "paes e salgados", "bolo ou biscoito", "frutas", "agua e suco"]
+    }
+  ],
+  "themes": [
+    {
+      "id": "boteco_brasileiro",
+      "match": ["boteco", "bar"],
+      "guidance": "Selecionar petiscos brasileiros e porcoes compartilhadas dentro dos momentos exigidos pelo evento.",
+      "culinary_signals": ["mandioca", "pasteis", "bolinhos", "vinagrete", "molhos separados"],
+      "avoid": "Nao transformar todo o cardapio em fritura nem remover a refeicao principal quando ela for esperada."
+    },
+    {
+      "id": "junino",
+      "match": ["junino", "julina", "sao joao"],
+      "guidance": "Usar repertorio brasileiro ligado ao milho, mandioca e especiarias, respeitando regiao e restricoes.",
+      "culinary_signals": ["milho", "mandioca", "coco", "canela", "amendoim somente quando permitido"],
+      "avoid": "Nao presumir amendoim seguro e nao repetir milho em todas as categorias."
+    },
+    {
+      "id": "italiano",
+      "match": ["italiano", "italiana", "italia"],
+      "guidance": "Criar unidade entre antepastos, massa ou risoto, proteinas, vegetais e sobremesa sem excesso de pratos pesados.",
+      "culinary_signals": ["antepastos", "ervas", "tomate", "massa ou risoto", "sobremesa italiana reinterpretada"],
+      "avoid": "Nao oferecer varias massas com o mesmo molho ou depender de queijo em todas as opcoes."
+    },
+    {
+      "id": "tropical",
+      "match": ["tropical", "praia", "verao"],
+      "guidance": "Priorizar frescor, frutas, ervas e bebidas leves adequadas ao clima sem eliminar pratos substanciosos necessarios.",
+      "culinary_signals": ["frutas", "ervas frescas", "vegetais", "molhos citricos", "bebidas refrescantes"],
+      "avoid": "Nao usar fruta em todos os pratos nem confundir tropical com cardapio apenas doce."
+    },
+    {
+      "id": "circo_colorido",
+      "match": ["circo", "colorido"],
+      "guidance": "Aplicar cores e nomes ludicos a preparacoes adequadas a idade, preservando porcoes, variedade e sinalizacao.",
+      "culinary_signals": ["frutas coloridas", "mini porcoes", "decoracao comestivel simples", "apresentacao ludica"],
+      "avoid": "Nao depender de corantes ou acucar para representar o tema."
+    },
+    {
+      "id": "elegante_botanico",
+      "match": ["botanico", "jardim", "elegante"],
+      "guidance": "Usar apresentacao delicada, ervas, vegetais e sazonalidade sem reduzir porcoes ou remover a estrutura do evento.",
+      "culinary_signals": ["ervas", "flores comestiveis identificadas", "vegetais sazonais", "montagem delicada"],
+      "avoid": "Nao usar plantas decorativas nao comestiveis em contato com alimentos."
+    },
+    {
+      "id": "profissional_contemporaneo",
+      "match": ["profissional", "contemporaneo", "minimalista"],
+      "guidance": "Priorizar apresentacao limpa, porcoes praticas e sabores reconheciveis com acabamento atual.",
+      "culinary_signals": ["mini porcoes organizadas", "cores naturais", "louca ou embalagem discreta"],
+      "avoid": "Nao trocar funcionalidade por apresentacao complexa."
+    },
+    {
+      "id": "familiar",
+      "match": ["familiar", "familia", "afetivo"],
+      "guidance": "Valorizar compartilhamento e sabores reconheciveis, equilibrando conforto com variedade e restricoes.",
+      "culinary_signals": ["travessas", "paes", "assados", "guarnicoes compartilhadas"],
+      "avoid": "Nao presumir preferencias culturais ou receitas de familia que o cliente nao informou."
+    }
+  ]
+}

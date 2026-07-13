@@ -16,7 +16,7 @@ Use a menor quantidade de informacao capaz de orientar a tarefa:
 
 1. **Codigo e testes atuais:** fonte principal do comportamento real.
 2. **`HANDOFF_PROXIMA_ATUALIZACAO.md`:** estado, ultimo resultado relevante e proximo passo unico.
-3. **`ROADMAP_ATUAL.md`:** consultar somente ao escolher ou mudar prioridade.
+3. **`ROADMAP_ATUAL.md`:** consultar ao verificar a etapa do ciclo, escolher ou mudar prioridade.
 4. **Documento especializado:** consultar somente quando a tarefa tocar aquele processo.
 5. **Documentos historicos:** contexto opcional; nunca definem o trabalho atual.
 
@@ -24,10 +24,12 @@ Documentos especializados:
 
 | Assunto | Documento |
 |---|---|
+| Etapa atual dos Planos 1 a 10 | `ROADMAP_ATUAL.md`, secao `Quadro de etapa atual` |
 | Fluxo tecnico ou de uso | `FLUXOS_DE_PROCESSO.md` |
 | Requisito, ator ou validacao | `ANALISE_REQUISITOS_ATORES_CASOS_USO.md` |
 | Processo maior ou regra de negocio | `MATERIAL_APOIO_PROCESSOS_E_REQUISITOS.md` |
 | UI, qualidade ou criterio de prioridade | `PADROES_QUALIDADE_PRIORIZACAO.md` |
+| Teste controlado e ficha de feedback | `PLANO_TESTES_CONTROLADOS.md` |
 | Privacidade, viabilidade ou diagramas | `DIAGRAMAS_COMPLEMENTARES_ANALISE_TECNICA.md` |
 | Erro conhecido | `TROUBLESHOOTING.md` |
 | GitHub e segredos | `SEGURANCA_GITHUB.md` |
@@ -99,13 +101,14 @@ Use `rg "CODEX:" docs` para encontrar rapidamente as marcacoes de conducao.
 - `ANALISE_REQUISITOS_ATORES_CASOS_USO.md`: atores, requisitos por ator, diagramas de caso de uso, fluxo de uso, dados gerais e validacoes.
 - `DIAGRAMAS_COMPLEMENTARES_ANALISE_TECNICA.md`: SGPD/LGPD, viabilidade, sequencia, atividade, mapeamento, fluxo logico e complementaridade tecnica.
 - `PADROES_QUALIDADE_PRIORIZACAO.md`: convencoes, normas internas, metodologia interna de prompt, padroes de interface, pontos fortes, melhorias, ajustes iterativos e priorizacao.
+- `PLANO_TESTES_CONTROLADOS.md`: roteiro minimo, ficha de feedback, classificacao de falhas e porta de validacao real do Spoonacular.
 - `TROUBLESHOOTING.md`: diagnosticos e comandos de debug.
 - `SEGURANCA_GITHUB.md`: checklist de seguranca antes de publicar ou versionar.
 
 ## Referencias recuperadas
 
 - `planoCompletoChefia.md`: plano mestre/diagnostico arquitetural original. Use como contexto historico, nao como fonte unica do estado atual.
-- `PLANO_CONTINUACAO.md`: roteiro de fases recuperado. As fases 1 e 2 ja avancaram; confirme sempre com o handoff e o roadmap antes de executar.
+- `PLANO_CONTINUACAO.md`: roteiro historico e desatualizado de 2026-07-02. Nao usar como guia de execucao; confirmar sempre com o handoff e o roadmap.
 
 ## Referencia principal
 

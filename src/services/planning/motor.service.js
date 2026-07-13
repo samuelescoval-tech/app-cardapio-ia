@@ -16,8 +16,9 @@ const PERFIS_EVENTO = {
 };
 
 const FATOR_CONSUMO_CRIANCA = 0.6;
+const { calcularPlanejamentoOperacional } = require("./operational-planning.service");
 
-function calcularMotorEvento(evento = {}) {
+function calcularMotorEvento(evento = {}, diretrizCulinaria = null) {
   const pessoas = numeroSeguro(evento.pessoas) || 1;
   const criancas = Math.min(numeroSeguro(evento.criancas), pessoas);
   const adultos = pessoas - criancas;
@@ -35,12 +36,12 @@ function calcularMotorEvento(evento = {}) {
   const pesoComidaKg = coquetel ? 0 : arredondar1(pessoasConsumo * 0.42);
   const bebidasNaoAlcoolicasL = arredondar1((adultos * 0.2 + criancas * 0.16) * duracao);
   const bebidasAlcoolicasL = temAlcool ? arredondar1(adultos * 0.28 * duracao) : 0;
-  const garcons = Math.max(1, Math.ceil(pessoas / perfil.staff));
-  const apoioCozinha = Math.max(1, Math.ceil(pessoas / 35));
   const espacoM2 = Math.ceil(pessoas * perfil.m2);
   const composicaoPublico = criancas
     ? `${pessoas} pessoas (${adultos} adultos + ${criancas} criancas)`
     : `${pessoas} pessoas`;
+
+  const operacao = calcularPlanejamentoOperacional(evento, { pessoas, duracao }, diretrizCulinaria || {});
 
   return {
     perfil: `${evento.tipo || "Evento"} · ${composicaoPublico} · ${rotuloEstilo(estiloKey)}`,
@@ -55,10 +56,8 @@ function calcularMotorEvento(evento = {}) {
       { item: "Bebidas nao alcoolicas", quantidade: `${bebidasNaoAlcoolicasL}L`, observacao: "agua, suco e refrigerante" },
       { item: "Bebidas alcoolicas", quantidade: `${bebidasAlcoolicasL}L`, observacao: temAlcool ? "estimativa para adultos" : "nao previsto" }
     ],
-    staff: [
-      { funcao: "Garcom", quantidade: `${garcons}`, observacao: `1 a cada ${perfil.staff} pessoas` },
-      { funcao: "Apoio de cozinha", quantidade: `${apoioCozinha}`, observacao: "preparo, reposicao e limpeza operacional" }
-    ],
+    staff: operacao.equipe,
+    operacao,
     servico_mesa: calcularServicoMesa(pessoas),
     custo_adulto: null,
     custo_crianca: null,
@@ -75,7 +74,12 @@ function calcularMotorEvento(evento = {}) {
       refeicao: evento.refeicao || "Nao informado",
       alcool: evento.alcool || "Nao informado",
       tema: evento.tema || "Nao informado",
-      orcamento_base: evento.orcamentoBase || "Nao informado"
+      orcamento_base: evento.orcamentoBase || "Nao informado",
+      horario_inicio: evento.horarioInicio || "Nao informado",
+      formato_servico: evento.formatoServico || "A definir pelo Chef IA",
+      faixa_etaria: evento.faixaEtaria || "Publico misto",
+      infraestrutura: evento.infraestrutura || "A confirmar",
+      prioridade: evento.prioridade || "Equilibrio geral"
     }
   };
 }

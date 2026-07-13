@@ -11,12 +11,14 @@ let curSlide = 0;
 const slides = document.querySelectorAll('.slide');
 let demoAccessRequired = false;
 let demoAccessMessage = "";
+window.chefIARecipeReferencesAvailable = false;
 
 async function inicializarAcessoDemo() {
     try {
         const response = await fetch('/api/status');
         const status = await response.json();
         demoAccessRequired = Boolean(status.demo_access?.required);
+        window.chefIARecipeReferencesAvailable = Boolean(status.recipe_references?.configured);
     } catch (error) {
         console.warn('Não foi possível verificar acesso demo:', error.message);
     }
@@ -98,14 +100,16 @@ function limparDemoAccessKey(message = "") {
     demoAccessMessage = message;
 }
 
-function exibirErroResultado(resultadoArea, mensagem) {
+function exibirErroResultado(resultadoArea, mensagem, resultadoAnterior = "") {
     resultadoArea.classList.remove('hidden');
     resultadoArea.innerHTML = `
         <div class="glass-panel error-panel">
             <p><strong>Não foi possível gerar o planejamento.</strong></p>
             <p>${escapeHTML(mensagem)}</p>
         </div>
+        ${resultadoAnterior}
     `;
+    resultadoArea.dataset.planoValido = resultadoAnterior ? "true" : "false";
 }
 
 /* TAG: animacao-hero */
@@ -161,9 +165,17 @@ async function gerarTudo() {
     const tema = document.getElementById('tema')?.value || "Nao informado";
     const alcool = document.getElementById('alcool')?.value || "Nao informado";
     const orcamentoBase = document.getElementById('orcamentoBase')?.value || "Nao informado";
+    const horarioInicio = document.getElementById('horarioInicio')?.value || "";
+    const formatoServico = document.getElementById('formatoServico')?.value || "A definir pelo Chef IA";
+    const faixaEtaria = document.getElementById('faixaEtaria')?.value || "Publico misto";
+    const infraestrutura = document.getElementById('infraestrutura')?.value || "A confirmar";
+    const prioridade = document.getElementById('prioridade')?.value || "Equilibrio geral";
     
     const resultadoArea = document.getElementById('resultadoArea');
     const btn = document.getElementById('btnGerar');
+    const resultadoAnterior = resultadoArea.dataset.planoValido === "true"
+        ? resultadoArea.innerHTML
+        : "";
 
     if (!tipo || !pessoas) {
         alert("Por favor, informe o tipo de evento e a quantidade de pessoas.");
@@ -185,7 +197,12 @@ async function gerarTudo() {
         refeicao,
         tema,
         alcool,
-        orcamentoBase
+        orcamentoBase,
+        horarioInicio,
+        formatoServico,
+        faixaEtaria,
+        infraestrutura,
+        prioridade
     };
 
     try {
@@ -201,6 +218,7 @@ async function gerarTudo() {
         document.getElementById('mainHero').classList.add('collapsed');
 
         resultadoArea.classList.remove('hidden');
+        resultadoArea.dataset.planoValido = "false";
         resultadoArea.innerHTML = `
             <div class="glass-panel" style="text-align:center; border-top: 4px solid var(--gold);">
                 <p><strong>O Chef IA está arquitetando seu evento...</strong></p>
@@ -212,10 +230,12 @@ async function gerarTudo() {
         if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
 
         // 2. Chamada ao Servidor (Back-end)
+        const historicoCulinario = window.storageService?.criarMemoriaCulinaria?.() || [];
+        window.chefIALastCulinaryMemoryCount = historicoCulinario.length;
         const response = await fetch("/gerar-cardapio", {
             method: "POST",
             headers,
-            body: JSON.stringify({ evento })
+            body: JSON.stringify({ evento, historico_culinario: historicoCulinario })
         });
         const resposta = await response.json().catch(() => ({}));
 
@@ -229,34 +249,126 @@ async function gerarTudo() {
             throw new Error(resposta.error || "Erro no servidor.");
         }
 
+        if (resposta.ok === false) {
+            console.warn("A IA retornou um plano inválido:", resposta.meta?.erro || resposta.error);
+            throw new Error("O plano gerado não passou pela validação. Seu último planejamento válido foi preservado; tente novamente.");
+        }
+
         // Nova estrutura: { ok, provider, plano, meta }
         // Compatibilidade: se for JSON direto, passa como está
         const dadosIA = resposta.plano || resposta;
-
         if (!dadosIA) {
             throw new Error("Resposta sem dados válidos.");
         }
 
-        if (resposta.ok === false && resposta.meta?.erro) {
-            console.warn("A IA retornou fallback:", resposta.meta.erro);
-        }
-
         // 3. Exibição com visual premium e seções completas
         exibirResultadoLuxo(dadosIA, pessoas, evento);
+        resultadoArea.dataset.planoValido = "true";
 
         // TAG: integracao-historico | FASE 1
         // Salvar evento + plano no histórico
         if (window.storageService) {
-            window.storageService.salvarHistorico(evento, dadosIA);
+            const historicoId = window.storageService.salvarHistorico(evento, dadosIA);
             renderizarHistorico();
+            if (!historicoId) {
+                resultadoArea.insertAdjacentHTML('afterbegin', `
+                    <div class="glass-panel error-panel">
+                        <p><strong>O planejamento foi gerado, mas não pôde ser salvo nos projetos recentes.</strong></p>
+                    </div>
+                `);
+            }
         }
 
     } catch (error) {
         console.error(error);
-        exibirErroResultado(resultadoArea, `Detalhes: ${error.message}`);
+        exibirErroResultado(resultadoArea, `Detalhes: ${error.message}`, resultadoAnterior);
     } finally {
         btn.disabled = false;
         btn.innerText = "⚙️ CALCULAR + GERAR PLANEJAMENTO COMPLETO";
+    }
+}
+
+async function buscarReferenciasExternas() {
+    const input = document.getElementById('recipeReferenceQuery');
+    const resultado = document.getElementById('recipeReferenceResults');
+    const botao = document.getElementById('recipeReferenceButton');
+    if (!input || !resultado || !botao) return;
+
+    const query = input.value.replace(/\s+/g, ' ').trim();
+    if (query.length < 2 || query.length > 80) {
+        resultado.innerHTML = '<p class="reference-message">Informe uma busca entre 2 e 80 caracteres.</p>';
+        return;
+    }
+
+    try {
+        const demoAccessKey = await obterDemoAccessKey();
+        if (demoAccessRequired && !demoAccessKey) {
+            resultado.innerHTML = '<p class="reference-message">Informe a senha temporária para consultar referências.</p>';
+            return;
+        }
+
+        botao.disabled = true;
+        botao.textContent = 'Consultando...';
+        resultado.innerHTML = '<p class="reference-message">Busca transitória em andamento. Nenhum conteúdo será salvo.</p>';
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (demoAccessKey) headers['x-demo-access-key'] = demoAccessKey;
+        const response = await fetch('/api/referencias-receitas', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ query })
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (response.status === 401) {
+            demoAccessRequired = true;
+            limparDemoAccessKey('Senha temporária inválida.');
+        }
+        if (!response.ok || data.ok === false) {
+            throw new Error(data.error || 'Consulta externa indisponível.');
+        }
+
+        const referencias = Array.isArray(data.references) ? data.references : [];
+        resultado.innerHTML = referencias.length
+            ? `<div class="reference-grid">${referencias.map(renderReferenciaExterna).join('')}</div>
+               <p class="reference-disclaimer">Resultados transitórios: não entram no planejamento, histórico ou PDF. Confira a fonte original.</p>`
+            : '<p class="reference-message">Nenhuma referência encontrada para essa busca.</p>';
+    } catch (error) {
+        resultado.innerHTML = `<p class="reference-message">${escapeHTML(error.message)}</p>`;
+    } finally {
+        botao.disabled = false;
+        botao.textContent = 'Buscar referências';
+    }
+}
+
+function renderReferenciaExterna(referencia) {
+    const sourceUrl = urlHttpsSegura(referencia.source_url);
+    const imageUrl = urlHttpsSegura(referencia.image_url);
+    if (!sourceUrl) return '';
+    const detalhes = [
+        Number.isFinite(referencia.ready_in_minutes) ? `${referencia.ready_in_minutes} min` : '',
+        Number.isFinite(referencia.servings) ? `${referencia.servings} porções` : ''
+    ].filter(Boolean).join(' · ');
+
+    return `
+        <article class="reference-card">
+            ${imageUrl ? `<img src="${escapeHTML(imageUrl)}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ''}
+            <div>
+                <h4>${escapeHTML(referencia.title || 'Referência culinária')}</h4>
+                ${detalhes ? `<small>${escapeHTML(detalhes)}</small>` : ''}
+                <a href="${escapeHTML(sourceUrl)}" target="_blank" rel="noopener noreferrer">Ver em ${escapeHTML(referencia.source_name || 'fonte original')}</a>
+            </div>
+        </article>
+    `;
+}
+
+function urlHttpsSegura(valor) {
+    if (typeof valor !== 'string' || !valor) return null;
+    try {
+        const url = new URL(valor);
+        return url.protocol === 'https:' ? url.toString() : null;
+    } catch {
+        return null;
     }
 }
 
@@ -270,9 +382,12 @@ function renderizarHistorico() {
     if (!container || !window.storageService) return;
 
     const historico = window.storageService.carregarHistorico();
+    const erroHistorico = window.storageService.obterUltimoErroHistorico?.();
 
     if (historico.length === 0) {
-        container.innerHTML = '<p class="historico-vazio">Nenhum planejamento salvo ainda</p>';
+        container.innerHTML = erroHistorico
+            ? `<p class="historico-vazio">${escapeHTML(erroHistorico)} Os dados existentes não foram apagados.</p>`
+            : '<p class="historico-vazio">Nenhum planejamento salvo neste navegador e endereço.</p>';
         return;
     }
 
@@ -287,10 +402,11 @@ function renderizarHistorico() {
             </div>
             <div class="historico-card-resumo">
                 ${escapeHTML(entrada.resumo)}
+                ${entrada.plano_valido ? '' : '<br><strong>Geração incompleta — mantida apenas para diagnóstico.</strong>'}
             </div>
             <div class="historico-card-acoes">
-                <button class="historico-btn-carregar" onclick="carregarDoHistorico('${entrada.id}')">
-                    📂 Carregar
+                <button class="historico-btn-carregar" ${entrada.plano_valido ? `onclick="carregarDoHistorico('${entrada.id}')"` : 'disabled'}>
+                    ${entrada.plano_valido ? '📂 Carregar' : '⚠️ Incompleto'}
                 </button>
                 <button class="historico-btn-deletar" onclick="deletarDoHistorico('${entrada.id}')">
                     🗑️ Deletar
@@ -312,22 +428,43 @@ function carregarDoHistorico(id) {
         return;
     }
 
+    if (!entrada.plano_valido) {
+        alert('Este registro veio de uma geração incompleta e não pode substituir um planejamento válido.');
+        return;
+    }
+
     // Preencher formulário
     const evento = entrada.evento;
-    document.getElementById('tipo').value = evento.tipo || '';
-    document.getElementById('pessoas').value = evento.pessoas || '';
-    document.getElementById('criancas').value = evento.criancas || '';
-    document.getElementById('restricoes').value = evento.restricoes || '';
-    document.getElementById('userChat').value = evento.obs || '';
-    document.getElementById('duracao').value = evento.duracao || '';
-    document.getElementById('dataEvento').value = evento.dataEvento || '';
-    document.getElementById('pais').value = evento.pais || 'Brasil';
-    document.getElementById('estado').value = evento.estado || '';
-    document.getElementById('cidade').value = evento.cidade || '';
-    document.getElementById('refeicao').value = evento.refeicao || '';
-    document.getElementById('tema').value = evento.tema || '';
-    document.getElementById('orcamentoBase').value = evento.orcamentoBase || '';
-    document.getElementById('alcool').value = evento.alcool || '';
+    definirValorCampo('tipo', evento.tipo);
+    definirValorCampo('pessoas', evento.pessoas);
+    definirValorCampo('criancas', evento.criancas);
+    definirValorCampo('restricoes', evento.restricoes);
+    definirValorCampo('userChat', evento.obs);
+    definirValorCampo('duracao', evento.duracao);
+    definirValorCampo('dataEvento', evento.dataEvento);
+    definirValorCampo('pais', evento.pais || 'Brasil');
+    definirValorCampo('estado', evento.estado);
+    definirValorCampo('cidade', evento.cidade);
+    definirValorCampo('refeicao', evento.refeicao);
+    definirValorCampo('tema', evento.tema);
+    definirValorCampo('orcamentoBase', evento.orcamentoBase);
+    definirValorCampo('alcool', evento.alcool);
+    definirValorCampo('horarioInicio', evento.horarioInicio);
+    definirValorCampo('formatoServico', evento.formatoServico || 'A definir pelo Chef IA');
+    definirValorCampo('faixaEtaria', evento.faixaEtaria || 'Publico misto');
+    definirValorCampo('infraestrutura', evento.infraestrutura || 'A confirmar');
+    definirValorCampo('prioridade', evento.prioridade || 'Equilibrio geral');
+
+    const opcoesAvancadas = document.getElementById('advancedEventOptions');
+    if (opcoesAvancadas) {
+        opcoesAvancadas.open = Boolean(
+            evento.horarioInicio ||
+            (evento.formatoServico && evento.formatoServico !== 'A definir pelo Chef IA') ||
+            (evento.faixaEtaria && evento.faixaEtaria !== 'Publico misto') ||
+            (evento.infraestrutura && evento.infraestrutura !== 'A confirmar') ||
+            (evento.prioridade && evento.prioridade !== 'Equilibrio geral')
+        );
+    }
 
     // Definir o radio button de estilo
     const radioEstilo = document.querySelector(`input[name="estilo"][value="${evento.estilo}"]`);
@@ -338,9 +475,16 @@ function carregarDoHistorico(id) {
 
     if (entrada.plano) {
         exibirResultadoLuxo(entrada.plano, evento.pessoas || '', evento);
+        const resultadoArea = document.getElementById('resultadoArea');
+        if (resultadoArea) resultadoArea.dataset.planoValido = "true";
     }
 
     console.log('✅ Planejamento carregado:', id);
+}
+
+function definirValorCampo(id, valor) {
+    const campo = document.getElementById(id);
+    if (campo) campo.value = valor ?? '';
 }
 
 /**

@@ -20,7 +20,7 @@ function getGeminiStatus() {
   };
 }
 
-async function gerarPlano(prompt) {
+async function gerarPlano(prompt, contexto = {}) {
   const inicio = Date.now();
 
   try {
@@ -61,7 +61,7 @@ async function gerarPlano(prompt) {
 
     // 2. Validar e normalizar
     try {
-      dados = validarPlano(dados);
+      dados = validarPlano(dados, contexto);
     } catch (validationError) {
       console.warn("⚠️ Resposta fora do contrato:", validationError.message);
       return {
@@ -82,7 +82,11 @@ async function gerarPlano(prompt) {
       plano: dados,
       meta: {
         tempo_ms: Date.now() - inicio,
-        schema_ok: true
+        schema_ok: true,
+        qualidade_culinaria: dados.qualidade_culinaria?.status !== "revisar",
+        qualidade_culinaria_status: dados.qualidade_culinaria?.status || "nao_avaliado",
+        ajustes_culinarios: dados.qualidade_culinaria?.ajustes?.length || 0,
+        avisos_culinarios: dados.qualidade_culinaria?.avisos?.length || 0
       }
     };
   } catch (error) {

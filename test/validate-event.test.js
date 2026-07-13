@@ -10,7 +10,31 @@ test("normaliza um evento valido e aplica valores padrao", () => {
   assert.equal(evento.criancas, 0);
   assert.equal(evento.estilo, "Simples");
   assert.equal(evento.restricoes, "Nenhuma");
+  assert.equal(evento.horarioInicio, "");
+  assert.equal(evento.formatoServico, "A definir pelo Chef IA");
+  assert.equal(evento.faixaEtaria, "Publico misto");
+  assert.equal(evento.infraestrutura, "A confirmar");
+  assert.equal(evento.prioridade, "Equilibrio geral");
   assert.equal(Object.hasOwn(evento, "duracao"), false);
+});
+
+test("valida horario e opcoes avancadas controladas", () => {
+  const evento = validarEvento({
+    tipo: "Evento corporativo",
+    pessoas: 40,
+    horarioInicio: "08:30",
+    formatoServico: "Buffet self-service"
+  });
+
+  assert.equal(evento.horarioInicio, "08:30");
+  assert.throws(
+    () => validarEvento({ tipo: "Evento", pessoas: 20, horarioInicio: "25:90" }),
+    error => error instanceof ErroValidacaoEvento && error.campo === "horarioInicio"
+  );
+  assert.throws(
+    () => validarEvento({ tipo: "Evento", pessoas: 20, formatoServico: "Coffee break" }),
+    error => error instanceof ErroValidacaoEvento && error.campo === "formatoServico"
+  );
 });
 
 test("rejeita pessoas fora do intervalo", () => {

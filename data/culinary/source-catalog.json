@@ -1,0 +1,140 @@
+{
+  "version": "2026-07-12",
+  "status": "curated",
+  "runtime_policy": {
+    "web_search_per_event": false,
+    "copy_recipe_text": false,
+    "allowed_use": "Usar principios, estrutura de ficha, categorias, tecnicas e repertorio como orientacao editorial. Nunca copiar integralmente receitas ou substituir orientacao profissional de saude.",
+    "update_process": "Revisao manual e versionada; toda inclusao exige URL, papel, evidencia e limitacao."
+  },
+  "quality_levels": {
+    "official": "Orgao publico ou referencia regulatoria; usar para seguranca, restricoes e diretrizes.",
+    "educational": "Instituicao de formacao profissional; usar para processos, servico e ficha tecnica.",
+    "research": "Instituicao de pesquisa publica; usar para ingredientes, repertorio regional e publicacoes tecnicas.",
+    "academic": "Trabalho academico; usar para requisitos, modelagem e hipoteses, nunca como autoridade culinaria sem validacao adicional.",
+    "external_api": "Servico externo sujeito a quota, termos, atribuicao e disponibilidade; usar somente dentro das permissoes contratuais verificadas.",
+    "editorial": "Fonte culinaria com curadoria; usar somente para repertorio e formatos, observando vies comercial e direitos autorais."
+  },
+  "sources": [
+    {
+      "id": "senac-planejamento-eventos",
+      "name": "Senac SP - Planejamento de Alimentos e Bebidas para Eventos",
+      "organization": "Senac Sao Paulo",
+      "url": "https://www.sp.senac.br/cursos-livres/curso-de-planejamento-de-alimentos-e-bebidas-para-eventos",
+      "quality": "educational",
+      "roles": ["tipologia_evento", "tipo_servico", "composicao_cardapio"],
+      "evidence": "Relaciona cardapio ao numero de convidados, tipo e duracao do evento, servico de mesa, combinacao de pratos, infraestrutura e verba.",
+      "usage": "Orientar estrutura do evento e adequacao do menu ao servico.",
+      "limitations": "Pagina de curso; nao fornece base completa de receitas nem quantidades operacionais publicaveis."
+    },
+    {
+      "id": "senac-mapa-gastronomia",
+      "name": "Senac DN - Mapa Funcional do Segmento de Gastronomia",
+      "organization": "Senac Departamento Nacional",
+      "url": "https://dn.senac.br/wp-content/uploads/2018/09/SINTESE_FS_Gastronomia185x277_vs_final.pdf",
+      "quality": "educational",
+      "roles": ["ficha_tecnica", "mise_en_place", "porcionamento", "processo_cozinha"],
+      "evidence": "Define elaborar cardapios e fichas tecnicas, pre-preparar, controlar coccoes, porcionar e interpretar rotulos como funcoes profissionais.",
+      "usage": "Orientar campos obrigatorios de receita, preparo e operacao.",
+      "limitations": "Mapa de competencias; nao deve ser tratado como receituario."
+    },
+    {
+      "id": "ms-refeicoes-eventos",
+      "name": "Ministerio da Saude - Guia para Elaboracao de Refeicoes Saudaveis em Eventos",
+      "organization": "Ministerio da Saude",
+      "url": "https://bvsms.saude.gov.br/bvs/publicacoes/guia_elaboracao_refeicoes_saudaveis_eventos.pdf",
+      "quality": "official",
+      "roles": ["variedade", "alimentacao_adequada", "restricoes_culturais", "eventos"],
+      "evidence": "Orienta planejamento de refeicoes em eventos, variedade e atencao a restricoes alimentares e culturais.",
+      "usage": "Aplicar principios de inclusao e variedade; sinalizar necessidade de avaliacao profissional quando apropriado.",
+      "limitations": "Nao define cardapios comerciais universais nem substitui nutricionista."
+    },
+    {
+      "id": "anvisa-alergenicos",
+      "name": "Anvisa - Perguntas e Respostas sobre Rotulagem de Alimentos Alergenicos",
+      "organization": "Agencia Nacional de Vigilancia Sanitaria",
+      "url": "https://www.gov.br/anvisa/pt-br/centraisdeconteudo/publicacoes/alimentos/perguntas-e-respostas-arquivos/rotulagem-de-alergenicos.pdf",
+      "quality": "official",
+      "roles": ["alergenicos", "contaminacao_cruzada", "rotulagem", "seguranca"],
+      "evidence": "Diferencia alergias e outras reacoes e orienta declaracao de alergenicos e risco de contaminacao cruzada.",
+      "usage": "Gerar alertas e cuidados; nunca prometer seguranca clinica ou ausencia de contaminacao.",
+      "limitations": "Regra de rotulagem, nao manual de prescricao, diagnostico ou tratamento."
+    },
+    {
+      "id": "embrapa-repertorio-regional",
+      "name": "Embrapa - Publicacoes de receitas e ingredientes brasileiros",
+      "organization": "Embrapa",
+      "url": "https://www.embrapa.br/busca-de-noticias/-/noticia/1795462/embrapa-lanca-livro-com-receitas-culinarias-de-pinhao",
+      "quality": "research",
+      "roles": ["ingredientes_brasileiros", "repertorio_regional", "estrutura_receita"],
+      "evidence": "Publicacoes apresentam ingredientes, modo e tempo de preparo e rendimento, com foco em produtos brasileiros.",
+      "usage": "Ampliar repertorio regional e confirmar estrutura de ficha de receita.",
+      "limitations": "Cobertura concentrada em ingredientes e publicacoes especificas; nao representa todos os eventos ou regioes."
+    },
+    {
+      "id": "embrapa-sem-gluten",
+      "name": "Embrapa e CBAN - Paes, bolos e biscoitos sem gluten",
+      "organization": "Embrapa e CBAN",
+      "url": "https://www.embrapa.br/busca-de-publicacoes/-/publicacao/1160157/paes-bolos-e-biscoitos-sem-gluten-receitas-faceis-e-saborosas",
+      "quality": "research",
+      "roles": ["sem_gluten", "panificacao", "confeitaria", "substituicoes"],
+      "evidence": "Publicacao dedicada a preparacoes de panificacao e confeitaria sem gluten.",
+      "usage": "Repertorio tecnico para alternativas; manter alerta de contaminacao cruzada.",
+      "limitations": "Nao autoriza afirmar que uma cozinha ou evento seja seguro para pessoas celiacas."
+    },
+    {
+      "id": "panelinha-cardapio-modular",
+      "name": "Panelinha - Cardapios modulares, lista de compras e plano de ataque",
+      "organization": "Panelinha",
+      "url": "https://panelinha.com.br/blog/ritalobo/post/saiba-tudo-livro-cozinha-quatro-maos-rita-lobo",
+      "quality": "editorial",
+      "roles": ["variacao", "cardapio_modular", "lista_compras", "plano_ataque", "receber"],
+      "evidence": "Apresenta formulas de cardapio com variacoes, lista de compras, plano de ataque e ocasioes como brunch e happy hour.",
+      "usage": "Inspirar modularidade, variacao e sequenciamento; nao copiar texto ou receitas.",
+      "limitations": "Fonte editorial e comercial; nao e norma tecnica nem base oficial de seguranca alimentar."
+    },
+    {
+      "id": "nestle-cozinha-experimental",
+      "name": "Receitas Nestle - Plataforma culinaria e cozinha experimental",
+      "organization": "Nestle Brasil",
+      "url": "https://www.receitasnestle.com.br/quem-somos",
+      "quality": "editorial",
+      "roles": ["estrutura_receita", "tempo", "rendimento", "ocasiao", "dificuldade", "repertorio"],
+      "evidence": "Declara curadoria e testes de modo de preparo, tempo, rendimento e ingredientes em cozinha experimental.",
+      "usage": "Confirmar formatos de ficha e ampliar repertorio de forma secundaria.",
+      "limitations": "Possui vies de marca e produtos parceiros; nunca tornar ingrediente de marca obrigatorio nem copiar receitas."
+    },
+    {
+      "id": "cps-prato-feito-modelagem",
+      "name": "Centro Paula Souza - Aplicativo de busca e publicacao de receitas com base em ingredientes e utensilios pre-definidos",
+      "organization": "Centro Paula Souza - Fatec Zona Leste",
+      "url": "https://ric.cps.sp.gov.br/bitstream/123456789/14677/1/analise_e_desenvolvimento_de_sistemas_2023_1_SILVA_Henrique_Marques_da_aplicativo_de_busca_e_publicacao_de_receitas_com_base_em_ingredientes_e_utensilios_predefinidos_pdf.pdf",
+      "quality": "academic",
+      "roles": ["modelagem_receita", "ingredientes", "etapas", "utensilios", "busca", "duplicidade"],
+      "evidence": "O trabalho modela receitas, ingredientes, etapas, utensilios/eletrodomesticos, tempo e rendimento; tambem descreve busca por ingredientes/utensilios e alerta de receita repetida.",
+      "usage": "Inspirar requisitos e relacionamentos futuros, especialmente taxonomia, deteccao de repeticao e vinculo entre receita e recursos disponiveis.",
+      "limitations": "Projeto academico de software no-code, nao autoridade culinaria. Nenhuma receita, texto, tela ou codigo do trabalho deve ser copiado ou incorporado ao Chef IA.",
+      "runtime_use": false
+    },
+    {
+      "id": "spoonacular-recipe-api",
+      "name": "Spoonacular Food API",
+      "organization": "Spoonacular",
+      "url": "https://spoonacular.com/food-api",
+      "terms_url": "https://spoonacular.com/food-api/terms",
+      "quality": "external_api",
+      "roles": ["descoberta_receitas", "busca_ingredientes", "busca_equipamentos", "dietas", "instrucoes"],
+      "evidence": "A API oferece busca complexa por ingredientes, equipamentos, dieta, intolerancias e tipo de refeicao, alem de informacoes e instrucoes quando disponiveis.",
+      "usage": "Candidato futuro para descoberta transitoria de referencias com atribuicao da fonte original; nao usar como base persistente do plano atual.",
+      "limitations": "Plano gratuito possui quota diaria e limite de requisicoes. Os termos exigem credito a fonte original e proibem copiar ou armazenar ingredientes, instrucoes, nutricao ou dados derivados; somente id, titulo e URL da imagem podem ser mantidos indefinidamente. O Chef IA salva historico e PDF, portanto o runtime permanece desativado ate existir fluxo transitorio ou permissao/licenca compativel.",
+      "runtime_use": false
+    }
+  ],
+  "bundles": {
+    "core": ["senac-planejamento-eventos", "senac-mapa-gastronomia", "ms-refeicoes-eventos", "anvisa-alergenicos"],
+    "repertoire": ["embrapa-repertorio-regional", "panelinha-cardapio-modular", "nestle-cozinha-experimental"],
+    "restrictions": ["ms-refeicoes-eventos", "anvisa-alergenicos", "embrapa-sem-gluten"],
+    "product_structure": ["cps-prato-feito-modelagem"],
+    "external_discovery": ["spoonacular-recipe-api"]
+  }
+}

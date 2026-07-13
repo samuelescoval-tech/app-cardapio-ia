@@ -41,7 +41,7 @@ test("evento misto aplica fator infantil somente a consumo e custo", () => {
   assert.equal(motor.estimativa_total, null);
   assert.equal(motor.espaco, "120m2");
   assert.equal(motor.servico_mesa.talheres[0].quantidade, "115 un");
-  assert.equal(motor.staff[0].quantidade, "5");
+  assert.equal(motor.staff.find(item => item.funcao === "Atendimento de salao").quantidade, "5");
 });
 
 test("precificacao sem catalogo registra regiao e nao inventa valor", () => {
@@ -60,4 +60,26 @@ test("precificacao sem catalogo registra regiao e nao inventa valor", () => {
   });
   assert.equal(motor.precificacao.data_evento, "2026-09-20");
   assert.equal(motor.precificacao.fonte, null);
+});
+
+test("motor transforma o contexto avancado em operacao deterministica", () => {
+  const motor = calcularMotorEvento({
+    ...eventoBase,
+    horarioInicio: "19:30",
+    formatoServico: "Empratado",
+    faixaEtaria: "Adultos e idosos",
+    infraestrutura: "Cozinha de apoio limitada",
+    prioridade: "Conforto dos convidados"
+  });
+
+  assert.equal(motor.premissas.horario_inicio, "19:30");
+  assert.equal(motor.premissas.formato_servico, "Empratado");
+  assert.equal(motor.premissas.faixa_etaria, "Adultos e idosos");
+  assert.equal(motor.premissas.infraestrutura, "Cozinha de apoio limitada");
+  assert.equal(motor.premissas.prioridade, "Conforto dos convidados");
+  assert.equal(quantidade(motor.alimentacao, "Comida principal"), "42 kg");
+  assert.equal(motor.operacao.complexidade.nivel, "Alta");
+  assert.equal(motor.operacao.status, "dimensionado");
+  assert.equal(motor.operacao.cronograma_operacional[4].hora, "19:30");
+  assert.ok(motor.staff.some(item => item.funcao === "Passe e montagem de pratos"));
 });

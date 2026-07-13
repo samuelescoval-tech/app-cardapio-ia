@@ -9,7 +9,18 @@ const LIMITES_TEXTO = {
   obs: 1000,
   pais: 60,
   estado: 80,
-  cidade: 120
+  cidade: 120,
+  formatoServico: 40,
+  faixaEtaria: 40,
+  infraestrutura: 50,
+  prioridade: 40
+};
+
+const OPCOES_EVENTO = {
+  formatoServico: ["A definir pelo Chef IA", "Buffet self-service", "Buffet com equipe servindo", "Empratado", "Coquetel circulante", "Estacoes ou ilhas", "Compartilhado a mesa"],
+  faixaEtaria: ["Publico misto", "Predominantemente adultos", "Predominantemente infantil", "Adolescentes e jovens", "Adultos e idosos"],
+  infraestrutura: ["A confirmar", "Cozinha completa no local", "Cozinha de apoio limitada", "Sem cozinha no local", "Producao externa com finalizacao"],
+  prioridade: ["Equilibrio geral", "Variedade culinaria", "Praticidade de servico", "Apresentacao", "Conforto dos convidados", "Economia operacional"]
 };
 
 class ErroValidacaoEvento extends Error {
@@ -46,6 +57,11 @@ function validarEvento(valor) {
     tema: textoOpcional(valor.tema, "tema", "Nao informado"),
     alcool: textoOpcional(valor.alcool, "alcool", "Nao informado"),
     orcamentoBase: textoOpcional(valor.orcamentoBase, "orcamentoBase", "Nao informado"),
+    horarioInicio: horarioOpcional(valor.horarioInicio),
+    formatoServico: opcaoPermitida(valor.formatoServico, "formatoServico", "A definir pelo Chef IA"),
+    faixaEtaria: opcaoPermitida(valor.faixaEtaria, "faixaEtaria", "Publico misto"),
+    infraestrutura: opcaoPermitida(valor.infraestrutura, "infraestrutura", "A confirmar"),
+    prioridade: opcaoPermitida(valor.prioridade, "prioridade", "Equilibrio geral"),
     obs: textoOpcional(valor.obs, "obs", "Sem observacoes adicionais")
   };
 }
@@ -93,6 +109,23 @@ function dataEventoOpcional(valor) {
     throw new ErroValidacaoEvento("O campo dataEvento deve conter uma data valida.", "dataEvento");
   }
 
+  return texto;
+}
+
+function horarioOpcional(valor) {
+  const texto = textoNormalizado(valor);
+  if (!texto) return "";
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(texto)) {
+    throw new ErroValidacaoEvento("O campo horarioInicio deve usar o formato HH:MM.", "horarioInicio");
+  }
+  return texto;
+}
+
+function opcaoPermitida(valor, campo, fallback) {
+  const texto = textoNormalizado(valor) || fallback;
+  if (!OPCOES_EVENTO[campo].includes(texto)) {
+    throw new ErroValidacaoEvento(`O campo ${campo} possui uma opcao invalida.`, campo);
+  }
   return texto;
 }
 

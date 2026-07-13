@@ -31,24 +31,95 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             </div>
 
             ${renderResumoExecutivo(dados, pessoas, cardapio, compras)}
+            ${renderQualidadeCulinaria(dados.qualidade_culinaria)}
+            ${renderVariedadeCulinaria(dados.variedade_culinaria)}
+            ${renderContextoInformado(evento, dados.motor_logistica?.premissas)}
             ${renderMotorLogistica(dados.motor_logistica)}
+            ${renderOperacaoDeterministica(dados.motor_logistica?.operacao)}
             ${renderServicoMesa(servicoMesa)}
             ${renderCardapio(cardapio)}
             ${renderCompras(compras)}
-            ${locais.length ? renderLocais(locais) : ""}
-            ${layout.length ? renderSecao("Layout", renderListaCards(layout, "layout-card")) : ""}
-            ${dados.decoracao ? renderDecoracao(dados.decoracao) : ""}
-            ${cronograma.length ? renderCronograma(cronograma) : ""}
-            ${equipeObs.length ? renderSecao("Observacoes de Equipe", renderListaCards(equipeObs, "note-card")) : ""}
-            ${receitas.length ? renderReceitas(receitas) : ""}
-            ${utensilios.length ? renderUtensiliosDetalhados(utensilios, pessoas) : ""}
-            ${entretenimento.length ? renderSecao("Entretenimento", renderListaCards(entretenimento, "note-card")) : ""}
-            ${lembrancinhas.length ? renderSecao("Lembrancinhas", renderListaCards(lembrancinhas, "note-card")) : ""}
-            ${dados.checklist ? renderChecklist(dados.checklist) : ""}
+            ${renderLocais(locais)}
+            ${renderSecao("Layout", layout.length ? renderListaCards(layout, "layout-card") : renderConteudoAusente("Layout não informado."))}
+            ${renderDecoracao(dados.decoracao || {})}
+            ${renderCronograma(cronograma)}
+            ${renderSecao("Observacoes de Equipe", equipeObs.length ? renderListaCards(equipeObs, "note-card") : renderConteudoAusente("Orientações de equipe não informadas."))}
+            ${renderReceitas(receitas)}
+            ${renderReferenciasExternas()}
+            ${renderUtensiliosDetalhados(utensilios, pessoas)}
+            ${renderSecao("Entretenimento", entretenimento.length ? renderListaCards(entretenimento, "note-card") : renderConteudoAusente("Entretenimento não informado."))}
+            ${renderSecao("Lembrancinhas", lembrancinhas.length ? renderListaCards(lembrancinhas, "note-card") : renderConteudoAusente("Lembrancinhas não informadas."))}
+            ${renderChecklist(dados.checklist || {})}
             ${dados.orcamento && precificacaoEhConfiavel(dados.precificacao) ? renderOrcamento(dados.orcamento) : ""}
             ${dados.resumo_chef ? renderSecao("Resumo do Chef", `<div class="chef-summary">${escapeHTML(dados.resumo_chef)}</div>`) : ""}
         </div>
     `;
+}
+
+function renderQualidadeCulinaria(qualidade) {
+    if (!qualidade || qualidade.status === "aprovado") return "";
+
+    const cobertura = qualidade.cobertura || {};
+    const mensagens = [
+        ...normalizarArray(qualidade.avisos),
+        ...normalizarArray(qualidade.ajustes)
+    ].slice(0, 4);
+    const titulo = qualidade.status === "revisar"
+        ? "Planejamento gerado com pontos para revisão"
+        : "Cobertura culinária ajustada automaticamente";
+
+    return `
+        <section class="quality-panel ${qualidade.status === "revisar" ? "quality-review" : "quality-adjusted"}">
+            <div>
+                <strong>${escapeHTML(titulo)}</strong>
+                <p>${escapeHTML(cobertura.ingredientes_cobertos || 0)} de ${escapeHTML(cobertura.ingredientes_total || 0)} ingredientes ligados às compras · ${escapeHTML(cobertura.receitas_cobertas || 0)} de ${escapeHTML(cobertura.pratos_com_preparo || 0)} preparações com receita.</p>
+            </div>
+            ${mensagens.length ? `<ul>${mensagens.map(item => `<li>${escapeHTML(item)}</li>`).join("")}</ul>` : ""}
+    `;
+}
+
+function renderVariedadeCulinaria(variedade) {
+    if (!variedade || variedade.status === "sem_historico" || !variedade.historicos_considerados) return "";
+
+    const justificadas = normalizarArray(variedade.repeticoes_justificadas);
+    const revisar = normalizarArray(variedade.repeticoes_a_revisar);
+    const titulo = revisar.length
+        ? "Variedade aplicada com repetições para revisar"
+        : "Variedade aplicada ao histórico recente";
+    const mensagens = [
+        ...justificadas.map(item => `${item.nome}: mantido por ser elemento essencial do perfil.`),
+        ...revisar.map(item => `${item.nome}: repetido apesar de existir memória recente.`)
+    ].slice(0, 5);
+
+    return `
+        <section class="quality-panel variety-panel ${revisar.length ? "variety-review" : ""}">
+            <div>
+                <strong>${escapeHTML(titulo)}</strong>
+                <p>${escapeHTML(variedade.pratos_novos || 0)} pratos novos · ${escapeHTML(justificadas.length)} repetições essenciais · ${escapeHTML(revisar.length)} repetições para revisar.</p>
+                <p>Comparação com ${escapeHTML(variedade.historicos_considerados)} projeto(s) equivalente(s) deste navegador.</p>
+            </div>
+            ${mensagens.length ? `<ul>${mensagens.map(item => `<li>${escapeHTML(item)}</li>`).join("")}</ul>` : ""}
+        </section>
+    `;
+}
+
+function renderContextoInformado(evento = {}, premissas = {}) {
+    const valores = {
+        horario: evento?.horarioInicio || premissas.horario_inicio || "",
+        formato: evento?.formatoServico || premissas.formato_servico || "",
+        faixa: evento?.faixaEtaria || premissas.faixa_etaria || "",
+        infraestrutura: evento?.infraestrutura || premissas.infraestrutura || "",
+        prioridade: evento?.prioridade || premissas.prioridade || ""
+    };
+    const itens = [
+        valores.horario && valores.horario !== "Nao informado" ? `Inicio: ${valores.horario}` : "",
+        valores.formato && valores.formato !== "A definir pelo Chef IA" ? `Servico: ${valores.formato}` : "",
+        valores.faixa && valores.faixa !== "Publico misto" ? `Publico: ${valores.faixa}` : "",
+        valores.infraestrutura && valores.infraestrutura !== "A confirmar" ? `Infraestrutura: ${valores.infraestrutura}` : "",
+        valores.prioridade && valores.prioridade !== "Equilibrio geral" ? `Prioridade: ${valores.prioridade}` : ""
+    ].filter(Boolean);
+
+    return itens.length ? renderSecao("Contexto informado", renderListaCards(itens, "note-card")) : "";
 }
 
 function baixarRelatorioPDF() {
@@ -189,6 +260,8 @@ function baixarRelatorioPDF() {
     const alimentacao = normalizarArray(motor.alimentacao);
     const bebidas = normalizarArray(motor.bebidas);
     const servico = motor.servico_mesa || dados.servico_mesa;
+    const variedade = dados.variedade_culinaria || null;
+    const operacao = motor.operacao || null;
 
     cabecalho();
 
@@ -210,8 +283,13 @@ function baixarRelatorioPDF() {
         premissas.criancas > 0 ? `Publico: ${premissas.adultos} adultos e ${premissas.criancas} criancas` : "",
         `Localidade: ${localidadePrecificacao(precificacao)}`,
         `Data do evento: ${evento?.dataEvento || precificacao?.data_evento || "Nao informada"}`,
+        `Horario de inicio: ${evento?.horarioInicio || premissas.horario_inicio || "Nao informado"}`,
         `Duracao: ${evento?.duracao || premissas.duracao_horas || motor.duracao || "Nao informado"}`,
         `Refeicao: ${evento?.refeicao || premissas.refeicao || "Nao informado"}`,
+        `Formato do servico: ${evento?.formatoServico || premissas.formato_servico || "A definir pelo Chef IA"}`,
+        `Faixa etaria: ${evento?.faixaEtaria || premissas.faixa_etaria || "Publico misto"}`,
+        `Infraestrutura: ${evento?.infraestrutura || premissas.infraestrutura || "A confirmar"}`,
+        `Prioridade: ${evento?.prioridade || premissas.prioridade || "Equilibrio geral"}`,
         `Estilo: ${evento?.estilo || premissas.estilo || "Nao informado"}`,
         `Tema: ${evento?.tema || premissas.tema || "Nao informado"}`,
         `Bebidas: ${evento?.alcool || premissas.alcool || "Nao informado"}`,
@@ -227,6 +305,30 @@ function baixarRelatorioPDF() {
     listaOuVazio(bebidas);
     escrever("Equipe", { estilo: "bold" });
     listaOuVazio(staff);
+
+    if (operacao) {
+        secao("Operacao deterministica");
+        escrever(`Complexidade: ${operacao.complexidade?.nivel || "A definir"} (${operacao.complexidade?.pontuacao ?? "-"} pontos)`, { estilo: "bold" });
+        escrever(`Modelo de producao: ${operacao.modelo_producao || "A confirmar"}`);
+        escrever(operacao.complexidade?.leitura || "");
+        escrever("Fluxo de producao, montagem e reposicao", { estilo: "bold" });
+        listaOuVazio(operacao.fluxo_producao);
+        escrever("Equipamentos por estacao", { estilo: "bold" });
+        listaOuVazio(operacao.estacoes);
+        escrever("Cronograma operacional", { estilo: "bold" });
+        listaOuVazio(operacao.cronograma_operacional);
+        if (normalizarArray(operacao.confirmacoes_pendentes).length) {
+            escrever("Confirmacoes pendentes", { estilo: "bold" });
+            listaOuVazio(operacao.confirmacoes_pendentes);
+        }
+    }
+
+    if (variedade?.historicos_considerados > 0) {
+        secao("Variedade culinaria");
+        escrever(`${variedade.pratos_novos || 0} pratos novos; ${normalizarArray(variedade.repeticoes_justificadas).length} repeticoes essenciais; ${normalizarArray(variedade.repeticoes_a_revisar).length} repeticoes para revisar.`);
+        normalizarArray(variedade.repeticoes_justificadas).forEach(item => escrever(`- ${item.nome}: mantido como elemento essencial.`));
+        normalizarArray(variedade.repeticoes_a_revisar).forEach(item => escrever(`- ${item.nome}: repeticao a revisar.`));
+    }
 
     secao("Cardapio");
     listaOuVazio(cardapio, "Cardapio nao informado pela IA.");
@@ -268,8 +370,8 @@ function baixarRelatorioPDF() {
     listaOuVazio(itensDecoracao);
     escrever(`Iluminacao: ${decoracao.iluminacao || "Nao informada"}`);
 
-    secao("Cronograma");
-    listaOuVazio(cronograma, "Cronograma nao informado no plano.");
+    secao("Roteiro do evento");
+    listaOuVazio(cronograma, "Roteiro do evento nao informado no plano.");
 
     secao("Observacoes de equipe");
     listaOuVazio(equipeObs, "Observacoes de equipe nao informadas no plano.");
@@ -313,23 +415,37 @@ function textoPDFItem(item) {
     if (typeof item === "string") return item;
     if (!item || typeof item !== "object") return "";
 
-    const nome = item.nome || item.item || item.funcao || item.atividade || item.tipo || "Item";
+    const nome = item.nome || item.item || item.funcao || item.atividade || item.etapa || item.estacao || item.tipo || "Item";
     const quantidade = item.quantidade ? ` - ${item.quantidade}` : "";
+    const ingredientes = normalizarArray(item.ingredientes)
+        .map(ingrediente => ingrediente && typeof ingrediente === "object"
+            ? `${ingrediente.item || "Ingrediente"} ${[ingrediente.quantidade, ingrediente.unidade].filter(Boolean).join(" ")}`.trim()
+            : String(ingrediente || ""))
+        .filter(Boolean);
     const detalhes = [
         item.categoria,
         item.setor,
+        item.natureza,
+        item.hora ? `horario: ${item.hora}` : "",
+        ingredientes.length ? `ingredientes: ${ingredientes.join(", ")}` : "",
         item.prioridade ? `prioridade ${item.prioridade}` : "",
         item.capacidade,
         item.descricao,
         item.observacao,
         item.preparo,
+        normalizarArray(item.preparo_passos).length ? `passos: ${normalizarArray(item.preparo_passos).join("; ")}` : "",
         item.calculo,
         item.uso,
+        item.orientacao,
+        item.responsavel ? `responsavel: ${item.responsavel}` : "",
+        item.pontos ? `pontos: ${item.pontos}` : "",
+        normalizarArray(item.equipamentos).length ? `equipamentos: ${normalizarArray(item.equipamentos).join(", ")}` : "",
         item.pros ? `pros: ${item.pros}` : "",
         item.contras ? `contras: ${item.contras}` : "",
         item.custo ? `custo: ${item.custo}` : "",
         item.tempo,
-        item.rendimento
+        item.rendimento,
+        item.quantidade_total ? `quantidade total: ${item.quantidade_total}` : ""
     ].filter(Boolean).join(" | ");
 
     return [nome + quantidade, detalhes].filter(Boolean).join(": ");
@@ -405,6 +521,83 @@ function renderMotorLogistica(motor) {
     `;
 }
 
+function renderOperacaoDeterministica(operacao) {
+    if (!operacao || typeof operacao !== "object") return "";
+    const complexidade = operacao.complexidade || {};
+    const fluxo = normalizarArray(operacao.fluxo_producao);
+    const estacoes = normalizarArray(operacao.estacoes);
+    const cronograma = normalizarArray(operacao.cronograma_operacional);
+    const pendencias = normalizarArray(operacao.confirmacoes_pendentes);
+    const fatores = normalizarArray(complexidade.fatores);
+
+    return `
+        <section class="result-section operation-panel">
+            <div class="section-head">
+                <h3>Operacao do Evento</h3>
+                <span class="complexity-badge complexity-${escapeHTML(normalizarSlug(complexidade.nivel || "media"))}">Complexidade ${escapeHTML(complexidade.nivel || "A definir")}</span>
+            </div>
+            <div class="operation-summary">
+                <article>
+                    <small>Nivel calculado</small>
+                    <strong>${escapeHTML(complexidade.nivel || "A definir")} · ${escapeHTML(complexidade.pontuacao ?? "-")} pontos</strong>
+                    <p>${escapeHTML(complexidade.leitura || "Dimensionamento operacional ainda não disponível.")}</p>
+                </article>
+                <article>
+                    <small>Modelo de producao</small>
+                    <strong>${escapeHTML(operacao.modelo_producao || "A confirmar")}</strong>
+                    <p>${escapeHTML(operacao.status === "dimensionado" ? "Dimensionado com os dados informados." : "Depende das confirmações destacadas abaixo.")}</p>
+                </article>
+            </div>
+            ${fatores.length ? `<details class="operation-factors"><summary>Como a complexidade foi calculada</summary>${renderListaCards(fatores, "note-card")}</details>` : ""}
+            <div class="operation-grid">
+                <div>
+                    <h4>Producao, montagem e reposicao</h4>
+                    <div class="operation-card-list">
+                        ${fluxo.map(item => `<article><strong>${escapeHTML(item.etapa || "Etapa")}</strong><p>${escapeHTML(item.orientacao || "")}</p></article>`).join("")}
+                    </div>
+                </div>
+                <div>
+                    <h4>Equipamentos por estacao</h4>
+                    <div class="operation-card-list">
+                        ${estacoes.map(item => `
+                            <article>
+                                <strong>${escapeHTML(item.estacao || "Estação")} · ${escapeHTML(item.pontos || 1)} ponto(s)</strong>
+                                <p>${normalizarArray(item.equipamentos).map(equipamento => escapeHTML(equipamento)).join(" · ")}</p>
+                                <small>Responsável: ${escapeHTML(item.responsavel || "A definir")}</small>
+                            </article>
+                        `).join("")}
+                    </div>
+                </div>
+            </div>
+            <div class="operation-timeline">
+                <h4>Cronograma operacional</h4>
+                <div class="timeline">
+                    ${cronograma.map(item => `
+                        <div class="timeline-item">
+                            <span>${escapeHTML(item.hora || "")}</span>
+                            <div>
+                                <h4>${escapeHTML(item.atividade || "Atividade")}</h4>
+                                <p>${escapeHTML(item.descricao || "")}</p>
+                                <small>${escapeHTML(item.responsavel || "")}</small>
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>
+            ${pendencias.length ? `<div class="operation-pending"><strong>Confirmações antes da execução</strong>${renderListaCards(pendencias, "note-card")}</div>` : ""}
+        </section>
+    `;
+}
+
+function normalizarSlug(valor) {
+    return String(valor || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+}
+
 function renderFinanceStrip(motor) {
     const precificacao = motor.precificacao || null;
     if (!precificacaoEhConfiavel(precificacao)) {
@@ -453,7 +646,7 @@ function renderResumoExecutivo(dados, pessoas, cardapio, compras) {
     const total = numeroSeguro(pessoas);
     const motor = dados.motor_logistica || {};
     const staff = normalizarArray(motor.staff);
-    const garcons = staff.find(s => /gar[cç]om|servi/i.test(s.funcao || s.item || s.nome || ""));
+    const totalEquipe = staff.reduce((totalEquipe, item) => totalEquipe + (numeroSeguro(item.quantidade) || 0), 0);
     const precoConfiavel = precificacaoEhConfiavel(dados.precificacao || motor.precificacao);
     const estimativa = precoConfiavel ? (motor.estimativa_total || dados.orcamento?.medio?.total || "A cotar") : "A cotar";
 
@@ -461,7 +654,7 @@ function renderResumoExecutivo(dados, pessoas, cardapio, compras) {
         ["Convidados", total || pessoas, "base do calculo"],
         ["Pratos", cardapio.length || "-", "itens do cardapio"],
         ["Compras", compras.length || "-", "itens consolidados"],
-        ["Equipe", garcons?.quantidade || staff.length || "-", "servico recomendado"],
+        ["Equipe", totalEquipe || staff.length || "-", "profissionais recomendados"],
         ["Orcamento", estimativa, precoConfiavel ? "fonte e data-base validadas" : "sem catalogo regional"]
     ];
 
@@ -541,6 +734,7 @@ function renderCardapio(cardapio) {
                     const desc = typeof p === "string" ? "" : p.descricao;
                     const emoji = typeof p === "string" ? "🍽️" : (p.emoji || "🍽️");
                     const qtd = typeof p === "string" ? "" : p.quantidade;
+                    const ingredientes = typeof p === "string" ? [] : normalizarArray(p.ingredientes);
                     return `
                         <article class="dish-card-rich">
                             <div class="dish-visual g${i % 6}">${escapeHTML(emoji)}</div>
@@ -549,6 +743,12 @@ function renderCardapio(cardapio) {
                                 <h4>${escapeHTML(nome || "Prato sugerido")}</h4>
                                 ${desc ? `<p>${escapeHTML(desc)}</p>` : ""}
                                 ${qtd ? `<strong>${escapeHTML(qtd)}</strong>` : ""}
+                                ${ingredientes.length ? `<small>Ingredientes: ${ingredientes.map(ingrediente => {
+                                    if (ingrediente && typeof ingrediente === "object") {
+                                        return escapeHTML(`${ingrediente.item || "Ingrediente"} ${[ingrediente.quantidade, ingrediente.unidade].filter(Boolean).join(" ")}`.trim());
+                                    }
+                                    return escapeHTML(ingrediente);
+                                }).join(" · ")}</small>` : ""}
                             </div>
                         </article>
                     `;
@@ -579,7 +779,7 @@ function renderCompras(compras) {
                         <h4>${escapeHTML(setor)}</h4>
                         ${itens.map(item => `
                             <div class="shopping-item">
-                                <span>${escapeHTML(item.item || "Item")}</span>
+                                <span>${escapeHTML(item.item || "Item")}${item.natureza ? `<small>${escapeHTML(item.natureza)}</small>` : ""}</span>
                                 <strong>${escapeHTML(item.quantidade || "")}</strong>
                             </div>
                         `).join("")}
@@ -594,7 +794,7 @@ function renderLocais(locais) {
     return `
         <section class="result-section">
             <div class="section-head"><h3>Opcoes de Local</h3></div>
-            <div class="place-grid">
+            ${locais.length ? `<div class="place-grid">
                 ${locais.map(local => `
                     <article class="place-card ${local.recomendado ? "recommended" : ""}">
                         ${local.recomendado ? `<span class="badge">Recomendado</span>` : ""}
@@ -604,7 +804,7 @@ function renderLocais(locais) {
                         <p class="warn">${escapeHTML(local.contras || "")}</p>
                     </article>
                 `).join("")}
-            </div>
+            </div>` : renderConteudoAusente("Opções de local não informadas.")}
         </section>
     `;
 }
@@ -616,14 +816,15 @@ function renderDecoracao(decoracao) {
         ${temas.length ? `<div class="theme-row">${temas.map(t => `<span>${escapeHTML(t)}</span>`).join("")}</div>` : ""}
         ${itens.length ? renderListaCards(itens, "decor-card") : ""}
         ${decoracao.iluminacao ? `<div class="lighting-tip">${escapeHTML(decoracao.iluminacao)}</div>` : ""}
+        ${!temas.length && !itens.length && !decoracao.iluminacao ? renderConteudoAusente("Decoração e ambientação não informadas.") : ""}
     `);
 }
 
 function renderCronograma(cronograma) {
     return `
         <section class="result-section">
-            <div class="section-head"><h3>Cronograma</h3></div>
-            <div class="timeline">
+            <div class="section-head"><h3>Roteiro do Evento</h3><span>experiencia dos convidados</span></div>
+            ${cronograma.length ? `<div class="timeline">
                 ${cronograma.map(item => `
                     <div class="timeline-item">
                         <span>${escapeHTML(item.hora || "")}</span>
@@ -633,23 +834,46 @@ function renderCronograma(cronograma) {
                         </div>
                     </div>
                 `).join("")}
-            </div>
+            </div>` : renderConteudoAusente("Roteiro do evento não informado.")}
         </section>
     `;
 }
 
 function renderReceitas(receitas) {
     return renderSecao("Receitas e Preparo", `
-        <div class="recipe-grid">
+        ${receitas.length ? `<div class="recipe-grid">
             ${receitas.map(r => typeof r === "string" ? `
                 <div class="recipe-card"><p>${escapeHTML(r)}</p></div>
             ` : `
                 <div class="recipe-card">
                     <h4>${escapeHTML(r.nome || "Receita")}</h4>
-                    <p>${escapeHTML(r.preparo || "")}</p>
-                    <small>${escapeHTML([r.tempo, r.rendimento].filter(Boolean).join(" · "))}</small>
+                    ${normalizarArray(r.ingredientes).length ? `
+                        <h5>Ingredientes</h5>
+                        <ul class="recipe-ingredients">
+                            ${normalizarArray(r.ingredientes).map(ingrediente => `<li>${escapeHTML(ingrediente.item || "Ingrediente")} — ${escapeHTML([ingrediente.quantidade, ingrediente.unidade].filter(Boolean).join(" "))}</li>`).join("")}
+                        </ul>
+                    ` : ""}
+                    <h5>Modo de preparo</h5>
+                    ${normalizarArray(r.preparo_passos).length ? `
+                        <ol class="recipe-steps">${normalizarArray(r.preparo_passos).map(passo => `<li>${escapeHTML(passo)}</li>`).join("")}</ol>
+                    ` : `<p>${escapeHTML(r.preparo || "Preparo não informado.")}</p>`}
+                    <small>${escapeHTML([r.tempo, r.rendimento, r.quantidade_total].filter(Boolean).join(" · "))}</small>
                 </div>
             `).join("")}
+        </div>` : renderConteudoAusente("Receitas ainda não detalhadas no plano.")}
+    `);
+}
+
+function renderReferenciasExternas() {
+    if (!window.chefIARecipeReferencesAvailable) return "";
+    return renderSecao("Referencias externas de receitas", `
+        <div class="reference-search-panel">
+            <p>Consulta opcional ao Spoonacular. Exibe somente referências e autoria; não salva ingredientes ou instruções.</p>
+            <div class="reference-search-row">
+                <input id="recipeReferenceQuery" class="premium-input" maxlength="80" placeholder="Ex: brunch, risotto, barbecue">
+                <button id="recipeReferenceButton" class="btn-secondary" type="button" onclick="buscarReferenciasExternas()">Buscar referências</button>
+            </div>
+            <div id="recipeReferenceResults" aria-live="polite"></div>
         </div>
     `);
 }
@@ -663,6 +887,10 @@ function renderUtensiliosDetalhados(utensilios, pessoas) {
             uso: "apoio operacional"
         };
     });
+
+    if (!detalhados.length) {
+        return renderSecao("Utensilios e Estrutura", renderConteudoAusente("Utensílios extras não informados."));
+    }
 
     return renderSecao("Utensilios e Estrutura", `
         <div class="utensil-table">
@@ -684,7 +912,8 @@ function renderChecklist(checklist) {
         ["durante", "Durante"],
         ["pos", "Pos-evento"]
     ];
-    return renderSecao("Checklist", `
+    const possuiItens = grupos.some(([key]) => normalizarArray(checklist[key]).length);
+    return renderSecao("Checklist", possuiItens ? `
         <div class="check-grid">
             ${grupos.map(([key, label]) => {
                 const itens = normalizarArray(checklist[key]);
@@ -697,7 +926,7 @@ function renderChecklist(checklist) {
                 `;
             }).join("")}
         </div>
-    `);
+    ` : renderConteudoAusente("Checklist não informado."));
 }
 
 function renderOrcamento(orcamento) {
@@ -730,6 +959,10 @@ function renderSecao(titulo, conteudo) {
             ${conteudo}
         </section>
     `;
+}
+
+function renderConteudoAusente(mensagem) {
+    return `<p class="empty-section">${escapeHTML(mensagem)}</p>`;
 }
 
 function renderListaCards(lista, classe) {

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://chef-ia.local/schemas/simple-pricing-catalog.schema.json",
+  "title": "Chef IA simple regional pricing catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "catalog_id", "status", "updated_at", "market", "policy", "sources", "items"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "catalog_id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "status": { "enum": ["draft", "active"] },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "market": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["country", "state", "city", "currency"],
+      "properties": {
+        "country": { "type": "string" },
+        "state": { "type": "string" },
+        "city": { "type": "string" },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["max_age_days", "refresh_mode", "missing_value_behavior", "display_type"],
+      "properties": {
+        "max_age_days": { "type": "integer", "minimum": 1 },
+        "refresh_mode": { "enum": ["manual", "scheduled"] },
+        "missing_value_behavior": { "const": "quote_required" },
+        "display_type": { "const": "reference_range" }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/item" }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "url", "role", "categories"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+        "name": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "role": { "enum": ["regional_wholesale", "city_average", "retail_check", "inflation_update"] },
+        "categories": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "category", "unit", "status", "source_hint", "reference"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "name": { "type": "string" },
+        "category": { "enum": ["grocery", "butcher", "produce", "beverage"] },
+        "unit": { "enum": ["kg", "l", "unit"] },
+        "status": { "enum": ["missing", "reference", "expired"] },
+        "source_hint": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z0-9_-]+$" }
+        },
+        "reference": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/reference" }
+          ]
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_id", "date", "price_type", "value", "min", "max", "evidence"],
+      "properties": {
+        "source_id": { "type": "string", "pattern": "^[a-z0-9_-]+$" },
+        "date": { "type": "string", "format": "date" },
+        "price_type": { "enum": ["wholesale_average", "city_average", "retail_observed"] },
+        "value": { "type": "number", "minimum": 0 },
+        "min": { "type": "number", "minimum": 0 },
+        "max": { "type": "number", "minimum": 0 },
+        "evidence": { "type": "string" }
+      }
+    }
+  }
+}

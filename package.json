@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "node --test",
+    "test:spoonacular:live": "node scripts/validate-spoonacular-live.js",
     "start": "node server.js"
   },
   "keywords": [],

@@ -10,6 +10,7 @@ Antes de alterar qualquer etapa do fluxo principal, conferir o Fluxo 1 e o Fluxo
 Antes de mexer em acesso demo, conferir o Fluxo 3.
 Antes de mexer em PDF, conferir o Fluxo 4.
 Antes de mexer em documentacao, conferir o Fluxo 5.
+Antes de mexer em referencias Spoonacular, conferir o Fluxo 7.
 -->
 
 <!-- CODEX:MANTER_EM_LINHA
@@ -19,7 +20,7 @@ Registrar no handoff se a mudanca afetar estado ou proximo passo.
 
 Documento dedicado aos fluxos do Chef IA Studio.
 
-Ultima atualizacao: 2026-07-10
+Ultima atualizacao: 2026-07-13
 
 ## Onde estavam antes
 
@@ -39,14 +40,15 @@ Este arquivo replica e organiza os fluxos principais para consulta rapida.
 | Fluxo 4 | Exportacao PDF | Ao mexer no botao PDF, layout do PDF ou resultado renderizado |
 | Fluxo 5 | Atualizacao documental | Ao mudar codigo, fluxo, requisito, prioridade ou gargalo |
 | Fluxo 6 | Demo controlada externa | Ao preparar link temporario, roteiro de tester ou Porta de Passagem |
+| Fluxo 7 | Referencias externas transitorias | Ao mexer em Spoonacular, quota, atribuicao ou persistencia |
 
 ## Proxima atualizacao curta
 
-Objetivo: evitar repeticao de testes e deixar a trilha pronta para teste externo controlado.
+Objetivo ao retomar: o ciclo de 10 planos esta concluido; nao iniciar nova frente sem decisao do usuario.
 
-1. Consultar `docs/HANDOFF_PROXIMA_ATUALIZACAO.md`, secao Registro de testes e validacoes.
-2. Registrar evidencias dos testes manuais ja feitos pelo usuario para modal, geracao real e PDF.
-3. Seguir o Fluxo 6 - Demo controlada externa se nao houver falha aberta.
+1. Consultar o baseline final em `docs/HANDOFF_PROXIMA_ATUALIZACAO.md` e o quadro em `docs/ROADMAP_ATUAL.md`.
+2. Apresentar teste controlado, correcao por feedback, expansao culinaria e decisao de produto como caminhos separados.
+3. Executar somente o caminho escolhido explicitamente pelo usuario.
 
 Fora desta rodada:
 
@@ -106,6 +108,8 @@ flowchart LR
 Entradas:
 
 - Dados do evento.
+- Contexto avancado opcional: horario, servico, faixa etaria, infraestrutura e prioridade.
+- Memoria culinaria local compacta de projetos equivalentes.
 - Senha demo, quando ativa.
 - Configuracao Gemini no `.env`.
 
@@ -124,15 +128,19 @@ flowchart TD
     capturar["Capturar campos do formulario"]
     validarMinimo{"Tipo e pessoas existem?"}
     montarEvento["Montar objeto evento"]
+    memoria["Criar memoria culinaria compacta"]
     enviar["POST /gerar-cardapio"]
     validarSenha{"Senha demo valida?"}
     validarEvento{"Evento valido?"}
     erroEntrada["Retornar 400 com campo e mensagem"]
+    selecionarMatriz["obterDiretrizCulinaria"]
     calcularMotor["calcularMotorEvento"]
+    calcularOperacao["Calcular complexidade e operacao deterministica"]
     montarPrompt["montarPromptPlanejamento"]
     chamarGemini["gerarPlano no Gemini"]
     extrair["extrairJSON"]
     validarPlano["validarPlano"]
+    auditarVariedade["Auditar variedade culinaria"]
     aplicarMotor["aplicarMotorAoPlano"]
     responder["Retornar resposta normalizada"]
     renderizar["exibirResultadoLuxo"]
@@ -143,18 +151,22 @@ flowchart TD
     capturar --> validarMinimo
     validarMinimo -->|"Nao"| fim
     validarMinimo -->|"Sim"| montarEvento
-    montarEvento --> enviar
+    montarEvento --> memoria
+    memoria --> enviar
     enviar --> validarSenha
     validarSenha -->|"Nao"| fim
     validarSenha -->|"Sim"| validarEvento
     validarEvento -->|"Nao"| erroEntrada
     erroEntrada --> fim
-    validarEvento -->|"Sim"| calcularMotor
-    calcularMotor --> montarPrompt
+    validarEvento -->|"Sim"| selecionarMatriz
+    selecionarMatriz --> calcularMotor
+    calcularMotor --> calcularOperacao
+    calcularOperacao --> montarPrompt
     montarPrompt --> chamarGemini
     chamarGemini --> extrair
     extrair --> validarPlano
-    validarPlano --> aplicarMotor
+    validarPlano --> auditarVariedade
+    auditarVariedade --> aplicarMotor
     aplicarMotor --> responder
     responder --> renderizar
     renderizar --> salvar
@@ -166,6 +178,9 @@ Arquivos principais:
 - `public/js/app.js`
 - `server.js`
 - `src/services/planning/motor.service.js`
+- `src/services/planning/operational-planning.service.js`
+- `src/services/planning/culinary-matrix.service.js`
+- `data/culinary/matrix.json`
 - `src/prompts/event.prompt.js`
 - `src/services/ai/gemini.service.js`
 - `src/utils/extract-json.js`
@@ -178,6 +193,7 @@ Validacoes ligadas:
 
 - `VAL-03`
 - `VAL-14`
+- `VAL-16`
 - `VAL-05`
 - `VAL-06`
 - `VAL-07`
@@ -397,6 +413,49 @@ Entrada esperada do feedback:
 - Navegador/dispositivo.
 - Passo em que falhou ou confundiu.
 - Print ou descricao curta, quando possivel.
+
+## Fluxo 7 - Referencias externas transitorias
+
+```mermaid
+flowchart TD
+    inicio([Inicio])
+    configurada{"SPOONACULAR_API_KEY configurada?"}
+    ocultar["Nao exibir consulta externa"]
+    consulta["Usuario informa termo manual"]
+    senha{"Senha demo valida?"}
+    validar["Validar 2-80 caracteres, intervalo e limite diario"]
+    buscar["Consultar complexSearch: maximo 3 resultados"]
+    reduzir["Descartar ingredientes, instrucoes e nutricao"]
+    atribuir["Manter id, titulo, imagem, fonte/link, tempo e porcoes"]
+    exibir["Exibir somente no DOM transitorio"]
+    persistir{"Entrou no plano, historico ou PDF?"}
+    bloquear["Bloquear persistencia e corrigir regressao"]
+    fim([Fim])
+
+    inicio --> configurada
+    configurada -->|"Nao"| ocultar
+    ocultar --> fim
+    configurada -->|"Sim"| consulta
+    consulta --> senha
+    senha -->|"Nao"| fim
+    senha -->|"Sim"| validar
+    validar --> buscar
+    buscar --> reduzir
+    reduzir --> atribuir
+    atribuir --> exibir
+    exibir --> persistir
+    persistir -->|"Sim"| bloquear
+    persistir -->|"Nao"| fim
+    bloquear --> fim
+```
+
+Regras obrigatorias:
+
+- Chave somente no `.env`; nunca no frontend, URL de documentacao, logs ou Git.
+- No maximo tres referencias por consulta e limite local diario configuravel.
+- Exigir link HTTPS e atribuicao da fonte original.
+- Nao devolver nem persistir ingredientes, instrucoes, nutricao ou dados derivados do Spoonacular.
+- Nao incluir referencias externas em `window.chefIAUltimoPlano`, historico ou PDF.
 
 ## Comandos para encontrar fluxos
 

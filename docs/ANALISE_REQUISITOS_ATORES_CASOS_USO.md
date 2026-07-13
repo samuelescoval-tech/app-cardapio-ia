@@ -17,7 +17,7 @@ Registrar no handoff se a mudanca afetar estado ou proximo passo.
 
 Documento vivo para organizar atores, requisitos, casos de uso, validacoes, dados de uso geral e fluxo de uso do Chef IA Studio.
 
-Ultima atualizacao: 2026-07-09
+Ultima atualizacao: 2026-07-13
 
 ## Resumo
 
@@ -43,12 +43,12 @@ Este documento existe para orientar mudancas de comportamento do produto. Ele na
 
 | Ator | Requisitos ligados | Resultado esperado |
 |---|---|---|
-| AT-01 Dono do projeto | RF-01 a RF-16, RNF-01, RNF-03, RNF-07 | Saber o que esta pronto, o que falta e qual proximo passo executar. |
-| AT-02 Usuario testador | RF-02, RF-03, RF-08, RF-11, RF-12, RF-13, RF-14 | Acessar, gerar, entender erros e baixar PDF sem confusao. |
-| AT-03 Organizador de eventos | RF-06, RF-08, RF-11, RF-15 | Receber um plano acionavel, com numeros, compras, equipe e cronograma. |
+| AT-01 Dono do projeto | RF-01 a RF-23, RNF-01, RNF-03, RNF-07 | Saber o que esta pronto, o que falta e qual proximo passo executar. |
+| AT-02 Usuario testador | RF-02, RF-03, RF-08, RF-11, RF-12, RF-13, RF-14, RF-23 | Acessar, gerar, entender erros e baixar PDF sem confusao. |
+| AT-03 Organizador de eventos | RF-06, RF-08, RF-11, RF-15, RF-23 | Receber um plano acionavel, com numeros, compras, equipe, estacoes e cronograma. |
 | AT-04 Assistente tecnico | RNF-01, RNF-03, RNF-04, RNF-07 | Fazer mudancas pequenas, alinhadas e documentadas. |
 | AT-05 Backend Express | RF-02, RF-03, RF-04, RF-05, RF-07, RF-12, RF-16 | Coordenar fluxo com seguranca, validacao e fallback. |
-| AT-06 Motor local | RF-06, RF-15 | Garantir calculos consistentes e evoluiveis. |
+| AT-06 Motor local | RF-06, RF-15, RF-23 | Garantir calculos e operacao consistentes e evoluiveis. |
 | AT-07 Gemini | RF-03, RF-05, RF-07 | Gerar JSON utilizavel e detalhado. |
 | AT-08 Navegador/localStorage | RF-09, RF-10 | Salvar e recuperar historico no mesmo navegador. |
 | AT-09 GitHub/repositorio | RNF-02, RNF-07 | Preservar historico sem vazar segredos. |
@@ -190,6 +190,11 @@ Regras:
 | `orcamentoBase` | Formulario | Nao | Orcamento e cenarios | Texto normalizado, maximo 80 caracteres | Normalizacao de moeda ou faixa. |
 | `alcool` | Formulario | Nao | Bebidas e equipe | Select | Opcoes coerentes com motor. |
 | `estilo` | Formulario | Sim | Multiplicadores e acabamento | Radio com padrao | Manter padrao se nenhum marcado. |
+| `horarioInicio` | Opcoes avancadas | Nao | Cronograma operacional e contexto culinario | HH:MM ou vazio | Manter. |
+| `formatoServico` | Opcoes avancadas | Nao | Equipe, montagem e equipamentos | Lista controlada; padrao a definir | Revisar opcoes com feedback real. |
+| `faixaEtaria` | Opcoes avancadas | Nao | Contexto culinario e conforto | Lista controlada; padrao publico misto | Manter sem presumir restricao clinica. |
+| `infraestrutura` | Opcoes avancadas | Nao | Producao, transporte e finalizacao | Lista controlada; padrao a confirmar | Vistoria continua obrigatoria antes da execucao. |
+| `prioridade` | Opcoes avancadas | Nao | Ajuste do planejamento e complexidade | Lista controlada; padrao equilibrio | Nunca superar seguranca ou restricoes. |
 | `obs` | Formulario | Nao | Contexto livre do prompt | Texto normalizado, maximo 1000 caracteres e tratado como dado | Refinar mensagem de ajuda. |
 
 ### Payload principal
@@ -211,6 +216,11 @@ Regras:
     "orcamentoBase": "R$ 2500",
     "alcool": "Com alcool moderado",
     "estilo": "Elegante",
+    "horarioInicio": "19:30",
+    "formatoServico": "Empratado",
+    "faixaEtaria": "Predominantemente adultos",
+    "infraestrutura": "Cozinha de apoio limitada",
+    "prioridade": "Apresentacao",
     "obs": "preferir opcoes leves"
   }
 }
@@ -251,6 +261,13 @@ Regras:
 | VAL-13 | Porta de Passagem da demo controlada esta pronta. | Antes de enviar link temporario para amigo/testador. | Registro de testes consultado, evidencias manuais registradas, `DEMO_ACCESS_KEY` ativa e escopo do teste definido. |
 | VAL-14 | Backend valida e limita o evento antes do motor e da IA. | Em todo `POST /gerar-cardapio`. | Evento invalido retorna 400 com `campo`; prompt arbitrario sem evento nao e aceito. |
 | VAL-15 | Evento misto preserva total e separa consumo. | Ao calcular evento com criancas. | Adultos sao derivados; consumo infantil usa fator 60%; equipe, espaco e mesa usam total. |
+| VAL-16 | Plano possui profundidade e cobertura culinaria. | Apos retorno da IA. | Falha estrutural bloqueia; ingredientes podem ser recuperados da receita; compras sao consolidadas/derivadas; preparo/montagem possui receita completa ou gera aviso visivel sem apagar o evento. |
+| VAL-17 | Fallback nao substitui nem polui projetos validos. | Quando `resposta.ok` for falsa ou plano estiver vazio. | Frontend preserva o ultimo resultado valido, nao salva o fallback e identifica registros antigos incompletos sem apaga-los. |
+| VAL-18 | Referencia externa nao e persistida. | Ao usar `/api/referencias-receitas`. | Resposta tem somente metadados e atribuicao; DOM transitorio nao altera plano, historico ou PDF; quota e URLs sao validadas. |
+| VAL-19 | Identidade do evento prevalece sobre refeicao e tema. | Ao montar a diretriz culinaria. | Tipo seleciona o perfil-base; refeicao e tema entram como modificadores; matriz valida ids, momentos, elementos esperados, repertorio tipico e composicao. |
+| VAL-20 | Variedade usa somente historico equivalente e compacto. | Antes e depois da geracao. | Memoria limitada exclui dados pessoais e receitas; pratos novos e repeticoes essenciais ou revisaveis sao medidos e exibidos sem reduzir a qualidade culinaria. |
+| VAL-21 | Contexto avancado e opcional, controlado e retrocompativel. | Ao preencher, validar, salvar e carregar evento. | Horario usa HH:MM; servico, faixa, infraestrutura e prioridade usam opcoes permitidas; defaults mantem projetos antigos; tela e PDF mostram valores especificos. |
+| VAL-22 | Operacao e calculada sem inventar capacidade local. | Depois da validacao do evento. | Nivel possui fatores; equipe muda por formato; fluxo e estacoes respeitam infraestrutura; horario e momentos do perfil formam o cronograma; campos a confirmar geram pendencias. |
 
 ## Casos de uso gerais
 
@@ -290,10 +307,10 @@ Regras:
 | Atores secundarios | Backend Express, motor local, Gemini |
 | Pre-condicoes | Dados minimos informados e acesso demo resolvido |
 | Gatilho | Clique em calcular/gerar planejamento |
-| Fluxo principal | Frontend envia evento; backend valida entrada; calcula motor; monta prompt; chama Gemini; restringe e valida JSON; aplica motor; retorna plano |
+| Fluxo principal | Frontend envia evento; backend valida entrada; seleciona diretriz; calcula motor e operacao; monta prompt; chama Gemini; restringe e valida JSON; aplica motor; retorna plano |
 | Fluxo alternativo | Falha da IA ou JSON invalido; backend retorna fallback controlado |
 | Saida | Planejamento normalizado |
-| Validacao | VAL-05, VAL-06, VAL-07, VAL-14 |
+| Validacao | VAL-05, VAL-06, VAL-07, VAL-14, VAL-22 |
 | Status | Implementado |
 
 ### UC-04 - Validar acesso demo
@@ -318,10 +335,10 @@ Regras:
 | Atores secundarios | Frontend |
 | Pre-condicoes | Plano gerado ou carregado do historico |
 | Gatilho | Resposta do backend ou clique em carregar historico |
-| Fluxo principal | `render.js` monta resultado rico com secoes principais |
+| Fluxo principal | `render.js` monta resultado rico com secoes culinarias, operacao deterministica e roteiro visivel do evento |
 | Fluxo alternativo | Plano incompleto; renderizadores exibem mensagens de nao informado |
 | Saida | Planejamento na tela |
-| Validacao | VAL-08 |
+| Validacao | VAL-08, VAL-22 |
 | Status | Implementado em melhoria |
 
 ### UC-06 - Baixar PDF
@@ -414,6 +431,7 @@ Regras:
 | RF-14 | UC-06 |
 | RF-15 | UC-03, UC-05 |
 | RF-16 | UC-02, UC-03 |
+| RF-23 | UC-03, UC-05, UC-06 |
 | RNF-01 | UC-10 |
 | RNF-02 | UC-04, UC-10 |
 | RNF-03 | UC-10 |

@@ -42,6 +42,7 @@ Ultima atualizacao: 2026-07-09
 - Resolver o gargalo atual com a menor mudanca testavel.
 - Evitar tecnologia nova se o problema pode ser resolvido com HTML, CSS, JS, Express e docs.
 - Manter motor local como fonte de numeros operacionais.
+- Distinguir `Cronograma operacional` deterministico de `Roteiro do Evento` editorial; producao, transporte, equipe e equipamentos nao devem aparecer como se fossem momentos dos convidados.
 - Manter Gemini como apoio criativo e estruturado, nao como unica fonte de calculo.
 - Usar a Arquitetura Residencial de Prompts como referencia interna e proporcional; no runtime, preferir rotulos operacionais claros e nao expor a metafora.
 - Proteger `.env`, chave Gemini e acesso demo.
@@ -204,15 +205,15 @@ Exemplo para acesso demo:
 
 ### Fila curta da proxima atualizacao
 
-1. P2 - Refinar multiplicadores do motor por tipo de refeicao.
-2. P3 - Separar pitch do `index.html`, se ainda reduzir complexidade real.
-3. P3 - Avaliar migracao do SDK Gemini somente com base estavel.
+1. P1 - Definir nivel de complexidade operacional por servico, infraestrutura, horario e publico.
+2. P1 - Dimensionar equipe, utensilios, producao, montagem e reposicao com regras locais verificaveis.
+3. P1 - Gerar cronograma operacional ligado ao horario de inicio e aos momentos do evento.
 
 ### Fila logo depois
 
 1. P2 - Refinar regras de entrada conforme feedback real.
 2. P3 - Avaliar secoes recolhiveis para resultados extensos.
-3. P3 - Refinar PDF somente quando houver falha ou necessidade observada.
+3. P3 - Ampliar perfis regionais somente com revisao editorial e fontes adequadas.
 
 ### Regra de decisao
 

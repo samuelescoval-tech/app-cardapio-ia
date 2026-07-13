@@ -49,7 +49,7 @@ Estado atual:
 - A analise de requisitos, atores e casos de uso esta em `docs/ANALISE_REQUISITOS_ATORES_CASOS_USO.md`.
 - Os diagramas complementares estao em `docs/DIAGRAMAS_COMPLEMENTARES_ANALISE_TECNICA.md`.
 - Os padroes de qualidade, interface e priorizacao estao em `docs/PADROES_QUALIDADE_PRIORIZACAO.md`.
-- O foco atual e uma atualizacao curta anti-repeticao: consultar o registro de testes, registrar evidencias dos testes manuais ja feitos e executar a Porta de Passagem da demo controlada se nao houver falha aberta.
+- O fluxo culinario usa matriz local por evento/tema e valida cobertura entre prato, ingrediente e compra; o cenario corporativo passou e faltam casamento, churrasco e infantil.
 
 Decisao de conducao:
 
@@ -60,10 +60,9 @@ Decisao de conducao:
 
 Proximo tema recomendado:
 
-- Consultar a Porta de Passagem da demo controlada em `docs/README.md`.
-- Consultar o Registro de testes e validacoes em `docs/HANDOFF_PROXIMA_ATUALIZACAO.md` antes de rodar nova bateria.
-- Seguir `docs/FLUXOS_DE_PROCESSO.md`, Fluxo 6 - Demo controlada externa.
-- Registrar evidencias dos testes manuais ja feitos pelo usuario, especialmente modal, geracao real e PDF.
+- Validar a matriz culinaria em casamento, churrasco e evento infantil.
+- Revisar conteudo, categorias e cobertura, nao apenas `schema_ok`.
+- Consultar o Registro de testes e validacoes no handoff antes de repetir qualquer cenario.
 
 ## Objetivo do material
 
@@ -162,7 +161,8 @@ flowchart LR
         validaSenha{"Header x-demo-access-key valido?"}
         validaEvento{"Evento respeita contrato e limites?"}
         retornaErro["Retorna 400 com campo e mensagem"]
-        calculaMotor["Calcula motor local"]
+        selecionaDiretriz["Seleciona diretriz culinaria"]
+        calculaMotor["Calcula motor e operacao deterministica"]
         montaPrompt["Monta prompt backend"]
         chamaGemini["Chama servico Gemini"]
         validaJson["Extrai e valida JSON"]
@@ -194,7 +194,8 @@ flowchart LR
     validaSenha -->|"Sim"| validaEvento
     validaEvento -->|"Nao"| retornaErro
     retornaErro --> reportaAjuste
-    validaEvento -->|"Sim"| calculaMotor
+    validaEvento -->|"Sim"| selecionaDiretriz
+    selecionaDiretriz --> calculaMotor
     calculaMotor --> montaPrompt
     montaPrompt --> chamaGemini
     chamaGemini --> geraPlano
@@ -232,10 +233,15 @@ flowchart LR
 | Entrada | Bebidas/alcool | Usuario | Motor local e prompt | Afeta bebidas, equipe e custo. |
 | Entrada | Estilo | Usuario | Motor local e prompt | Afeta perfil, custo e acabamento. |
 | Entrada | Observacoes livres | Usuario | Prompt | Complementa detalhes do evento. |
+| Entrada | Horario de inicio | Usuario | Taxonomia, premissas do motor e prompt | Opcional; usa HH:MM e orienta o periodo do servico. |
+| Entrada | Formato de servico | Usuario | Taxonomia, prompt e motor operacional | Opcao controlada; dimensiona atendimento, montagem e equipamentos de servico. |
+| Entrada | Faixa etaria predominante | Usuario | Taxonomia e prompt | Complementa a contagem objetiva de criancas sem presumir restricao clinica. |
+| Entrada | Infraestrutura disponivel | Usuario | Taxonomia, prompt e motor operacional | Define producao/finalizacao; se estiver a confirmar, gera vistoria pendente e nao inventa equipamentos. |
+| Entrada | Prioridade do planejamento | Usuario | Taxonomia e prompt | Fica abaixo de identidade, seguranca e restricoes. |
 | Entrada | `DEMO_ACCESS_KEY` | `.env` e usuario/testador | Backend | Protecao temporaria de teste. |
 | Processo | Captura do formulario | Frontend | `evento` | Mantem IDs atuais do HTML. |
 | Processo | Validacao de acesso demo | Backend | Decisao 401 ou continua | Evita uso externo sem senha. |
-| Processo | Motor local | Backend | Plano enriquecido | Nao deve ser removido. |
+| Processo | Motor local e operacional | Backend | Plano enriquecido | Calcula quantidades, complexidade, equipe, fluxo, estacoes e cronograma; nao deve ser removido. |
 | Processo | Prompt backend | Backend | Gemini | Prompt nao deve voltar ao frontend; metodologia organiza contexto, foco, limites e entrega sem aparecer no resultado. |
 | Processo | Extracao/normalizacao/validacao JSON | Backend | Resposta normalizada | Evita quebrar a interface e estabiliza campos usados pela tela e PDF. |
 | Processo | Renderizacao | Frontend | Tela do usuario | Usa `render.js`. |
@@ -388,18 +394,24 @@ Saida:
 | RF-03 | O app deve gerar planejamento por `POST /gerar-cardapio`. | Implementado reforcado | Aceita evento validado e retorna `{ ok, provider, plano, meta }`; prompt arbitrario do cliente e rejeitado. |
 | RF-04 | A chave da IA deve ficar somente no backend. | Implementado | Nenhuma chamada direta de IA no frontend. |
 | RF-05 | O prompt principal deve ficar no backend. | Implementado reforcado | `src/prompts/event.prompt.js` usa secoes operacionais proporcionais e contrato explicito. |
-| RF-06 | O motor local deve calcular numeros operacionais. | Implementado inicial | Plano contem `motor_logistica`. |
+| RF-06 | O motor local deve calcular numeros operacionais. | Implementado reforcado | `motor_logistica` contem quantidades e uma operacao deterministica explicavel. |
 | RF-07 | A resposta da IA deve ser extraida, normalizada e validada. | Implementado reforcado | Campos essenciais sao exigidos, campos externos descartados e falha gera fallback controlado. |
-| RF-08 | O resultado deve renderizar secoes completas. | Implementado em melhoria | Tela mostra cardapio, compras, cronograma, equipe, orcamento e extras. |
+| RF-08 | O resultado deve renderizar secoes completas. | Implementado e validado | Tela distingue operacao deterministica do roteiro visivel do evento e mostra cardapio, compras, equipe e extras. |
 | RF-09 | O app deve salvar historico local. | Implementado | Planejamento aparece em recentes. |
 | RF-10 | O app deve carregar planejamento do historico. | Implementado | Formulario e resultado sao preenchidos. |
 | RF-11 | O app deve exportar PDF. | Implementado em melhoria | Botao baixa PDF com secoes principais. |
 | RF-12 | O teste externo deve poder exigir senha temporaria. | Implementado | Modal pede senha; sem senha ou senha incorreta, `/gerar-cardapio` retorna 401. |
 | RF-13 | A UI deve comunicar erros de forma clara. | Implementado em melhoria | Usuario entende senha invalida, servidor fora ou falha da IA. |
-| RF-14 | O PDF deve ser legivel em eventos realistas. | Pendente validacao | Quebras de pagina e textos ficam legiveis. |
+| RF-14 | O PDF deve ser legivel em eventos realistas. | Implementado e validado | Cinco PDFs finais A4, com 7 a 8 paginas, texto extraivel, operacao e roteiro passaram; amostra visual ficou legivel. |
 | RF-15 | O motor deve separar adultos e criancas. | Implementado inicial | Consumo usa fator infantil; equipe, espaco e mesa preservam o total. |
 | RF-16 | O backend deve validar o evento antes do motor e da IA. | Implementado | Limites invalidos retornam HTTP 400 com campo e mensagem; corpo JSON e limitado a 20 KB. |
 | RF-17 | Todo valor financeiro exibido deve ter origem rastreavel. | Em implementacao | Regiao, moeda, fonte e data-base acompanham o preco; sem catalogo, mostrar `A cotar`. |
+| RF-18 | O cardapio deve ser adequado ao evento e coberto pela lista de compras. | Implementado e validado | Perfil define identidade e composicao; ingredientes podem ser recuperados da receita ligada e compras ausentes sao derivadas com ajuste visivel. |
+| RF-19 | Referencias Spoonacular devem ser opcionais e nao persistentes. | Implementado sem chave real | Endpoint retorna somente metadados atribuiveis; ingredientes/instrucoes externos nao entram em plano, historico ou PDF. |
+| RF-20 | Tema e refeicao devem modificar sem descaracterizar o tipo de evento. | Implementado | Perfil-base usa o tipo; refeicao e tema sao modificadores separados e cobertos por teste. |
+| RF-21 | Geracoes equivalentes devem evitar repeticoes culinarias sem remover elementos essenciais. | Implementado e validado | Auditoria normaliza plural e qualificadores, preserva tecnicas distintas e informa pratos novos, repeticoes essenciais e pontos para revisao na tela e no PDF. |
+| RF-22 | Contexto avancado deve melhorar o plano sem tornar o formulario obrigatoriamente complexo. | Implementado | Opcoes avancadas recolhiveis, listas controladas, defaults retrocompativeis e dados preservados em historico, tela e PDF. |
+| RF-23 | O backend deve transformar contexto avancado em operacao executavel sem inventar infraestrutura. | Implementado | Complexidade, equipe, fluxo, estacoes e cronograma variam por formato e infraestrutura; dados a confirmar geram pendencias explicitas. |
 
 ### Requisitos nao funcionais
 
@@ -418,6 +430,9 @@ Saida:
 
 - Motor local e fonte dos numeros operacionais.
 - IA complementa com criatividade, cardapio, decoracao, roteiro e explicacoes.
+- A matriz culinaria local orienta composicao e tema; a geracao normal nao pesquisa fontes externas.
+- O catalogo culinario local registra qualidade, finalidade e limitacoes das fontes; fontes editoriais ampliam repertorio, mas nao sao copiadas nem substituem fontes oficiais de seguranca.
+- Ingredientes devem ter quantidade e unidade, e cada um deve aparecer em uma compra consolidada ligada ao prato de origem.
 - A Arquitetura Residencial de Prompts orienta a hierarquia do prompt, mas o runtime usa rotulos operacionais e nunca devolve a metafora ao usuario.
 - Motor local e aplicado pelo backend; o Gemini nao deve devolver nem controlar `motor_logistica`.
 - `pessoas` e o total do evento; `criancas` e opcional e adultos sao derivados. Criancas usam fator inicial de consumo de 60%.
