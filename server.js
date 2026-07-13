@@ -59,7 +59,7 @@ async function gerarCardapioHandler(req, res) {
         const prompt = montarPromptPlanejamento(evento, motor, diretrizCulinaria, contextoVariedade);
         console.log('📝 Prompt:', `${prompt.length} chars`);
 
-        const resposta = await gerarPlano(prompt, { diretrizCulinaria });
+        const resposta = await gerarPlano(prompt, { diretrizCulinaria, evento });
         if (resposta.ok && resposta.plano) {
             resposta.plano.variedade_culinaria = avaliarVariedadePlano(resposta.plano, contextoVariedade);
         }

@@ -94,6 +94,21 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Limite da evidencia: este pre-teste de API nao aprovou interface, historico, operacao renderizada ou PDF.
 - Proxima porta: executar o primeiro teste real pela interface usando a ficha de feedback deste documento.
 
+### Pre-teste tecnico 1 - E2E corporativo pela interface
+
+- Data: 2026-07-13.
+- Escopo: formulario, geracao real, renderizacao, operacao, historico, recarga, mobile e PDF.
+- Resultado final: 13 pratos, 11 receitas, 29 compras e cobertura de 30/30 ingredientes.
+- Operacao: complexidade media, 4 frentes de equipe, 6 etapas de fluxo, 3 estacoes, 9 momentos e nenhuma confirmacao pendente.
+- Interface: 16 secoes esperadas, sem duplicacao operacional e sem overflow no desktop ou em 400 px.
+- Historico: um projeto salvo, recarregado com todos os campos avancados e painel avancado aberto.
+- PDF: A4, 7 paginas, 57.588 bytes e texto pesquisavel.
+- Falha encontrada: o primeiro PDF afirmou uma restricao sem gluten nao informada e usou linguagem de garantia alimentar.
+- Correcao: o backend agora substitui resumos com promessa absoluta ou restricao inventada por texto deterministico baseado no evento, com aviso de conferencia profissional e contaminacao cruzada.
+- Regressao: o E2E passou a rejeitar promessa alimentar absoluta, restricao a gluten nao informada e falta de cuidado profissional.
+- Ponto a observar: 22 compras foram recuperadas automaticamente. A cobertura final ficou completa, mas o volume de recuperacao deve ser comparado com os proximos testes antes de alterar o prompt.
+- Proxima porta: primeiro teste com uma pessoa usuaria e preenchimento da ficha de feedback.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

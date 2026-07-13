@@ -17,7 +17,7 @@ const cenarios = [
 async function gerar(evento, diretriz, contexto) {
   return gerarPlano(
     montarPromptPlanejamento(evento, calcularMotorEvento(evento, diretriz), diretriz, contexto),
-    { diretrizCulinaria: diretriz }
+    { diretrizCulinaria: diretriz, evento }
   );
 }
 

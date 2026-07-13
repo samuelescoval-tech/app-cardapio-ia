@@ -173,7 +173,7 @@ class CdpClient {
 async function main() {
   fs.mkdirSync(profileDir, { recursive: true });
   fs.mkdirSync(downloadDir, { recursive: true });
-  await confirmarServidor();
+  const server = await confirmarServidor();
 
   const chrome = spawn("google-chrome", [
     "--headless=new",
@@ -290,11 +290,14 @@ async function main() {
   } finally {
     cdp?.close();
     if (chrome.exitCode === null) chrome.kill("SIGTERM");
+    if (server?.exitCode === null) server.kill("SIGTERM");
   }
 }
 
 function validarResultadoCiclo(result, scenario) {
   const erros = [];
+  const resumo = normalizarTextoBusca(result.resumoChef);
+  const restricoes = normalizarTextoBusca(scenario.restricoes);
   if (!result.operacaoPresente || result.operationPanels !== 1) erros.push("secao operacional ausente ou duplicada");
   if (result.complexidadeOperacional !== scenario.complexidadeEsperada) erros.push(`complexidade ${result.complexidadeOperacional}/${scenario.complexidadeEsperada}`);
   if (result.equipeOperacional < 3) erros.push(`equipe operacional insuficiente: ${result.equipeOperacional}`);
@@ -307,7 +310,23 @@ function validarResultadoCiclo(result, scenario) {
   if (result.desktopOverflow) erros.push("overflow horizontal no desktop");
   if (result.recipeCards !== result.receitas) erros.push(`cards de receita ${result.recipeCards}/${result.receitas}`);
   if (result.shoppingItems !== result.compras) erros.push(`itens de compra ${result.shoppingItems}/${result.compras}`);
+  if (/atende rigorosamente|cumpre rigorosamente|garant|assegur/.test(resumo) && /restri|alergen|gluten|lactose|celiac|contamin/.test(resumo)) {
+    erros.push("resumo contem promessa alimentar absoluta");
+  }
+  if (/gluten|celiac/.test(resumo) && !/gluten|celiac/.test(restricoes)) {
+    erros.push("resumo inventou restricao a gluten");
+  }
+  if (!/^(nenhuma|nao informado|nao informada)$/.test(restricoes) && !/contaminacao cruzada|conferencia profissional/.test(resumo)) {
+    erros.push("resumo restrito sem cuidado profissional");
+  }
   if (erros.length) throw new Error(`${scenario.id}: ${erros.join("; ")}`);
+}
+
+function normalizarTextoBusca(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
 }
 
 async function gerarScenario(cdp, scenario) {
@@ -356,6 +375,7 @@ async function gerarScenario(cdp, scenario) {
         avisosDetalhes: plano.qualidade_culinaria?.avisos || [],
         ajustesDetalhes: plano.qualidade_culinaria?.ajustes || [],
         coberturaCulinaria: plano.qualidade_culinaria?.cobertura || {},
+        resumoChef: plano.resumo_chef || '',
         variedade: plano.variedade_culinaria?.status || 'sem_historico',
         historicosConsiderados: plano.variedade_culinaria?.historicos_considerados || 0,
         pratosNovos: plano.variedade_culinaria?.pratos_novos || 0,
@@ -392,8 +412,28 @@ async function gerarScenario(cdp, scenario) {
 }
 
 async function confirmarServidor() {
-  const response = await fetch(`${BASE_URL}/api/status`);
-  if (!response.ok) throw new Error("Servidor local indisponivel.");
+  try {
+    const response = await fetch(`${BASE_URL}/api/status`);
+    if (response.ok) return null;
+  } catch {}
+
+  const server = spawn(process.execPath, ["server.js"], {
+    cwd: path.join(__dirname, ".."),
+    env: process.env,
+    stdio: "ignore"
+  });
+
+  for (let tentativa = 0; tentativa < 60; tentativa += 1) {
+    if (server.exitCode !== null) throw new Error("Servidor local encerrou durante a inicializacao.");
+    try {
+      const response = await fetch(`${BASE_URL}/api/status`);
+      if (response.ok) return server;
+    } catch {}
+    await esperar(250);
+  }
+
+  if (server.exitCode === null) server.kill("SIGTERM");
+  throw new Error("Servidor local indisponivel.");
 }
 
 async function aguardarPaginaDebug() {

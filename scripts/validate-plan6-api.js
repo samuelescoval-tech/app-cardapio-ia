@@ -24,7 +24,7 @@ async function main() {
     const diretriz = obterDiretrizCulinaria(evento);
     const resposta = await gerarPlano(
       montarPromptPlanejamento(evento, calcularMotorEvento(evento), diretriz),
-      { diretrizCulinaria: diretriz }
+      { diretrizCulinaria: diretriz, evento }
     );
     const plano = resposta.plano || {};
     const qualidade = plano.qualidade_culinaria || {};

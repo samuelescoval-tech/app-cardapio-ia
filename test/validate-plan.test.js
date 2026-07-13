@@ -117,6 +117,37 @@ test("aceita variacao de quantidade sem perder a validacao estrutural", () => {
   assert.equal(plano.qualidade_culinaria.avisos.some(aviso => /cronograma/i.test(aviso)), false);
 });
 
+test("substitui resumo que inventa restricao e promete garantia alimentar", () => {
+  const entrada = planoValido();
+  entrada.resumo_chef = "Atende rigorosamente as restricoes sem gluten e veganas, garantindo inclusao e qualidade.";
+  const evento = {
+    tipo: "Evento corporativo",
+    pessoas: 40,
+    refeicao: "Coffee break",
+    formatoServico: "Estacoes ou ilhas",
+    restricoes: "Opcao vegana e opcao sem lactose"
+  };
+
+  const plano = validarPlano(entrada, { evento });
+
+  assert.doesNotMatch(plano.resumo_chef, /sem gluten|rigorosamente|garantindo/i);
+  assert.match(plano.resumo_chef, /Opcao vegana e opcao sem lactose/i);
+  assert.match(plano.resumo_chef, /contaminação cruzada/i);
+  assert.match(plano.qualidade_culinaria.ajustes.join(" "), /Resumo do Chef substituido/i);
+});
+
+test("adiciona cuidado profissional quando o resumo restrito e coerente", () => {
+  const entrada = planoValido();
+  entrada.resumo_chef = "O cardapio considera a opcao sem lactose informada.";
+
+  const plano = validarPlano(entrada, {
+    evento: { restricoes: "Opcao sem lactose" }
+  });
+
+  assert.match(plano.resumo_chef, /contaminação cruzada/i);
+  assert.match(plano.qualidade_culinaria.ajustes.join(" "), /Aviso de seguranca alimentar/i);
+});
+
 test("recupera ingredientes do prato a partir da receita sem inventar conteudo", () => {
   const entrada = planoValido();
   const ingredientesReceita = entrada.receitas[0].ingredientes.map(item => ({ ...item }));

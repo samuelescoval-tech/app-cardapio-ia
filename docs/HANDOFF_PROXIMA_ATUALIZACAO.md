@@ -233,6 +233,15 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - O status culinario ficou `revisar` por faltar ficha para `Frutas da estacao fatiadas`, item de montagem. O aviso foi considerado valido e nao motivou mudanca de codigo.
 - Interface, historico, operacao renderizada e PDF continuam reservados ao primeiro teste controlado com usuario.
 
+### Evidencia do pre-teste tecnico 1
+
+- O roteiro E2E passou a iniciar e encerrar seu proprio servidor quando a porta 3000 estiver livre, mantendo compatibilidade com um servidor ja ativo.
+- O primeiro E2E corporativo passou em geracao, operacao, historico, recarga, mobile e PDF, mas a leitura do PDF encontrou resumo com restricao sem gluten nao informada e linguagem de garantia alimentar.
+- `validarPlano()` passou a receber o evento e substituir deterministicamente resumo com promessa absoluta ou restricao inventada; restricoes validas recebem aviso de conferencia profissional e contaminacao cruzada.
+- Dois testes de regressao cobrem substituicao do resumo inseguro e inclusao do cuidado profissional. O E2E tambem ganhou portas automaticas para essas regras.
+- A repeticao com o codigo atual passou: 13 pratos, 11 receitas, 29 compras, 30/30 ingredientes cobertos, operacao media, historico recarregado, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas.
+- A IA omitiu 22 compras na ultima amostra; o backend recuperou todas sem aviso. Monitorar o volume nos proximos testes antes de mudar o prompt.
+
 ## Proxima atualizacao curta
 
 O usuario escolheu teste controlado e pausou o Spoonacular por custo:

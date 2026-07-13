@@ -44,9 +44,13 @@ function validarPlano(data, contexto = {}) {
   plano.decoracao = normalizarDecoracao(data.decoracao);
   plano.checklist = normalizarChecklist(data.checklist);
   plano.orcamento = null;
-  plano.resumo_chef = textoSeguro(data.resumo_chef, "Resumo indisponível.");
+  const resumo = normalizarResumoChef(data.resumo_chef, contexto.evento);
+  plano.resumo_chef = resumo.texto;
 
   plano.qualidade_culinaria = validarCoerenciaCulinaria(plano, contexto.diretrizCulinaria);
+  if (resumo.ajuste) {
+    registrarAjuste(plano.qualidade_culinaria, resumo.ajuste);
+  }
 
   return plano;
 }
@@ -499,6 +503,54 @@ function normalizarChecklist(valor) {
     durante: normalizarArrayTexto(valor.durante),
     pos: normalizarArrayTexto(valor.pos)
   };
+}
+
+function normalizarResumoChef(valor, evento) {
+  const original = textoSeguro(valor, "Resumo indisponível.");
+  if (!ehObjeto(evento)) return { texto: original, ajuste: null };
+
+  const resumoNormalizado = chaveCulinaria(original);
+  const restricoes = textoSeguro(evento.restricoes, "Nenhuma");
+  const restricoesNormalizadas = chaveCulinaria(restricoes);
+  const possuiRestricao = restricoesNormalizadas && !/^(nenhuma|nao informado|nao informada)$/.test(restricoesNormalizadas);
+  const promessaAbsoluta = /atende rigorosamente|cumpre rigorosamente|garant|assegur/.test(resumoNormalizado)
+    && /restri|alergen|gluten|lactose|celiac|contamin/.test(resumoNormalizado);
+  const restricaoInventada = [
+    /gluten|celiac/,
+    /lactose/,
+    /amendoim/
+  ].some(padrao => padrao.test(resumoNormalizado) && !padrao.test(restricoesNormalizadas));
+
+  if (promessaAbsoluta || restricaoInventada) {
+    return {
+      texto: construirResumoSeguro(evento, restricoes),
+      ajuste: "Resumo do Chef substituido por versao segura devido a promessa absoluta ou restricao nao informada."
+    };
+  }
+
+  if (possuiRestricao && !/contaminacao cruzada|conferencia profissional/.test(resumoNormalizado)) {
+    return {
+      texto: `${original} Restrições alimentares exigem conferência profissional de ingredientes, rótulos, preparo e risco de contaminação cruzada.`,
+      ajuste: "Aviso de seguranca alimentar adicionado ao Resumo do Chef."
+    };
+  }
+
+  return { texto: original, ajuste: null };
+}
+
+function construirResumoSeguro(evento, restricoes) {
+  const tipo = textoSeguro(evento.tipo, "evento");
+  const pessoas = Number(evento.pessoas);
+  const publico = Number.isFinite(pessoas) && pessoas > 0 ? ` para ${pessoas} convidados` : "";
+  const refeicao = textoSeguro(evento.refeicao, "");
+  const formato = textoSeguro(evento.formatoServico, "");
+  const contexto = [refeicao, formato].filter(Boolean).join(" e ");
+  const fraseContexto = contexto ? `, considerando ${contexto}` : "";
+
+  return `Planejamento para ${tipo}${publico}${fraseContexto}. `
+    + `As restrições registradas para revisão são: ${restricoes}. `
+    + "Cardápio, receitas e compras devem ser conferidos antes da execução. "
+    + "Restrições alimentares exigem conferência profissional de ingredientes, rótulos, preparo e risco de contaminação cruzada.";
 }
 
 function textoSeguro(valor, fallback) {
