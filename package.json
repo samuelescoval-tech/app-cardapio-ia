@@ -5,6 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "node --test",
+    "benchmark:models": "node scripts/benchmark-models.js",
+    "benchmark:models:dry": "node scripts/benchmark-models.js --dry-run",
     "test:spoonacular:live": "node scripts/validate-spoonacular-live.js",
     "start": "node server.js"
   },

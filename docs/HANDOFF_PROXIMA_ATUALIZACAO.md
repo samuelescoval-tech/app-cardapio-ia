@@ -18,7 +18,15 @@ Este documento resume o estado real do projeto para continuar a proxima rodada s
 
 ## Estado atual em uma frase
 
-Os Planos 1 a 10, cinco baselines tecnicos e o primeiro teste acompanhado foram concluidos; ocasioes e pedidos culinarios explicitos agora possuem contrato geral, e a proxima porta e o usuario 2 sem push automatico.
+Os Planos 1 a 10 e o benchmark inicial foram concluidos; o modelo atual venceu o teste de substituicao direta, e a proxima fase e dividir a geracao em blocos menores antes de reavaliar um modelo mais forte.
+
+## Benchmark de modelos - 2026-07-14
+
+- Foi criado um catalogo versionado com dez cenarios e um ciclo rapido com debutante, corporativo Premium e Natal.
+- O modelo atual concluiu 3/3 casos, com media tecnica 92,7/100 e 15,7 segundos.
+- O Gemini 3.5 Flash falhou em 3/3 por `MAX_TOKENS`: o modelo mais forte nao e substituto direto enquanto todo o evento permanecer em uma resposta unica.
+- Proxima fase: separar conceito/cardapio dos detalhamentos operacionais, preservar os motores locais e repetir o benchmark antes de qualquer troca do modelo principal.
+- Nenhuma chave nova e necessaria para essa fase. Imagens e Pexels continuam posteriores.
 
 ## O que foi modificado
 

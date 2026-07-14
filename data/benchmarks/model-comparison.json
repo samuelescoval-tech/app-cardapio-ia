@@ -1,0 +1,271 @@
+{
+  "version": "1.0.0",
+  "description": "Cenarios fixos para comparar modelos sem substituir avaliacao humana.",
+  "scenarios": [
+    {
+      "id": "debutante",
+      "quick": true,
+      "evento": {
+        "tipo": "Aniversario de debutante",
+        "pessoas": 150,
+        "criancas": 0,
+        "duracao": 6,
+        "refeicao": "Almoco com churrasco",
+        "restricoes": "Nenhuma",
+        "tema": "Festa de 15 anos elegante",
+        "alcool": "Sem alcool",
+        "estilo": "Elegante",
+        "obs": "Incluir bebidas leves, bolo, brigadeiros, beijinhos, churrasco com alcatra, patinho, linguica, asa e coxa de frango e baiao de dois.",
+        "horarioInicio": "12:00",
+        "formatoServico": "Estacoes ou ilhas",
+        "faixaEtaria": "Adolescentes e jovens",
+        "infraestrutura": "Cozinha de apoio limitada",
+        "prioridade": "Conforto dos convidados"
+      },
+      "expectations": [
+        { "label": "bolo", "anyOf": ["bolo"] },
+        { "label": "doces de festa", "anyOf": ["brigadeiro", "beijinho"] },
+        { "label": "carne bovina", "anyOf": ["alcatra", "patinho"] },
+        { "label": "frango", "anyOf": ["frango", "asa", "coxa"] },
+        { "label": "baiao de dois", "anyOf": ["baiao de dois"] }
+      ]
+    },
+    {
+      "id": "corporativo-premium",
+      "quick": true,
+      "evento": {
+        "tipo": "Workshop corporativo de tecnologia",
+        "pessoas": 80,
+        "criancas": 0,
+        "duracao": 6,
+        "refeicao": "Coffee break",
+        "restricoes": "Opcao vegana e opcao sem lactose",
+        "tema": "Tecnologia e inovacao",
+        "alcool": "Sem alcool",
+        "estilo": "Premium",
+        "obs": "Networking, apresentacao executiva e duas pausas gastronomicas. Evitar solucoes comuns como cha em sache.",
+        "horarioInicio": "09:00",
+        "formatoServico": "Buffet com equipe servindo",
+        "faixaEtaria": "Predominantemente adultos",
+        "infraestrutura": "Sem cozinha no local",
+        "prioridade": "Apresentacao"
+      },
+      "expectations": [
+        { "label": "boas-vindas", "anyOf": ["boas vindas", "welcome"] },
+        { "label": "vegano", "anyOf": ["vegano", "vegana"] },
+        { "label": "sem lactose", "anyOf": ["sem lactose"] },
+        { "label": "cafe especial", "anyOf": ["cafe especial", "cafe coado", "barista"] },
+        { "label": "infusao premium", "anyOf": ["infusao", "ervas frescas"] }
+      ]
+    },
+    {
+      "id": "natal",
+      "quick": true,
+      "evento": {
+        "tipo": "Ceia de Natal",
+        "pessoas": 30,
+        "criancas": 5,
+        "duracao": 5,
+        "refeicao": "Almoco ou jantar",
+        "restricoes": "Nenhuma",
+        "tema": "Natal familiar brasileiro",
+        "alcool": "Com alcool moderado",
+        "estilo": "Elegante",
+        "obs": "Ceia familiar brasileira para adultos e criancas com repertorio tipico da ocasiao.",
+        "horarioInicio": "19:30",
+        "formatoServico": "Compartilhado a mesa",
+        "faixaEtaria": "Publico misto",
+        "infraestrutura": "Cozinha completa no local",
+        "prioridade": "Conforto dos convidados"
+      },
+      "expectations": [
+        { "label": "principal natalino", "anyOf": ["peru", "pernil", "tender", "ave"] },
+        { "label": "acompanhamento natalino", "anyOf": ["farofa", "salpicao", "arroz festivo"] },
+        { "label": "sobremesa natalina", "anyOf": ["rabanada", "pave", "panetone", "chocotone"] }
+      ]
+    },
+    {
+      "id": "casamento",
+      "quick": false,
+      "evento": {
+        "tipo": "Casamento",
+        "pessoas": 100,
+        "criancas": 15,
+        "duracao": 6,
+        "refeicao": "Almoco ou jantar",
+        "restricoes": "Uma opcao vegetariana",
+        "tema": "Tropical elegante",
+        "alcool": "Com bar completo",
+        "estilo": "Elegante",
+        "obs": "Recepcao, jantar e mesa de sobremesas.",
+        "horarioInicio": "19:30",
+        "formatoServico": "Empratado",
+        "faixaEtaria": "Publico misto",
+        "infraestrutura": "Cozinha de apoio limitada",
+        "prioridade": "Apresentacao"
+      },
+      "expectations": [
+        { "label": "principal vegetariano", "anyOf": ["principal vegetariano", "principal vegano"] },
+        { "label": "sobremesa", "anyOf": ["sobremesa", "doce"] },
+        { "label": "bar variado", "anyOf": ["vinho", "espumante", "cerveja", "drink"] }
+      ]
+    },
+    {
+      "id": "churrasco",
+      "quick": false,
+      "evento": {
+        "tipo": "Churrasco de aniversario",
+        "pessoas": 50,
+        "criancas": 10,
+        "duracao": 5,
+        "refeicao": "Churrasco",
+        "restricoes": "Uma opcao vegetariana na grelha",
+        "tema": "Boteco brasileiro",
+        "alcool": "Com alcool moderado",
+        "estilo": "Simples",
+        "obs": "Servico informal com acompanhamentos variados.",
+        "horarioInicio": "13:00",
+        "formatoServico": "Estacoes ou ilhas",
+        "faixaEtaria": "Publico misto",
+        "infraestrutura": "Cozinha de apoio limitada",
+        "prioridade": "Praticidade de servico"
+      },
+      "expectations": [
+        { "label": "carne", "anyOf": ["picanha", "alcatra", "fraldinha", "carne"] },
+        { "label": "linguica", "anyOf": ["linguica"] },
+        { "label": "vegetariano na grelha", "anyOf": ["vegetariano", "legumes grelhados", "espetinho vegetal"] }
+      ]
+    },
+    {
+      "id": "infantil",
+      "quick": false,
+      "evento": {
+        "tipo": "Festa infantil",
+        "pessoas": 30,
+        "criancas": 20,
+        "duracao": 4,
+        "refeicao": "Coquetel / Finger food",
+        "restricoes": "Evitar amendoim",
+        "tema": "Circo colorido",
+        "alcool": "Sem alcool",
+        "estilo": "Simples",
+        "obs": "Comidas faceis de servir e opcoes frescas.",
+        "horarioInicio": "15:00",
+        "formatoServico": "Coquetel circulante",
+        "faixaEtaria": "Predominantemente infantil",
+        "infraestrutura": "Producao externa com finalizacao",
+        "prioridade": "Conforto dos convidados"
+      },
+      "expectations": [
+        { "label": "bolo", "anyOf": ["bolo"] },
+        { "label": "salgado infantil", "anyOf": ["mini", "espetinho", "sanduiche"] },
+        { "label": "bebida sem alcool", "anyOf": ["suco", "agua", "limonada"] }
+      ]
+    },
+    {
+      "id": "domiciliar",
+      "quick": false,
+      "evento": {
+        "tipo": "Atendimento domiciliar",
+        "pessoas": 5,
+        "criancas": 0,
+        "duracao": 1,
+        "refeicao": "Brunch / cafe da manha",
+        "restricoes": "Nenhuma",
+        "tema": "Familiar",
+        "alcool": "Com alcool moderado",
+        "estilo": "Elegante",
+        "obs": "Entrada antes do prato principal e sobremesa para finalizar.",
+        "horarioInicio": "11:30",
+        "formatoServico": "Buffet self-service",
+        "faixaEtaria": "Predominantemente adultos",
+        "infraestrutura": "Cozinha completa no local",
+        "prioridade": "Conforto dos convidados"
+      },
+      "expectations": [
+        { "label": "brunch", "anyOf": ["ovos", "paes", "torrada", "quiche"] },
+        { "label": "fruta", "anyOf": ["fruta"] },
+        { "label": "bebida matinal", "anyOf": ["cafe", "suco", "cha"] }
+      ]
+    },
+    {
+      "id": "pascoa",
+      "quick": false,
+      "evento": {
+        "tipo": "Almoco de Pascoa",
+        "pessoas": 24,
+        "criancas": 6,
+        "duracao": 4,
+        "refeicao": "Almoco",
+        "restricoes": "Uma opcao sem lactose",
+        "tema": "Pascoa familiar brasileira",
+        "alcool": "Com alcool moderado",
+        "estilo": "Elegante",
+        "obs": "Almoco familiar com pratos tradicionais e sobremesas de chocolate.",
+        "horarioInicio": "12:30",
+        "formatoServico": "Compartilhado a mesa",
+        "faixaEtaria": "Publico misto",
+        "infraestrutura": "Cozinha completa no local",
+        "prioridade": "Conforto dos convidados"
+      },
+      "expectations": [
+        { "label": "peixe", "anyOf": ["bacalhau", "peixe"] },
+        { "label": "chocolate", "anyOf": ["chocolate", "cacau"] },
+        { "label": "sem lactose", "anyOf": ["sem lactose"] }
+      ]
+    },
+    {
+      "id": "carnaval",
+      "quick": false,
+      "evento": {
+        "tipo": "Festa de Carnaval",
+        "pessoas": 60,
+        "criancas": 10,
+        "duracao": 5,
+        "refeicao": "Coquetel / Finger food",
+        "restricoes": "Nenhuma",
+        "tema": "Carnaval brasileiro",
+        "alcool": "Com alcool moderado",
+        "estilo": "Simples",
+        "obs": "Evento colorido com comidas brasileiras praticas e hidratacao reforcada.",
+        "horarioInicio": "16:00",
+        "formatoServico": "Estacoes ou ilhas",
+        "faixaEtaria": "Publico misto",
+        "infraestrutura": "Cozinha de apoio limitada",
+        "prioridade": "Praticidade de servico"
+      },
+      "expectations": [
+        { "label": "petisco brasileiro", "anyOf": ["coxinha", "bolinho", "espetinho", "pasteis"] },
+        { "label": "fruta", "anyOf": ["fruta"] },
+        { "label": "hidratacao", "anyOf": ["agua", "agua de coco", "suco"] }
+      ]
+    },
+    {
+      "id": "ano-novo",
+      "quick": false,
+      "evento": {
+        "tipo": "Ceia de Ano Novo",
+        "pessoas": 40,
+        "criancas": 5,
+        "duracao": 6,
+        "refeicao": "Almoco ou jantar",
+        "restricoes": "Uma opcao vegetariana",
+        "tema": "Reveillon brasileiro a beira da piscina",
+        "alcool": "Com bar completo",
+        "estilo": "Premium",
+        "obs": "Ceia leve, elegante e festiva com servico ate depois da meia-noite.",
+        "horarioInicio": "20:00",
+        "formatoServico": "Estacoes ou ilhas",
+        "faixaEtaria": "Publico misto",
+        "infraestrutura": "Producao externa com finalizacao",
+        "prioridade": "Apresentacao"
+      },
+      "expectations": [
+        { "label": "lentilha", "anyOf": ["lentilha"] },
+        { "label": "fruta", "anyOf": ["uva", "roma", "fruta"] },
+        { "label": "brinde", "anyOf": ["espumante", "brinde"] },
+        { "label": "principal vegetariano", "anyOf": ["principal vegetariano", "principal vegano"] }
+      ]
+    }
+  ]
+}
