@@ -1,5 +1,6 @@
 const matriz = require("../../../data/culinary/matrix.json");
 const catalogoFontes = require("../../../data/culinary/source-catalog.json");
+const catalogoAlimentos = require("../../../data/culinary/food-catalog.json");
 
 const errosTaxonomia = validarTaxonomiaCulinaria(matriz);
 if (errosTaxonomia.length) {
@@ -10,6 +11,9 @@ function obterDiretrizCulinaria(evento = {}) {
   const contextoEvento = normalizar(evento.tipo);
   const contextoRefeicao = normalizar(evento.refeicao);
   const contextoTema = normalizar(evento.tema);
+  const contextoOcasiao = normalizar([
+    evento.tipo, evento.tema, evento.obs
+  ].filter(Boolean).join(" "));
   const contextoCompleto = normalizar([
     evento.tipo, evento.refeicao, evento.tema, evento.restricoes, evento.estilo, evento.alcool, evento.obs
   ].filter(Boolean).join(" "));
@@ -22,28 +26,42 @@ function obterDiretrizCulinaria(evento = {}) {
     item.match.some(termo => contextoRefeicao.includes(normalizar(termo)))
   );
 
+  const ocasiao = matriz.occasion_modifiers.find(item =>
+    item.match.some(termo => contextoOcasiao.includes(normalizar(termo)))
+  );
+
   const tema = matriz.themes.find(item =>
     item.match.some(termo => contextoTema.includes(normalizar(termo)))
   );
   const contextoOperacional = construirContextoOperacional(evento);
-  const composicaoMinima = ajustarComposicaoAoEvento(perfil.composition, evento);
+  const composicaoMinima = ajustarComposicaoAoEvento(perfil.composition, evento, ocasiao?.composition_overrides);
+  const pedidosExplicitos = extrairPedidosCulinarios(evento);
 
   return {
     matriz_version: matriz.version,
     catalogo_fontes_version: catalogoFontes.version,
+    catalogo_alimentos_version: catalogoAlimentos.version,
     perfil: perfil.id,
     identidade_evento: perfil.identity,
     tipo_servico: perfil.service,
-    momentos_servico: perfil.service_moments,
-    elementos_esperados: perfil.required_features,
-    repeticoes_essenciais: perfil.essential_repetitions,
+    momentos_servico: combinarListas(perfil.service_moments, ocasiao?.service_moments),
+    elementos_esperados: combinarListas(perfil.required_features, ocasiao?.required_features),
+    repeticoes_essenciais: combinarListas(perfil.essential_repetitions, ocasiao?.essential_repetitions),
     comidas_tipicas: perfil.typical_foods,
     elementos_opcionais: perfil.optional_features,
     evitar_no_perfil: perfil.avoid,
+    pedidos_culinarios_explicitos: pedidosExplicitos,
     modificador_refeicao: refeicao ? {
       id: refeicao.id,
       orientacoes: refeicao.guidance,
       sinais_culinarios: refeicao.signals
+    } : null,
+    modificador_ocasiao: ocasiao ? {
+      id: ocasiao.id,
+      identidade: ocasiao.identity,
+      comidas_tipicas: ocasiao.typical_foods,
+      orientacoes: ocasiao.guidance,
+      evitar: ocasiao.avoid
     } : null,
     modificador_tema: tema ? {
       id: tema.id,
@@ -58,6 +76,7 @@ function obterDiretrizCulinaria(evento = {}) {
       ...matriz.principles,
       ...perfil.guidance,
       ...(refeicao ? refeicao.guidance : []),
+      ...(ocasiao ? ocasiao.guidance : []),
       ...(tema ? [tema.guidance, tema.avoid] : []),
       ...contextoOperacional.orientacoes
     ],
@@ -65,14 +84,53 @@ function obterDiretrizCulinaria(evento = {}) {
   };
 }
 
-function ajustarComposicaoAoEvento(composicao, evento) {
+function ajustarComposicaoAoEvento(composicao, evento, substituicoes = []) {
   const barCompleto = normalizar(evento.alcool).includes("bar completo");
-  return composicao.map(item => ({
+  const categorias = new Map(composicao.map(item => [normalizar(item.category), { ...item }]));
+  substituicoes.forEach(item => {
+    const chave = normalizar(item.category);
+    const atual = categorias.get(chave);
+    categorias.set(chave, {
+      category: atual?.category || item.category,
+      minimum: Math.max(Number(atual?.minimum) || 0, Number(item.minimum) || 0)
+    });
+  });
+  return Array.from(categorias.values()).map(item => ({
     ...item,
     minimum: barCompleto && normalizar(item.category) === "bebida"
       ? Math.max(item.minimum, 4)
       : item.minimum
   }));
+}
+
+function combinarListas(base = [], adicional = []) {
+  return Array.from(new Set([...(base || []), ...(adicional || [])]));
+}
+
+function extrairPedidosCulinarios(evento = {}) {
+  const contexto = normalizarTermos([evento.tema, evento.obs].filter(Boolean).join(" "));
+  if (!contexto) return [];
+  let restante = ` ${contexto} `;
+  const candidatos = catalogoAlimentos.terms.flatMap((entrada, indice) => {
+    const termos = combinarListas([entrada.item], entrada.aliases).map(normalizarTermos).filter(Boolean);
+    const correspondencias = termos.filter(termo => restante.includes(` ${termo} `));
+    return correspondencias.length ? [{ item: entrada.item, termos, correspondencias, indice }] : [];
+  }).sort((a, b) => Math.max(...b.correspondencias.map(termo => termo.length)) - Math.max(...a.correspondencias.map(termo => termo.length)));
+
+  const pedidos = [];
+  candidatos.forEach(candidato => {
+    const termo = candidato.correspondencias.find(item => restante.includes(` ${item} `));
+    if (!termo) return;
+    pedidos.push(candidato);
+    restante = restante.replace(` ${termo} `, " ");
+  });
+  return pedidos
+    .sort((a, b) => a.indice - b.indice)
+    .map(({ item, termos }) => ({ item, termos }));
+}
+
+function normalizarTermos(valor) {
+  return normalizar(valor).replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function construirContextoOperacional(evento) {
@@ -168,10 +226,12 @@ function validarTaxonomiaCulinaria(valor) {
   const erros = [];
   const perfis = Array.isArray(valor?.profiles) ? valor.profiles : [];
   const modificadores = Array.isArray(valor?.meal_modifiers) ? valor.meal_modifiers : [];
+  const ocasioes = Array.isArray(valor?.occasion_modifiers) ? valor.occasion_modifiers : [];
   const temas = Array.isArray(valor?.themes) ? valor.themes : [];
 
   validarIdsUnicos(perfis, "perfil", erros);
   validarIdsUnicos(modificadores, "modificador de refeicao", erros);
+  validarIdsUnicos(ocasioes, "modificador de ocasiao", erros);
   validarIdsUnicos(temas, "tema", erros);
 
   if (!perfis.some(perfil => perfil.id === "evento_refeicao_geral")) {
@@ -185,6 +245,13 @@ function validarTaxonomiaCulinaria(valor) {
     if (!Array.isArray(perfil.essential_repetitions) || !perfil.essential_repetitions.length) erros.push(`${perfil.id}: repeticoes essenciais ausentes`);
     if (!perfil.typical_foods || Object.keys(perfil.typical_foods).length < 4) erros.push(`${perfil.id}: repertorio tipico insuficiente`);
     if (!Array.isArray(perfil.composition) || !perfil.composition.length) erros.push(`${perfil.id}: composicao ausente`);
+  });
+
+  ocasioes.forEach(ocasiao => {
+    if (!Array.isArray(ocasiao.match) || !ocasiao.match.length) erros.push(`${ocasiao.id}: termos de ocasiao ausentes`);
+    if (!ocasiao.identity || !Array.isArray(ocasiao.guidance) || !ocasiao.guidance.length) erros.push(`${ocasiao.id}: identidade ou orientacao ausente`);
+    if (!ocasiao.typical_foods || Object.keys(ocasiao.typical_foods).length < 3) erros.push(`${ocasiao.id}: repertorio de ocasiao insuficiente`);
+    if (!Array.isArray(ocasiao.composition_overrides) || !ocasiao.composition_overrides.length) erros.push(`${ocasiao.id}: composicao de ocasiao ausente`);
   });
 
   return erros;
@@ -202,4 +269,4 @@ function validarIdsUnicos(itens, rotulo, erros) {
   });
 }
 
-module.exports = { obterDiretrizCulinaria, selecionarFontes, validarTaxonomiaCulinaria, construirContextoOperacional };
+module.exports = { obterDiretrizCulinaria, selecionarFontes, validarTaxonomiaCulinaria, construirContextoOperacional, extrairPedidosCulinarios };

@@ -165,6 +165,25 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Interface e documentos: historico recarregado com campos avancados, mobile 400/400 sem overflow e PDF A4 pesquisavel de 7 paginas e 57.169 bytes.
 - Decisao: aprovado como quinto baseline tecnico; os cinco perfis representativos estao prontos para o inicio dos testes acompanhados com pessoas usuarias.
 
+### Teste acompanhado 1 - aniversario de debutante
+
+- Data: 2026-07-13.
+- Perfil: dono do projeto como primeira pessoa usuaria; evento realista de debutante para 150 pessoas.
+- Geracao: concluida; historico e PDF funcionaram. O campo deixado como `sim/nao` foi registrado como `sim` porque o participante avaliou o resultado, recarregou o historico e abriu o PDF.
+- Notas: formulario 2/5; cardapio 3/5; receitas 2/5; compras 2/5; operacao 3/5.
+- Principal acerto: pedidos nominais simples, como picanha, sao reconhecidos pelo Chef IA.
+- Dificuldades: formulario e resultado densos; poucas opcoes de refeicao; repertorio generico quando o usuario nao nomeia pratos; bebidas pouco variadas; receitas percebidas como limitadas; natureza da compra colada ao nome; ausencia de estimativa financeira.
+- Pedido culinario do teste: bebidas leves, bolo, brigadeiro, beijinho, almoco com churrasco, alcatra, patinho, linguica, asa/coxa de frango e baiao de dois; publico adolescente com adultos; danca, DJ e area livre para coreografia.
+- Reproducao anterior a correcao: 13 itens e somente um `Prato Principal`, o baiao de dois; as carnes nomeadas foram omitidas e vieram apenas agua, suco e refrigerante.
+- Correcao geral: criada camada extensivel de ocasioes, inicialmente com debutante, Natal, Ano Novo, Pascoa e Carnaval; perfil-base, refeicao, ocasiao e tema permanecem independentes.
+- Diferenciacao: repertorio da ocasiao completa o planejamento quando o usuario nao especifica; alimentos reconhecidos no catalogo local viram pedidos explicitos estruturados e sua ausencia gera revisao no backend.
+- Interface: campo de evento ganhou sugestoes sem perder texto livre; refeicoes combinadas foram ampliadas; natureza da compra recebeu rotulo separado; operacao detalhada fica recolhida por padrao e continua disponivel.
+- Aceite final de debutante: 22 itens, todos os oito pedidos nominais, 14/14 receitas completas, 36/36 ingredientes, nenhuma compra derivada, quatro bebidas, historico, mobile e PDF aprovados.
+- Aceite sazonal: Natal sem pratos nominais gerou 19 itens, 15/15 receitas completas e repertorio coerente com peru, tender, farofa, salpicao, rabanada, pave e panetone; quatro bebidas e PDF A4 de 8 paginas.
+- Ponto a observar: a amostra de Natal recuperou 25 compras automaticamente. A lista final ficou completa, mas a recorrencia deve ser medida nos proximos usuarios.
+- Backlog: imagens ilustrativas com fonte/licenca; fornecedores e precos por usuario; importacao de planilha; catalogo regional auditavel. Nenhum valor enviado por usuario vira referencia geral sem validacao.
+- Decisao: falhas reproduziveis de repertorio, pedidos explicitos e formatacao foram corrigidas; imagens e precificacao permanecem fora deste ciclo.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

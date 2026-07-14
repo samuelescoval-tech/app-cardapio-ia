@@ -12,6 +12,59 @@ const summaryPath = `/tmp/chef-ia-plan5-summary-${runId}.json`;
 
 const scenarioCatalog = [
   {
+    id: "debutante",
+    tipo: "Aniversário de debutante",
+    pessoas: 150,
+    criancas: 0,
+    duracao: 6,
+    refeicao: "Almoço com churrasco",
+    restricoes: "Nenhuma",
+    tema: "Festa de 15 anos elegante",
+    alcool: "Sem álcool",
+    estilo: "Elegante",
+    obs: "Festa de 15 anos com público adolescente e alguns adultos. Incluir bebidas leves, bolo, brigadeiros, beijinhos e outros doces; almoço com churrasco, carnes bovinas como alcatra e patinho, linguiça, asa e coxa de frango, além de comidas brasileiras como baião de dois. Prever dança e DJ, com área de coreografia para 20 pessoas e espaço livre para pelo menos 50 das 150 pessoas.",
+    horarioInicio: "12:00",
+    formatoServico: "Estacoes ou ilhas",
+    faixaEtaria: "Adolescentes e jovens",
+    infraestrutura: "Cozinha de apoio limitada",
+    prioridade: "Conforto dos convidados",
+    complexidadeEsperada: "Alta",
+    menuExpectations: [
+      { label: "alcatra", anyOf: ["alcatra"] },
+      { label: "patinho", anyOf: ["patinho"] },
+      { label: "linguica", anyOf: ["linguica"] },
+      { label: "frango", anyOf: ["frango", "asa", "coxa"] },
+      { label: "baiao de dois", anyOf: ["baiao de dois"] },
+      { label: "bolo", anyOf: ["bolo"] },
+      { label: "brigadeiro", anyOf: ["brigadeiro"] },
+      { label: "beijinho", anyOf: ["beijinho"] }
+    ]
+  },
+  {
+    id: "natal",
+    tipo: "Ceia de Natal",
+    pessoas: 30,
+    criancas: 5,
+    duracao: 5,
+    refeicao: "Almoço ou jantar",
+    restricoes: "Nenhuma",
+    tema: "Natal familiar brasileiro",
+    alcool: "Com álcool moderado",
+    estilo: "Elegante",
+    obs: "Planejar uma ceia familiar brasileira para adultos e crianças, com serviço confortável e repertório típico da ocasião.",
+    horarioInicio: "19:30",
+    formatoServico: "Compartilhado a mesa",
+    faixaEtaria: "Publico misto",
+    infraestrutura: "Cozinha completa no local",
+    prioridade: "Conforto dos convidados",
+    complexidadeEsperada: "Baixa",
+    menuExpectations: [
+      { label: "principal natalino", anyOf: ["peru", "ave", "pernil", "tender", "peixe"] },
+      { label: "acompanhamento natalino", anyOf: ["farofa", "arroz festivo", "salpicao"] },
+      { label: "sobremesa natalina", anyOf: ["rabanada", "pave", "panetone", "chocotone"] }
+    ]
+  },
+  {
     id: "domiciliar",
     tipo: "Atendimento domiciliar",
     pessoas: 5,
@@ -309,6 +362,7 @@ function validarResultadoCiclo(result, scenario) {
   const erros = [];
   const resumo = normalizarTextoBusca(result.resumoChef);
   const restricoes = normalizarTextoBusca(scenario.restricoes);
+  const cardapio = normalizarTextoBusca(result.cardapioDetalhes.map(item => item.nome).join(" "));
   if (!result.operacaoPresente || result.operationPanels !== 1) erros.push("secao operacional ausente ou duplicada");
   if (result.complexidadeOperacional !== scenario.complexidadeEsperada) erros.push(`complexidade ${result.complexidadeOperacional}/${scenario.complexidadeEsperada}`);
   if (result.equipeOperacional < 3) erros.push(`equipe operacional insuficiente: ${result.equipeOperacional}`);
@@ -320,6 +374,12 @@ function validarResultadoCiclo(result, scenario) {
   if (result.secoes.includes("Cronograma")) erros.push("titulo ambiguo Cronograma ainda presente");
   if (result.desktopOverflow) erros.push("overflow horizontal no desktop");
   if (result.recipeCards !== result.receitas) erros.push(`cards de receita ${result.recipeCards}/${result.receitas}`);
+  if (result.coberturaCulinaria.receitas_cobertas !== result.coberturaCulinaria.pratos_com_preparo) {
+    erros.push(`receitas cobertas ${result.coberturaCulinaria.receitas_cobertas}/${result.coberturaCulinaria.pratos_com_preparo}`);
+  }
+  if (result.coberturaCulinaria.receitas_completas !== result.coberturaCulinaria.pratos_com_preparo) {
+    erros.push(`receitas completas ${result.coberturaCulinaria.receitas_completas}/${result.coberturaCulinaria.pratos_com_preparo}`);
+  }
   if (result.shoppingItems !== result.compras) erros.push(`itens de compra ${result.shoppingItems}/${result.compras}`);
   if (temPromessaAlimentarAbsoluta(resumo)) {
     erros.push("resumo contem promessa alimentar absoluta");
@@ -341,6 +401,11 @@ function validarResultadoCiclo(result, scenario) {
   }
   const avisosBebidas = result.avisosDetalhes.filter(aviso => /Bebidas .* abaixo da estimativa do motor/i.test(aviso));
   if (avisosBebidas.length) erros.push(avisosBebidas.join("; "));
+  (scenario.menuExpectations || []).forEach(expectativa => {
+    if (!expectativa.anyOf.some(termo => cardapio.includes(normalizarTextoBusca(termo)))) {
+      erros.push(`cardapio sem ${expectativa.label}`);
+    }
+  });
   if (erros.length) throw new Error(`${scenario.id}: ${erros.join("; ")}`);
 }
 
@@ -411,6 +476,12 @@ async function gerarScenario(cdp, scenario) {
         avisosDetalhes: plano.qualidade_culinaria?.avisos || [],
         ajustesDetalhes: plano.qualidade_culinaria?.ajustes || [],
         coberturaCulinaria: plano.qualidade_culinaria?.cobertura || {},
+        cardapioDetalhes: (plano.cardapio || []).map(item => ({
+          nome: item.nome || '',
+          categoria: item.categoria || '',
+          quantidade: item.quantidade || ''
+        })),
+        receitasDetalhes: (plano.receitas || []).map(item => item.nome || item.cardapio_id || ''),
         resumoChef: plano.resumo_chef || '',
         principalVegetariano: (plano.cardapio || []).some(item => /prato principal/.test(normalizar(item.categoria)) && /vegetar|vegano/.test(normalizar([item.nome, item.descricao].join(' ')))),
         bebidasAlcoolicas: bebidas.filter(ehAlcoolica).length,
@@ -423,6 +494,7 @@ async function gerarScenario(cdp, scenario) {
         comprasBebidasDetalhes: (plano.lista_compras || [])
           .filter(item => /bebida/.test(normalizar([item.setor, item.natureza].join(' '))))
           .map(item => ({ item: item.item || '', quantidade: item.quantidade || '' })),
+        generationMeta: window.chefIALastResponseMeta || null,
         variedade: plano.variedade_culinaria?.status || 'sem_historico',
         historicosConsiderados: plano.variedade_culinaria?.historicos_considerados || 0,
         pratosNovos: plano.variedade_culinaria?.pratos_novos || 0,

@@ -30,6 +30,12 @@ test("prompt usa secoes operacionais e nao pede o motor na resposta", () => {
   assert.match(prompt, /Preserve primeiro identidade_evento, momentos_servico e elementos_esperados/i);
   assert.match(prompt, /comidas_tipicas como repertorio/i);
   assert.match(prompt, /Tema, estilo ou horario nao podem apagar a identidade/i);
+  assert.match(prompt, /modificador_ocasiao/);
+  assert.match(prompt, /Nomes de comidas, bebidas ou preparacoes.*requisitos explicitos/i);
+  assert.match(prompt, /pedidos_culinarios_explicitos e a lista estruturada/i);
+  assert.match(prompt, /extraia internamente todos os alimentos nomeados/i);
+  assert.match(prompt, /Cortes, carnes, doces e bebidas nomeados separadamente/i);
+  assert.match(prompt, /pedidos explicitos podem e devem ampliar a composicao/i);
   assert.match(prompt, /"origens":\["prato-1"\]/);
   assert.match(prompt, /"tipo_execucao":"preparo\|montagem\|pronto"/);
   assert.match(prompt, /"preparo_passos":\["passo 1", "passo 2", "passo 3"\]/);

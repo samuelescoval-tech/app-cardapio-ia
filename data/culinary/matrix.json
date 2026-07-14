@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-12-plan6",
+  "version": "2026-07-13-occasions",
   "status": "event-taxonomy",
   "principles": [
     "Preservar a identidade do tipo de evento antes de aplicar tema, refeicao ou estilo.",
@@ -217,7 +217,152 @@
       "guidance": ["Oferecer variedade de sabores, texturas e temperaturas.", "Identificar no resumo que o tipo de evento precisa de maior detalhamento."]
     }
   ],
+  "occasion_modifiers": [
+    {
+      "id": "debutante_15_anos",
+      "match": ["debutante", "15 anos", "quinze anos"],
+      "identity": "Celebracao de transicao com publico adolescente e adulto, refeicao festiva, momento cerimonial, bolo, doces e pista de danca sem infantilizar a apresentacao.",
+      "service_moments": ["recepcao", "refeicao principal", "cerimonia ou coreografia", "parabens, bolo e doces", "danca e encerramento"],
+      "required_features": ["refeicao coerente com o horario", "bolo de debutante", "doces de festa variados", "bebidas leves e hidratacao", "servico separado de alcool quando houver adultos", "espaco de cerimonia, coreografia ou danca"],
+      "essential_repetitions": ["agua", "bolo de debutante", "brigadeiro", "beijinho"],
+      "typical_foods": {
+        "Entrada": ["salgados de festa", "canapes", "mini porcoes", "petiscos de recepcao"],
+        "Prato Principal": ["carne bovina", "ave", "massa ou preparo brasileiro", "alternativa vegetal"],
+        "Acompanhamento": ["arroz ou baiao de dois", "farofa", "legumes", "salada composta"],
+        "Sobremesa": ["bolo decorado", "brigadeiro", "beijinho", "doces finos ou sobremesa complementar"],
+        "Bebida": ["agua", "sucos", "refrigerantes", "mocktail ou bebida leve sem alcool"]
+      },
+      "guidance": ["Equilibrar repertorio reconhecivel por adolescentes com acabamento elegante e opcoes adequadas aos adultos.", "Quando o cliente nomear carnes, doces, bebidas ou pratos, incluir cada pedido coerente em vez de substitui-lo pelo minimo generico.", "Separar alimentacao, cerimonia e pista de danca no layout e no roteiro."],
+      "avoid": ["infantilizar nomes e apresentacao", "reduzir a refeicao a doces e salgados", "servir alcool no mesmo fluxo das bebidas destinadas aos adolescentes"],
+      "composition_overrides": [
+        { "category": "Entrada", "minimum": 4 },
+        { "category": "Prato Principal", "minimum": 4 },
+        { "category": "Acompanhamento", "minimum": 4 },
+        { "category": "Salada", "minimum": 2 },
+        { "category": "Sobremesa", "minimum": 4 },
+        { "category": "Bebida", "minimum": 4 }
+      ]
+    },
+    {
+      "id": "natal",
+      "match": ["natal", "ceia natalina", "confraternizacao natalina"],
+      "identity": "Celebracao natalina de compartilhamento, normalmente com ceia ou refeicao completa, entradas de recepcao, acompanhamentos festivos, sobremesas tradicionais e bebidas para diferentes idades.",
+      "service_moments": ["recepcao", "entradas compartilhadas", "ceia ou refeicao principal", "sobremesas e cafe", "encerramento"],
+      "required_features": ["refeicao principal compartilhavel", "ao menos duas guarnicoes", "sobremesa natalina", "bebidas alcoolicas e nao alcoolicas separadas quando aplicavel"],
+      "essential_repetitions": ["agua", "farofa natalina", "rabanada ou sobremesa natalina"],
+      "typical_foods": {
+        "Entrada": ["castanhas somente quando permitidas", "paes e pastas", "salada festiva", "canapes"],
+        "Prato Principal": ["peru ou ave assada", "pernil", "tender", "peixe ou alternativa vegetal"],
+        "Acompanhamento": ["arroz festivo", "farofa", "legumes assados", "salpicao ou salada"],
+        "Sobremesa": ["rabanada", "pave", "panetone ou chocotone", "frutas"],
+        "Bebida": ["agua", "sucos", "refrigerantes", "espumante ou vinho quando solicitado"]
+      },
+      "guidance": ["Adaptar tradicoes a regiao, ao publico e as restricoes informadas sem presumir uma unica ceia correta.", "Variar acompanhamentos e sobremesas sem repetir frutas secas ou castanhas em todo o menu."],
+      "avoid": ["presumir castanhas seguras", "oferecer somente carnes pesadas", "usar alcool sem fluxo nao alcoolico equivalente"],
+      "composition_overrides": [
+        { "category": "Entrada", "minimum": 3 },
+        { "category": "Prato Principal", "minimum": 3 },
+        { "category": "Acompanhamento", "minimum": 4 },
+        { "category": "Salada", "minimum": 2 },
+        { "category": "Sobremesa", "minimum": 3 },
+        { "category": "Bebida", "minimum": 4 }
+      ]
+    },
+    {
+      "id": "ano_novo",
+      "match": ["ano novo", "reveillon", "virada do ano"],
+      "identity": "Celebracao de virada com recepcao prolongada, refeicao festiva, bebidas de brinde, opcoes leves para circulacao e encerramento depois da meia-noite.",
+      "service_moments": ["recepcao", "entradas e circulacao", "refeicao principal", "brinde da virada", "sobremesa ou ceia de encerramento"],
+      "required_features": ["hidratacao continua", "refeicao principal", "brinde com alternativa sem alcool", "itens estaveis para servico prolongado"],
+      "essential_repetitions": ["agua", "bebida de brinde", "lentilha quando coerente com o cliente"],
+      "typical_foods": {
+        "Entrada": ["canapes", "frutos do mar quando adequados", "saladas frias", "petiscos compartilhados"],
+        "Prato Principal": ["peixe", "carne assada", "ave", "preparo vegetal festivo"],
+        "Acompanhamento": ["lentilha", "arroz com ervas", "legumes", "farofa ou batata"],
+        "Sobremesa": ["frutas", "sobremesa gelada", "torta", "doces porcionados"],
+        "Bebida": ["agua", "sucos", "mocktail", "espumante quando solicitado"]
+      },
+      "guidance": ["Planejar reposicao e seguranca para duracao longa e transicao da meia-noite.", "Oferecer alternativa de brinde sem alcool com a mesma qualidade de apresentacao."],
+      "avoid": ["depender apenas de preparacoes pereciveis expostas", "concentrar todas as bebidas no alcool", "presumir supersticoes alimentares obrigatorias"],
+      "composition_overrides": [
+        { "category": "Entrada", "minimum": 4 },
+        { "category": "Prato Principal", "minimum": 3 },
+        { "category": "Acompanhamento", "minimum": 3 },
+        { "category": "Salada", "minimum": 2 },
+        { "category": "Sobremesa", "minimum": 3 },
+        { "category": "Bebida", "minimum": 4 }
+      ]
+    },
+    {
+      "id": "pascoa",
+      "match": ["pascoa", "almoco pascal", "domingo de pascoa"],
+      "identity": "Refeicao de Pascoa familiar ou comunitaria com progressao de almoco ou jantar, repertorio adaptavel entre peixe, carnes, acompanhamentos e sobremesas de chocolate.",
+      "service_moments": ["recepcao", "entrada", "refeicao principal", "sobremesa de Pascoa", "cafe e encerramento"],
+      "required_features": ["prato principal completo", "alternativa para quem nao consome peixe", "acompanhamentos frescos e quentes", "sobremesa tematica sem excesso"],
+      "essential_repetitions": ["agua", "sobremesa de chocolate ou alternativa informada"],
+      "typical_foods": {
+        "Entrada": ["salada", "antepasto", "paes e pastas", "entrada com vegetais"],
+        "Prato Principal": ["bacalhau", "outro peixe", "carne ou ave", "preparo vegetal"],
+        "Acompanhamento": ["arroz", "batatas", "legumes", "graos"],
+        "Sobremesa": ["chocolate", "torta", "pave", "frutas"],
+        "Bebida": ["agua", "sucos", "refrigerantes", "vinho quando solicitado"]
+      },
+      "guidance": ["Nao presumir bacalhau como unica opcao; adaptar ao orçamento, regiao e preferencias declaradas.", "Equilibrar chocolate com sobremesas ou frutas menos intensas."],
+      "avoid": ["menu inteiro baseado em peixe", "chocolate em todas as sobremesas", "simbolos religiosos nao solicitados na apresentacao"],
+      "composition_overrides": [
+        { "category": "Entrada", "minimum": 3 },
+        { "category": "Prato Principal", "minimum": 3 },
+        { "category": "Acompanhamento", "minimum": 3 },
+        { "category": "Salada", "minimum": 2 },
+        { "category": "Sobremesa", "minimum": 3 },
+        { "category": "Bebida", "minimum": 3 }
+      ]
+    },
+    {
+      "id": "carnaval",
+      "match": ["carnaval", "baile de carnaval", "bloco"],
+      "identity": "Celebracao de alta circulacao e energia, com porcoes praticas, hidratacao reforcada, alimentos reconheciveis e operacao resistente a calor, movimento e reposicao frequente.",
+      "service_moments": ["recepcao", "petiscos e hidratacao", "refeicao ou lanche substancioso", "doces e frutas", "encerramento"],
+      "required_features": ["agua em acesso continuo", "bebidas nao alcoolicas variadas", "itens de consumo em pe", "opcao substanciosa", "frutas ou preparacoes frescas"],
+      "essential_repetitions": ["agua", "bebida refrescante"],
+      "typical_foods": {
+        "Entrada": ["salgados", "espetinhos", "sanduiches pequenos", "petiscos brasileiros"],
+        "Prato Principal": ["lanche substancioso", "massa ou arroz", "prato brasileiro de buffet", "alternativa vegetal"],
+        "Acompanhamento": ["farofa", "vinagrete", "salada", "frutas"],
+        "Sobremesa": ["picolé conforme estrutura", "frutas", "doces porcionados", "bolo"],
+        "Bebida": ["agua", "agua de coco", "sucos", "refrigerantes", "drinque quando solicitado"]
+      },
+      "guidance": ["Priorizar hidratacao, consumo simples e estabilidade fora da cozinha.", "Usar cores e nomes festivos sem depender de corantes ou excesso de acucar."],
+      "avoid": ["alimentos muito delicados para exposicao", "servico dependente de louca complexa", "alcool sem controle e hidratacao equivalente"],
+      "composition_overrides": [
+        { "category": "Entrada", "minimum": 4 },
+        { "category": "Prato Principal", "minimum": 2 },
+        { "category": "Acompanhamento", "minimum": 3 },
+        { "category": "Salada", "minimum": 1 },
+        { "category": "Sobremesa", "minimum": 3 },
+        { "category": "Bebida", "minimum": 4 }
+      ]
+    }
+  ],
   "meal_modifiers": [
+    {
+      "id": "almoco_com_churrasco",
+      "match": ["almoco com churrasco", "jantar com churrasco"],
+      "guidance": ["Combinar progressao de refeicao completa com variedade de grelha, acompanhamentos quentes, saladas e sobremesa.", "Nao reduzir o churrasco a uma unica carne nem apagar bolo e doces quando a ocasiao os exigir."],
+      "signals": ["entradas de espera", "carnes e alternativa vegetal", "arroz, farofa e vinagrete", "saladas", "sobremesa"]
+    },
+    {
+      "id": "refeicao_completa_festa",
+      "match": ["refeicao completa + coquetel", "refeicao completa e coquetel"],
+      "guidance": ["Planejar recepcao com pequenas porcoes, refeicao completa e transicao posterior para bolo, doces ou encerramento.", "Evitar que as entradas substituam os pratos principais solicitados."],
+      "signals": ["canapes ou salgados", "prato principal", "acompanhamentos", "bolo e doces", "bebidas"]
+    },
+    {
+      "id": "festa_salgados_bolo_doces",
+      "match": ["festa com salgados, bolo e doces", "salgados bolo e doces"],
+      "guidance": ["Estruturar recepcao, salgados variados, momento do bolo, doces e hidratacao continua.", "Incluir opcao substanciosa quando horario ou duracao atravessar uma refeicao."],
+      "signals": ["salgados", "bolo", "doces de festa", "agua", "sucos e refrigerantes"]
+    },
     {
       "id": "coquetel_finger_food",
       "match": ["coquetel", "finger food"],

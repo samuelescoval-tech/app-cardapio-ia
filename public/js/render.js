@@ -35,7 +35,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             ${renderVariedadeCulinaria(dados.variedade_culinaria)}
             ${renderContextoInformado(evento, dados.motor_logistica?.premissas)}
             ${renderMotorLogistica(dados.motor_logistica)}
-            ${renderOperacaoDeterministica(dados.motor_logistica?.operacao)}
+            ${renderDetalhesExpansiveis("Detalhes da operação", "Equipe, fluxo, estações e cronograma técnico", renderOperacaoDeterministica(dados.motor_logistica?.operacao))}
             ${renderServicoMesa(servicoMesa)}
             ${renderCardapio(cardapio)}
             ${renderCompras(compras)}
@@ -120,6 +120,19 @@ function renderContextoInformado(evento = {}, premissas = {}) {
     ].filter(Boolean);
 
     return itens.length ? renderSecao("Contexto informado", renderListaCards(itens, "note-card")) : "";
+}
+
+function renderDetalhesExpansiveis(titulo, resumo, conteudo) {
+    if (!conteudo) return "";
+    return `
+        <details class="result-detail-group">
+            <summary>
+                <span>${escapeHTML(titulo)}</span>
+                <small>${escapeHTML(resumo)}</small>
+            </summary>
+            <div class="result-detail-content">${conteudo}</div>
+        </details>
+    `;
 }
 
 function baixarRelatorioPDF() {
@@ -779,7 +792,7 @@ function renderCompras(compras) {
                         <h4>${escapeHTML(setor)}</h4>
                         ${itens.map(item => `
                             <div class="shopping-item">
-                                <span>${escapeHTML(item.item || "Item")}${item.natureza ? `<small>${escapeHTML(item.natureza)}</small>` : ""}</span>
+                                <span class="shopping-item-name"><span>${escapeHTML(item.item || "Item")}</span>${item.natureza ? `<small>${escapeHTML(item.natureza)}</small>` : ""}</span>
                                 <strong>${escapeHTML(item.quantidade || "")}</strong>
                             </div>
                         `).join("")}

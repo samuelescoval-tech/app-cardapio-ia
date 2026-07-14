@@ -271,6 +271,8 @@ Regras:
 | VAL-23 | Restricoes e bar possuem cobertura semantica minima. | Depois da resposta da IA e antes de exibir o plano. | Resumo nao promete seguranca alimentar nem inventa restricao; almoco/jantar vegetariano possui `Prato Principal`; bar completo possui ao menos duas bebidas alcoolicas e duas nao alcoolicas; falha gera revisao visivel. |
 | VAL-24 | Bebidas cobrem os totais oficiais do motor. | Depois de aplicar o motor ao plano. | Soma em litros do cardapio atinge separadamente bebidas nao alcoolicas e alcoolicas; deficit permanece visivel como revisao e nao e preenchido artificialmente pelo backend. |
 | VAL-25 | Bebidas preservam unidade mensuravel. | Ao normalizar cardapio e compras. | Quantidade numerica isolada de item explicitamente classificado como Bebida recebe `L`, sem alterar o valor; a recuperacao fica registrada como ajuste e demais categorias nao recebem unidade inferida. |
+| VAL-26 | Ocasiao complementa perfil, refeicao e tema sem substitui-los. | Ao montar a diretriz culinaria. | Debutante, Natal, Ano Novo, Pascoa, Carnaval e futuras entradas usam a mesma camada de dados com identidade, momentos, repertorio, elementos esperados, inadequacoes e composicao minima. |
+| VAL-27 | Pedido culinario nominal prevalece sobre repertorio generico. | Antes e depois da geracao. | Catalogo local extrai alimentos nomeados em tema/observacoes; a lista estruturada chega ao prompt; cada item precisa aparecer em nome, descricao ou ingredientes, e ausencia gera revisao visivel. |
 
 ## Casos de uso gerais
 
@@ -313,7 +315,7 @@ Regras:
 | Fluxo principal | Frontend envia evento; backend valida entrada; seleciona diretriz; calcula motor e operacao; monta prompt; chama Gemini; restringe e valida JSON; aplica motor; retorna plano |
 | Fluxo alternativo | Falha da IA ou JSON invalido; backend retorna fallback controlado |
 | Saida | Planejamento normalizado |
-| Validacao | VAL-05, VAL-06, VAL-07, VAL-14, VAL-22, VAL-23, VAL-24, VAL-25 |
+| Validacao | VAL-05, VAL-06, VAL-07, VAL-14, VAL-22, VAL-23, VAL-24, VAL-25, VAL-26, VAL-27 |
 | Status | Implementado |
 
 ### UC-04 - Validar acesso demo

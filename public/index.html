@@ -70,7 +70,21 @@
             <div class="form-grid">
                 <div class="fgroup">
                     <label class="flabel">Tipo de Evento</label>
-                    <input type="text" id="tipo" class="premium-input" minlength="2" maxlength="80" placeholder="Ex: Casamento Real">
+                    <input type="text" id="tipo" class="premium-input" minlength="2" maxlength="80" list="eventTypeSuggestions" aria-describedby="tipoHint" placeholder="Ex: Aniversário de debutante">
+                    <small class="field-hint" id="tipoHint">Escolha uma sugestão ou escreva livremente outro evento.</small>
+                    <datalist id="eventTypeSuggestions">
+                        <option value="Aniversário de debutante"></option>
+                        <option value="Aniversário adulto"></option>
+                        <option value="Festa infantil"></option>
+                        <option value="Casamento"></option>
+                        <option value="Churrasco"></option>
+                        <option value="Evento corporativo"></option>
+                        <option value="Atendimento domiciliar"></option>
+                        <option value="Ceia de Natal"></option>
+                        <option value="Réveillon / Ano Novo"></option>
+                        <option value="Almoço de Páscoa"></option>
+                        <option value="Baile de Carnaval"></option>
+                    </datalist>
                 </div>
                 <div class="fgroup">
                     <label class="flabel">Convidados</label>
@@ -93,6 +107,9 @@
                     <select id="refeicao" class="premium-input">
                         <option value="Coquetel / Finger food">Coquetel / Finger food</option>
                         <option value="Almoço ou jantar">Almoço ou jantar</option>
+                        <option value="Almoço com churrasco">Almoço com churrasco</option>
+                        <option value="Refeição completa + coquetel e doces">Refeição completa + coquetel e doces</option>
+                        <option value="Festa com salgados, bolo e doces">Festa com salgados, bolo e doces</option>
                         <option value="Churrasco">Churrasco</option>
                         <option value="Brunch / café da manhã">Brunch / café da manhã</option>
                         <option value="Coffee break">Coffee break</option>

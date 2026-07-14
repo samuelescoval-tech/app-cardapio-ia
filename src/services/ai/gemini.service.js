@@ -40,6 +40,15 @@ async function gerarPlano(prompt, contexto = {}) {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
+    const candidate = response.candidates?.[0] || {};
+    const usage = response.usageMetadata || {};
+    const generationMeta = {
+      model_version: response.modelVersion || modelName,
+      finish_reason: candidate.finishReason || null,
+      prompt_tokens: usage.promptTokenCount || null,
+      output_tokens: usage.candidatesTokenCount || null,
+      total_tokens: usage.totalTokenCount || null
+    };
 
     // 1. Tentar extrair JSON com fallback
     let dados;
@@ -54,7 +63,8 @@ async function gerarPlano(prompt, contexto = {}) {
         meta: {
           erro: extractError.message,
           tempo_ms: Date.now() - inicio,
-          schema_ok: false
+          schema_ok: false,
+          ...generationMeta
         }
       };
     }
@@ -71,7 +81,8 @@ async function gerarPlano(prompt, contexto = {}) {
         meta: {
           erro: validationError.message,
           tempo_ms: Date.now() - inicio,
-          schema_ok: false
+          schema_ok: false,
+          ...generationMeta
         }
       };
     }
@@ -86,7 +97,8 @@ async function gerarPlano(prompt, contexto = {}) {
         qualidade_culinaria: dados.qualidade_culinaria?.status !== "revisar",
         qualidade_culinaria_status: dados.qualidade_culinaria?.status || "nao_avaliado",
         ajustes_culinarios: dados.qualidade_culinaria?.ajustes?.length || 0,
-        avisos_culinarios: dados.qualidade_culinaria?.avisos?.length || 0
+        avisos_culinarios: dados.qualidade_culinaria?.avisos?.length || 0,
+        ...generationMeta
       }
     };
   } catch (error) {

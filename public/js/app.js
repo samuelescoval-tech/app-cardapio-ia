@@ -238,6 +238,7 @@ async function gerarTudo() {
             body: JSON.stringify({ evento, historico_culinario: historicoCulinario })
         });
         const resposta = await response.json().catch(() => ({}));
+        window.chefIALastResponseMeta = resposta.meta || null;
 
         if (response.status === 401) {
             demoAccessRequired = true;

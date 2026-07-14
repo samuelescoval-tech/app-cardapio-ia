@@ -117,12 +117,15 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - Suite final: 11 arquivos de teste aprovados, sintaxe valida e `git diff --check` aprovado.
 - Cinco baselines tecnicos controlados foram consolidados em 2026-07-13: corporativo, infantil, casamento, churrasco e atendimento domiciliar.
 - O atendimento domiciliar confirmou operacao baixa e revelou apenas perda de unidade em bebidas numericas; o backend recupera `L` sem alterar valores, e a repeticao passou com 13 itens, 11 receitas, cobertura 29/29, historico, mobile e PDF A4.
+- O primeiro teste acompanhado revelou repertorio generico, pedidos nominais omitidos, poucas opcoes de refeicao e densidade visual. A correcao criou uma camada geral de ocasioes e catalogo local de pedidos explicitos, sem limitar a solucao a debutante.
+- Debutante passou com 22 itens, oito pedidos nominais, 14/14 receitas, quatro bebidas e cobertura 36/36. Natal sem pratos nominais confirmou repertorio sazonal com 19 itens e 15/15 receitas.
+- Imagens, fornecedores, planilha e precificacao por usuario permanecem no backlog; dados de clientes nao alimentam uma base geral de precos sem fonte e validacao.
 
 ## Proxima atualizacao curta
 
-1. Executar o primeiro teste acompanhado com uma pessoa usuaria conforme `PLANO_TESTES_CONTROLADOS.md`.
+1. Executar o segundo teste acompanhado com uma pessoa usuaria conforme `PLANO_TESTES_CONTROLADOS.md`.
 2. Registrar feedback e evidencia por evento, separando falha reproduzivel de preferencia editorial.
-3. Corrigir somente falhas que afetem geracao, historico, PDF, compras ou operacao; completar 3 a 5 pessoas antes de nova expansao.
+3. Corrigir somente falhas que afetem geracao, historico, PDF, compras ou operacao; faltam de 2 a 4 pessoas antes de nova expansao.
 4. Manter Spoonacular desativado e fora do ciclo atual; a integracao opcional fica preservada para reavaliacao futura de custo e beneficio.
 5. Nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao dos testes com usuarios.
 

@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { obterDiretrizCulinaria, validarTaxonomiaCulinaria } = require("../src/services/planning/culinary-matrix.service");
+const { obterDiretrizCulinaria, validarTaxonomiaCulinaria, extrairPedidosCulinarios } = require("../src/services/planning/culinary-matrix.service");
 
 test("seleciona composicao de churrasco antes do perfil generico", () => {
   const diretriz = obterDiretrizCulinaria({ tipo: "Churrasco de aniversario", tema: "Boteco" });
@@ -52,6 +52,56 @@ test("atendimento domiciliar recebe perfil proprio e modificador de brunch", () 
   assert.equal(diretriz.modificador_refeicao.id, "brunch_cafe_manha");
   assert.equal(diretriz.modificador_tema.id, "familiar");
   assert.ok(diretriz.comidas_tipicas["Boas-vindas"].length >= 2);
+});
+
+test("ocasiao de debutante amplia aniversario sem substituir o perfil-base", () => {
+  const diretriz = obterDiretrizCulinaria({
+    tipo: "Aniversario de debutante",
+    refeicao: "Almoco com churrasco",
+    tema: "Festa de 15 anos elegante",
+    obs: "Bolo, brigadeiro, beijinho, alcatra e baiao de dois"
+  });
+  const principais = diretriz.composicao_minima.find(item => item.category === "Prato Principal");
+  const bebidas = diretriz.composicao_minima.find(item => item.category === "Bebida");
+
+  assert.equal(diretriz.perfil, "aniversario_geral");
+  assert.equal(diretriz.modificador_ocasiao.id, "debutante_15_anos");
+  assert.equal(diretriz.modificador_refeicao.id, "almoco_com_churrasco");
+  assert.equal(principais.minimum, 4);
+  assert.equal(bebidas.minimum, 4);
+  assert.ok(diretriz.quantidade_total_minima >= 20);
+  assert.ok(diretriz.elementos_esperados.includes("espaco de cerimonia, coreografia ou danca"));
+});
+
+test("ocasioes sazonais usam a mesma camada extensivel", () => {
+  const casos = [
+    ["Ceia de Natal", "natal", /rabanada/i],
+    ["Reveillon de Ano Novo", "ano_novo", /brinde/i],
+    ["Almoco de Pascoa", "pascoa", /bacalhau/i],
+    ["Baile de Carnaval", "carnaval", /hidratacao/i]
+  ];
+
+  casos.forEach(([tipo, id, sinal]) => {
+    const diretriz = obterDiretrizCulinaria({ tipo });
+    assert.equal(diretriz.modificador_ocasiao.id, id);
+    assert.match(JSON.stringify(diretriz.modificador_ocasiao), sinal);
+  });
+});
+
+test("extrai alimentos nomeados sem confundir a ocasiao com o pedido", () => {
+  const pedidos = extrairPedidosCulinarios({
+    tipo: "Aniversario de debutante",
+    tema: "Elegante",
+    obs: "Quero alcatra, patinho, linguica, frango, baiao de dois, bolo, brigadeiros e beijinhos."
+  }).map(item => item.item);
+
+  assert.deepEqual(pedidos, ["alcatra", "patinho", "linguica", "frango", "baiao de dois", "bolo", "brigadeiro", "beijinho"]);
+});
+
+test("termo especifico nao cria pedido generico duplicado", () => {
+  const pedidos = extrairPedidosCulinarios({ obs: "Servir agua de coco gelada." }).map(item => item.item);
+
+  assert.deepEqual(pedidos, ["agua de coco"]);
 });
 
 test("todos os perfis possuem contrato de identidade culinaria do plano 6", () => {
@@ -111,7 +161,7 @@ test("seleciona catalogo curado sem URLs no prompt e amplia restricoes quando ne
   const geral = obterDiretrizCulinaria({ tipo: "Jantar" });
   const restrito = obterDiretrizCulinaria({ tipo: "Jantar", restricoes: "Pessoa celiaca, sem gluten" });
 
-  assert.equal(geral.matriz_version, "2026-07-12-plan6");
+  assert.equal(geral.matriz_version, "2026-07-13-occasions");
   assert.equal(geral.catalogo_fontes_version, "2026-07-12");
   assert.ok(geral.fontes.some(fonte => fonte.qualidade === "official"));
   assert.ok(geral.fontes.some(fonte => fonte.qualidade === "editorial"));

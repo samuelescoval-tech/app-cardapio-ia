@@ -253,6 +253,20 @@ test("avisa quando falta categoria sem apagar o evento", () => {
   assert.match(plano.qualidade_culinaria.avisos.join(" "), /Sobremesa 0\/1/);
 });
 
+test("avisa quando pedido culinario explicito nao aparece no plano", () => {
+  const entrada = planoValido();
+  const plano = validarPlano(entrada, {
+    diretrizCulinaria: {
+      quantidade_total_minima: 8,
+      composicao_minima: [{ category: "Entrada", minimum: 8 }],
+      pedidos_culinarios_explicitos: [{ item: "patinho", termos: ["patinho"] }]
+    }
+  });
+
+  assert.equal(plano.qualidade_culinaria.status, "revisar");
+  assert.match(plano.qualidade_culinaria.avisos.join(" "), /Pedido culinario explicito ausente: patinho/i);
+});
+
 test("recupera quantidade de compra vaga a partir do ingrediente", () => {
   const entrada = planoValido();
   entrada.lista_compras[0].quantidade = "A gosto";

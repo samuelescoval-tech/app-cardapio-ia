@@ -56,6 +56,14 @@
         0 0 0 5px rgba(212,175,55,.12);
 }
 
+.field-hint{
+    display:block;
+    margin-top:6px;
+    color:#6f665c;
+    font-size:.78rem;
+    line-height:1.35;
+}
+
 .advanced-options{
     margin:-6px 0 26px;
     border:1px solid rgba(180,137,62,.28);

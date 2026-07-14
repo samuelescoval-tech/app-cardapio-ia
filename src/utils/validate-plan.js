@@ -352,6 +352,18 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
     if (faltas.length) {
       registrarAviso(relatorio, `Cardapio sem cobertura de categorias: ${faltas.join(", ")}.`);
     }
+
+    const textoCardapio = ` ${normalizarTermosBusca(plano.cardapio.flatMap(prato => [
+      prato.nome,
+      prato.descricao,
+      ...prato.ingredientes.map(ingrediente => ingrediente.item)
+    ]).filter(Boolean).join(" "))} `;
+    (diretrizCulinaria.pedidos_culinarios_explicitos || []).forEach(pedido => {
+      const termos = [pedido.item, ...(pedido.termos || [])].map(normalizarTermosBusca).filter(Boolean);
+      if (!termos.some(termo => textoCardapio.includes(` ${termo} `))) {
+        registrarAviso(relatorio, `Pedido culinario explicito ausente: ${pedido.item}.`);
+      }
+    });
   }
 
   validarCompletudeEvento(plano, relatorio);
@@ -599,6 +611,10 @@ function normalizarTextoBusca(valor) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
+}
+
+function normalizarTermosBusca(valor) {
+  return normalizarTextoBusca(valor).replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function construirResumoSeguro(evento, restricoes) {

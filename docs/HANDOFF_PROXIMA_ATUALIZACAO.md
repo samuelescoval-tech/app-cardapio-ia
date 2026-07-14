@@ -18,7 +18,7 @@ Este documento resume o estado real do projeto para continuar a proxima rodada s
 
 ## Estado atual em uma frase
 
-Os Planos 1 a 10 e os cinco baselines tecnicos foram concluidos; a proxima porta e executar testes acompanhados com pessoas usuarias, sem Spoonacular e sem publicar cada ajuste.
+Os Planos 1 a 10, cinco baselines tecnicos e o primeiro teste acompanhado foram concluidos; ocasioes e pedidos culinarios explicitos agora possuem contrato geral, e a proxima porta e o usuario 2 sem push automatico.
 
 ## O que foi modificado
 
@@ -279,15 +279,26 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - Operacao baixa, historico, recarga, mobile 400/400 e PDF A4 pesquisavel de 7 paginas passaram.
 - Os cinco baselines tecnicos estao consolidados: corporativo, infantil, casamento, churrasco e atendimento domiciliar. A proxima evidencia necessaria e de uso acompanhado por pessoas reais.
 
+### Evidencia do teste acompanhado 1
+
+- O participante planejou aniversario de debutante para 150 pessoas e atribuiu notas 2 ao formulario, 3 ao cardapio, 2 as receitas, 2 as compras e 3 a operacao; historico e PDF funcionaram.
+- A reproducao confirmou o problema: o perfil generico entregava 13 itens, apenas um prato principal e omitia carnes nomeadas no pedido.
+- A matriz ganhou camada geral de ocasioes, inicialmente com debutante, Natal, Ano Novo, Pascoa e Carnaval. Novas ocasioes podem ser adicionadas como dados, sem criar fluxo exclusivo no codigo.
+- Um catalogo culinario local inicial separa pedidos nominais do repertorio tipico. O prompt recebe a lista estruturada, e o backend marca qualquer pedido ausente como revisao.
+- O aceite final de debutante passou com 22 itens, oito pedidos nominais presentes, 14/14 receitas completas, 36/36 ingredientes, zero compras derivadas e quatro bebidas.
+- Natal validou o comportamento sem pratos nominais: 19 itens, 15/15 receitas, repertorio sazonal coerente, quatro bebidas, historico, mobile e PDF A4 de 8 paginas.
+- O formulario oferece sugestoes de eventos sem bloquear texto livre e tres refeicoes combinadas adicionais. A lista de compras separa visualmente natureza e nome; detalhes operacionais ficam recolhidos por padrao.
+- Imagens, fornecedores, planilha e precificacao por usuario foram classificados como backlog. Precos continuam `A cotar` ate existir catalogo regional com fonte, data-base e validacao.
+
 ## Proxima atualizacao curta
 
-O usuario escolheu teste controlado, pausou o Spoonacular por custo e concluiu os cinco baselines tecnicos:
+O usuario escolheu teste controlado, pausou o Spoonacular por custo, concluiu cinco baselines tecnicos e o primeiro teste acompanhado:
 
-1. Selecionar a primeira pessoa testadora e um evento realista.
-2. Acompanhar uma geracao principal pela interface usando a ficha de `PLANO_TESTES_CONTROLADOS.md`.
+1. Selecionar a segunda pessoa testadora e um evento realista diferente.
+2. Acompanhar uma geracao principal pela interface usando a ficha de `PLANO_TESTES_CONTROLADOS.md`, preferencialmente sem listar todos os pratos.
 3. Registrar notas, evidencia e gravidade sem expor chaves ou dados pessoais desnecessarios.
 4. Corrigir somente falhas reproduzidas; preferencias isoladas permanecem em observacao.
-5. Repetir ate completar 3 a 5 pessoas e somente entao consolidar a decisao seguinte.
+5. Repetir ate completar 3 a 5 pessoas; faltam de 2 a 4 participantes antes da consolidacao.
 6. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
 
 Nao fazer nesta atualizacao:
