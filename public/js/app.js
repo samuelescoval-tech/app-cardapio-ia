@@ -133,16 +133,24 @@ function switchView(view) {
         pitch.classList.add('hidden');
         btnApp.classList.add('active');
         btnPitch.classList.remove('active');
+        btnApp.setAttribute('aria-pressed', 'true');
+        btnPitch.setAttribute('aria-pressed', 'false');
     } else {
         app.classList.add('hidden');
         pitch.classList.remove('hidden');
         btnApp.classList.remove('active');
         btnPitch.classList.add('active');
+        btnApp.setAttribute('aria-pressed', 'false');
+        btnPitch.setAttribute('aria-pressed', 'true');
     }
 }
 
 function toggleHeader() {
-    document.getElementById('mainHero').classList.toggle('collapsed');
+    const hero = document.getElementById('mainHero');
+    const button = hero?.querySelector('.toggle-header');
+    const collapsed = hero?.classList.toggle('collapsed');
+    button?.setAttribute('aria-expanded', String(!collapsed));
+    button?.setAttribute('aria-label', collapsed ? 'Expandir capa' : 'Recolher capa');
 }
 
 /* TAG: fluxo-principal-ia */

@@ -43,9 +43,9 @@
     </div>
 
     <!-- TAG: navegacao-modo | Alterna app e apresentacao -->
-    <nav class="mode-nav">
-        <button class="nav-btn active" id="btnApp" onclick="switchView('app')">👨‍🍳 GERADOR IA</button>
-        <button class="nav-btn" id="btnPitch" onclick="switchView('pitch')">📊 APRESENTAÇÃO</button>
+    <nav class="mode-nav" aria-label="Alternar área do Chef IA">
+        <button type="button" class="nav-btn active" id="btnApp" aria-pressed="true" onclick="switchView('app')">👨‍🍳 GERADOR IA</button>
+        <button type="button" class="nav-btn" id="btnPitch" aria-pressed="false" onclick="switchView('pitch')">📊 APRESENTAÇÃO</button>
     </nav>
 
     <!-- TAG: hero-dinamico | Capa visual compactavel -->
@@ -59,7 +59,7 @@
             <h1 class="hero-title">Chef <span>IA</span> Studio</h1>
             <p class="hero-sub">ARQUITETURA GASTRONÔMICA E LOGÍSTICA</p>
         </div>
-        <button class="toggle-header" onclick="toggleHeader()">↕</button>
+        <button type="button" class="toggle-header" aria-controls="mainHero" aria-expanded="true" aria-label="Recolher capa" onclick="toggleHeader()">↕</button>
     </header>
 
     <!-- TAG: app-gerador | Formulario principal do evento -->
@@ -69,7 +69,7 @@
             
             <div class="form-grid">
                 <div class="fgroup">
-                    <label class="flabel">Tipo de Evento</label>
+                    <label class="flabel" for="tipo">Tipo de Evento</label>
                     <input type="text" id="tipo" class="premium-input" minlength="2" maxlength="80" list="eventTypeSuggestions" aria-describedby="tipoHint" placeholder="Ex: Aniversário de debutante">
                     <small class="field-hint" id="tipoHint">Escolha uma sugestão ou escreva livremente outro evento.</small>
                     <datalist id="eventTypeSuggestions">
@@ -87,23 +87,23 @@
                     </datalist>
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Convidados</label>
+                    <label class="flabel" for="pessoas">Convidados</label>
                     <input type="number" id="pessoas" class="premium-input" min="1" max="5000" placeholder="Total">
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Criancas (ate 12 anos)</label>
+                    <label class="flabel" for="criancas">Crianças (até 12 anos)</label>
                     <input type="number" id="criancas" class="premium-input" min="0" max="5000" placeholder="Opcional">
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Duração do Evento</label>
+                    <label class="flabel" for="duracao">Duração do Evento</label>
                     <input type="number" id="duracao" class="premium-input" min="1" max="24" placeholder="Ex: 4 horas">
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Data do Evento</label>
+                    <label class="flabel" for="dataEvento">Data do Evento</label>
                     <input type="date" id="dataEvento" class="premium-input">
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Tipo de Refeição</label>
+                    <label class="flabel" for="refeicao">Tipo de Refeição</label>
                     <select id="refeicao" class="premium-input">
                         <option value="Coquetel / Finger food">Coquetel / Finger food</option>
                         <option value="Almoço ou jantar">Almoço ou jantar</option>
@@ -117,15 +117,15 @@
                 </div>
                 <!-- NOVO CAMPO: Restrições -->
                 <div class="fgroup">
-                    <label class="flabel">Restrições Alimentares</label>
+                    <label class="flabel" for="restricoes">Restrições Alimentares</label>
                     <input type="text" id="restricoes" class="premium-input" maxlength="500" placeholder="Ex: Veganos, Celíacos...">
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Tema do Evento</label>
+                    <label class="flabel" for="tema">Tema do Evento</label>
                     <input type="text" id="tema" class="premium-input" maxlength="120" placeholder="Ex: Tropical, Botânico, Anos 80...">
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Bebidas</label>
+                    <label class="flabel" for="alcool">Bebidas</label>
                     <select id="alcool" class="premium-input">
                         <option value="Sem álcool">Sem álcool</option>
                         <option value="Com álcool moderado">Com álcool moderado</option>
@@ -133,8 +133,8 @@
                     </select>
                 </div>
                 <div class="fgroup">
-                    <label class="flabel">Estilo do Serviço</label>
-                    <div class="style-grid">
+                    <span class="flabel" id="estiloLabel">Estilo do Serviço</span>
+                    <div class="style-grid" role="radiogroup" aria-labelledby="estiloLabel">
                         <input type="radio" name="estilo" id="s1" value="Simples" checked><label for="s1">🏡 Simples</label>
                         <input type="radio" name="estilo" id="s2" value="Elegante"><label for="s2">🌸 Elegante</label>
                         <input type="radio" name="estilo" id="s3" value="Premium"><label for="s3">👑 Premium</label>
@@ -217,18 +217,18 @@
 
             <!-- TAG: observacoes-ia | Contexto livre para o prompt -->
             <div class="chat-box">
-                <label class="flabel">Observações Adicionais para a IA</label>
+                <label class="flabel" for="userChat">Observações Adicionais para a IA</label>
                 <div id="chatHistory" class="chat-history">
                     <div class="bubble-ai">Informe detalhes como: "Quero foco em frutos do mar" ou "Decoração rústica".</div>
                 </div>
                 <div class="chat-input-wrap">
                     <input type="text" id="userChat" class="premium-input" maxlength="1000" placeholder="Fale com o Chef...">
                     <input type="file" id="importChef" accept=".chef" class="hidden" onchange="importarProjeto(event)">
-                    <button class="btn-util" onclick="document.getElementById('importChef').click()">📂</button>
+                    <button type="button" class="btn-util" aria-label="Importar projeto Chef" title="Importar projeto Chef" onclick="document.getElementById('importChef').click()">📂</button>
                 </div>
             </div>
 
-            <button class="btn-epic" id="btnGerar" onclick="gerarTudo()">⚙️ CALCULAR + GERAR PLANEJAMENTO COMPLETO</button>
+            <button type="button" class="btn-epic" id="btnGerar" onclick="gerarTudo()">⚙️ CALCULAR + GERAR PLANEJAMENTO COMPLETO</button>
         </section>
 
         <!-- TAG: historico-ui | FASE 1: Histórico Local -->
@@ -246,7 +246,7 @@
         </section>
 
         <!-- TAG: resultado-ia | Area preenchida por render.js -->
-        <div id="resultadoArea" class="hidden"></div>
+        <div id="resultadoArea" class="hidden" aria-live="polite"></div>
     </main>
 
    <!-- TAG: pitch-comercial | Apresentacao do produto -->

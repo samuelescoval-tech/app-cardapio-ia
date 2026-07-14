@@ -1310,7 +1310,24 @@
     }
 
     .menu-controls{
+        display:grid;
+        width:100%;
+        grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px 44px;
         justify-content:flex-start;
+    }
+
+    .menu-controls > span{
+        grid-column:1 / -1;
+        justify-self:start;
+    }
+
+    .menu-view-btn,
+    .menu-nav-btn{
+        min-height:44px;
+    }
+
+    .menu-nav-btn{
+        width:44px;
     }
 
     .sector-grid{

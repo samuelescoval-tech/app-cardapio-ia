@@ -211,3 +211,128 @@
 
     font-size:2rem;
 }
+
+@media (max-width:768px){
+    .mode-nav{
+        top:max(10px,env(safe-area-inset-top));
+        width:calc(100% - 24px);
+        max-width:390px;
+        gap:4px;
+        padding:4px;
+        transform:translateX(-50%);
+    }
+
+    .nav-btn{
+        flex:1;
+        min-width:0;
+        min-height:44px;
+        padding:10px 12px;
+        font-size:.65rem;
+        letter-spacing:1px;
+    }
+
+    .hero{
+        height:300px;
+    }
+
+    .hero.collapsed{
+        height:104px;
+    }
+
+    .hero-content{
+        max-width:100%;
+        padding:52px 20px 0;
+    }
+
+    .hero-title{
+        font-size:2.5rem;
+        line-height:1.05;
+    }
+
+    .hero-sub{
+        max-width:340px;
+        margin:0 auto;
+        font-size:.72rem;
+        line-height:1.55;
+        letter-spacing:2.8px;
+    }
+
+    .toggle-header{
+        right:14px;
+        bottom:14px;
+        width:44px;
+        height:44px;
+    }
+
+    .app-container{
+        margin:-24px auto 52px;
+        padding:0 12px;
+    }
+
+    .glass-panel{
+        padding:24px;
+        border-top-width:6px;
+        border-radius:24px;
+    }
+
+    .panel-title{
+        gap:10px;
+        margin-bottom:24px;
+        font-size:1.55rem;
+        line-height:1.15;
+    }
+
+    .panel-title span{
+        flex:0 0 auto;
+    }
+}
+
+@media (max-width:480px){
+    .mode-nav{
+        top:max(8px,env(safe-area-inset-top));
+        width:calc(100% - 16px);
+    }
+
+    .nav-btn{
+        padding:9px 8px;
+        font-size:.61rem;
+        letter-spacing:.75px;
+    }
+
+    .hero{
+        height:270px;
+    }
+
+    .hero.collapsed{
+        height:96px;
+    }
+
+    .hero-content{
+        padding-top:46px;
+    }
+
+    .hero-title{
+        font-size:2.25rem;
+    }
+
+    .hero-sub{
+        max-width:290px;
+        font-size:.66rem;
+        letter-spacing:2.1px;
+    }
+
+    .app-container{
+        margin-top:-20px;
+        padding:0 8px;
+    }
+
+    .glass-panel{
+        padding:20px 16px;
+        border-radius:20px;
+    }
+
+    .panel-title{
+        margin-bottom:22px;
+        font-size:1.45rem;
+    }
+}

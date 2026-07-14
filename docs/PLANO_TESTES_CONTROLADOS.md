@@ -215,6 +215,16 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Compatibilidade: historico, recarga e viewport 400/400 passaram sem overflow.
 - Porta Premium preservada: o corporativo continuou em `revisar` por ausencia de evidencia de louca/acabamento e estacao especial de bebidas.
 
+### Refinamento mobile - regressao de 2026-07-14
+
+- Primeira dobra reduzida de `50vh` para `300px` em tablet e `270px` em celular, mantendo capa e navegacao.
+- Campos principais uniformizados em `54px`; navegacao e controles de cardapio usam alvos de toque de pelo menos `44px`.
+- Acessibilidade: rotulos associados, navegacao com `aria-pressed`, resultado com `aria-live`, foco visivel e movimento reduzido.
+- Evidencia real: viewport `390px`, documento `390px`, nenhum overflow, controles do cardapio `340px` e primeiro cartao `296px`.
+- O E2E passou a capturar evidencia mobile antes das portas culinarias para nao perder o diagnostico visual quando a IA entrega conteudo insuficiente.
+- Portas culinarias preservadas: uma amostra corporativa parou com 3 receitas ausentes e uma amostra de churrasco parou com `35/48 L` de bebidas nao alcoolicas.
+- Decisao: mobile aprovado como camada visual; cobertura de receitas e bebidas segue como proxima correcao funcional.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

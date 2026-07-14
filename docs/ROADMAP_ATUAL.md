@@ -128,16 +128,19 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - A regra de coerencia de 2026-07-14 criou um catalogo de 11 contextos com significado, alimentos, bebidas, cores, decoracao, estilo, restricoes e orcamento orientador sem cotacao.
 - Cardapio passou a ter duas camadas: blocos editoriais para tela/PDF e itens atomicos para receitas, quantidades e compras. Historicos antigos recebem agrupamento de compatibilidade.
 - E2E de blocos: corporativo 17 itens/12 blocos, churrasco 19/13 e Natal 19/11; os tres passaram em historico, recarga, mobile 400/400 e PDF pesquisavel.
+- Refinamento mobile de 2026-07-14: primeira dobra reduzida, campos de `54px`, controles de toque de `44px`, rotulos acessiveis e resultado responsivo.
+- Evidencia atual: viewport/documento `390/390`, sem overflow; cardapio com controles de `340px` e primeiro cartao de `296px`.
+- As portas funcionais nao foram relaxadas: amostras recentes expuseram 3 receitas ausentes no corporativo e deficit de bebidas no churrasco. Esses pontos passam a frente da proxima correcao de conteudo.
 
 ## Proxima atualizacao curta
 
-1. Reavaliar o workshop corporativo com o novo contrato Premium pela interface real.
-2. Coletar referencias visuais do usuario e transformar somente padroes aprovados em componentes reutilizaveis.
-3. Projetar envelope orcamentario por percentuais e estado `A cotar`, sem precos de mercado inventados.
-4. Especificar a futura camada de imagens com licenca, atribuicao, cache e fallback.
-5. Executar o proximo teste acompanhado com outra pessoa e outro tipo de evento.
-6. Manter Spoonacular desativado e fora do ciclo atual.
-7. Nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao dos testes com usuarios.
+1. Completar receitas ausentes e reconciliar bebidas com o motor sem mascarar insuficiencia da IA.
+2. Reavaliar o workshop corporativo e o novo mobile pela interface real.
+3. Coletar referencias visuais do usuario e transformar somente padroes aprovados em componentes reutilizaveis.
+4. Projetar envelope orcamentario por percentuais e estado `A cotar`, sem precos de mercado inventados.
+5. Especificar a futura camada de imagens com licenca, atribuicao, cache e fallback.
+6. Executar o proximo teste acompanhado com outra pessoa e outro tipo de evento.
+7. Manter Spoonacular desativado e nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao.
 
 Em 2026-07-13, o usuario informou que a chave Spoonacular exposta foi rotacionada. A auditoria local passou nos 11 arquivos de teste, na sintaxe e em `git diff --check`; depois da revisao de custo, o usuario decidiu pausar a consulta real por ser um servico pago. Isso nao bloqueia os testes controlados do MVP.
 

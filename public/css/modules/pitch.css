@@ -327,30 +327,6 @@
     }
 }
 
-@media (max-width:768px){
-
-    .hero{
-        height:50vh;
-    }
-
-    .hero-title{
-        font-size:2.7rem;
-    }
-
-    .app-container{
-        margin-top:-30px;
-    }
-
-    .glass-panel{
-        padding:28px;
-    }
-
-    .mode-nav{
-        transform:
-            translateX(-50%)
-            scale(.92);
-    }
-}
 /* ════════════════════════════════════════
    FIX GLOBAL TEXTOS ESCUROS NO PITCH
 ════════════════════════════════════════ */

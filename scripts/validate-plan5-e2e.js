@@ -279,6 +279,7 @@ async function main() {
       process.stdout.write(`[${index + 1}/${scenarios.length}] ${scenario.id}: gerando...\n`);
       const result = await gerarScenario(cdp, scenario);
       if (!result.ok) throw new Error(`${scenario.id}: ${result.error}`);
+      result.mobileEvidence = await capturarEvidenciaMobile(cdp, scenario.id);
       try {
         validarResultadoCiclo(result, scenario);
       } catch (error) {
@@ -356,6 +357,43 @@ async function main() {
     if (chrome.exitCode === null) chrome.kill("SIGTERM");
     if (server?.exitCode === null) server.kill("SIGTERM");
   }
+}
+
+async function capturarEvidenciaMobile(cdp, scenarioId) {
+  await cdp.send("Emulation.setDeviceMetricsOverride", {
+    width: 390,
+    height: 844,
+    deviceScaleFactor: 1,
+    mobile: true
+  });
+  await cdp.evaluate(`(() => {
+    document.querySelector('.resultado-premium')?.scrollIntoView({ block: 'start' });
+    return true;
+  })()`);
+  await esperar(350);
+
+  const metricas = await cdp.evaluate(`(() => {
+    const controles = document.querySelector('.menu-controls')?.getBoundingClientRect();
+    const cartao = document.querySelector('.dish-card-rich')?.getBoundingClientRect();
+    return {
+      viewport: window.innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+      menuControlsWidth: Math.round(controles?.width || 0),
+      firstCardWidth: Math.round(cartao?.width || 0)
+    };
+  })()`);
+
+  const captura = await cdp.send("Page.captureScreenshot", {
+    format: "png",
+    fromSurface: true,
+    captureBeyondViewport: false
+  });
+  const screenshotPath = path.join(downloadDir, `${scenarioId}-mobile-390x844.png`);
+  fs.writeFileSync(screenshotPath, Buffer.from(captura.data, "base64"));
+  await cdp.send("Emulation.clearDeviceMetricsOverride");
+
+  return { ...metricas, screenshotPath };
 }
 
 function validarResultadoCiclo(result, scenario) {

@@ -311,17 +311,27 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - E2E: corporativo 17/12, churrasco 19/13 e Natal 19/11 em itens/blocos; historico, recarga, mobile e PDFs passaram.
 - A especificacao tecnica ativa esta em `docs/REGRA_COERENCIA_BLOCOS_EVENTO.md`.
 
+### Evidencia do refinamento mobile
+
+- A regra responsiva geral saiu do modulo de pitch; o app agora controla sua propria primeira dobra em `300px` e `270px`.
+- Formulario, chat, historico e acoes foram compactados com campos de `54px` e alvos de toque de no minimo `44px`.
+- Em `390 x 844`, o documento mediu `390px`, sem overflow; controles do cardapio mediram `340px` e o primeiro cartao `296px`.
+- O E2E salva captura e metricas mobile antes da avaliacao culinaria. Assim, falha de receita ou bebida nao apaga evidencia visual.
+- Duas amostras mantiveram portas funcionais ativas: corporativo com 11/14 receitas e churrasco com 35/48 L de bebidas nao alcoolicas.
+- Especificacao e evidencias: `docs/VALIDACAO_MOBILE.md`.
+
 ## Proxima atualizacao curta
 
 O usuario escolheu teste controlado, pausou o Spoonacular por custo, concluiu cinco baselines tecnicos, o primeiro teste acompanhado e uma revisao corporativa Premium:
 
-1. Pedir ao usuario uma nova avaliacao perceptiva do workshop gerado pelo contrato Premium atualizado.
-2. Separar qualidade culinaria, ambientacao, restricoes e clareza visual em notas independentes.
-3. Projetar a proxima melhoria visual a partir das referencias de sites que o usuario trouxer, preservando carrossel e lista.
-4. Definir um envelope orcamentario informativo por percentuais, sem transformar o valor desejado em cotacao.
-5. Planejar imagens com fonte, licenca, atribuicao e fallback antes de integrar qualquer biblioteca externa.
-6. Selecionar outra pessoa testadora e um evento realista diferente para evitar ajuste excessivo ao mesmo avaliador.
-7. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
+1. Garantir receita operacional para toda preparacao que exigir preparo, sem criar receita artificial para agua ou produto pronto.
+2. Reconciliar bebidas geradas com os totais minimos do motor, preservando alcool, publico e duracao.
+3. Pedir ao usuario uma nova avaliacao perceptiva do workshop e do mobile atualizados.
+4. Separar qualidade culinaria, ambientacao, restricoes e clareza visual em notas independentes.
+5. Projetar a proxima melhoria visual a partir das referencias de sites que o usuario trouxer, preservando carrossel e lista.
+6. Definir um envelope orcamentario informativo por percentuais, sem transformar o valor desejado em cotacao.
+7. Planejar imagens com fonte, licenca, atribuicao e fallback antes de integrar qualquer biblioteca externa.
+8. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
 
 Nao fazer nesta atualizacao:
 
