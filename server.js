@@ -32,7 +32,8 @@ app.get('/api/status', (req, res) => {
             prompt_backend: true,
             culinary_variety_history: true,
             advanced_event_context: true,
-            operational_complexity: true
+            operational_complexity: true,
+            event_coherence_blocks: true
         },
         recipe_references: spoonacularService.getStatus()
     });
@@ -62,6 +63,7 @@ async function gerarCardapioHandler(req, res) {
         const resposta = await gerarPlano(prompt, { diretrizCulinaria, evento });
         if (resposta.ok && resposta.plano) {
             resposta.plano.variedade_culinaria = avaliarVariedadePlano(resposta.plano, contextoVariedade);
+            resposta.plano.contexto_evento = diretrizCulinaria.contexto_evento;
         }
         if (motor && resposta.plano) {
             resposta.plano = aplicarMotorAoPlano(resposta.plano, motor);
@@ -75,7 +77,8 @@ async function gerarCardapioHandler(req, res) {
                 ajustes_culinarios: resposta.plano.qualidade_culinaria?.ajustes?.length || 0,
                 avisos_culinarios: resposta.plano.qualidade_culinaria?.avisos?.length || 0,
                 variedade_culinaria_status: resposta.plano.variedade_culinaria?.status || "nao_avaliado",
-                repeticoes_culinarias_a_revisar: resposta.plano.variedade_culinaria?.repeticoes_a_revisar?.length || 0
+                repeticoes_culinarias_a_revisar: resposta.plano.variedade_culinaria?.repeticoes_a_revisar?.length || 0,
+                blocos_cardapio: resposta.plano.blocos_cardapio?.length || 0
             };
         }
 

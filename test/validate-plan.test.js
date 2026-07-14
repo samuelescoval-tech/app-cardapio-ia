@@ -79,6 +79,8 @@ test("normaliza somente os campos conhecidos do contrato", () => {
   assert.equal(plano.orcamento, null);
   assert.equal(plano.precificacao, null);
   assert.equal(plano.cardapio.length, 8);
+  assert.equal(plano.blocos_cardapio.length, 1);
+  assert.deepEqual(plano.blocos_cardapio[0].itens, plano.cardapio.map(item => item.id));
 });
 
 test("rejeita plano sem campos essenciais", () => {

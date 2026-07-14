@@ -54,6 +54,8 @@ RESTRICOES
 - Nao pesquise a web, nao copie receitas das fontes e nao torne produtos de marca obrigatorios.
 - Nao prometa ausencia de alergenicos ou contaminacao cruzada; destaque cuidados quando houver restricao relevante.
 - Respeite restricoes alimentares em cardapio, receitas e lista de compras.
+- Leia primeiro contexto_evento da DIRETRIZ CULINARIA LOCAL. Ele responde tipologia, significado social ou cultural, blocos alimentares e de bebidas, cores, decoracao, estilo, inadequacoes, restricoes e uso seguro do orcamento.
+- Siga esta ordem de raciocinio antes de escrever o JSON: identificar evento; preservar significado; aplicar estilo; aplicar restricoes; considerar o envelope sem inventar precos; escolher blocos coerentes; somente entao detalhar itens, quantidades, compras e operacao.
 - Preserve primeiro identidade_evento, momentos_servico e elementos_esperados da DIRETRIZ CULINARIA LOCAL.
 - Use comidas_tipicas como repertorio de alternativas coerentes, nao como lista obrigatoria. Escolha e varie; nao copie todas.
 - Aplique modificador_refeicao, modificador_ocasiao, modificador_tema e modificador_estilo como camadas sobre o perfil-base. Refeicao, ocasiao, tema, estilo ou horario nao podem apagar a identidade nem os momentos essenciais do evento.
@@ -73,6 +75,10 @@ RESTRICOES
 - Quando infraestrutura estiver como A confirmar, nao invente equipamentos disponiveis; registre a necessidade de confirmacao no checklist e na recomendacao.
 - Use a composicao minima da DIRETRIZ CULINARIA LOCAL e adapte os pratos a ocasiao, tema, refeicao, estilo e publico. O minimo e piso: pedidos explicitos podem e devem ampliar a composicao.
 - Nao repita o mesmo prato, ingrediente dominante ou funcao culinaria apenas para atingir quantidade.
+- Pense por blocos coerentes. Sabores equivalentes de suco, refrigerante, carne ou doce pertencem ao mesmo bloco editorial e nao devem inflar variedade como se fossem conceitos independentes.
+- Mantenha cada preparacao operacional como item atomico do cardapio quando ela precisar de quantidade, ingredientes, receita ou compra propria. O backend agrupa esses itens para apresentacao sem perder rastreabilidade.
+- Escolha variacoes realmente uteis dentro de cada bloco. Nao gere cinco sabores quase iguais apenas para atingir o minimo; cubra categorias, tecnicas, restricoes e momentos de servico.
+- Se orcamento.status for orientador_sem_cotacao, use o valor apenas como limite de decisao e indique no checklist o que depende de cotacao regional. Nao transforme o envelope informado em preco, custo ou promessa de viabilidade.
 - Se faltar uma preferencia, adote uma opcao prudente e identifique a estimativa no campo correspondente.
 - Use linguagem profissional, direta e adequada ao Brasil.
 - Responda somente com JSON valido, sem markdown, comentarios ou texto adicional.

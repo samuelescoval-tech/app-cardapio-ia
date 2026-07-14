@@ -1,0 +1,137 @@
+{
+  "version": "2026-07-14-coherence-blocks",
+  "contexts": [
+    {
+      "id": "debutante",
+      "scope": "type",
+      "match": ["debutante", "15 anos", "quinze anos"],
+      "meaning": "Celebracao simbolica de transicao, com protagonismo da aniversariante, momento cerimonial, fotografia, doces e danca.",
+      "food_blocks": ["finger foods e canapes", "refeicao compativel com o horario", "bolo e doces de festa", "mini sobremesas tematicas"],
+      "beverage_blocks": ["aguas e hidratacao", "sucos naturais variados", "refrigerantes variados", "mocktails sem alcool"],
+      "colors": ["rosa", "dourado", "branco", "lilas", "prata", "champagne", "cores do tema"],
+      "decor": ["mesa principal", "painel fotografico", "flores", "iluminacao", "pista de danca", "cenario da aniversariante"],
+      "premium": ["entrada cenografica", "doces finos", "bolo de alto impacto visual", "loucas elegantes", "mocktails autorais"],
+      "avoid": ["bebida alcoolica como elemento central", "decoracao generica", "falta de area para danca ou cerimonia"]
+    },
+    {
+      "id": "natal",
+      "scope": "type",
+      "match": ["natal", "ceia natalina"],
+      "meaning": "Celebracao familiar, afetiva e tradicional, normalmente organizada como ceia ou refeicao compartilhada com mesa farta.",
+      "food_blocks": ["aves e carnes natalinas", "acompanhamentos natalinos", "sobremesas natalinas"],
+      "beverage_blocks": ["aguas e hidratacao", "sucos naturais variados", "bebidas de celebracao para adultos quando permitidas", "drinks sem alcool com frutas"],
+      "colors": ["vermelho", "verde", "dourado", "branco", "prata"],
+      "decor": ["arvore", "guirlandas", "luzes quentes", "velas", "lacos", "pinhas", "arranjos verdes"],
+      "premium": ["loucas elegantes", "arranjos naturais", "iluminacao quente", "mesa refinada de sobremesas", "bebidas com apresentacao especial"],
+      "avoid": ["decoracao plastica excessiva", "pratos soltos sem harmonia de ceia", "sobremesas comuns sem curadoria"]
+    },
+    {
+      "id": "ano_novo",
+      "scope": "type",
+      "match": ["ano novo", "reveillon", "réveillon"],
+      "meaning": "Celebracao de renovacao e passagem de ano, associada a leveza, brilho, verao e alimentos de comemoracao.",
+      "food_blocks": ["pratos leves de reveillon", "saladas e acompanhamentos frescos", "frutas e sobremesas geladas"],
+      "beverage_blocks": ["aguas e hidratacao", "agua de coco", "sucos naturais variados", "mocktails refrescantes", "espumante para adultos quando permitido"],
+      "colors": ["branco", "dourado", "prata", "champagne", "azul claro"],
+      "decor": ["velas", "luzes", "flores brancas", "elementos metalizados", "mesa clara"],
+      "premium": ["estacao de drinks ou mocktails", "buffet leve e refinado", "flores naturais", "loucas claras", "metais dourados"],
+      "avoid": ["cardapio pesado", "falta de hidratacao", "decoracao escura sem relacao com a celebracao"]
+    },
+    {
+      "id": "pascoa",
+      "scope": "type",
+      "match": ["pascoa", "páscoa"],
+      "meaning": "Evento familiar e simbolico ligado a almoco especial, chocolate e ambientacao leve.",
+      "food_blocks": ["peixes ou carnes adequadas ao publico", "acompanhamentos de almoco", "chocolates e sobremesas de Pascoa"],
+      "beverage_blocks": ["aguas e hidratacao", "sucos naturais variados", "vinho branco para adultos quando permitido", "bebidas quentes em encontros familiares"],
+      "colors": ["tons pastel", "amarelo", "laranja", "verde claro", "azul claro", "rosa claro", "branco"],
+      "decor": ["ovos decorativos", "cestas", "flores", "lacos", "mesa de doces"],
+      "premium": ["chocolates artesanais", "mesa delicada", "flores naturais", "loucas claras", "sobremesas refinadas"],
+      "avoid": ["cardapio formado apenas por chocolate", "decoracao infantil quando o publico for adulto", "restricoes sem identificacao"]
+    },
+    {
+      "id": "infantil",
+      "scope": "type",
+      "match": ["infantil", "crianca", "kids"],
+      "meaning": "Celebracao familiar, alegre e visual, com alimentos de facil consumo, porcoes adequadas e seguranca para criancas.",
+      "food_blocks": ["salgados e lanches infantis", "preparacoes frescas", "bolo e doces de festa", "itens tematicos"],
+      "beverage_blocks": ["aguas e hidratacao", "sucos variados", "refrigerantes variados", "bebidas adequadas a faixa etaria"],
+      "colors": ["cores vivas", "paleta do tema"],
+      "decor": ["baloes", "painel tematico", "mesa de bolo", "arco decorativo", "brinquedos", "lembrancinhas"],
+      "premium": ["mesa personalizada", "doces modelados", "papelaria visual", "estacoes decoradas", "monitores", "displays tematicos"],
+      "avoid": ["alimentos inadequados a idade", "alcool", "tema visual desconectado do cardapio"]
+    },
+    {
+      "id": "casamento",
+      "scope": "type",
+      "match": ["casamento", "noivado", "bodas"],
+      "meaning": "Evento afetivo, formal e cerimonial que exige harmonia entre menu, servico, decoracao e experiencia dos convidados.",
+      "food_blocks": ["canapes e boas-vindas", "entradas refinadas", "pratos principais e guarnicoes", "bolo, bem-casados e doces finos"],
+      "beverage_blocks": ["aguas e hidratacao", "sucos naturais variados", "vinhos e espumantes para adultos quando permitidos", "bar de coquetelaria"],
+      "colors": ["branco", "off-white", "dourado", "verde", "rose", "champagne", "marsala", "tons terrosos"],
+      "decor": ["flores naturais", "velas", "mesa dos noivos", "altar ou ponto cerimonial", "luzes quentes", "identidade visual do casal"],
+      "premium": ["menu autoral", "servico de alto padrao", "flores naturais abundantes", "loucas e pratarias", "bar sofisticado"],
+      "avoid": ["servico sem progressao", "decoracao sem unidade", "alcool sem alternativas nao alcoolicas"]
+    },
+    {
+      "id": "corporativo",
+      "scope": "type",
+      "match": ["corporativo", "empresa", "workshop", "networking", "congresso", "seminario", "treinamento"],
+      "meaning": "Evento profissional focado em produtividade, networking, conforto e imagem da organizacao, com comida pratica e discreta.",
+      "food_blocks": ["coffee break salgado", "frutas e acompanhamentos frescos", "mini sobremesas", "opcoes alimentares identificadas"],
+      "beverage_blocks": ["aguas e hidratacao", "sucos naturais variados", "cafes", "infusoes naturais", "mocktails sem alcool quando o estilo pedir"],
+      "colors": ["branco", "preto", "cinza", "azul", "verde escuro", "dourado discreto", "cores da marca"],
+      "decor": ["mesa clean", "sinalizacao", "paineis de marca", "arranjos discretos", "credenciamento", "identificadores de pratos"],
+      "premium": ["estacao de cafe especial", "infusoes naturais", "loucas melhores", "bancadas refinadas", "sinalizacao elegante", "equipe discreta"],
+      "avoid": ["cha de sache", "biscoito comum", "copos descartaveis simples", "cheiros fortes", "cardapio pesado", "decoracao generica"]
+    },
+    {
+      "id": "churrasco",
+      "scope": "type",
+      "match": ["churrasco", "parrilla", "grelhado"],
+      "meaning": "Evento social e de convivencia centrado na grelha, com proteinas, acompanhamentos compartilhados e reposicao continua.",
+      "food_blocks": ["carnes bovinas", "carnes suinas", "aves", "opcoes vegetais de grelha", "acompanhamentos de churrasco"],
+      "beverage_blocks": ["aguas e hidratacao", "sucos variados", "refrigerantes variados", "bebidas alcoolicas para adultos quando permitidas"],
+      "colors": ["marrom", "verde", "preto", "vermelho", "amarelo", "tons rusticos"],
+      "decor": ["madeira", "plantas", "luzes externas", "mesa rustica", "grelha em destaque"],
+      "premium": ["cortes nobres", "estacao de parrilla", "churrasqueiro", "acompanhamentos autorais", "molhos artesanais", "loucas rusticas elegantes"],
+      "avoid": ["somente carne vermelha", "acompanhamentos repetitivos", "mistura de utensilios quando houver restricao"]
+    },
+    {
+      "id": "junino",
+      "scope": "theme",
+      "match": ["festa junina", "junino", "sao joao", "arraia"],
+      "meaning": "Celebracao popular, alegre e tradicional em que comidas de milho, doces, bebidas quentes e ambientacao colorida fazem parte da experiencia.",
+      "food_blocks": ["comidas de milho", "doces juninos", "lanches e espetinhos", "caldos quando o clima permitir"],
+      "beverage_blocks": ["aguas e hidratacao", "bebidas quentes", "quentao e vinho quente para adultos quando permitidos", "versoes sem alcool"],
+      "colors": ["vermelho", "amarelo", "azul", "verde", "laranja", "xadrez colorido"],
+      "decor": ["bandeirinhas", "palha", "tecido xadrez", "barracas", "fogueira cenografica", "chapeus de palha"],
+      "premium": ["barracas organizadas", "apresentacao refinada de comidas tipicas", "loucas rusticas elegantes", "iluminacao quente"],
+      "avoid": ["remover a identidade popular", "repetir milho em todas as categorias", "presumir amendoim seguro"]
+    },
+    {
+      "id": "tropical",
+      "scope": "theme",
+      "match": ["tropical", "praia", "verao", "verão", "piscina"],
+      "meaning": "Evento leve, fresco e colorido associado a frutas, verao, praia ou piscina.",
+      "food_blocks": ["frutas tropicais", "saladas e preparacoes frescas", "proteinas leves", "sobremesas com coco ou frutas"],
+      "beverage_blocks": ["agua de coco", "sucos naturais variados", "limonadas", "mocktails com frutas", "cha gelado artesanal"],
+      "colors": ["verde", "amarelo", "laranja", "azul", "rosa", "vermelho", "tons vibrantes"],
+      "decor": ["folhagens", "flores coloridas", "bambu", "palha", "frutas decorativas", "luzes quentes"],
+      "premium": ["flores e folhagens naturais", "mocktails autorais", "loucas claras", "estacoes frescas bem acabadas"],
+      "avoid": ["usar fruta em todos os pratos", "cardapio apenas doce", "decoracao artificial excessiva"]
+    },
+    {
+      "id": "brunch",
+      "scope": "meal",
+      "match": ["brunch", "cafe da manha", "café da manhã"],
+      "meaning": "Encontro entre cafe da manha e almoco, com mesa variada, leve, acolhedora e adequada ao periodo diurno.",
+      "food_blocks": ["paes e viennoiserie", "ovos e preparacoes salgadas", "frutas, iogurtes e granolas", "bolos e acompanhamentos"],
+      "beverage_blocks": ["cafes", "infusoes", "sucos naturais variados", "agua saborizada", "espumante para adultos quando permitido"],
+      "colors": ["branco", "bege", "verde claro", "amarelo claro", "rosa claro", "tons pastel"],
+      "decor": ["mesa clara", "flores naturais", "loucas delicadas", "cestas de paes", "guardanapos de tecido"],
+      "premium": ["cafes especiais", "paes artesanais", "loucas delicadas", "arranjos naturais", "servico bem acabado"],
+      "avoid": ["mesa desorganizada", "bebidas quentes sem reposicao", "cardapio pesado sem itens frescos"]
+    }
+  ]
+}

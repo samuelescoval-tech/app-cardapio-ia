@@ -125,6 +125,9 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - O layout irregular foi rastreado a uma tag `section` sem fechamento. A estrutura foi corrigida e a selecao de pratos ganhou carrossel uniforme com alternativa em lista.
 - Geracao real atualizada: 17 itens em 5+3+4+5, nenhum item proibido, termino `STOP` com 6.931 tokens. O resultado precisa agora de nova avaliacao perceptiva do usuario.
 - E2E corporativo Premium: 17 pratos, 15 receitas, 40 compras, historico recarregado, mobile 400/400 e PDF A4 de 62.758 bytes; a qualidade permaneceu em `revisar` por ausencia de evidencia de louca/acabamento e estacao especial de bebidas.
+- A regra de coerencia de 2026-07-14 criou um catalogo de 11 contextos com significado, alimentos, bebidas, cores, decoracao, estilo, restricoes e orcamento orientador sem cotacao.
+- Cardapio passou a ter duas camadas: blocos editoriais para tela/PDF e itens atomicos para receitas, quantidades e compras. Historicos antigos recebem agrupamento de compatibilidade.
+- E2E de blocos: corporativo 17 itens/12 blocos, churrasco 19/13 e Natal 19/11; os tres passaram em historico, recarga, mobile 400/400 e PDF pesquisavel.
 
 ## Proxima atualizacao curta
 

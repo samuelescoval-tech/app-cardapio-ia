@@ -1,6 +1,7 @@
 const matriz = require("../../../data/culinary/matrix.json");
 const catalogoFontes = require("../../../data/culinary/source-catalog.json");
 const catalogoAlimentos = require("../../../data/culinary/food-catalog.json");
+const { construirContextoEvento } = require("./event-coherence.service");
 
 const errosTaxonomia = validarTaxonomiaCulinaria(matriz);
 if (errosTaxonomia.length) {
@@ -44,12 +45,14 @@ function obterDiretrizCulinaria(evento = {}) {
     estilo?.minimum_increment_each_category
   );
   const pedidosExplicitos = extrairPedidosCulinarios(evento);
+  const contextoEventoEstruturado = construirContextoEvento(evento);
 
   return {
     matriz_version: matriz.version,
     catalogo_fontes_version: catalogoFontes.version,
     catalogo_alimentos_version: catalogoAlimentos.version,
     perfil: perfil.id,
+    contexto_evento: contextoEventoEstruturado,
     identidade_evento: perfil.identity,
     tipo_servico: perfil.service,
     momentos_servico: combinarListas(perfil.service_moments, ocasiao?.service_moments),

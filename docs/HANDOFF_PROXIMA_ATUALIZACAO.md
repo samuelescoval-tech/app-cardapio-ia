@@ -301,6 +301,16 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - O E2E confirmou 17 pratos, 15 receitas, 40 compras, historico, mobile 400/400 e PDF A4 de 62.758 bytes. A porta de qualidade manteve `revisar` por falta de evidencia de louca/acabamento e estacao de bebidas especiais.
 - Precos, imagens e fornecedores continuam separados: `A cotar` permanece correto ate existir fonte regional; a avaliacao de envelope orcamentario deve ser uma etapa explicita, sem simular cotacao.
 
+### Evidencia da regra de coerencia e blocos
+
+- O requisito de 2026-07-14 foi implementado com duas camadas: blocos para apresentacao e itens atomicos para receitas, quantidades e compras.
+- `data/culinary/event-contexts.json` cobre 11 contextos e combina tipo, tema e refeicao sem substituir o evento principal.
+- `contexto_evento` estrutura significado, alimentos, bebidas, cores, decoracao, estilo, inadequacoes, restricoes e orcamento orientador sem cotacao.
+- O backend deriva `blocos_cardapio` por familia sem aceitar blocos inventados pelo cliente ou pela IA como fonte operacional.
+- Tela e PDF mostram blocos antes do detalhamento; planejamentos antigos recebem agrupamento por categoria.
+- E2E: corporativo 17/12, churrasco 19/13 e Natal 19/11 em itens/blocos; historico, recarga, mobile e PDFs passaram.
+- A especificacao tecnica ativa esta em `docs/REGRA_COERENCIA_BLOCOS_EVENTO.md`.
+
 ## Proxima atualizacao curta
 
 O usuario escolheu teste controlado, pausou o Spoonacular por custo, concluiu cinco baselines tecnicos, o primeiro teste acompanhado e uma revisao corporativa Premium:

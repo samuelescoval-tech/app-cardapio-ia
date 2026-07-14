@@ -4,6 +4,7 @@ const CAMPOS_ARRAY_TEXTO = [
   "entretenimento",
   "lembrancinhas"
 ];
+const { construirBlocosCardapio } = require("../services/planning/event-coherence.service");
 
 const CAMPOS_OBRIGATORIOS = [
   "cardapio",
@@ -48,6 +49,7 @@ function validarPlano(data, contexto = {}) {
   plano.resumo_chef = resumo.texto;
 
   plano.qualidade_culinaria = validarCoerenciaCulinaria(plano, contexto.diretrizCulinaria);
+  plano.blocos_cardapio = construirBlocosCardapio(plano.cardapio, contexto.evento);
   if (resumo.ajuste) {
     registrarAjuste(plano.qualidade_culinaria, resumo.ajuste);
   }
@@ -59,6 +61,7 @@ function validarPlano(data, contexto = {}) {
 function criarFallback(mensagem) {
   return {
     cardapio: [],
+    blocos_cardapio: [],
     receitas: [],
     lista_compras: [],
     utensilios: [],

@@ -202,6 +202,19 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Ponto a observar: a IA abreviou vegetariano como `Veg`; o backend passou a reconhecer a etiqueta sem perder a regra principal. O novo resultado ainda precisa de avaliacao humana para confirmar se a curadoria percebida atingiu o padrao Premium.
 - Decisao financeira: manter `A cotar` sem catalogo regional. O valor desejado pode orientar uma futura distribuicao de envelope, mas nao autoriza inventar precos.
 
+### Regra de coerencia e blocos - regressao de 2026-07-14
+
+- Requisito: pensar por contexto cultural, estilo, restricoes e orcamento; apresentar variacoes relacionadas em blocos sem perder receitas, quantidades e compras.
+- Arquitetura: contexto estruturado e blocos de apresentacao sao deterministicos; itens operacionais continuam atomicos e ligados por `id`.
+- Catalogo inicial: 11 contextos de tipo, tema ou refeicao, combinados em camadas sem substituir o perfil-base.
+- Corporativo: 17 itens, 12 blocos, 15 receitas, 35 compras e PDF de 70.588 bytes.
+- Churrasco: 19 itens, 13 blocos, 14 receitas, 30 compras e PDF de 67.417 bytes.
+- Natal: 19 itens, 11 blocos, 14 receitas, 32 compras e PDF de 69.680 bytes.
+- Interface: um painel de coerencia e um detalhe expansivel por bloco; carrossel e lista usam a mesma estrutura.
+- Documentos: PDFs pesquisaveis incluem coerencia, cardapio por blocos e detalhamento de itens e quantidades.
+- Compatibilidade: historico, recarga e viewport 400/400 passaram sem overflow.
+- Porta Premium preservada: o corporativo continuou em `revisar` por ausencia de evidencia de louca/acabamento e estacao especial de bebidas.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

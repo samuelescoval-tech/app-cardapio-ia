@@ -374,6 +374,9 @@ function validarResultadoCiclo(result, scenario) {
   if (result.secoes.includes("Cronograma")) erros.push("titulo ambiguo Cronograma ainda presente");
   if (result.desktopOverflow) erros.push("overflow horizontal no desktop");
   if (result.recipeCards !== result.receitas) erros.push(`cards de receita ${result.recipeCards}/${result.receitas}`);
+  if (result.coherencePanels !== 1) erros.push(`paineis de coerencia ${result.coherencePanels}/1`);
+  if (result.menuBlocks < 1 || result.menuBlocks >= result.cardapio) erros.push(`blocos do cardapio ${result.menuBlocks}/${result.cardapio}`);
+  if (result.menuBlockDetails !== result.menuBlocks) erros.push(`detalhes de bloco ${result.menuBlockDetails}/${result.menuBlocks}`);
   if (result.coberturaCulinaria.receitas_cobertas !== result.coberturaCulinaria.pratos_com_preparo) {
     erros.push(`receitas cobertas ${result.coberturaCulinaria.receitas_cobertas}/${result.coberturaCulinaria.pratos_com_preparo}`);
   }
@@ -501,6 +504,9 @@ async function gerarScenario(cdp, scenario) {
         repeticoesEssenciais: plano.variedade_culinaria?.repeticoes_justificadas?.length || 0,
         repeticoesRevisar: plano.variedade_culinaria?.repeticoes_a_revisar?.length || 0,
         varietyPanels: document.querySelectorAll('.variety-panel').length,
+        coherencePanels: document.querySelectorAll('.coherence-panel').length,
+        menuBlocks: document.querySelectorAll('.menu-block-card').length,
+        menuBlockDetails: document.querySelectorAll('.menu-block-details').length,
         memoriaEnviada: window.chefIALastCulinaryMemoryCount || 0,
         contextoInformado: secoes.includes('Contexto informado'),
         operacaoPresente: Boolean(operacao),

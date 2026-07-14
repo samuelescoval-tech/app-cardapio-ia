@@ -530,6 +530,60 @@
     -webkit-line-clamp:3;
 }
 
+.menu-block-preview{
+    display:-webkit-box;
+    margin-top:10px;
+    overflow:hidden;
+    color:#4f473f;
+    font-size:.76rem;
+    line-height:1.5;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:4;
+}
+
+.menu-block-details{
+    margin-top:auto;
+    padding-top:12px;
+}
+
+.menu-block-details summary{
+    cursor:pointer;
+    color:var(--gold-dark);
+    font-size:.75rem;
+    font-weight:900;
+}
+
+.menu-block-details ul{
+    display:grid;
+    gap:7px;
+    margin:10px 0 0;
+    padding:0;
+    list-style:none;
+}
+
+.menu-block-details li{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:3px 8px;
+    border-top:1px solid #eee7db;
+    padding-top:7px;
+    color:#494038;
+    font-size:.75rem;
+}
+
+.menu-block-details li span{
+    color:var(--gold-dark);
+    font-weight:800;
+}
+
+.menu-block-details li small{
+    grid-column:1 / -1;
+    display:block;
+    margin:0;
+    overflow:visible;
+    -webkit-line-clamp:unset;
+}
+
 .dish-list{
     display:grid;
     grid-auto-flow:row;
@@ -781,6 +835,74 @@
 .result-detail-content .operation-panel{
     margin:0;
     box-shadow:none;
+}
+
+.coherence-panel{
+    border:1px solid #eee4d2;
+    border-radius:14px;
+    background:#fffdf8;
+    padding:16px;
+}
+
+.coherence-lead{
+    margin-bottom:14px;
+}
+
+.coherence-lead span{
+    display:inline-block;
+    margin-bottom:6px;
+    border-radius:999px;
+    background:#17171f;
+    color:var(--gold);
+    padding:5px 10px;
+    font-size:.7rem;
+    font-weight:900;
+}
+
+.coherence-lead p,
+.coherence-grid p,
+.coherence-budget small{
+    color:#675e53;
+    font-size:.8rem;
+    line-height:1.5;
+}
+
+.coherence-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+}
+
+.coherence-grid > div,
+.coherence-budget{
+    border:1px solid #eee7db;
+    border-radius:11px;
+    background:#fff;
+    padding:11px;
+}
+
+.coherence-grid strong,
+.coherence-budget strong{
+    display:block;
+    margin-bottom:4px;
+    color:#3f342b;
+    font-size:.76rem;
+}
+
+.coherence-budget{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:4px 12px;
+    margin-top:10px;
+}
+
+.coherence-budget span{
+    color:var(--gold-dark);
+    font-weight:900;
+}
+
+.coherence-budget small{
+    grid-column:1 / -1;
 }
 
 .place-card{
@@ -1153,6 +1275,10 @@
 
     .dish-grid{
         grid-auto-columns:minmax(230px,72%);
+    }
+
+    .coherence-grid{
+        grid-template-columns:1fr;
     }
 }
 

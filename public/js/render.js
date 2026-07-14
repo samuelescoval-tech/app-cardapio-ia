@@ -8,6 +8,7 @@
 function exibirResultadoLuxo(dados, pessoas, evento = null) {
     const area = document.getElementById('resultadoArea');
     const cardapio = normalizarArray(dados.cardapio);
+    const blocosCardapio = normalizarBlocosCardapio(dados.blocos_cardapio, cardapio);
     const compras = normalizarArray(dados.lista_compras);
     const receitas = normalizarArray(dados.receitas);
     const utensilios = normalizarArray(dados.utensilios);
@@ -33,11 +34,12 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             ${renderResumoExecutivo(dados, pessoas, cardapio, compras)}
             ${renderQualidadeCulinaria(dados.qualidade_culinaria)}
             ${renderVariedadeCulinaria(dados.variedade_culinaria)}
+            ${renderCoerenciaEvento(dados.contexto_evento)}
             ${renderContextoInformado(evento, dados.motor_logistica?.premissas)}
             ${renderMotorLogistica(dados.motor_logistica)}
             ${renderDetalhesExpansiveis("Detalhes da operação", "Equipe, fluxo, estações e cronograma técnico", renderOperacaoDeterministica(dados.motor_logistica?.operacao))}
             ${renderServicoMesa(servicoMesa)}
-            ${renderCardapio(cardapio)}
+            ${renderCardapio(cardapio, blocosCardapio)}
             ${renderCompras(compras)}
             ${renderLocais(locais)}
             ${renderSecao("Layout", layout.length ? renderListaCards(layout, "layout-card") : renderConteudoAusente("Layout não informado."))}
@@ -121,6 +123,48 @@ function renderContextoInformado(evento = {}, premissas = {}) {
     ].filter(Boolean);
 
     return itens.length ? renderSecao("Contexto informado", renderListaCards(itens, "note-card")) : "";
+}
+
+function renderCoerenciaEvento(contexto) {
+    if (!contexto || typeof contexto !== "object") return "";
+    const alimentos = normalizarArray(contexto.blocos_alimentares_esperados);
+    const bebidas = normalizarArray(contexto.blocos_bebidas_esperados);
+    const cores = normalizarArray(contexto.cores_coerentes);
+    const decoracao = normalizarArray(contexto.decoracao_coerente);
+    const sinaisPremium = normalizarArray(contexto.sinais_premium);
+    const evitar = normalizarArray(contexto.evitar);
+    const restricoes = normalizarArray(contexto.restricoes_alimentares);
+    const orcamento = contexto.orcamento || {};
+
+    return renderDetalhesExpansiveis(
+        "Coerencia aplicada ao evento",
+        `${contexto.tipologia_reconhecida || "geral"} · estilo ${contexto.estilo || "simples"} · ${alimentos.length + bebidas.length} blocos de referencia`,
+        `<section class="coherence-panel">
+            <div class="coherence-lead">
+                <span>${escapeHTML(contexto.tipo_informado || "Evento")}</span>
+                <p>${escapeHTML(contexto.significado_social_cultural || "Contexto geral aplicado.")}</p>
+            </div>
+            <div class="coherence-grid">
+                ${renderCoherenceGroup("Blocos alimentares", alimentos)}
+                ${renderCoherenceGroup("Bebidas", bebidas)}
+                ${renderCoherenceGroup("Cores", cores)}
+                ${renderCoherenceGroup("Decoracao", decoracao)}
+                ${renderCoherenceGroup("Sinais Premium", sinaisPremium)}
+                ${renderCoherenceGroup("Evitar", evitar)}
+                ${renderCoherenceGroup("Restricoes", restricoes.map(item => item.rotulo || item.id || item))}
+            </div>
+            <div class="coherence-budget">
+                <strong>Orcamento</strong>
+                <span>${escapeHTML(orcamento.valor_informado || "Nao informado")}</span>
+                <small>${escapeHTML(orcamento.regra || "Valores permanecem a cotar.")}</small>
+            </div>
+        </section>`
+    );
+}
+
+function renderCoherenceGroup(titulo, itens) {
+    if (!itens.length) return "";
+    return `<div><strong>${escapeHTML(titulo)}</strong><p>${itens.map(item => escapeHTML(item)).join(" · ")}</p></div>`;
 }
 
 function renderDetalhesExpansiveis(titulo, resumo, conteudo) {
@@ -261,6 +305,7 @@ function baixarRelatorioPDF() {
     const precificacao = dados.precificacao || motor.precificacao || null;
     const precoConfiavel = precificacaoEhConfiavel(precificacao);
     const cardapio = normalizarArray(dados.cardapio);
+    const blocosCardapio = normalizarBlocosCardapio(dados.blocos_cardapio, cardapio);
     const compras = normalizarArray(dados.lista_compras);
     const receitas = normalizarArray(dados.receitas);
     const utensilios = normalizarArray(dados.utensilios);
@@ -276,6 +321,7 @@ function baixarRelatorioPDF() {
     const servico = motor.servico_mesa || dados.servico_mesa;
     const variedade = dados.variedade_culinaria || null;
     const operacao = motor.operacao || null;
+    const contextoEvento = dados.contexto_evento || null;
 
     cabecalho();
 
@@ -312,6 +358,35 @@ function baixarRelatorioPDF() {
         evento?.obs ? `Observacoes do cliente: ${evento.obs}` : ""
     ].filter(Boolean));
 
+    if (contextoEvento) {
+        secao("Coerencia aplicada ao evento");
+        escrever(contextoEvento.significado_social_cultural || "Contexto geral aplicado.");
+        escrever(`Tipologia: ${contextoEvento.tipologia_reconhecida || "geral"} | Estilo: ${contextoEvento.estilo || "simples"}`);
+        escrever("Blocos alimentares esperados", { estilo: "bold" });
+        listaOuVazio(contextoEvento.blocos_alimentares_esperados);
+        escrever("Blocos de bebidas esperados", { estilo: "bold" });
+        listaOuVazio(contextoEvento.blocos_bebidas_esperados);
+        escrever("Cores e decoracao", { estilo: "bold" });
+        listaOuVazio([
+            ...normalizarArray(contextoEvento.cores_coerentes),
+            ...normalizarArray(contextoEvento.decoracao_coerente)
+        ]);
+        if (normalizarArray(contextoEvento.evitar).length) {
+            escrever("Evitar", { estilo: "bold" });
+            listaOuVazio(contextoEvento.evitar);
+        }
+        if (normalizarArray(contextoEvento.sinais_premium).length) {
+            escrever("Sinais Premium", { estilo: "bold" });
+            listaOuVazio(contextoEvento.sinais_premium);
+        }
+        if (normalizarArray(contextoEvento.restricoes_alimentares).length) {
+            escrever("Blocos de restricao", { estilo: "bold" });
+            listaOuVazio(contextoEvento.restricoes_alimentares.map(item => item.rotulo || item.id));
+        }
+        escrever(`Orcamento orientador: ${contextoEvento.orcamento?.valor_informado || "Nao informado"}`);
+        escrever(contextoEvento.orcamento?.regra || "Valores permanecem a cotar.");
+    }
+
     secao("Motor logistico");
     escrever("Alimentacao", { estilo: "bold" });
     listaOuVazio(alimentacao);
@@ -344,7 +419,10 @@ function baixarRelatorioPDF() {
         normalizarArray(variedade.repeticoes_a_revisar).forEach(item => escrever(`- ${item.nome}: repeticao a revisar.`));
     }
 
-    secao("Cardapio");
+    secao("Cardapio por blocos");
+    listaOuVazio(blocosCardapio, "Blocos de cardapio nao informados.");
+
+    secao("Itens e quantidades do cardapio");
     listaOuVazio(cardapio, "Cardapio nao informado pela IA.");
 
     secao("Receitas e preparo");
@@ -440,6 +518,7 @@ function textoPDFItem(item) {
         item.categoria,
         item.setor,
         item.natureza,
+        normalizarArray(item.nomes_itens).length ? `itens: ${normalizarArray(item.nomes_itens).join(", ")}` : "",
         item.hora ? `horario: ${item.hora}` : "",
         ingredientes.length ? `ingredientes: ${ingredientes.join(", ")}` : "",
         item.prioridade ? `prioridade ${item.prioridade}` : "",
@@ -736,17 +815,19 @@ function renderMetricGroup(titulo, itens) {
     `;
 }
 
-function renderCardapio(cardapio) {
+function renderCardapio(cardapio, blocosCardapio = []) {
     if (!cardapio.length) return "";
+    const blocos = normalizarBlocosCardapio(blocosCardapio, cardapio);
+    const itensPorId = new Map(cardapio.map((item, indice) => [item.id || `item-${indice + 1}`, item]));
     return `
         <section class="result-section menu-section">
             <div class="section-head menu-head">
                 <div>
                     <h3>Selecao de Pratos</h3>
-                    <small>Deslize para explorar ou alterne para a visualizacao em lista.</small>
+                    <small>Preparacoes agrupadas por funcao; receitas e compras continuam detalhadas por item.</small>
                 </div>
                 <div class="menu-controls" aria-label="Visualizacao do cardapio">
-                    <span>${cardapio.length} itens</span>
+                    <span>${blocos.length} blocos · ${cardapio.length} itens</span>
                     <button type="button" class="menu-view-btn active" data-menu-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoCardapio('carousel')">Carrossel</button>
                     <button type="button" class="menu-view-btn" data-menu-view="list" aria-pressed="false" onclick="alternarVisualizacaoCardapio('list')">Lista</button>
                     <button type="button" class="menu-nav-btn" data-menu-nav="prev" aria-label="Pratos anteriores" onclick="rolarCardapio(-1)">←</button>
@@ -754,27 +835,28 @@ function renderCardapio(cardapio) {
                 </div>
             </div>
             <div class="dish-grid dish-carousel" id="cardapioVisualizacao">
-                ${cardapio.map((p, i) => {
-                    const nome = typeof p === "string" ? p : p.nome;
-                    const categoria = typeof p === "string" ? "Cardapio" : p.categoria;
-                    const desc = typeof p === "string" ? "" : p.descricao;
-                    const emoji = typeof p === "string" ? "🍽️" : (p.emoji || "🍽️");
-                    const qtd = typeof p === "string" ? "" : p.quantidade;
-                    const ingredientes = typeof p === "string" ? [] : normalizarArray(p.ingredientes);
+                ${blocos.map((bloco, i) => {
+                    const itens = normalizarArray(bloco.itens).map(id => itensPorId.get(id)).filter(Boolean);
+                    const emoji = itens.find(item => item.emoji)?.emoji || emojiBloco(bloco);
                     return `
-                        <article class="dish-card-rich">
+                        <article class="dish-card-rich menu-block-card">
                             <div class="dish-visual g${i % 6}">${escapeHTML(emoji)}</div>
                             <div class="dish-body">
-                                <span>${escapeHTML(categoria || "Cardapio")}</span>
-                                <h4>${escapeHTML(nome || "Prato sugerido")}</h4>
-                                ${desc ? `<p>${escapeHTML(desc)}</p>` : ""}
-                                ${qtd ? `<strong>${escapeHTML(qtd)}</strong>` : ""}
-                                ${ingredientes.length ? `<small>Ingredientes: ${ingredientes.map(ingrediente => {
-                                    if (ingrediente && typeof ingrediente === "object") {
-                                        return escapeHTML(`${ingrediente.item || "Ingrediente"} ${[ingrediente.quantidade, ingrediente.unidade].filter(Boolean).join(" ")}`.trim());
-                                    }
-                                    return escapeHTML(ingrediente);
-                                }).join(" · ")}</small>` : ""}
+                                <span>${escapeHTML(bloco.categoria || "Cardapio")}</span>
+                                <h4>${escapeHTML(bloco.nome || "Bloco do cardapio")}</h4>
+                                <p>${escapeHTML(bloco.descricao || "Preparacoes relacionadas e apresentadas como um conjunto coerente.")}</p>
+                                <strong>${itens.length} ${itens.length === 1 ? "item operacional" : "itens operacionais"}</strong>
+                                <p class="menu-block-preview">${itens.map(item => escapeHTML(item.nome || "Item")).join(" · ")}</p>
+                                <details class="menu-block-details">
+                                    <summary>Ver itens e quantidades</summary>
+                                    <ul>${itens.map(item => `
+                                        <li>
+                                            <b>${escapeHTML(item.nome || "Item")}</b>
+                                            ${item.quantidade ? `<span>${escapeHTML(item.quantidade)}</span>` : ""}
+                                            ${item.descricao ? `<small>${escapeHTML(item.descricao)}</small>` : ""}
+                                        </li>
+                                    `).join("")}</ul>
+                                </details>
                             </div>
                         </article>
                     `;
@@ -782,6 +864,47 @@ function renderCardapio(cardapio) {
             </div>
         </section>
     `;
+}
+
+function normalizarBlocosCardapio(blocos, cardapio) {
+    const informados = normalizarArray(blocos).filter(bloco => bloco && typeof bloco === "object");
+    if (informados.length) return informados;
+
+    const grupos = new Map();
+    cardapio.forEach((item, indice) => {
+        const categoria = item?.categoria || "Cardapio";
+        const idGrupo = normalizarSlug(categoria) || "cardapio";
+        if (!grupos.has(idGrupo)) {
+            grupos.set(idGrupo, {
+                id: `legado-${idGrupo}`,
+                nome: nomeBlocoLegado(categoria),
+                categoria,
+                descricao: "Agrupamento de compatibilidade para planejamento salvo anteriormente.",
+                itens: []
+            });
+        }
+        grupos.get(idGrupo).itens.push(item?.id || `item-${indice + 1}`);
+    });
+    return Array.from(grupos.values());
+}
+
+function nomeBlocoLegado(categoria) {
+    const chave = normalizarSlug(categoria);
+    if (/boas-vindas|entrada/.test(chave)) return "Boas-vindas e entradas";
+    if (/prato-principal/.test(chave)) return "Pratos principais";
+    if (/acompanhamento|salada/.test(chave)) return "Acompanhamentos e saladas";
+    if (/sobremesa/.test(chave)) return "Sobremesas";
+    if (/bebida/.test(chave)) return "Bebidas selecionadas";
+    return categoria || "Selecao do cardapio";
+}
+
+function emojiBloco(bloco) {
+    const texto = normalizarSlug([bloco.nome, bloco.categoria].filter(Boolean).join(" "));
+    if (/bebida|suco|agua|cafe|infus|mocktail|vinho|cerveja/.test(texto)) return "🥤";
+    if (/doce|sobremesa|bolo/.test(texto)) return "🍰";
+    if (/carne|ave|peixe|principal/.test(texto)) return "🍽️";
+    if (/fruta|salada|vegetal/.test(texto)) return "🥗";
+    return "🍴";
 }
 
 function alternarVisualizacaoCardapio(modo) {

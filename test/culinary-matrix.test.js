@@ -53,6 +53,8 @@ test("estilo premium amplia todas as categorias e aplica contrato verificavel", 
   assert.deepEqual(diretriz.composicao_minima.map(item => item.minimum), [5, 3, 4, 5]);
   assert.ok(diretriz.elementos_esperados.includes("estacao de bebidas especiais quando compativel"));
   assert.ok(diretriz.evitar_no_perfil.includes("cha em sache"));
+  assert.equal(diretriz.contexto_evento.tipologia_reconhecida, "corporativo");
+  assert.ok(diretriz.contexto_evento.sinais_premium.includes("estacao de cafe especial"));
 });
 
 test("atendimento domiciliar recebe perfil proprio e modificador de brunch", () => {
