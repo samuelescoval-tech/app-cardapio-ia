@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { gerarCardapioHandler } = require("../server");
+const { gerarCardapioHandler, buscarImagensEventoHandler } = require("../server");
 
 function respostaFake() {
   return {
@@ -49,4 +49,11 @@ test("POST /gerar-cardapio nao aceita prompt arbitrario sem evento", async () =>
 
   assert.equal(response.statusCode, 400);
   assert.equal(response.body.campo, "evento");
+});
+
+test("POST /api/imagens-evento valida o evento antes de consultar fontes externas", async () => {
+  const response = respostaFake();
+  await buscarImagensEventoHandler(requisicaoFake({ evento: { tipo: "Festa", pessoas: 0 } }), response);
+  assert.equal(response.statusCode, 400);
+  assert.equal(response.body.campo, "pessoas");
 });

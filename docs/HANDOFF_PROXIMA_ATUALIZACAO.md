@@ -18,7 +18,7 @@ Este documento resume o estado real do projeto para continuar a proxima rodada s
 
 ## Estado atual em uma frase
 
-Os Planos 1 a 10 e os experimentos de modelo foram concluidos; o fluxo em blocos melhorou a debutante, mas continua desativado por disponibilidade e lacunas Premium, e a proxima fase e o dicionario visual sem chave externa.
+Os experimentos de modelo e a infraestrutura visual foram concluidos; Openverse funciona sem chave como fonte complementar, e a proxima fase e integrar a galeria ao resultado sem persistir imagens externas nem alterar o PDF ainda.
 
 ## Benchmark de modelos - 2026-07-14
 
@@ -28,6 +28,8 @@ Os Planos 1 a 10 e os experimentos de modelo foram concluidos; o fluxo em blocos
 - O fluxo foi separado em cardapio, receitas e experiencia, preservando o motor local e a consolidacao deterministica de compras.
 - Nenhuma chave nova foi necessaria. A proxima fase e o dicionario visual e os fallbacks locais; Pexels continua posterior.
 - O fluxo experimental em blocos chegou a 99/100 na debutante, 87/100 no corporativo Premium e encontrou `503` no Natal; permaneceu desativado e ganhou fallback para o Flash-Lite.
+- O dicionario visual cobre dez contextos e oito slots, com contrato de licenca, cinco SVGs locais e endpoint Openverse protegido.
+- O teste real encontrou zero resultados na consulta corporativa especifica, mas a busca generica retornou imagem HTTPS com CC BY, autor e fonte preservados. Openverse foi classificado como complementar, nao como fonte Premium unica.
 
 ## O que foi modificado
 

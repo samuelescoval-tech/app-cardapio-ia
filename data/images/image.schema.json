@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Chef IA image metadata",
+  "type": "object",
+  "required": ["id", "slot", "provider", "image_url", "thumbnail_url", "source_url", "license", "attribution", "fallback"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "slot": { "type": "string", "enum": ["capa", "entrada", "principal", "acompanhamento", "salada", "sobremesa", "bebida", "ambiente"] },
+    "provider": { "type": "string", "enum": ["openverse", "local"] },
+    "image_url": { "type": "string", "minLength": 1 },
+    "thumbnail_url": { "type": "string", "minLength": 1 },
+    "source_url": { "type": ["string", "null"] },
+    "creator": { "type": ["string", "null"] },
+    "creator_url": { "type": ["string", "null"] },
+    "license": { "type": "string", "enum": ["cc0", "pdm", "by", "local-fallback"] },
+    "license_url": { "type": ["string", "null"] },
+    "attribution": { "type": "string", "minLength": 1 },
+    "alt": { "type": "string" },
+    "width": { "type": ["number", "null"] },
+    "height": { "type": ["number", "null"] },
+    "fallback": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

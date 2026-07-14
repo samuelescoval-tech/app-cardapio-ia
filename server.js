@@ -10,10 +10,14 @@ const { validarEvento, ErroValidacaoEvento } = require('./src/utils/validate-eve
 const { validarHistoricoCulinario } = require('./src/utils/validate-culinary-history');
 const { criarContextoVariedade, avaliarVariedadePlano } = require('./src/services/planning/culinary-variety.service');
 const { criarSpoonacularService, SpoonacularError } = require('./src/services/recipes/spoonacular.service');
+const { criarOpenverseService } = require('./src/services/images/openverse.service');
+const { criarImageSelectionService } = require('./src/services/images/image-selection.service');
 
 const app = express();
 const demoAccessKey = process.env.DEMO_ACCESS_KEY;
 const spoonacularService = criarSpoonacularService();
+const openverseService = criarOpenverseService();
+const imageSelectionService = criarImageSelectionService({ openverseService });
 
 app.use(express.json({ limit: '20kb' }));
 
@@ -37,7 +41,8 @@ app.get('/api/status', (req, res) => {
             recipe_operational_recovery: true,
             beverage_volume_reconciliation: true
         },
-        recipe_references: spoonacularService.getStatus()
+        recipe_references: spoonacularService.getStatus(),
+        visual_references: openverseService.getStatus()
     });
 });
 
@@ -140,6 +145,32 @@ async function buscarReferenciasHandler(req, res) {
 
 app.post('/api/referencias-receitas', buscarReferenciasHandler);
 
+async function buscarImagensEventoHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const evento = validarEvento(req.body?.evento);
+        const blocos = Array.isArray(req.body?.blocos)
+            ? req.body.blocos.slice(0, 20).map(item => ({
+                id: String(item?.id || "").slice(0, 80),
+                nome: String(item?.nome || "").slice(0, 120),
+                categoria: String(item?.categoria || "").slice(0, 80)
+            }))
+            : [];
+        const resultado = await imageSelectionService.selecionarParaEvento(evento, blocos);
+        res.json({ ok: true, ...resultado });
+    } catch (error) {
+        if (error instanceof ErroValidacaoEvento) {
+            return res.status(400).json({ ok: false, error: error.message, campo: error.campo });
+        }
+        console.error("❌ Erro nas imagens do evento:", error.message);
+        res.status(500).json({ ok: false, error: "Nao foi possivel preparar imagens para o evento." });
+    }
+}
+
+app.post('/api/imagens-evento', buscarImagensEventoHandler);
+
 // Força a abertura do index.html na rota principal
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -149,4 +180,4 @@ if (require.main === module) {
     app.listen(process.env.PORT || 3000, () => console.log(`✅ Chef IA Rodando! Acesse: http://localhost:${process.env.PORT || 3000}`));
 }
 
-module.exports = { app, gerarCardapioHandler, buscarReferenciasHandler };
+module.exports = { app, gerarCardapioHandler, buscarReferenciasHandler, buscarImagensEventoHandler };
