@@ -2,9 +2,20 @@
 
 ## Estado atual
 
-A infraestrutura visual existe, mas ainda nao esta conectada automaticamente ao resultado, historico ou PDF.
+A infraestrutura visual esta conectada automaticamente ao resultado validado. A galeria permanece separada do plano culinario, do historico e do PDF.
 
-O objetivo desta separacao e impedir que uma falha externa quebre a geracao do evento e evitar persistencia de imagens sem metadados de licenca.
+O objetivo desta separacao e impedir que uma falha externa quebre a geracao do evento e evitar persistencia de imagens ou URLs cuja disponibilidade e licenca podem mudar.
+
+## Integracao na interface
+
+- A consulta comeca somente depois que o planejamento foi validado, renderizado e salvo.
+- O carregamento de imagens nao bloqueia cardapio, receitas, compras, historico ou PDF.
+- A galeria oferece carrossel e lista, com cartoes uniformes e controles proprios.
+- Cada imagem externa exibe autoria, licenca, atribuicao e link para a fonte original.
+- URLs externas precisam usar HTTPS; caminhos locais ficam limitados a `public/images/fallback/`.
+- Falha de endpoint ou de arquivo individual troca a imagem por um SVG local.
+- Projetos carregados do historico exibem somente fallbacks locais e informam que as referencias externas nao foram salvas.
+- `prepararPlanoParaHistorico()` remove defensivamente campos visuais transitorios caso sejam anexados ao plano no futuro.
 
 ## Dicionario visual
 
@@ -57,12 +68,21 @@ O endpoint `POST /api/imagens-evento` usa o mesmo controle de acesso da demonstr
 
 Conclusao: Openverse e adequado como fonte gratuita complementar e fallback de descoberta. Sua cobertura contextual nao e suficiente para ser a unica fonte de imagens Premium.
 
+## Validacao da interface em 2026-07-14
+
+- `npm test`: 20 arquivos aprovados.
+- `node --check`: app, render e storage aprovados.
+- Chrome headless: cinco imagens, cinco linhas de credito e `aria-busy=false`.
+- Mobile: viewport/documento `390/390`, sem overflow e quatro controles com 44 px.
+- A troca para lista atualizou `aria-pressed` e ocultou as setas do carrossel.
+- A captura recortada confirmou hierarquia, legibilidade, cartoes e aviso de nao persistencia.
+- A validacao nao chamou Gemini nem Openverse; usou dados e SVGs locais.
+
 ## Proxima porta
 
-1. buscar imagens somente depois que o planejamento estiver validado;
-2. exibir uma galeria separada com estado de carregamento e fallback;
-3. manter atribuicao visivel junto da imagem;
-4. testar falha de URL e mobile;
-5. nao persistir imagem externa no historico ate definir politica de selecao;
-6. testar CORS antes de incorporar qualquer imagem ao PDF;
-7. avaliar Pexels como fonte principal quando houver chave gratuita.
+1. avaliar a relevancia real das imagens em diferentes tipos de evento;
+2. melhorar consultas e ordenacao sem aumentar excessivamente a cota anonima;
+3. comparar provedores gratuitos antes de pedir nova chave ao usuario;
+4. permitir atualizar ou ocultar uma referencia sem regenerar o evento;
+5. manter imagens fora do PDF ate validar CORS, estabilidade e politica de reutilizacao;
+6. avaliar Pexels somente se o ganho justificar cadastro e chave gratuita.

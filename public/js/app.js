@@ -11,7 +11,9 @@ let curSlide = 0;
 const slides = document.querySelectorAll('.slide');
 let demoAccessRequired = false;
 let demoAccessMessage = "";
+let sequenciaConsultaVisual = 0;
 window.chefIARecipeReferencesAvailable = false;
+window.chefIAVisualReferencesAvailable = null;
 
 async function inicializarAcessoDemo() {
     try {
@@ -19,6 +21,7 @@ async function inicializarAcessoDemo() {
         const status = await response.json();
         demoAccessRequired = Boolean(status.demo_access?.required);
         window.chefIARecipeReferencesAvailable = Boolean(status.recipe_references?.configured);
+        window.chefIAVisualReferencesAvailable = Boolean(status.visual_references?.configured);
     } catch (error) {
         console.warn('Não foi possível verificar acesso demo:', error.message);
     }
@@ -288,6 +291,9 @@ async function gerarTudo() {
             }
         }
 
+        // Referencias visuais sao transitorias e nao bloqueiam historico ou PDF.
+        void carregarImagensEvento(evento, dadosIA.blocos_cardapio || [], demoAccessKey);
+
     } catch (error) {
         console.error(error);
         exibirErroResultado(resultadoArea, `Detalhes: ${error.message}`, resultadoAnterior);
@@ -295,6 +301,43 @@ async function gerarTudo() {
         btn.disabled = false;
         btn.innerText = "⚙️ CALCULAR + GERAR PLANEJAMENTO COMPLETO";
     }
+}
+
+async function carregarImagensEvento(evento, blocos = [], demoAccessKey = null) {
+    const sequencia = ++sequenciaConsultaVisual;
+    if (window.chefIAVisualReferencesAvailable === false) {
+        renderizarGaleriaEventoFallback("A consulta visual externa nao esta configurada.");
+        return;
+    }
+
+    try {
+        const headers = { "Content-Type": "application/json" };
+        if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
+        const response = await fetch("/api/imagens-evento", {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ evento, blocos })
+        });
+        const resultado = await response.json().catch(() => ({}));
+        if (sequencia !== sequenciaConsultaVisual) return;
+
+        if (response.status === 401) {
+            demoAccessRequired = true;
+            limparDemoAccessKey("Senha temporaria invalida.");
+        }
+        if (!response.ok || resultado.ok === false) {
+            throw new Error(resultado.error || "Consulta visual indisponivel.");
+        }
+        renderizarGaleriaEvento(resultado);
+    } catch (error) {
+        if (sequencia !== sequenciaConsultaVisual) return;
+        console.warn("Referencias visuais indisponiveis:", error.message);
+        renderizarGaleriaEventoFallback(error.message);
+    }
+}
+
+function cancelarConsultaVisualPendente() {
+    sequenciaConsultaVisual += 1;
 }
 
 async function buscarReferenciasExternas() {
@@ -483,7 +526,9 @@ function carregarDoHistorico(id) {
     document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
 
     if (entrada.plano) {
+        cancelarConsultaVisualPendente();
         exibirResultadoLuxo(entrada.plano, evento.pessoas || '', evento);
+        renderizarGaleriaHistorico();
         const resultadoArea = document.getElementById('resultadoArea');
         if (resultadoArea) resultadoArea.dataset.planoValido = "true";
     }

@@ -18,7 +18,7 @@ Este documento resume o estado real do projeto para continuar a proxima rodada s
 
 ## Estado atual em uma frase
 
-Os experimentos de modelo e a infraestrutura visual foram concluidos; Openverse funciona sem chave como fonte complementar, e a proxima fase e integrar a galeria ao resultado sem persistir imagens externas nem alterar o PDF ainda.
+A galeria visual transitoria foi integrada ao resultado validado com Openverse e fallbacks locais; imagens continuam fora do historico e do PDF, e a proxima fase e medir relevancia e ampliar qualidade sem assumir custos.
 
 ## Benchmark de modelos - 2026-07-14
 
@@ -331,6 +331,16 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - Duas amostras mantiveram portas funcionais ativas: corporativo com 11/14 receitas e churrasco com 35/48 L de bebidas nao alcoolicas.
 - Especificacao e evidencias: `docs/VALIDACAO_MOBILE.md`.
 
+### Evidencia da galeria visual transitoria
+
+- A busca visual ocorre depois do plano valido e nao bloqueia historico, PDF ou exibicao culinaria.
+- A tela ganhou carrossel/lista com cartoes uniformes, texto alternativo, atribuicao, licenca e fonte original segura.
+- Falhas do endpoint ou da URL individual usam cinco SVGs locais; projetos do historico nao repetem consultas externas.
+- O storage remove defensivamente campos visuais transitorios antes de persistir o plano.
+- `npm test` passou com 20 arquivos; sintaxe e `git diff --check` passaram.
+- Chrome headless confirmou cinco cartoes e creditos, alternancia para lista e mobile `390/390`, sem overflow e com controles de 44 px.
+- O teste visual usou somente fixture local, sem consumir Gemini ou Openverse. Comando: `npm run test:gallery-ui`.
+
 ### Evidencia de receitas e bebidas
 
 - Itens `preparo` e `montagem` agora terminam com ficha ligada por `cardapio_id`; `pronto` permanece sem receita obrigatoria.
@@ -343,14 +353,14 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 
 ## Proxima atualizacao curta
 
-O usuario escolheu teste controlado, pausou o Spoonacular por custo, concluiu cinco baselines tecnicos, o primeiro teste acompanhado e uma revisao corporativa Premium:
+O usuario pausou o Spoonacular por custo e autorizou a trilha visual gratuita. A infraestrutura e a primeira galeria estao concluidas:
 
-1. Receber do usuario a proxima atividade relacionada ao Chef IA antes de abrir outra frente.
-2. Manter como pendencia visivel a composicao e os sinais Premium do corporativo.
-3. Pedir uma nova avaliacao perceptiva do workshop e do mobile quando o usuario desejar retomar os testes.
-4. Separar qualidade culinaria, ambientacao, restricoes e clareza visual em notas independentes.
-5. Projetar futuras referencias visuais somente depois da nova atividade solicitada.
-6. Manter envelope orcamentario, imagens licenciadas e fornecedores como trilhas separadas.
+1. Medir a relevancia das imagens em pelo menos cinco contextos de evento sem chamar Gemini.
+2. Refinar consultas e selecao para reduzir imagens genericas ou incoerentes.
+3. Comparar uma segunda fonte gratuita e sem chave antes de solicitar cadastro ao usuario.
+4. Adicionar acao para atualizar ou ocultar uma referencia sem regenerar o planejamento.
+5. Manter imagens externas fora do historico e PDF ate validar estabilidade e direitos de reutilizacao.
+6. Preservar a pendencia de qualidade Premium corporativa como trilha culinaria separada.
 7. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
 
 Nao fazer nesta atualizacao:

@@ -4,6 +4,7 @@ const {
   extrairResumoPlano,
   normalizarEntradaHistorico,
   planoTemConteudo,
+  prepararPlanoParaHistorico,
   criarMemoriaCulinaria
 } = require("../public/js/storage.service");
 
@@ -49,6 +50,24 @@ test("resumo usa contrato atual de cardapio e compras", () => {
     extrairResumoPlano({ cardapio: [{}, {}], lista_compras: [{}, {}, {}] }),
     "2 pratos • 3 itens de compra"
   );
+});
+
+test("remove referencias visuais antes de persistir o planejamento", () => {
+  const plano = {
+    cardapio: [{ nome: "Prato" }],
+    imagens_evento: [{ image_url: "https://exemplo.test/imagem.jpg" }],
+    visual_references: { provider: "openverse" },
+    referencias_visuais: ["transitorio"],
+    galeria_evento: { images: [] }
+  };
+  const persistivel = prepararPlanoParaHistorico(plano);
+
+  assert.deepEqual(persistivel.cardapio, plano.cardapio);
+  assert.equal("imagens_evento" in persistivel, false);
+  assert.equal("visual_references" in persistivel, false);
+  assert.equal("referencias_visuais" in persistivel, false);
+  assert.equal("galeria_evento" in persistivel, false);
+  assert.equal("imagens_evento" in plano, true);
 });
 
 test("memoria culinaria envia somente contexto e nomes de pratos", () => {

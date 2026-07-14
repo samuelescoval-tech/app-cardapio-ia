@@ -37,6 +37,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             ${renderVariedadeCulinaria(dados.variedade_culinaria)}
             ${renderCoerenciaEvento(dados.contexto_evento)}
             ${renderContextoInformado(evento, dados.motor_logistica?.premissas)}
+            ${renderGaleriaEventoPendente()}
             ${renderMotorLogistica(dados.motor_logistica)}
             ${renderDetalhesExpansiveis("Detalhes da operação", "Equipe, fluxo, estações e cronograma técnico", renderOperacaoDeterministica(dados.motor_logistica?.operacao))}
             ${renderServicoMesa(servicoMesa)}
@@ -57,6 +58,216 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             ${dados.resumo_chef ? renderSecao("Resumo do Chef", `<div class="chef-summary">${escapeHTML(dados.resumo_chef)}</div>`) : ""}
         </div>
     `;
+}
+
+function renderGaleriaEventoPendente() {
+    return `
+        <section class="result-section event-gallery-section" id="eventGallerySection" aria-live="polite" aria-busy="true">
+            <div class="section-head gallery-head">
+                <div>
+                    <h3>Referencias visuais do evento</h3>
+                    <small>Imagens ilustrativas para inspirar apresentacao, ambiente e cardapio.</small>
+                </div>
+                <div class="gallery-controls" id="eventGalleryControls" aria-label="Visualizacao das referencias visuais" hidden>
+                    <span id="eventGalleryCount">Preparando</span>
+                    <button type="button" class="gallery-view-btn active" data-gallery-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoGaleria('carousel')">Carrossel</button>
+                    <button type="button" class="gallery-view-btn" data-gallery-view="list" aria-pressed="false" onclick="alternarVisualizacaoGaleria('list')">Lista</button>
+                    <button type="button" class="gallery-nav-btn" data-gallery-nav="prev" aria-label="Imagens anteriores" onclick="rolarGaleria(-1)">←</button>
+                    <button type="button" class="gallery-nav-btn" data-gallery-nav="next" aria-label="Proximas imagens" onclick="rolarGaleria(1)">→</button>
+                </div>
+            </div>
+            <div id="eventGalleryContent" class="event-gallery-loading">
+                <span class="gallery-loading-visual" aria-hidden="true"></span>
+                <div><strong>Buscando referencias compativeis...</strong><small>O planejamento ja esta disponivel; esta etapa visual acontece separadamente.</small></div>
+            </div>
+        </section>
+    `;
+}
+
+function renderizarGaleriaEvento(resultado, opcoes = {}) {
+    const secao = document.getElementById("eventGallerySection");
+    const conteudo = document.getElementById("eventGalleryContent");
+    const controles = document.getElementById("eventGalleryControls");
+    const contador = document.getElementById("eventGalleryCount");
+    if (!secao || !conteudo || !controles || !contador) return;
+
+    const imagens = normalizarArray(resultado?.images).map(normalizarImagemEvento).filter(Boolean);
+    const historico = Boolean(opcoes.historico);
+    secao.setAttribute("aria-busy", "false");
+
+    if (!imagens.length) {
+        controles.hidden = true;
+        conteudo.className = "event-gallery-empty";
+        conteudo.innerHTML = `<strong>Referencias visuais indisponiveis.</strong><small>O planejamento culinario permanece completo e pode ser usado normalmente.</small>`;
+        return;
+    }
+
+    contador.textContent = `${imagens.length} ${imagens.length === 1 ? "imagem" : "imagens"}`;
+    controles.hidden = false;
+    conteudo.className = "event-gallery-body";
+    conteudo.innerHTML = `
+        <div class="event-gallery-track" id="eventGalleryVisualizacao">
+            ${imagens.map(renderImagemEvento).join("")}
+        </div>
+        <div class="gallery-notice">
+            <strong>${historico ? "Visualizacao local do historico" : "Referencias ilustrativas"}</strong>
+            <span>${escapeHTML(historico
+                ? "As imagens externas nao sao salvas. Gere o evento novamente para atualizar as referencias do Openverse."
+                : resultado?.attribution_notice || "Confira autoria, licenca e fonte antes de reutilizar uma imagem.")}</span>
+            ${normalizarArray(resultado?.warnings).length ? `<small>${escapeHTML(`${resultado.warnings.length} referencia(s) usaram a ilustracao local de contingencia.`)}</small>` : ""}
+        </div>
+    `;
+    ativarFallbackImagensGaleria();
+}
+
+function renderizarGaleriaEventoFallback(mensagem = "A fonte externa nao respondeu.") {
+    renderizarGaleriaEvento({
+        images: imagensLocaisGaleria(),
+        warnings: [mensagem],
+        attribution_notice: "A fonte externa esta indisponivel; exibimos ilustracoes locais sem afetar o planejamento."
+    });
+}
+
+function renderizarGaleriaHistorico() {
+    renderizarGaleriaEvento({ images: imagensLocaisGaleria() }, { historico: true });
+}
+
+function imagensLocaisGaleria() {
+    return [
+        ["capa", "/images/fallback/event-cover.svg", "Capa conceitual do evento"],
+        ["entrada", "/images/fallback/savory-course.svg", "Entradas e preparacoes salgadas"],
+        ["principal", "/images/fallback/main-course.svg", "Prato principal"],
+        ["sobremesa", "/images/fallback/dessert.svg", "Doces e sobremesas"],
+        ["bebida", "/images/fallback/beverages.svg", "Bebidas do evento"]
+    ].map(([slot, imageUrl, alt]) => ({
+        id: `local-${slot}`,
+        slot,
+        provider: "local",
+        image_url: imageUrl,
+        thumbnail_url: imageUrl,
+        source_url: null,
+        creator: "Chef IA Studio",
+        license: "local-fallback",
+        attribution: "Ilustracao de contingencia do Chef IA Studio.",
+        alt,
+        fallback: true
+    }));
+}
+
+function normalizarImagemEvento(imagem) {
+    if (!imagem || typeof imagem !== "object") return null;
+    const provider = imagem.provider === "openverse" ? "openverse" : imagem.provider === "local" ? "local" : null;
+    if (!provider) return null;
+    const imageUrl = urlImagemEventoSegura(imagem.thumbnail_url || imagem.image_url, provider);
+    if (!imageUrl) return null;
+    const sourceUrl = provider === "openverse" ? urlExternaHttpsSegura(imagem.source_url) : null;
+    if (provider === "openverse" && !sourceUrl) return null;
+
+    return {
+        id: String(imagem.id || "referencia").slice(0, 100),
+        slot: String(imagem.slot || "evento").slice(0, 40),
+        provider,
+        image_url: imageUrl,
+        source_url: sourceUrl,
+        creator: String(imagem.creator || (provider === "local" ? "Chef IA Studio" : "Autor nao informado")).slice(0, 160),
+        license: String(imagem.license || "licenca nao informada").toUpperCase().slice(0, 40),
+        attribution: String(imagem.attribution || "Credito nao informado").slice(0, 500),
+        alt: String(imagem.alt || "Referencia visual do evento").slice(0, 220),
+        fallback: Boolean(imagem.fallback || provider === "local")
+    };
+}
+
+function urlImagemEventoSegura(valor, provider) {
+    if (typeof valor !== "string") return null;
+    if (provider === "local") {
+        return /^\/images\/fallback\/[a-z0-9-]+\.svg$/i.test(valor) ? valor : null;
+    }
+    return urlExternaHttpsSegura(valor);
+}
+
+function urlExternaHttpsSegura(valor) {
+    if (typeof valor !== "string" || !valor) return null;
+    try {
+        const url = new URL(valor);
+        return url.protocol === "https:" ? url.toString() : null;
+    } catch {
+        return null;
+    }
+}
+
+function renderImagemEvento(imagem) {
+    const fallbackUrl = fallbackGaleriaPorSlot(imagem.slot);
+    return `
+        <figure class="event-gallery-card ${imagem.fallback ? "gallery-card-local" : ""}">
+            <div class="gallery-image-frame">
+                <img src="${escapeHTML(imagem.image_url)}" data-gallery-fallback="${escapeHTML(fallbackUrl)}" alt="${escapeHTML(imagem.alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                <span>${escapeHTML(rotuloSlotGaleria(imagem.slot))}</span>
+            </div>
+            <figcaption>
+                <strong>${escapeHTML(imagem.alt)}</strong>
+                <small>${escapeHTML(imagem.attribution)}</small>
+                <div class="gallery-credit-line">
+                    <span>${escapeHTML(imagem.creator)} · ${escapeHTML(imagem.license)}</span>
+                    ${imagem.source_url ? `<a href="${escapeHTML(imagem.source_url)}" target="_blank" rel="noopener noreferrer">Ver fonte original</a>` : `<span>Recurso local</span>`}
+                </div>
+            </figcaption>
+        </figure>
+    `;
+}
+
+function fallbackGaleriaPorSlot(slot) {
+    if (slot === "sobremesa") return "/images/fallback/dessert.svg";
+    if (slot === "bebida") return "/images/fallback/beverages.svg";
+    if (slot === "principal") return "/images/fallback/main-course.svg";
+    if (["entrada", "salada", "acompanhamento"].includes(slot)) return "/images/fallback/savory-course.svg";
+    return "/images/fallback/event-cover.svg";
+}
+
+function rotuloSlotGaleria(slot) {
+    return ({
+        capa: "Conceito",
+        ambiente: "Ambiente",
+        entrada: "Entradas",
+        principal: "Principal",
+        acompanhamento: "Acompanhamentos",
+        salada: "Saladas",
+        sobremesa: "Sobremesas",
+        bebida: "Bebidas"
+    })[slot] || "Evento";
+}
+
+function ativarFallbackImagensGaleria() {
+    document.querySelectorAll("#eventGalleryVisualizacao img[data-gallery-fallback]").forEach(imagem => {
+        imagem.addEventListener("error", () => {
+            const fallback = imagem.dataset.galleryFallback;
+            if (fallback && imagem.getAttribute("src") !== fallback) imagem.setAttribute("src", fallback);
+            imagem.closest(".event-gallery-card")?.classList.add("gallery-card-local");
+        }, { once: true });
+    });
+}
+
+function alternarVisualizacaoGaleria(modo) {
+    const galeria = document.getElementById("eventGalleryVisualizacao");
+    if (!galeria) return;
+    const emLista = modo === "list";
+    galeria.classList.toggle("event-gallery-list", emLista);
+    document.querySelectorAll("[data-gallery-view]").forEach(botao => {
+        const ativo = botao.dataset.galleryView === (emLista ? "list" : "carousel");
+        botao.classList.toggle("active", ativo);
+        botao.setAttribute("aria-pressed", String(ativo));
+    });
+    document.querySelectorAll("[data-gallery-nav]").forEach(botao => {
+        botao.hidden = emLista;
+    });
+}
+
+function rolarGaleria(direcao) {
+    const galeria = document.getElementById("eventGalleryVisualizacao");
+    if (!galeria || galeria.classList.contains("event-gallery-list")) return;
+    galeria.scrollBy({
+        left: direcao * Math.max(galeria.clientWidth * 0.82, 280),
+        behavior: "smooth"
+    });
 }
 
 function renderQualidadeCulinaria(qualidade) {

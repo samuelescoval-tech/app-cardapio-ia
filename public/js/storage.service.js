@@ -22,6 +22,7 @@ function salvarHistorico(evento, plano) {
     }
 
     const id = `evento_${Date.now()}`;
+    const planoPersistivel = prepararPlanoParaHistorico(plano);
     const entrada = {
       id,
       data_criacao: new Date().toISOString(),
@@ -29,8 +30,8 @@ function salvarHistorico(evento, plano) {
       pessoas: evento.pessoas,
       duracao_horas: evento.duracao_horas || 'N/A',
       evento: evento,
-      plano: plano,
-      resumo: extrairResumoPlano(plano)
+      plano: planoPersistivel,
+      resumo: extrairResumoPlano(planoPersistivel)
     };
 
     let historico = carregarHistorico();
@@ -46,6 +47,23 @@ function salvarHistorico(evento, plano) {
     console.error('❌ Erro ao salvar histórico:', error);
     return null;
   }
+}
+
+/**
+ * Referencias visuais sao transitorias: licencas, URLs e resultados externos
+ * nao devem aumentar o localStorage nem reaparecer como se fossem permanentes.
+ */
+function prepararPlanoParaHistorico(plano) {
+  if (!plano || typeof plano !== 'object' || Array.isArray(plano)) return plano;
+
+  const copia = { ...plano };
+  [
+    'imagens_evento',
+    'visual_references',
+    'referencias_visuais',
+    'galeria_evento'
+  ].forEach(campo => delete copia[campo]);
+  return copia;
 }
 
 /**
@@ -237,6 +255,7 @@ if (typeof window !== 'undefined') {
     criarMemoriaCulinaria,
     formatarDataBR,
     planoTemConteudo,
+    prepararPlanoParaHistorico,
     obterUltimoErroHistorico
   };
 }
@@ -246,6 +265,7 @@ if (typeof module !== 'undefined' && module.exports) {
     extrairResumoPlano,
     normalizarEntradaHistorico,
     planoTemConteudo,
+    prepararPlanoParaHistorico,
     criarMemoriaCulinaria
   };
 }

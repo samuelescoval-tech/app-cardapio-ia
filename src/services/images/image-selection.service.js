@@ -24,7 +24,7 @@ function criarImageSelectionService(opcoes = {}) {
       context_id: solicitacoes[0]?.context_id || "evento-geral",
       style_id: solicitacoes[0]?.style_id || "sem-modificador",
       images: imagens, warnings: avisos,
-      attribution_notice: "Creditos e licencas devem acompanhar cada imagem no aplicativo e no PDF."
+      attribution_notice: "Creditos e licencas acompanham cada imagem no aplicativo. As referencias nao sao salvas no historico nem no PDF."
     };
   }
   return { selecionarParaEvento };

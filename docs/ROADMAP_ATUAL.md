@@ -134,15 +134,19 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - Cobertura funcional concluida em 2026-07-14: fichas ausentes ou parciais sao recuperadas com origem/status visiveis e bebidas abaixo do motor sao reconciliadas proporcionalmente.
 - E2E atual: corporativo 15/15 receitas, churrasco 16/16 com 9 recuperadas e Natal 15/15; historico, PDF e mobile passaram.
 - O corporativo continua em revisao por 16/17 itens, cha em sache e experiencia Premium insuficiente. Cobertura tecnica nao equivale a qualidade percebida.
+- A infraestrutura visual gratuita foi concluida com dicionario de dez contextos, oito slots, cinco SVGs locais, Openverse anonimo, cache, limite diario e endpoint protegido.
+- A galeria transitoria agora carrega somente depois de um plano valido e oferece carrossel/lista, credito, licenca, fonte, fallback por imagem e estado acessivel.
+- Referencias externas continuam fora de `chefIAUltimoPlano`, historico e PDF; o storage remove campos visuais defensivamente.
+- Chrome headless validou cinco cartoes, alternancia de visualizacao e mobile `390/390`, sem overflow e com controles de 44 px. A suite passou com 20 arquivos.
 
 ## Proxima atualizacao curta
 
-1. Aguardar e executar a proxima atividade do Chef IA indicada pelo usuario.
-2. Reavaliar o workshop corporativo e o novo mobile quando os testes forem retomados.
-3. Coletar referencias visuais do usuario e transformar somente padroes aprovados em componentes reutilizaveis.
-4. Projetar envelope orcamentario por percentuais e estado `A cotar`, sem precos de mercado inventados.
-5. Especificar a futura camada de imagens com licenca, atribuicao, cache e fallback.
-6. Executar o proximo teste acompanhado com outra pessoa e outro tipo de evento.
+1. Testar a relevancia visual em cinco tipos de evento usando o endpoint atual e sem nova geracao Gemini.
+2. Refinar consultas e criterios de selecao para reduzir resultados genericos.
+3. Comparar uma segunda fonte gratuita sem chave e documentar cobertura/licencas.
+4. Criar controles para atualizar ou ocultar referencias sem regenerar o evento.
+5. Manter historico e PDF sem imagens externas nesta etapa.
+6. Retomar a avaliacao perceptiva Premium e o proximo teste acompanhado em trilha separada.
 7. Manter Spoonacular desativado e nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao.
 
 Em 2026-07-13, o usuario informou que a chave Spoonacular exposta foi rotacionada. A auditoria local passou nos 11 arquivos de teste, na sintaxe e em `git diff --check`; depois da revisao de custo, o usuario decidiu pausar a consulta real por ser um servico pago. Isso nao bloqueia os testes controlados do MVP.
