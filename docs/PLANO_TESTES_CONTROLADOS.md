@@ -184,6 +184,24 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Backlog: imagens ilustrativas com fonte/licenca; fornecedores e precos por usuario; importacao de planilha; catalogo regional auditavel. Nenhum valor enviado por usuario vira referencia geral sem validacao.
 - Decisao: falhas reproduziveis de repertorio, pedidos explicitos e formatacao foram corrigidas; imagens e precificacao permanecem fora deste ciclo.
 
+### Revisao acompanhada 2 - workshop corporativo Premium
+
+- Data: 2026-07-13.
+- Cenario: workshop corporativo de tecnologia para 80 pessoas, seis horas, coffee break, sem alcool, estilo Premium, sem cozinha no local e prioridade de apresentacao.
+- Feedback: resultado operacional 6,5/10 e experiencia Premium 4,5/10; layout irregular, somente 13 itens, cha em sache, cardapio comum, cobertura pouco clara de restricoes, ambientacao generica e orcamento desejado de R$ 30.000 sem uso visivel.
+- Diagnostico de quantidade: 13 era exatamente a composicao-base do perfil corporativo, nao truncamento. A amostra antiga terminou com `STOP` e 5.444 tokens.
+- Diagnostico visual: o painel de qualidade nao fechava a tag `section`; por isso, contexto e motor eram encaixados na grade anterior com alturas e espacos incoerentes.
+- Correcao de estilo: criada camada geral `style_modifiers` para Simples, Elegante e Premium. Premium acrescenta um item por categoria, exige evidencia concreta de curadoria e evita sache, bolo simples, biscoito comum, cafe soluvel, suco em po e alternativa somente sob demanda.
+- Correcao de inclusao: evento Premium com restricoes solicita ao menos duas opcoes identificadas por grupo; o backend avisa quando a cobertura textual estiver abaixo do minimo ou apenas sob demanda.
+- Correcao visual: cardapio passou a carrossel horizontal com tres cartoes uniformes no desktop, setas, rolagem e alternativa em lista; o painel HTML foi fechado corretamente.
+- Aceite automatizado: 11 arquivos de teste aprovados e sintaxe valida.
+- Aceite visual: Chrome headless confirmou contexto e motor em blocos independentes, carrossel uniforme e lista compacta funcional.
+- Aceite real apos reiniciar o servidor: 17 itens nas proporcoes 5 entradas, 3 acompanhamentos, 4 sobremesas e 5 bebidas; nenhum termo proibido; `STOP` com 6.931 tokens.
+- E2E pela interface: 17 pratos, 15 receitas, 40 compras, historico salvo e recarregado, mobile 400/400 sem overflow e PDF A4 de 62.758 bytes.
+- Porta Premium: o E2E ficou corretamente em `revisar` por nao evidenciar louca/acabamento de alto padrao nem estacao de bebidas especiais; validade tecnica nao e mais tratada como aprovacao Premium automatica.
+- Ponto a observar: a IA abreviou vegetariano como `Veg`; o backend passou a reconhecer a etiqueta sem perder a regra principal. O novo resultado ainda precisa de avaliacao humana para confirmar se a curadoria percebida atingiu o padrao Premium.
+- Decisao financeira: manter `A cotar` sem catalogo regional. O valor desejado pode orientar uma futura distribuicao de envelope, mas nao autoriza inventar precos.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.

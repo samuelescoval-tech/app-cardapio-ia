@@ -267,6 +267,31 @@ test("avisa quando pedido culinario explicito nao aparece no plano", () => {
   assert.match(plano.qualidade_culinaria.avisos.join(" "), /Pedido culinario explicito ausente: patinho/i);
 });
 
+test("reprova item comum e cobertura alimentar insuficiente em evento premium", () => {
+  const entrada = planoValido();
+  entrada.cardapio[0].nome = "Cha em sache";
+  entrada.cardapio[1].descricao = "Opcao Veg";
+  entrada.cardapio[2].descricao = "Opcao sem lactose";
+  entrada.cardapio[3].descricao = "Pao sem gluten sob demanda";
+
+  const plano = validarPlano(entrada, {
+    evento: {
+      estilo: "Premium",
+      refeicao: "Coffee break",
+      restricoes: "8 vegetarianos, 4 sem lactose e 2 com restricao a gluten"
+    }
+  });
+  const avisos = plano.qualidade_culinaria.avisos.join(" ");
+
+  assert.equal(plano.qualidade_culinaria.status, "revisar");
+  assert.match(avisos, /Contrato Premium violado.*cha em sache/i);
+  assert.match(avisos, /vegetariana ou vegana.*1\/2/i);
+  assert.match(avisos, /sem lactose.*1\/2/i);
+  assert.match(avisos, /gluten.*1\/2/i);
+  assert.match(avisos, /somente sob demanda/i);
+  assert.match(avisos, /Experiencia Premium sem evidencia/i);
+});
+
 test("recupera quantidade de compra vaga a partir do ingrediente", () => {
   const entrada = planoValido();
   entrada.lista_compras[0].quantidade = "A gosto";

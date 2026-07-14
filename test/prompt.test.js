@@ -31,6 +31,11 @@ test("prompt usa secoes operacionais e nao pede o motor na resposta", () => {
   assert.match(prompt, /comidas_tipicas como repertorio/i);
   assert.match(prompt, /Tema, estilo ou horario nao podem apagar a identidade/i);
   assert.match(prompt, /modificador_ocasiao/);
+  assert.match(prompt, /modificador_estilo/);
+  assert.match(prompt, /nao use cha em sache/i);
+  assert.match(prompt, /nao basta acrescentar "premium"/i);
+  assert.match(prompt, /pelo menos duas opcoes identificadas para cada restricao/i);
+  assert.match(prompt, /circulacao favoravel ao networking/i);
   assert.match(prompt, /Nomes de comidas, bebidas ou preparacoes.*requisitos explicitos/i);
   assert.match(prompt, /pedidos_culinarios_explicitos e a lista estruturada/i);
   assert.match(prompt, /extraia internamente todos os alimentos nomeados/i);
@@ -60,6 +65,18 @@ test("prompt seleciona perfil e orientacao de tema pelo evento", () => {
   assert.match(prompt, /"modificador_refeicao"/);
   assert.match(prompt, /"modificador_tema"/);
   assert.doesNotMatch(prompt, /Prefira de 7 a 9 itens/);
+});
+
+test("prompt premium corporativo exige 17 itens e criterios de alto padrao", () => {
+  const prompt = montarPromptPlanejamento(
+    { tipo: "Workshop corporativo", refeicao: "Coffee break", estilo: "Premium", pessoas: 80 },
+    { staff: [] }
+  );
+
+  assert.match(prompt, /no minimo 17 itens no cardapio/i);
+  assert.match(prompt, /"id": "premium"/);
+  assert.match(prompt, /estacao de bebidas especiais/i);
+  assert.match(prompt, /alternativas inclusivas previamente identificadas/i);
 });
 
 test("prompt recebe memoria recente como dado e preserva repeticoes essenciais", () => {

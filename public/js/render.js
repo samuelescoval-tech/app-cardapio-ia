@@ -75,6 +75,7 @@ function renderQualidadeCulinaria(qualidade) {
                 <p>${escapeHTML(cobertura.ingredientes_cobertos || 0)} de ${escapeHTML(cobertura.ingredientes_total || 0)} ingredientes ligados às compras · ${escapeHTML(cobertura.receitas_cobertas || 0)} de ${escapeHTML(cobertura.pratos_com_preparo || 0)} preparações com receita.</p>
             </div>
             ${mensagens.length ? `<ul>${mensagens.map(item => `<li>${escapeHTML(item)}</li>`).join("")}</ul>` : ""}
+        </section>
     `;
 }
 
@@ -738,9 +739,21 @@ function renderMetricGroup(titulo, itens) {
 function renderCardapio(cardapio) {
     if (!cardapio.length) return "";
     return `
-        <section class="result-section">
-            <div class="section-head"><h3>Selecao de Pratos</h3><span>${cardapio.length} itens</span></div>
-            <div class="dish-grid">
+        <section class="result-section menu-section">
+            <div class="section-head menu-head">
+                <div>
+                    <h3>Selecao de Pratos</h3>
+                    <small>Deslize para explorar ou alterne para a visualizacao em lista.</small>
+                </div>
+                <div class="menu-controls" aria-label="Visualizacao do cardapio">
+                    <span>${cardapio.length} itens</span>
+                    <button type="button" class="menu-view-btn active" data-menu-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoCardapio('carousel')">Carrossel</button>
+                    <button type="button" class="menu-view-btn" data-menu-view="list" aria-pressed="false" onclick="alternarVisualizacaoCardapio('list')">Lista</button>
+                    <button type="button" class="menu-nav-btn" data-menu-nav="prev" aria-label="Pratos anteriores" onclick="rolarCardapio(-1)">←</button>
+                    <button type="button" class="menu-nav-btn" data-menu-nav="next" aria-label="Proximos pratos" onclick="rolarCardapio(1)">→</button>
+                </div>
+            </div>
+            <div class="dish-grid dish-carousel" id="cardapioVisualizacao">
                 ${cardapio.map((p, i) => {
                     const nome = typeof p === "string" ? p : p.nome;
                     const categoria = typeof p === "string" ? "Cardapio" : p.categoria;
@@ -769,6 +782,30 @@ function renderCardapio(cardapio) {
             </div>
         </section>
     `;
+}
+
+function alternarVisualizacaoCardapio(modo) {
+    const cardapio = document.getElementById("cardapioVisualizacao");
+    if (!cardapio) return;
+    const emLista = modo === "list";
+    cardapio.classList.toggle("dish-list", emLista);
+    document.querySelectorAll("[data-menu-view]").forEach(botao => {
+        const ativo = botao.dataset.menuView === (emLista ? "list" : "carousel");
+        botao.classList.toggle("active", ativo);
+        botao.setAttribute("aria-pressed", String(ativo));
+    });
+    document.querySelectorAll("[data-menu-nav]").forEach(botao => {
+        botao.hidden = emLista;
+    });
+}
+
+function rolarCardapio(direcao) {
+    const cardapio = document.getElementById("cardapioVisualizacao");
+    if (!cardapio || cardapio.classList.contains("dish-list")) return;
+    cardapio.scrollBy({
+        left: direcao * Math.max(cardapio.clientWidth * 0.82, 260),
+        behavior: "smooth"
+    });
 }
 
 function renderCompras(compras) {

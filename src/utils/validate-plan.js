@@ -575,13 +575,18 @@ function validarRequisitosDoEvento(plano, evento, relatorio) {
   const restricoes = normalizarTextoBusca(evento.restricoes);
   const refeicao = normalizarTextoBusca(evento.refeicao);
   const alcool = normalizarTextoBusca(evento.alcool);
+  const estilo = normalizarTextoBusca(evento.estilo);
   const itens = plano.cardapio.map(item => ({
     categoria: normalizarTextoBusca(item.categoria),
     texto: normalizarTextoBusca([item.nome, item.descricao].filter(Boolean).join(" "))
   }));
 
+  validarContratoPremium(itens, estilo, relatorio);
+  validarCoberturaDeRestricoes(itens, restricoes, estilo, relatorio);
+  validarExperienciaPremium(plano, evento, estilo, relatorio);
+
   const exigePrincipalVegetariano = /vegetar|vegano/.test(restricoes) && /almoco|jantar/.test(refeicao);
-  const possuiPrincipalVegetariano = itens.some(item => /prato principal/.test(item.categoria) && /vegetar|vegano/.test(item.texto));
+  const possuiPrincipalVegetariano = itens.some(item => /prato principal/.test(item.categoria) && /vegetar|vegano|\bveg\b/.test(item.texto));
   if (exigePrincipalVegetariano && !possuiPrincipalVegetariano) {
     registrarAviso(relatorio, "Restricao vegetariana ou vegana sem opcao identificada em Prato Principal.");
   }
@@ -597,6 +602,76 @@ function validarRequisitosDoEvento(plano, evento, relatorio) {
 
   if (/bar completo/.test(alcool) && naoAlcoolicas.length < 2) {
     registrarAviso(relatorio, `Bar completo abaixo do minimo de bebidas nao alcoolicas: ${naoAlcoolicas.length}/2.`);
+  }
+}
+
+function validarContratoPremium(itens, estilo, relatorio) {
+  if (!/premium/.test(estilo)) return;
+
+  const criteriosComuns = [
+    [/(cha.{0,20}sache|sache.{0,20}cha)/, "cha em sache"],
+    [/bolo simples/, "bolo simples"],
+    [/biscoito comum/, "biscoito comum"],
+    [/cafe soluvel/, "cafe soluvel"],
+    [/suco em po/, "suco em po"]
+  ];
+  const encontrados = criteriosComuns
+    .filter(([padrao]) => itens.some(item => padrao.test(item.texto)))
+    .map(([, rotulo]) => rotulo);
+
+  if (encontrados.length) {
+    registrarAviso(relatorio, `Contrato Premium violado por item comum: ${encontrados.join(", ")}.`);
+  }
+}
+
+function validarCoberturaDeRestricoes(itens, restricoes, estilo, relatorio) {
+  if (!restricoes || /^(nenhuma|nao informado|nao informada)$/.test(restricoes)) return;
+
+  const minimo = /premium/.test(estilo) ? 2 : 1;
+  const regras = [
+    { solicitada: /vegetar|vegano/.test(restricoes), padrao: /vegetar|vegano|\bveg\b/, rotulo: "vegetariana ou vegana" },
+    { solicitada: /lactose/.test(restricoes), padrao: /sem lactose|zero lactose/, rotulo: "sem lactose" },
+    { solicitada: /gluten|celiac/.test(restricoes), padrao: /sem gluten|gluten free/, rotulo: "planejada sem ingredientes com gluten" }
+  ];
+
+  regras.filter(regra => regra.solicitada).forEach(regra => {
+    const cobertura = itens.filter(item => regra.padrao.test(item.texto)).length;
+    if (cobertura < minimo) {
+      registrarAviso(relatorio, `Restricao ${regra.rotulo} com cobertura identificada insuficiente: ${cobertura}/${minimo} itens.`);
+    }
+  });
+
+  if (itens.some(item => /sob demanda/.test(item.texto) && /vegetar|vegano|lactose|gluten|celiac/.test(item.texto))) {
+    registrarAviso(relatorio, "Restricao alimentar apresentada somente sob demanda; planejar alternativa identificada e integrada ao servico.");
+  }
+}
+
+function validarExperienciaPremium(plano, evento, estilo, relatorio) {
+  if (!/premium/.test(estilo)) return;
+
+  const textoExperiencia = normalizarTextoBusca([
+    ...normalizarArrayTexto(plano.layout),
+    ...normalizarArrayTexto(plano.equipe_obs),
+    ...normalizarArrayTexto(plano.entretenimento),
+    ...normalizarArrayTexto(plano.decoracao?.temas),
+    ...normalizarArrayTexto(plano.decoracao?.itens),
+    plano.decoracao?.iluminacao || "",
+    ...(Array.isArray(plano.cronograma) ? plano.cronograma : []).flatMap(item => [item.hora, item.atividade, item.descricao]),
+    ...normalizarArrayTexto(plano.checklist?.pre),
+    ...normalizarArrayTexto(plano.checklist?.durante)
+  ].join(" "));
+  const criterios = [
+    { padrao: /sinaliz|identidade visual|branding|placa|menu identificad/, rotulo: "sinalizacao ou identidade visual" },
+    { padrao: /louca|porcelana|vidro|talher|guardanapo de tecido/, rotulo: "louca ou acabamento de servico" },
+    { padrao: /estacao de cafe|estacao de bebidas|coffee station|ilha de bebidas|infus/, rotulo: "estacao de bebidas especiais" }
+  ];
+  if (/corporativ|empresa|workshop|networking|congresso|seminario|treinamento/.test(normalizarTextoBusca(evento.tipo))) {
+    criterios.push({ padrao: /networking|circulacao|interacao|conversa/, rotulo: "circulacao para networking" });
+  }
+  const ausentes = criterios.filter(criterio => !criterio.padrao.test(textoExperiencia)).map(criterio => criterio.rotulo);
+
+  if (ausentes.length) {
+    registrarAviso(relatorio, `Experiencia Premium sem evidencia de: ${ausentes.join(", ")}.`);
   }
 }
 

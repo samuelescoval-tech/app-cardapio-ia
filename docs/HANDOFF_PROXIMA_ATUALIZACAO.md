@@ -290,16 +290,28 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - O formulario oferece sugestoes de eventos sem bloquear texto livre e tres refeicoes combinadas adicionais. A lista de compras separa visualmente natureza e nome; detalhes operacionais ficam recolhidos por padrao.
 - Imagens, fornecedores, planilha e precificacao por usuario foram classificados como backlog. Precos continuam `A cotar` ate existir catalogo regional com fonte, data-base e validacao.
 
+### Evidencia da revisao corporativa Premium
+
+- O workshop corporativo de 80 pessoas recebeu 6,5/10 como rascunho e 4,5/10 como experiencia Premium; os principais sinais foram 13 itens, cha em sache, restricoes pouco claras, ambientacao comum e layout irregular.
+- A causa dos 13 itens era deterministica: a composicao corporativa-base somava 4+2+3+4. A resposta antiga terminou normalmente, sem corte por tokens.
+- A taxonomia agora possui modificadores de estilo. Premium acrescenta uma opcao por categoria e define criterios verificaveis de curadoria, servico, apresentacao e inclusao.
+- Prompt e backend rejeitam itens comuns incompativeis com Premium e cobram duas opcoes identificadas por restricao em eventos com varios momentos de servico.
+- Um `section` sem fechamento causava a grade visual quebrada. A estrutura foi corrigida e a selecao de pratos ganhou carrossel uniforme, setas e visualizacao alternativa em lista.
+- O teste real atualizado entregou 17 itens em 5+3+4+5, nenhum item proibido, `STOP` e 6.931 tokens. A abreviacao `Veg` foi incorporada ao validador.
+- O E2E confirmou 17 pratos, 15 receitas, 40 compras, historico, mobile 400/400 e PDF A4 de 62.758 bytes. A porta de qualidade manteve `revisar` por falta de evidencia de louca/acabamento e estacao de bebidas especiais.
+- Precos, imagens e fornecedores continuam separados: `A cotar` permanece correto ate existir fonte regional; a avaliacao de envelope orcamentario deve ser uma etapa explicita, sem simular cotacao.
+
 ## Proxima atualizacao curta
 
-O usuario escolheu teste controlado, pausou o Spoonacular por custo, concluiu cinco baselines tecnicos e o primeiro teste acompanhado:
+O usuario escolheu teste controlado, pausou o Spoonacular por custo, concluiu cinco baselines tecnicos, o primeiro teste acompanhado e uma revisao corporativa Premium:
 
-1. Selecionar a segunda pessoa testadora e um evento realista diferente.
-2. Acompanhar uma geracao principal pela interface usando a ficha de `PLANO_TESTES_CONTROLADOS.md`, preferencialmente sem listar todos os pratos.
-3. Registrar notas, evidencia e gravidade sem expor chaves ou dados pessoais desnecessarios.
-4. Corrigir somente falhas reproduzidas; preferencias isoladas permanecem em observacao.
-5. Repetir ate completar 3 a 5 pessoas; faltam de 2 a 4 participantes antes da consolidacao.
-6. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
+1. Pedir ao usuario uma nova avaliacao perceptiva do workshop gerado pelo contrato Premium atualizado.
+2. Separar qualidade culinaria, ambientacao, restricoes e clareza visual em notas independentes.
+3. Projetar a proxima melhoria visual a partir das referencias de sites que o usuario trouxer, preservando carrossel e lista.
+4. Definir um envelope orcamentario informativo por percentuais, sem transformar o valor desejado em cotacao.
+5. Planejar imagens com fonte, licenca, atribuicao e fallback antes de integrar qualquer biblioteca externa.
+6. Selecionar outra pessoa testadora e um evento realista diferente para evitar ajuste excessivo ao mesmo avaliador.
+7. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
 
 Nao fazer nesta atualizacao:
 

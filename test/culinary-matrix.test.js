@@ -40,6 +40,21 @@ test("bar completo amplia a composicao minima de bebidas", () => {
   assert.equal(diretriz.quantidade_total_minima, 15);
 });
 
+test("estilo premium amplia todas as categorias e aplica contrato verificavel", () => {
+  const diretriz = obterDiretrizCulinaria({
+    tipo: "Workshop corporativo de tecnologia",
+    refeicao: "Coffee break",
+    estilo: "Premium"
+  });
+
+  assert.equal(diretriz.perfil, "corporativo_coffee_break");
+  assert.equal(diretriz.modificador_estilo.id, "premium");
+  assert.equal(diretriz.quantidade_total_minima, 17);
+  assert.deepEqual(diretriz.composicao_minima.map(item => item.minimum), [5, 3, 4, 5]);
+  assert.ok(diretriz.elementos_esperados.includes("estacao de bebidas especiais quando compativel"));
+  assert.ok(diretriz.evitar_no_perfil.includes("cha em sache"));
+});
+
 test("atendimento domiciliar recebe perfil proprio e modificador de brunch", () => {
   const diretriz = obterDiretrizCulinaria({
     tipo: "Atendimento domiciliar",
@@ -161,7 +176,7 @@ test("seleciona catalogo curado sem URLs no prompt e amplia restricoes quando ne
   const geral = obterDiretrizCulinaria({ tipo: "Jantar" });
   const restrito = obterDiretrizCulinaria({ tipo: "Jantar", restricoes: "Pessoa celiaca, sem gluten" });
 
-  assert.equal(geral.matriz_version, "2026-07-13-occasions");
+  assert.equal(geral.matriz_version, "2026-07-13-premium-contract");
   assert.equal(geral.catalogo_fontes_version, "2026-07-12");
   assert.ok(geral.fontes.some(fonte => fonte.qualidade === "official"));
   assert.ok(geral.fontes.some(fonte => fonte.qualidade === "editorial"));

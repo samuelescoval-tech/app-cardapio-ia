@@ -120,14 +120,21 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - O primeiro teste acompanhado revelou repertorio generico, pedidos nominais omitidos, poucas opcoes de refeicao e densidade visual. A correcao criou uma camada geral de ocasioes e catalogo local de pedidos explicitos, sem limitar a solucao a debutante.
 - Debutante passou com 22 itens, oito pedidos nominais, 14/14 receitas, quatro bebidas e cobertura 36/36. Natal sem pratos nominais confirmou repertorio sazonal com 19 itens e 15/15 receitas.
 - Imagens, fornecedores, planilha e precificacao por usuario permanecem no backlog; dados de clientes nao alimentam uma base geral de precos sem fonte e validacao.
+- A revisao corporativa Premium identificou que o minimo de 13 itens vinha da composicao-base e nao de truncamento. A camada geral de estilos agora amplia Premium para 17 itens no perfil corporativo e define sinais verificaveis de alto padrao.
+- Prompt e backend passaram a rejeitar cha em sache e outros itens comuns em Premium, exigir cobertura alimentar identificada e sinalizar alternativas apenas sob demanda.
+- O layout irregular foi rastreado a uma tag `section` sem fechamento. A estrutura foi corrigida e a selecao de pratos ganhou carrossel uniforme com alternativa em lista.
+- Geracao real atualizada: 17 itens em 5+3+4+5, nenhum item proibido, termino `STOP` com 6.931 tokens. O resultado precisa agora de nova avaliacao perceptiva do usuario.
+- E2E corporativo Premium: 17 pratos, 15 receitas, 40 compras, historico recarregado, mobile 400/400 e PDF A4 de 62.758 bytes; a qualidade permaneceu em `revisar` por ausencia de evidencia de louca/acabamento e estacao especial de bebidas.
 
 ## Proxima atualizacao curta
 
-1. Executar o segundo teste acompanhado com uma pessoa usuaria conforme `PLANO_TESTES_CONTROLADOS.md`.
-2. Registrar feedback e evidencia por evento, separando falha reproduzivel de preferencia editorial.
-3. Corrigir somente falhas que afetem geracao, historico, PDF, compras ou operacao; faltam de 2 a 4 pessoas antes de nova expansao.
-4. Manter Spoonacular desativado e fora do ciclo atual; a integracao opcional fica preservada para reavaliacao futura de custo e beneficio.
-5. Nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao dos testes com usuarios.
+1. Reavaliar o workshop corporativo com o novo contrato Premium pela interface real.
+2. Coletar referencias visuais do usuario e transformar somente padroes aprovados em componentes reutilizaveis.
+3. Projetar envelope orcamentario por percentuais e estado `A cotar`, sem precos de mercado inventados.
+4. Especificar a futura camada de imagens com licenca, atribuicao, cache e fallback.
+5. Executar o proximo teste acompanhado com outra pessoa e outro tipo de evento.
+6. Manter Spoonacular desativado e fora do ciclo atual.
+7. Nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao dos testes com usuarios.
 
 Em 2026-07-13, o usuario informou que a chave Spoonacular exposta foi rotacionada. A auditoria local passou nos 11 arquivos de teste, na sintaxe e em `git diff --check`; depois da revisao de custo, o usuario decidiu pausar a consulta real por ser um servico pago. Isso nao bloqueia os testes controlados do MVP.
 

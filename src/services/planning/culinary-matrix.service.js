@@ -33,8 +33,16 @@ function obterDiretrizCulinaria(evento = {}) {
   const tema = matriz.themes.find(item =>
     item.match.some(termo => contextoTema.includes(normalizar(termo)))
   );
+  const estilo = matriz.style_modifiers.find(item =>
+    item.match.some(termo => normalizar(evento.estilo).includes(normalizar(termo)))
+  );
   const contextoOperacional = construirContextoOperacional(evento);
-  const composicaoMinima = ajustarComposicaoAoEvento(perfil.composition, evento, ocasiao?.composition_overrides);
+  const composicaoMinima = ajustarComposicaoAoEvento(
+    perfil.composition,
+    evento,
+    ocasiao?.composition_overrides,
+    estilo?.minimum_increment_each_category
+  );
   const pedidosExplicitos = extrairPedidosCulinarios(evento);
 
   return {
@@ -45,11 +53,14 @@ function obterDiretrizCulinaria(evento = {}) {
     identidade_evento: perfil.identity,
     tipo_servico: perfil.service,
     momentos_servico: combinarListas(perfil.service_moments, ocasiao?.service_moments),
-    elementos_esperados: combinarListas(perfil.required_features, ocasiao?.required_features),
+    elementos_esperados: combinarListas(
+      combinarListas(perfil.required_features, ocasiao?.required_features),
+      estilo?.required_features
+    ),
     repeticoes_essenciais: combinarListas(perfil.essential_repetitions, ocasiao?.essential_repetitions),
     comidas_tipicas: perfil.typical_foods,
     elementos_opcionais: perfil.optional_features,
-    evitar_no_perfil: perfil.avoid,
+    evitar_no_perfil: combinarListas(perfil.avoid, estilo?.avoid),
     pedidos_culinarios_explicitos: pedidosExplicitos,
     modificador_refeicao: refeicao ? {
       id: refeicao.id,
@@ -69,6 +80,13 @@ function obterDiretrizCulinaria(evento = {}) {
       sinais_culinarios: tema.culinary_signals,
       evitar: tema.avoid
     } : null,
+    modificador_estilo: estilo ? {
+      id: estilo.id,
+      identidade: estilo.identity,
+      orientacoes: estilo.guidance,
+      evitar: estilo.avoid,
+      incremento_minimo_por_categoria: estilo.minimum_increment_each_category
+    } : null,
     contexto_operacional: contextoOperacional,
     quantidade_total_minima: composicaoMinima.reduce((total, item) => total + item.minimum, 0),
     composicao_minima: composicaoMinima,
@@ -78,13 +96,14 @@ function obterDiretrizCulinaria(evento = {}) {
       ...(refeicao ? refeicao.guidance : []),
       ...(ocasiao ? ocasiao.guidance : []),
       ...(tema ? [tema.guidance, tema.avoid] : []),
+      ...(estilo ? [estilo.identity, ...estilo.guidance, ...estilo.avoid.map(item => `Evitar no estilo ${estilo.id}: ${item}.`)] : []),
       ...contextoOperacional.orientacoes
     ],
     fontes: selecionarFontes(contextoCompleto)
   };
 }
 
-function ajustarComposicaoAoEvento(composicao, evento, substituicoes = []) {
+function ajustarComposicaoAoEvento(composicao, evento, substituicoes = [], incrementoPorCategoria = 0) {
   const barCompleto = normalizar(evento.alcool).includes("bar completo");
   const categorias = new Map(composicao.map(item => [normalizar(item.category), { ...item }]));
   substituicoes.forEach(item => {
@@ -98,8 +117,8 @@ function ajustarComposicaoAoEvento(composicao, evento, substituicoes = []) {
   return Array.from(categorias.values()).map(item => ({
     ...item,
     minimum: barCompleto && normalizar(item.category) === "bebida"
-      ? Math.max(item.minimum, 4)
-      : item.minimum
+      ? Math.max(item.minimum + incrementoPorCategoria, 4)
+      : item.minimum + incrementoPorCategoria
   }));
 }
 
@@ -228,11 +247,13 @@ function validarTaxonomiaCulinaria(valor) {
   const modificadores = Array.isArray(valor?.meal_modifiers) ? valor.meal_modifiers : [];
   const ocasioes = Array.isArray(valor?.occasion_modifiers) ? valor.occasion_modifiers : [];
   const temas = Array.isArray(valor?.themes) ? valor.themes : [];
+  const estilos = Array.isArray(valor?.style_modifiers) ? valor.style_modifiers : [];
 
   validarIdsUnicos(perfis, "perfil", erros);
   validarIdsUnicos(modificadores, "modificador de refeicao", erros);
   validarIdsUnicos(ocasioes, "modificador de ocasiao", erros);
   validarIdsUnicos(temas, "tema", erros);
+  validarIdsUnicos(estilos, "modificador de estilo", erros);
 
   if (!perfis.some(perfil => perfil.id === "evento_refeicao_geral")) {
     erros.push("perfil geral ausente");
@@ -252,6 +273,14 @@ function validarTaxonomiaCulinaria(valor) {
     if (!ocasiao.identity || !Array.isArray(ocasiao.guidance) || !ocasiao.guidance.length) erros.push(`${ocasiao.id}: identidade ou orientacao ausente`);
     if (!ocasiao.typical_foods || Object.keys(ocasiao.typical_foods).length < 3) erros.push(`${ocasiao.id}: repertorio de ocasiao insuficiente`);
     if (!Array.isArray(ocasiao.composition_overrides) || !ocasiao.composition_overrides.length) erros.push(`${ocasiao.id}: composicao de ocasiao ausente`);
+  });
+
+  estilos.forEach(estilo => {
+    if (!Array.isArray(estilo.match) || !estilo.match.length) erros.push(`${estilo.id}: termos de estilo ausentes`);
+    if (!estilo.identity || !Array.isArray(estilo.guidance) || !estilo.guidance.length) erros.push(`${estilo.id}: identidade ou orientacao ausente`);
+    if (!Array.isArray(estilo.required_features) || estilo.required_features.length < 2) erros.push(`${estilo.id}: elementos de estilo insuficientes`);
+    if (!Array.isArray(estilo.avoid) || estilo.avoid.length < 2) erros.push(`${estilo.id}: criterios de exclusao insuficientes`);
+    if (!Number.isInteger(estilo.minimum_increment_each_category) || estilo.minimum_increment_each_category < 0) erros.push(`${estilo.id}: incremento de composicao invalido`);
   });
 
   return erros;

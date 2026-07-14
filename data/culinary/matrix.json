@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-13-occasions",
+  "version": "2026-07-13-premium-contract",
   "status": "event-taxonomy",
   "principles": [
     "Preservar a identidade do tipo de evento antes de aplicar tema, refeicao ou estilo.",
@@ -23,6 +23,35 @@
       "name": "Senac SP - Montagem de Mesas de Buffet e Coffee Break",
       "url": "https://www.sp.senac.br/cursos-livres/curso-de-montagem-de-mesas-de-buffet-e-coffee-break-presencial-ead",
       "use": "Diferenciacao entre buffet, coffee break, mise en place e fluxo de servico."
+    }
+  ],
+  "style_modifiers": [
+    {
+      "id": "simples",
+      "match": ["simples"],
+      "identity": "Execucao objetiva e acolhedora, com preparacoes reconheciveis, boa organizacao e apresentacao limpa.",
+      "required_features": ["servico funcional", "apresentacao limpa"],
+      "guidance": ["Priorizar clareza, viabilidade e bom aproveitamento sem reduzir seguranca ou identidade do evento."],
+      "avoid": ["sofisticacao apenas no nome", "variedade artificial sem funcao culinaria"],
+      "minimum_increment_each_category": 0
+    },
+    {
+      "id": "elegante",
+      "match": ["elegante"],
+      "identity": "Execucao refinada e equilibrada, com acabamentos consistentes, louca coerente e transicoes de servico cuidadas.",
+      "required_features": ["acabamento visual consistente", "servico e louca coerentes com a ocasiao"],
+      "guidance": ["Evidenciar elegancia por tecnica, composicao e apresentacao, sem depender de adjetivos vagos."],
+      "avoid": ["itens comuns apenas renomeados como gourmet", "mistura visual sem unidade"],
+      "minimum_increment_each_category": 0
+    },
+    {
+      "id": "premium",
+      "match": ["premium"],
+      "identity": "Experiencia de alto padrao demonstrada por curadoria culinaria, ingredientes e tecnicas identificaveis, servico bem acabado e apresentacao alinhada ao evento.",
+      "required_features": ["curadoria distinta em cada momento de servico", "estacao de bebidas especiais quando compativel", "louca, sinalizacao e acabamento de alto padrao", "alternativas alimentares integradas ao mesmo nivel de apresentacao"],
+      "guidance": ["Cada item precisa justificar o alto padrao por ingrediente, tecnica, finalizacao ou forma de servico concreta.", "Distribuir a experiencia entre recepcao, intervalo e encerramento, evitando concentrar qualidade em um unico item."],
+      "avoid": ["cha em sache", "bolo simples", "biscoito comum", "suco em po", "cafe soluvel", "produto basico apenas renomeado como premium ou gourmet", "alternativa alimentar somente sob demanda"],
+      "minimum_increment_each_category": 1
     }
   ],
   "profiles": [
