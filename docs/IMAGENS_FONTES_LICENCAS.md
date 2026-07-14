@@ -78,11 +78,22 @@ Conclusao: Openverse e adequado como fonte gratuita complementar e fallback de d
 - A captura recortada confirmou hierarquia, legibilidade, cartoes e aviso de nao persistencia.
 - A validacao nao chamou Gemini nem Openverse; usou dados e SVGs locais.
 
+## Refinamento de relevancia em 2026-07-14
+
+- O benchmark inicial encontrou somente 1/15 resultados contextuais, 4/15 recuos genericos e 10/15 vazios.
+- Consultas curtas por contexto elevaram a cobertura para 12/15 contextuais, 3/15 recuos e zero vazios.
+- A selecao evita repetir a mesma obra em slots diferentes e preserva alternativas da mesma resposta.
+- A tela permite trocar ou ocultar uma referencia sem nova chamada e sem regenerar o evento.
+- Um caminho local incorreto (`savory-course.svg`) foi corrigido para o arquivo existente `savory-food.svg`.
+- A validacao real confirmou zero imagens quebradas e as novas acoes no mobile.
+- A sonda Wikimedia Commons encontrou resultados permitidos, mas tambem ruido semantico, arquivos que nao eram imagens e HTTP 429; nao foi integrada automaticamente.
+- Evidencias e fontes: `docs/BENCHMARK_IMAGENS.md`.
+
 ## Proxima porta
 
-1. avaliar a relevancia real das imagens em diferentes tipos de evento;
-2. melhorar consultas e ordenacao sem aumentar excessivamente a cota anonima;
-3. comparar provedores gratuitos antes de pedir nova chave ao usuario;
-4. permitir atualizar ou ocultar uma referencia sem regenerar o evento;
+1. obter avaliacao perceptiva do usuario sobre imagens externas em eventos reais;
+2. registrar quais imagens foram adequadas, genericas ou inadequadas por slot;
+3. estudar pontuacao por titulo/tags sem bloquear resultados bons por metadados fracos;
+4. manter Commons apenas como sonda ate existir estrategia de cota e relevancia;
 5. manter imagens fora do PDF ate validar CORS, estabilidade e politica de reutilizacao;
 6. avaliar Pexels somente se o ganho justificar cadastro e chave gratuita.

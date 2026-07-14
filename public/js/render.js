@@ -92,8 +92,16 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     if (!secao || !conteudo || !controles || !contador) return;
 
     const imagens = normalizarArray(resultado?.images).map(normalizarImagemEvento).filter(Boolean);
+    const alternativas = normalizarAlternativasGaleria(resultado?.alternatives);
     const historico = Boolean(opcoes.historico);
     secao.setAttribute("aria-busy", "false");
+    window.chefIAGaleriaEstado = {
+        images: imagens,
+        alternatives: alternativas,
+        warnings: normalizarArray(resultado?.warnings),
+        attribution_notice: resultado?.attribution_notice || "",
+        opcoes: { historico }
+    };
 
     if (!imagens.length) {
         controles.hidden = true;
@@ -107,7 +115,7 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     conteudo.className = "event-gallery-body";
     conteudo.innerHTML = `
         <div class="event-gallery-track" id="eventGalleryVisualizacao">
-            ${imagens.map(renderImagemEvento).join("")}
+            ${imagens.map(imagem => renderImagemEvento(imagem, alternativas[imagem.slot]?.length > 0)).join("")}
         </div>
         <div class="gallery-notice">
             <strong>${historico ? "Visualizacao local do historico" : "Referencias ilustrativas"}</strong>
@@ -118,6 +126,14 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
         </div>
     `;
     ativarFallbackImagensGaleria();
+}
+
+function normalizarAlternativasGaleria(valor) {
+    if (!valor || typeof valor !== "object" || Array.isArray(valor)) return {};
+    return Object.fromEntries(Object.entries(valor).flatMap(([slot, imagens]) => {
+        const normalizadas = normalizarArray(imagens).map(normalizarImagemEvento).filter(Boolean);
+        return normalizadas.length ? [[slot, normalizadas]] : [];
+    }));
 }
 
 function renderizarGaleriaEventoFallback(mensagem = "A fonte externa nao respondeu.") {
@@ -135,7 +151,7 @@ function renderizarGaleriaHistorico() {
 function imagensLocaisGaleria() {
     return [
         ["capa", "/images/fallback/event-cover.svg", "Capa conceitual do evento"],
-        ["entrada", "/images/fallback/savory-course.svg", "Entradas e preparacoes salgadas"],
+        ["entrada", "/images/fallback/savory-food.svg", "Entradas e preparacoes salgadas"],
         ["principal", "/images/fallback/main-course.svg", "Prato principal"],
         ["sobremesa", "/images/fallback/dessert.svg", "Doces e sobremesas"],
         ["bebida", "/images/fallback/beverages.svg", "Bebidas do evento"]
@@ -195,10 +211,10 @@ function urlExternaHttpsSegura(valor) {
     }
 }
 
-function renderImagemEvento(imagem) {
+function renderImagemEvento(imagem, possuiAlternativas = false) {
     const fallbackUrl = fallbackGaleriaPorSlot(imagem.slot);
     return `
-        <figure class="event-gallery-card ${imagem.fallback ? "gallery-card-local" : ""}">
+        <figure class="event-gallery-card ${imagem.fallback ? "gallery-card-local" : ""}" data-gallery-slot="${escapeHTML(imagem.slot)}">
             <div class="gallery-image-frame">
                 <img src="${escapeHTML(imagem.image_url)}" data-gallery-fallback="${escapeHTML(fallbackUrl)}" alt="${escapeHTML(imagem.alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
                 <span>${escapeHTML(rotuloSlotGaleria(imagem.slot))}</span>
@@ -210,16 +226,50 @@ function renderImagemEvento(imagem) {
                     <span>${escapeHTML(imagem.creator)} · ${escapeHTML(imagem.license)}</span>
                     ${imagem.source_url ? `<a href="${escapeHTML(imagem.source_url)}" target="_blank" rel="noopener noreferrer">Ver fonte original</a>` : `<span>Recurso local</span>`}
                 </div>
+                <div class="gallery-card-actions" aria-label="Acoes desta referencia visual">
+                    ${possuiAlternativas ? `<button type="button" class="gallery-action-btn gallery-swap-btn" onclick="trocarImagemGaleria('${escapeHTML(imagem.slot)}')">Trocar imagem</button>` : ""}
+                    <button type="button" class="gallery-action-btn gallery-hide-btn" onclick="ocultarImagemGaleria('${escapeHTML(imagem.slot)}')">Ocultar</button>
+                </div>
             </figcaption>
         </figure>
     `;
+}
+
+function trocarImagemGaleria(slot) {
+    const estado = window.chefIAGaleriaEstado;
+    if (!estado) return;
+    const indice = estado.images.findIndex(imagem => imagem.slot === slot);
+    const fila = normalizarArray(estado.alternatives?.[slot]);
+    if (indice < 0 || !fila.length) return;
+
+    const chavesAtuais = new Set(estado.images.map(chaveImagemGaleria));
+    const indiceAlternativa = fila.findIndex(imagem => !chavesAtuais.has(chaveImagemGaleria(imagem)));
+    if (indiceAlternativa < 0) return;
+    const [proxima] = fila.splice(indiceAlternativa, 1);
+    const atual = estado.images[indice];
+    estado.images[indice] = proxima;
+    fila.push(atual);
+    estado.alternatives[slot] = fila;
+    renderizarGaleriaEvento(estado, estado.opcoes);
+}
+
+function ocultarImagemGaleria(slot) {
+    const estado = window.chefIAGaleriaEstado;
+    if (!estado) return;
+    estado.images = estado.images.filter(imagem => imagem.slot !== slot);
+    delete estado.alternatives[slot];
+    renderizarGaleriaEvento(estado, estado.opcoes);
+}
+
+function chaveImagemGaleria(imagem) {
+    return String(imagem?.source_url || imagem?.id || imagem?.image_url || "");
 }
 
 function fallbackGaleriaPorSlot(slot) {
     if (slot === "sobremesa") return "/images/fallback/dessert.svg";
     if (slot === "bebida") return "/images/fallback/beverages.svg";
     if (slot === "principal") return "/images/fallback/main-course.svg";
-    if (["entrada", "salada", "acompanhamento"].includes(slot)) return "/images/fallback/savory-course.svg";
+    if (["entrada", "salada", "acompanhamento"].includes(slot)) return "/images/fallback/savory-food.svg";
     return "/images/fallback/event-cover.svg";
 }
 

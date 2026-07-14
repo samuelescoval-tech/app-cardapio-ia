@@ -138,13 +138,16 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - A galeria transitoria agora carrega somente depois de um plano valido e oferece carrossel/lista, credito, licenca, fonte, fallback por imagem e estado acessivel.
 - Referencias externas continuam fora de `chefIAUltimoPlano`, historico e PDF; o storage remove campos visuais defensivamente.
 - Chrome headless validou cinco cartoes, alternancia de visualizacao e mobile `390/390`, sem overflow e com controles de 44 px. A suite passou com 20 arquivos.
+- Benchmark visual em cinco contextos elevou resultados Openverse contextuais de 1/15 para 12/15 e reduziu vazios de 10/15 para zero.
+- A selecao evita obras repetidas, preserva alternativas e permite trocar/ocultar referencias sem nova chamada externa.
+- Wikimedia Commons foi avaliado sem chave, mas apresentou ruido semantico, arquivos nao-imagem e HTTP 429; nao foi integrado ao runtime.
 
 ## Proxima atualizacao curta
 
-1. Testar a relevancia visual em cinco tipos de evento usando o endpoint atual e sem nova geracao Gemini.
-2. Refinar consultas e criterios de selecao para reduzir resultados genericos.
-3. Comparar uma segunda fonte gratuita sem chave e documentar cobertura/licencas.
-4. Criar controles para atualizar ou ocultar referencias sem regenerar o evento.
+1. Coletar avaliacao perceptiva das imagens externas em eventos reais.
+2. Registrar exemplos adequados, genericos e inadequados por slot.
+3. Projetar pontuacao de relevancia baseada nessa evidencia, sem depender apenas do titulo.
+4. Manter Commons como sonda e Openverse como fonte complementar principal.
 5. Manter historico e PDF sem imagens externas nesta etapa.
 6. Retomar a avaliacao perceptiva Premium e o proximo teste acompanhado em trilha separada.
 7. Manter Spoonacular desativado e nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao.

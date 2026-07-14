@@ -24,7 +24,7 @@ function construirSolicitacoesImagem(evento = {}, blocos = []) {
     const config = dictionary.slots[item.slot];
     return {
       ...item,
-      query: [contexto.query, ["capa", "ambiente"].includes(item.slot) ? estilo?.query?.split(" ")[0] : null, config.query].filter(Boolean).join(" "),
+      query: consultaContextual(contexto, item.slot, config.query),
       fallback_query: config.query,
       orientation: config.orientation,
       fallback_url: config.fallback,
@@ -32,6 +32,13 @@ function construirSolicitacoesImagem(evento = {}, blocos = []) {
       style_id: estilo?.id || "sem-modificador"
     };
   });
+}
+
+function consultaContextual(contexto, slot, fallback) {
+  const grupo = ["entrada", "principal", "acompanhamento", "salada"].includes(slot)
+    ? "principal"
+    : slot;
+  return limparTermo(contexto?.queries?.[grupo] || `${contexto?.query || ""} ${fallback}`, 180);
 }
 
 function criarImagemFallback(solicitacao) {
@@ -97,6 +104,12 @@ function validarDicionario(valor) {
   if (!valor?.version) erros.push("versao ausente");
   if (!Number.isInteger(valor?.max_images_per_event) || valor.max_images_per_event < 1 || valor.max_images_per_event > 10) erros.push("limite invalido");
   if (!Array.isArray(valor?.contexts) || valor.contexts.length < 5) erros.push("contextos insuficientes");
+  [...(valor?.contexts || []), valor?.default_context].filter(Boolean).forEach(contexto => {
+    const consultas = contexto.queries || {};
+    if (!["capa", "principal", "sobremesa", "bebida", "ambiente"].every(chave => limparTermo(consultas[chave], 180).length >= 3)) {
+      erros.push(`consultas do contexto ${contexto.id || "desconhecido"} incompletas`);
+    }
+  });
   if (!valor?.slots?.capa || !valor?.slots?.ambiente) erros.push("slots essenciais ausentes");
   Object.entries(valor?.slots || {}).forEach(([id, slot]) => {
     if (!slot.query || !slot.orientation || !/^\/images\/fallback\/.+\.svg$/.test(slot.fallback || "")) erros.push(`slot ${id} incompleto`);

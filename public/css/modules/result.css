@@ -1668,6 +1668,38 @@
     text-underline-offset:3px;
 }
 
+.gallery-card-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    padding-top:2px;
+}
+
+.gallery-action-btn{
+    min-height:36px;
+    padding:7px 10px;
+    border:1px solid #d9cfbb;
+    border-radius:9px;
+    background:#fffaf0;
+    color:#4f421f;
+    font:inherit;
+    font-size:.7rem;
+    font-weight:900;
+    cursor:pointer;
+}
+
+.gallery-action-btn:hover,
+.gallery-action-btn:focus-visible{
+    border-color:#bd8f08;
+    outline:2px solid rgba(213,165,20,.22);
+    outline-offset:2px;
+}
+
+.gallery-hide-btn{
+    color:#6e5e50;
+    background:#fff;
+}
+
 .gallery-card-local .gallery-image-frame{
     background:#f5eedc;
 }
@@ -1737,7 +1769,8 @@
     }
 
     .gallery-view-btn,
-    .gallery-nav-btn{
+    .gallery-nav-btn,
+    .gallery-action-btn{
         min-height:44px;
     }
 

@@ -5,19 +5,56 @@
   "default_context": {
     "id": "evento-geral",
     "match": [],
-    "query": "event catering"
+    "query": "event catering",
+    "queries": {
+      "capa": "event reception",
+      "principal": "catering food",
+      "sobremesa": "dessert table",
+      "bebida": "event drinks",
+      "ambiente": "event decoration"
+    }
   },
   "contexts": [
-    { "id": "debutante", "match": ["debutante", "15 anos", "quinze anos"], "query": "quinceanera party" },
-    { "id": "casamento", "match": ["casamento", "wedding"], "query": "wedding reception" },
-    { "id": "corporativo", "match": ["corporativo", "workshop", "congresso", "empresa"], "query": "corporate event" },
-    { "id": "natal", "match": ["natal", "christmas"], "query": "Christmas dinner" },
-    { "id": "ano-novo", "match": ["ano novo", "reveillon", "réveillon"], "query": "new year dinner" },
-    { "id": "pascoa", "match": ["pascoa", "páscoa", "easter"], "query": "Easter lunch" },
-    { "id": "carnaval", "match": ["carnaval", "carnival"], "query": "Brazilian carnival" },
-    { "id": "churrasco", "match": ["churrasco", "barbecue"], "query": "Brazilian barbecue" },
-    { "id": "infantil", "match": ["infantil", "crianca", "criança"], "query": "children birthday party" },
-    { "id": "domiciliar", "match": ["domiciliar", "brunch", "cafe da manha", "café da manhã"], "query": "home brunch" }
+    {
+      "id": "debutante", "match": ["debutante", "15 anos", "quinze anos"], "query": "quinceanera",
+      "queries": { "capa": "quinceanera", "principal": "quinceanera food", "sobremesa": "quinceanera cake", "bebida": "quinceanera drinks", "ambiente": "quinceanera decoration" }
+    },
+    {
+      "id": "casamento", "match": ["casamento", "wedding"], "query": "wedding reception",
+      "queries": { "capa": "wedding reception", "principal": "wedding dinner", "sobremesa": "wedding cake", "bebida": "wedding drinks", "ambiente": "wedding decoration" }
+    },
+    {
+      "id": "corporativo", "match": ["corporativo", "workshop", "congresso", "empresa"], "query": "corporate event",
+      "queries": { "capa": "corporate conference", "principal": "corporate catering", "sobremesa": "corporate desserts", "bebida": "coffee break drinks", "ambiente": "corporate event interior" }
+    },
+    {
+      "id": "natal", "match": ["natal", "christmas"], "query": "Christmas dinner",
+      "queries": { "capa": "Christmas dinner table", "principal": "Christmas dinner", "sobremesa": "Christmas desserts", "bebida": "Christmas drinks", "ambiente": "Christmas table decoration" }
+    },
+    {
+      "id": "ano-novo", "match": ["ano novo", "reveillon", "réveillon"], "query": "New Year party",
+      "queries": { "capa": "New Year party", "principal": "New Year dinner", "sobremesa": "New Year desserts", "bebida": "New Year drinks", "ambiente": "New Year party decoration" }
+    },
+    {
+      "id": "pascoa", "match": ["pascoa", "páscoa", "easter"], "query": "Easter lunch",
+      "queries": { "capa": "Easter lunch table", "principal": "Easter lunch", "sobremesa": "Easter desserts", "bebida": "Easter drinks", "ambiente": "Easter table decoration" }
+    },
+    {
+      "id": "carnaval", "match": ["carnaval", "carnival"], "query": "Brazilian carnival",
+      "queries": { "capa": "Brazilian carnival party", "principal": "Brazilian carnival food", "sobremesa": "Brazilian carnival sweets", "bebida": "Brazilian carnival drinks", "ambiente": "Brazilian carnival decoration" }
+    },
+    {
+      "id": "churrasco", "match": ["churrasco", "barbecue"], "query": "Brazilian barbecue",
+      "queries": { "capa": "Brazilian barbecue", "principal": "Brazilian barbecue food", "sobremesa": "barbecue dessert", "bebida": "barbecue drinks", "ambiente": "outdoor barbecue party" }
+    },
+    {
+      "id": "infantil", "match": ["infantil", "crianca", "criança"], "query": "children birthday party",
+      "queries": { "capa": "children birthday party", "principal": "children party food", "sobremesa": "birthday cake", "bebida": "children party drinks", "ambiente": "children birthday decoration" }
+    },
+    {
+      "id": "domiciliar", "match": ["domiciliar", "brunch", "cafe da manha", "café da manhã"], "query": "home brunch",
+      "queries": { "capa": "home brunch table", "principal": "brunch food", "sobremesa": "brunch desserts", "bebida": "brunch drinks", "ambiente": "home brunch table" }
+    }
   ],
   "styles": [
     { "id": "premium", "match": ["premium", "luxo", "luxuoso"], "query": "luxury refined editorial" },
@@ -25,13 +62,13 @@
     { "id": "simples", "match": ["simples", "informal"], "query": "welcoming casual" }
   ],
   "slots": {
-    "capa": { "query": "table setting", "orientation": "wide", "fallback": "/images/fallback/event-cover.svg" },
-    "entrada": { "query": "gourmet appetizers catering", "orientation": "square", "fallback": "/images/fallback/savory-food.svg" },
-    "principal": { "query": "gourmet main course buffet", "orientation": "wide", "fallback": "/images/fallback/main-course.svg" },
-    "acompanhamento": { "query": "colorful side dishes buffet", "orientation": "square", "fallback": "/images/fallback/savory-food.svg" },
-    "salada": { "query": "fresh elegant salad catering", "orientation": "square", "fallback": "/images/fallback/savory-food.svg" },
-    "sobremesa": { "query": "elegant dessert table catering", "orientation": "square", "fallback": "/images/fallback/dessert.svg" },
-    "bebida": { "query": "elegant beverage station event", "orientation": "wide", "fallback": "/images/fallback/beverages.svg" },
-    "ambiente": { "query": "event decoration table lighting", "orientation": "wide", "fallback": "/images/fallback/event-cover.svg" }
+    "capa": { "query": "event reception", "orientation": "wide", "fallback": "/images/fallback/event-cover.svg" },
+    "entrada": { "query": "appetizers", "orientation": "square", "fallback": "/images/fallback/savory-food.svg" },
+    "principal": { "query": "main course", "orientation": "wide", "fallback": "/images/fallback/main-course.svg" },
+    "acompanhamento": { "query": "side dishes", "orientation": "square", "fallback": "/images/fallback/savory-food.svg" },
+    "salada": { "query": "salad", "orientation": "square", "fallback": "/images/fallback/savory-food.svg" },
+    "sobremesa": { "query": "dessert", "orientation": "square", "fallback": "/images/fallback/dessert.svg" },
+    "bebida": { "query": "drinks", "orientation": "wide", "fallback": "/images/fallback/beverages.svg" },
+    "ambiente": { "query": "event decoration", "orientation": "wide", "fallback": "/images/fallback/event-cover.svg" }
   }
 }

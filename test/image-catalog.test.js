@@ -14,7 +14,7 @@ test("dicionario visual possui contextos, slots e fallbacks locais", () => {
   });
 });
 
-test("solicitacoes combinam evento, estilo e blocos sem exceder oito imagens", () => {
+test("solicitacoes usam consultas curtas por contexto e preservam estilo como metadado", () => {
   const solicitacoes = construirSolicitacoesImagem({ tipo: "Aniversario de debutante", tema: "Jardim dourado", estilo: "Premium" }, [
     { id: "b1", nome: "Entradas", categoria: "Entrada" },
     { id: "b2", nome: "Carnes da grelha", categoria: "Prato Principal" },
@@ -22,9 +22,11 @@ test("solicitacoes combinam evento, estilo e blocos sem exceder oito imagens", (
   ]);
   assert.ok(solicitacoes.length <= 8);
   assert.equal(solicitacoes[0].slot, "capa");
-  assert.match(solicitacoes[0].query, /quinceanera/);
-  assert.match(solicitacoes[0].query, /luxury/);
-  assert.equal(solicitacoes[0].fallback_query, "table setting");
+  assert.equal(solicitacoes[0].query, "quinceanera");
+  assert.equal(solicitacoes[0].style_id, "premium");
+  assert.equal(solicitacoes[0].fallback_query, "event reception");
+  assert.equal(solicitacoes.find(item => item.slot === "principal").query, "quinceanera food");
+  assert.equal(solicitacoes.find(item => item.slot === "sobremesa").query, "quinceanera cake");
   assert.ok(solicitacoes.some(item => item.slot === "bebida"));
   assert.ok(solicitacoes.some(item => item.slot === "ambiente"));
 });

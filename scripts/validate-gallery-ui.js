@@ -107,8 +107,12 @@ async function main() {
       };
       document.getElementById('resultadoArea').classList.remove('hidden');
       exibirResultadoLuxo(dados, 80, { tipo: 'Evento corporativo', estilo: 'Premium' });
+      const imagensLocais = imagensLocaisGaleria();
       renderizarGaleriaEvento({
-        images: imagensLocaisGaleria(),
+        images: imagensLocais,
+        alternatives: {
+          capa: [{ ...imagensLocais[1], id: 'local-capa-alternativa', slot: 'capa', alt: 'Capa alternativa do evento' }]
+        },
         attribution_notice: 'Amostra local de validacao; referencias externas nao persistem.'
       });
       document.getElementById('eventGallerySection').scrollIntoView({ block: 'start' });
@@ -147,6 +151,21 @@ async function main() {
     });
     fs.writeFileSync(screenshotPath, Buffer.from(captura.data, "base64"));
 
+    const interacoes = await cdp.evaluate(`(() => {
+      const srcAntes = document.querySelector('[data-gallery-slot="capa"] img')?.getAttribute('src');
+      trocarImagemGaleria('capa');
+      const srcDepois = document.querySelector('[data-gallery-slot="capa"] img')?.getAttribute('src');
+      ocultarImagemGaleria('sobremesa');
+      return {
+        trocaAplicada: Boolean(srcAntes && srcDepois && srcAntes !== srcDepois),
+        cardsDepoisDeOcultar: document.querySelectorAll('.event-gallery-card').length,
+        sobremesaOculta: !document.querySelector('[data-gallery-slot="sobremesa"]')
+      };
+    })()`);
+    if (!interacoes.trocaAplicada || interacoes.cardsDepoisDeOcultar !== 4 || !interacoes.sobremesaOculta) {
+      throw new Error("acoes de trocar ou ocultar imagem falharam");
+    }
+
     const lista = await cdp.evaluate(`(() => {
       alternarVisualizacaoGaleria('list');
       const galeria = document.getElementById('eventGalleryVisualizacao');
@@ -161,7 +180,7 @@ async function main() {
       throw new Error("alternancia para lista nao atualizou estado e navegacao");
     }
 
-    process.stdout.write(`${JSON.stringify({ ok: true, desktop, mobile, lista, screenshotPath })}\n`);
+    process.stdout.write(`${JSON.stringify({ ok: true, desktop, mobile, interacoes, lista, screenshotPath })}\n`);
   } finally {
     cdp?.close();
     if (chrome?.exitCode === null) chrome.kill("SIGTERM");
@@ -171,7 +190,7 @@ async function main() {
 
 async function coletarMetricas(cdp) {
   return cdp.evaluate(`(() => {
-    const controles = Array.from(document.querySelectorAll('.gallery-view-btn,.gallery-nav-btn'));
+    const controles = Array.from(document.querySelectorAll('.gallery-view-btn,.gallery-nav-btn,.gallery-action-btn'));
     const alturasVisiveis = controles.map(item => item.getBoundingClientRect().height).filter(altura => altura > 0);
     const primeiro = document.querySelector('.event-gallery-card')?.getBoundingClientRect();
     return {
@@ -181,6 +200,7 @@ async function coletarMetricas(cdp) {
       ariaBusy: document.getElementById('eventGallerySection')?.getAttribute('aria-busy'),
       controlsVisible: !document.getElementById('eventGalleryControls')?.hidden,
       creditLines: document.querySelectorAll('.gallery-credit-line').length,
+      brokenImages: Array.from(document.querySelectorAll('.event-gallery-card img')).filter(item => item.complete && item.naturalWidth === 0).length,
       firstCardWidth: Math.round(primeiro?.width || 0),
       visibleTouchTargets: alturasVisiveis.length,
       touchTargetHeights: alturasVisiveis.map(Math.round),
@@ -194,6 +214,7 @@ function assertMetricas(metricas, nome) {
   if (metricas.ariaBusy !== "false") throw new Error(`${nome}: aria-busy nao finalizado`);
   if (!metricas.controlsVisible) throw new Error(`${nome}: controles ocultos`);
   if (metricas.creditLines !== metricas.cards) throw new Error(`${nome}: creditos incompletos`);
+  if (metricas.brokenImages !== 0) throw new Error(`${nome}: ${metricas.brokenImages} imagem(ns) quebrada(s)`);
 }
 
 async function aguardarHttp(url) {

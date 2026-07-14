@@ -340,6 +340,12 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - `npm test` passou com 20 arquivos; sintaxe e `git diff --check` passaram.
 - Chrome headless confirmou cinco cartoes e creditos, alternancia para lista e mobile `390/390`, sem overflow e com controles de 44 px.
 - O teste visual usou somente fixture local, sem consumir Gemini ou Openverse. Comando: `npm run test:gallery-ui`.
+- O benchmark de cinco eventos melhorou resultados contextuais de 1/15 para 12/15 e eliminou os 10 vazios anteriores.
+- Consultas por evento/slot substituem frases longas; estilo permanece metadado e nao termo obrigatorio.
+- A selecao evita obras repetidas, preserva alternativas e a tela ganhou `Trocar imagem` e `Ocultar` sem nova chamada.
+- O fallback salgado quebrado foi corrigido; Chrome confirmou zero imagens quebradas e as duas novas acoes.
+- Wikimedia Commons foi comparado sem chave, mas apresentou ruido, arquivos nao-imagem e HTTP 429. Permanece sonda, nao provider automatico.
+- Evidencia completa: `docs/BENCHMARK_IMAGENS.md`.
 
 ### Evidencia de receitas e bebidas
 
@@ -355,12 +361,12 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 
 O usuario pausou o Spoonacular por custo e autorizou a trilha visual gratuita. A infraestrutura e a primeira galeria estao concluidas:
 
-1. Medir a relevancia das imagens em pelo menos cinco contextos de evento sem chamar Gemini.
-2. Refinar consultas e selecao para reduzir imagens genericas ou incoerentes.
-3. Comparar uma segunda fonte gratuita e sem chave antes de solicitar cadastro ao usuario.
-4. Adicionar acao para atualizar ou ocultar uma referencia sem regenerar o planejamento.
+1. Pedir avaliacao perceptiva das imagens em eventos reais, separada da nota culinaria.
+2. Registrar adequacao por capa, comida, sobremesa, bebida e ambiente.
+3. Criar pontuacao de relevancia somente depois de reunir exemplos bons e ruins.
+4. Manter Commons experimental e nao solicitar chave de imagem nesta etapa.
 5. Manter imagens externas fora do historico e PDF ate validar estabilidade e direitos de reutilizacao.
-6. Preservar a pendencia de qualidade Premium corporativa como trilha culinaria separada.
+6. Retomar a pendencia de qualidade Premium corporativa como trilha culinaria separada.
 7. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
 
 Nao fazer nesta atualizacao:

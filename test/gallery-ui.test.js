@@ -40,6 +40,9 @@ test("cartoes preservam credito, licenca, fonte segura e fallback local", () => 
   assert.match(render, /data-gallery-fallback=/);
   assert.match(render, /addEventListener\("error"/);
   assert.match(render, /aria-live="polite" aria-busy="true"/);
+  assert.match(render, /function trocarImagemGaleria/);
+  assert.match(render, /function ocultarImagemGaleria/);
+  assert.match(render, /Trocar imagem/);
   assert.doesNotMatch(render, /onerror=/i);
 });
 
@@ -93,3 +96,17 @@ test("galeria oferece carrossel, lista e adaptacao para celular", () => {
   assert.match(css, /@media \(prefers-reduced-motion:reduce\)/);
 });
 
+test("todos os fallbacks locais referenciados pela galeria existem", () => {
+  const render = ler("public/js/render.js");
+  const caminhos = [...render.matchAll(/\/images\/fallback\/[a-z0-9-]+\.svg/gi)]
+    .map(resultado => resultado[0]);
+
+  assert.ok(caminhos.length >= 5);
+  for (const caminho of new Set(caminhos)) {
+    assert.equal(
+      fs.existsSync(path.join(raiz, "public", caminho)),
+      true,
+      `fallback ausente: ${caminho}`
+    );
+  }
+});
