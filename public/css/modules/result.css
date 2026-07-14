@@ -1700,6 +1700,106 @@
     background:#fff;
 }
 
+.gallery-feedback{
+    display:grid;
+    gap:7px;
+    padding-top:10px;
+    border-top:1px solid #eee8dc;
+}
+
+.gallery-feedback > span{
+    color:#655c50;
+    font-size:.68rem;
+    font-weight:800;
+}
+
+.gallery-feedback > div{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:5px;
+}
+
+.gallery-feedback-btn{
+    min-height:36px;
+    padding:6px 5px;
+    border:1px solid #ded5c5;
+    border-radius:8px;
+    background:#fff;
+    color:#655d52;
+    font:inherit;
+    font-size:.62rem;
+    font-weight:900;
+    cursor:pointer;
+}
+
+.gallery-feedback-btn:hover,
+.gallery-feedback-btn:focus-visible{
+    border-color:#bd8f08;
+    outline:2px solid rgba(213,165,20,.22);
+    outline-offset:2px;
+}
+
+.gallery-feedback-btn[data-gallery-rating="adequada"].active{
+    border-color:#2f7753;
+    background:#e8f5ed;
+    color:#20553b;
+}
+
+.gallery-feedback-btn[data-gallery-rating="generica"].active{
+    border-color:#9d7722;
+    background:#fff4d5;
+    color:#6f5012;
+}
+
+.gallery-feedback-btn[data-gallery-rating="inadequada"].active{
+    border-color:#a6423d;
+    background:#fff0ee;
+    color:#7c2e2a;
+}
+
+.gallery-card-rejected{
+    border-color:#d9a6a1;
+}
+
+.gallery-feedback-summary{
+    display:flex;
+    min-height:48px;
+    margin-top:14px;
+    padding:10px 12px;
+    border:1px solid #e6dcc6;
+    border-radius:11px;
+    background:#fffdf8;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    color:#675f53;
+    font-size:.7rem;
+    line-height:1.45;
+}
+
+.gallery-feedback-summary strong{
+    color:#352c1e;
+}
+
+.gallery-feedback-clear{
+    min-height:36px;
+    flex:0 0 auto;
+    padding:7px 9px;
+    border:1px solid #ddd2bd;
+    border-radius:8px;
+    background:#fff;
+    color:#6b5847;
+    font:inherit;
+    font-size:.66rem;
+    font-weight:900;
+    cursor:pointer;
+}
+
+.gallery-feedback-clear:focus-visible{
+    outline:2px solid rgba(213,165,20,.24);
+    outline-offset:2px;
+}
+
 .gallery-card-local .gallery-image-frame{
     background:#f5eedc;
 }
@@ -1770,7 +1870,9 @@
 
     .gallery-view-btn,
     .gallery-nav-btn,
-    .gallery-action-btn{
+    .gallery-action-btn,
+    .gallery-feedback-btn,
+    .gallery-feedback-clear{
         min-height:44px;
     }
 
@@ -1824,6 +1926,15 @@
 
     .gallery-notice small{
         grid-column:1;
+    }
+
+    .gallery-feedback-summary{
+        align-items:stretch;
+        flex-direction:column;
+    }
+
+    .gallery-feedback-clear{
+        width:100%;
     }
 }
 

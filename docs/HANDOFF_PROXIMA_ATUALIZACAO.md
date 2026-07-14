@@ -347,6 +347,16 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - Wikimedia Commons foi comparado sem chave, mas apresentou ruido, arquivos nao-imagem e HTTP 429. Permanece sonda, nao provider automatico.
 - Evidencia completa: `docs/BENCHMARK_IMAGENS.md`.
 
+### Evidencia da avaliacao visual local
+
+- A galeria permite classificar cada imagem como adequada, generica ou inadequada.
+- Somente provider, identificador, slot e nota ficam no navegador, com limite de 250 registros.
+- URLs, evento, observacoes, historico culinario e dados pessoais nao sao salvos nessa chave.
+- Uma nota inadequada troca automaticamente para uma alternativa ja carregada quando disponivel.
+- O mesmo identificador e reordenado em aparicoes futuras; nenhuma regra ampla e inferida por evento ou usuario.
+- Chrome confirmou duas preferencias, storage sem URLs, troca automatica, zero imagens quebradas e mobile `390/390`.
+- `npm test` passou com 22 arquivos. Roteiro: `docs/AVALIACAO_VISUAL_LOCAL.md`.
+
 ### Evidencia de receitas e bebidas
 
 - Itens `preparo` e `montagem` agora terminam com ficha ligada por `cardapio_id`; `pronto` permanece sem receita obrigatoria.
@@ -361,11 +371,11 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 
 O usuario pausou o Spoonacular por custo e autorizou a trilha visual gratuita. A infraestrutura e a primeira galeria estao concluidas:
 
-1. Pedir avaliacao perceptiva das imagens em eventos reais, separada da nota culinaria.
-2. Registrar adequacao por capa, comida, sobremesa, bebida e ambiente.
-3. Criar pontuacao de relevancia somente depois de reunir exemplos bons e ruins.
-4. Manter Commons experimental e nao solicitar chave de imagem nesta etapa.
-5. Manter imagens externas fora do historico e PDF ate validar estabilidade e direitos de reutilizacao.
+1. Usuario avaliar o projeto e classificar as imagens nos eventos escolhidos.
+2. Separar a nota visual das notas de cardapio, receitas, compras e operacao.
+3. Registrar quais slots concentram imagens genericas ou inadequadas.
+4. Nao alterar pontuacao ampla ou provider antes de receber essa avaliacao.
+5. Manter imagens externas fora do historico e PDF.
 6. Retomar a pendencia de qualidade Premium corporativa como trilha culinaria separada.
 7. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
 

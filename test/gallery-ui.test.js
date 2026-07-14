@@ -21,6 +21,15 @@ test("galeria consulta imagens somente depois de um plano valido", () => {
   assert.match(app, /fetch\("\/api\/imagens-evento"/);
 });
 
+test("servico de preferencias visuais carrega antes do renderizador", () => {
+  const html = ler("public/index.html");
+  const feedback = html.indexOf('src="js/visual-feedback.service.js"');
+  const render = html.indexOf('src="js/render.js"');
+
+  assert.ok(feedback >= 0);
+  assert.ok(render > feedback);
+});
+
 test("historico usa referencias locais e nao repete consulta externa", () => {
   const app = ler("public/js/app.js");
   const inicio = app.indexOf("function carregarDoHistorico");
@@ -42,6 +51,10 @@ test("cartoes preservam credito, licenca, fonte segura e fallback local", () => 
   assert.match(render, /aria-live="polite" aria-busy="true"/);
   assert.match(render, /function trocarImagemGaleria/);
   assert.match(render, /function ocultarImagemGaleria/);
+  assert.match(render, /function avaliarImagemGaleria/);
+  assert.match(render, /Adequada/);
+  assert.match(render, /Generica/);
+  assert.match(render, /Inadequada/);
   assert.match(render, /Trocar imagem/);
   assert.doesNotMatch(render, /onerror=/i);
 });

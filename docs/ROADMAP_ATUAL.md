@@ -141,13 +141,16 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - Benchmark visual em cinco contextos elevou resultados Openverse contextuais de 1/15 para 12/15 e reduziu vazios de 10/15 para zero.
 - A selecao evita obras repetidas, preserva alternativas e permite trocar/ocultar referencias sem nova chamada externa.
 - Wikimedia Commons foi avaliado sem chave, mas apresentou ruido semantico, arquivos nao-imagem e HTTP 429; nao foi integrado ao runtime.
+- A avaliacao visual local permite notas adequada/generica/inadequada por identificador exato, sem enviar dados ao backend.
+- Imagem inadequada usa alternativa ja carregada quando disponivel; preferencias ficam limitadas a 250 entradas sem URLs ou dados do evento.
+- Chrome confirmou persistencia minima, substituicao automatica, controles de 44 px e mobile sem overflow. Suite atual: 22 arquivos.
 
 ## Proxima atualizacao curta
 
-1. Coletar avaliacao perceptiva das imagens externas em eventos reais.
-2. Registrar exemplos adequados, genericos e inadequados por slot.
-3. Projetar pontuacao de relevancia baseada nessa evidencia, sem depender apenas do titulo.
-4. Manter Commons como sonda e Openverse como fonte complementar principal.
+1. Usuario avaliar o estado atual e classificar imagens em eventos reais.
+2. Separar avaliacao visual das notas culinarias e operacionais.
+3. Identificar slots com maior concentracao de resultados genericos ou inadequados.
+4. Nao criar nova regra de pontuacao antes dessa evidencia.
 5. Manter historico e PDF sem imagens externas nesta etapa.
 6. Retomar a avaliacao perceptiva Premium e o proximo teste acompanhado em trilha separada.
 7. Manter Spoonacular desativado e nao iniciar deploy, login, banco, precificacao ou SaaS antes da consolidacao.

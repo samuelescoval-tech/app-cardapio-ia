@@ -91,9 +91,14 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     const contador = document.getElementById("eventGalleryCount");
     if (!secao || !conteudo || !controles || !contador) return;
 
-    const imagens = normalizarArray(resultado?.images).map(normalizarImagemEvento).filter(Boolean);
-    const alternativas = normalizarAlternativasGaleria(resultado?.alternatives);
+    const imagensBase = normalizarArray(resultado?.images).map(normalizarImagemEvento).filter(Boolean);
+    const alternativasBase = normalizarAlternativasGaleria(resultado?.alternatives);
     const historico = Boolean(opcoes.historico);
+    const preferencias = historico
+        ? { images: imagensBase, alternatives: alternativasBase }
+        : aplicarPreferenciasVisuais(imagensBase, alternativasBase);
+    const imagens = preferencias.images;
+    const alternativas = preferencias.alternatives;
     secao.setAttribute("aria-busy", "false");
     window.chefIAGaleriaEstado = {
         images: imagens,
@@ -115,8 +120,9 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     conteudo.className = "event-gallery-body";
     conteudo.innerHTML = `
         <div class="event-gallery-track" id="eventGalleryVisualizacao">
-            ${imagens.map(imagem => renderImagemEvento(imagem, alternativas[imagem.slot]?.length > 0)).join("")}
+            ${imagens.map(imagem => renderImagemEvento(imagem, alternativas[imagem.slot]?.length > 0, historico)).join("")}
         </div>
+        ${renderResumoFeedbackVisual(historico)}
         <div class="gallery-notice">
             <strong>${historico ? "Visualizacao local do historico" : "Referencias ilustrativas"}</strong>
             <span>${escapeHTML(historico
@@ -126,6 +132,20 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
         </div>
     `;
     ativarFallbackImagensGaleria();
+}
+
+function aplicarPreferenciasVisuais(imagens, alternativas) {
+    const service = window.visualFeedbackService;
+    if (!service?.ordenarCandidatos) return { images: imagens, alternatives: alternativas };
+
+    const selecionadas = [];
+    const filas = {};
+    imagens.forEach(imagem => {
+        const candidatos = service.ordenarCandidatos([imagem, ...normalizarArray(alternativas[imagem.slot])]);
+        selecionadas.push(candidatos[0]);
+        if (candidatos.length > 1) filas[imagem.slot] = candidatos.slice(1);
+    });
+    return { images: selecionadas, alternatives: filas };
 }
 
 function normalizarAlternativasGaleria(valor) {
@@ -211,8 +231,9 @@ function urlExternaHttpsSegura(valor) {
     }
 }
 
-function renderImagemEvento(imagem, possuiAlternativas = false) {
+function renderImagemEvento(imagem, possuiAlternativas = false, historico = false) {
     const fallbackUrl = fallbackGaleriaPorSlot(imagem.slot);
+    const avaliacao = window.visualFeedbackService?.obterAvaliacao?.(imagem) || null;
     return `
         <figure class="event-gallery-card ${imagem.fallback ? "gallery-card-local" : ""}" data-gallery-slot="${escapeHTML(imagem.slot)}">
             <div class="gallery-image-frame">
@@ -230,9 +251,72 @@ function renderImagemEvento(imagem, possuiAlternativas = false) {
                     ${possuiAlternativas ? `<button type="button" class="gallery-action-btn gallery-swap-btn" onclick="trocarImagemGaleria('${escapeHTML(imagem.slot)}')">Trocar imagem</button>` : ""}
                     <button type="button" class="gallery-action-btn gallery-hide-btn" onclick="ocultarImagemGaleria('${escapeHTML(imagem.slot)}')">Ocultar</button>
                 </div>
+                ${historico ? "" : renderControlesFeedbackVisual(imagem.slot, avaliacao)}
             </figcaption>
         </figure>
     `;
+}
+
+function renderControlesFeedbackVisual(slot, avaliacao) {
+    if (!window.visualFeedbackService) return "";
+    const opcoes = [
+        ["adequada", "Adequada"],
+        ["generica", "Generica"],
+        ["inadequada", "Inadequada"]
+    ];
+    return `
+        <div class="gallery-feedback" role="group" aria-label="Avaliar referencia de ${escapeHTML(rotuloSlotGaleria(slot))}">
+            <span>Esta imagem combina com o evento?</span>
+            <div>
+                ${opcoes.map(([valor, rotulo]) => `<button type="button" class="gallery-feedback-btn ${avaliacao === valor ? "active" : ""}" data-gallery-rating="${valor}" aria-pressed="${avaliacao === valor ? "true" : "false"}" onclick="avaliarImagemGaleria('${escapeHTML(slot)}','${valor}')">${rotulo}</button>`).join("")}
+            </div>
+        </div>
+    `;
+}
+
+function renderResumoFeedbackVisual(historico = false) {
+    if (historico || !window.visualFeedbackService) return "";
+    return `<div class="gallery-feedback-summary" id="galleryFeedbackSummary" role="status">${conteudoResumoFeedbackVisual()}</div>`;
+}
+
+function conteudoResumoFeedbackVisual() {
+    const resumo = window.visualFeedbackService?.resumir?.() || { total: 0 };
+    if (!resumo.total) {
+        return `<span>Avalie as imagens para melhorar escolhas repetidas neste navegador.</span>`;
+    }
+    return `
+        <span><strong>${escapeHTML(resumo.total)} preferencias locais:</strong> ${escapeHTML(resumo.adequada)} adequadas · ${escapeHTML(resumo.generica)} genericas · ${escapeHTML(resumo.inadequada)} inadequadas.</span>
+        <button type="button" class="gallery-feedback-clear" onclick="limparAvaliacoesGaleria()">Limpar preferencias visuais</button>
+    `;
+}
+
+function avaliarImagemGaleria(slot, rating) {
+    const estado = window.chefIAGaleriaEstado;
+    const service = window.visualFeedbackService;
+    const imagem = estado?.images?.find(item => item.slot === slot);
+    if (!imagem || !service?.salvarAvaliacao?.(imagem, rating)) return;
+
+    if (rating === "inadequada" && normalizarArray(estado.alternatives?.[slot]).length) {
+        trocarImagemGaleria(slot);
+        return;
+    }
+    const cartao = document.querySelector(`[data-gallery-slot="${slot}"]`);
+    cartao?.querySelectorAll("[data-gallery-rating]").forEach(botao => {
+        const ativo = botao.dataset.galleryRating === rating;
+        botao.classList.toggle("active", ativo);
+        botao.setAttribute("aria-pressed", String(ativo));
+    });
+    if (cartao) cartao.classList.toggle("gallery-card-rejected", rating === "inadequada");
+    const resumo = document.getElementById("galleryFeedbackSummary");
+    if (resumo) resumo.innerHTML = conteudoResumoFeedbackVisual();
+}
+
+function limparAvaliacoesGaleria() {
+    if (!window.visualFeedbackService) return;
+    if (typeof confirm === "function" && !confirm("Limpar somente as preferencias visuais salvas neste navegador?")) return;
+    window.visualFeedbackService.limpar();
+    const estado = window.chefIAGaleriaEstado;
+    if (estado) renderizarGaleriaEvento(estado, estado.opcoes);
 }
 
 function trocarImagemGaleria(slot) {

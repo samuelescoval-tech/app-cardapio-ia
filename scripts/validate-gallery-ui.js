@@ -153,17 +153,23 @@ async function main() {
 
     const interacoes = await cdp.evaluate(`(() => {
       const srcAntes = document.querySelector('[data-gallery-slot="capa"] img')?.getAttribute('src');
-      trocarImagemGaleria('capa');
+      avaliarImagemGaleria('capa', 'inadequada');
       const srcDepois = document.querySelector('[data-gallery-slot="capa"] img')?.getAttribute('src');
+      avaliarImagemGaleria('principal', 'adequada');
       ocultarImagemGaleria('sobremesa');
+      const feedbackBruto = localStorage.getItem('chef_ia_visual_feedback_v1') || '';
       return {
         trocaAplicada: Boolean(srcAntes && srcDepois && srcAntes !== srcDepois),
         cardsDepoisDeOcultar: document.querySelectorAll('.event-gallery-card').length,
-        sobremesaOculta: !document.querySelector('[data-gallery-slot="sobremesa"]')
+        sobremesaOculta: !document.querySelector('[data-gallery-slot="sobremesa"]'),
+        preferenciasSalvas: window.visualFeedbackService.resumir(),
+        feedbackSemUrls: !feedbackBruto.includes('http') && !feedbackBruto.includes('image_url'),
+        resumoVisivel: document.getElementById('galleryFeedbackSummary')?.textContent.includes('preferencias locais')
       };
     })()`);
-    if (!interacoes.trocaAplicada || interacoes.cardsDepoisDeOcultar !== 4 || !interacoes.sobremesaOculta) {
-      throw new Error("acoes de trocar ou ocultar imagem falharam");
+    if (!interacoes.trocaAplicada || interacoes.cardsDepoisDeOcultar !== 4 || !interacoes.sobremesaOculta ||
+        interacoes.preferenciasSalvas.total !== 2 || !interacoes.feedbackSemUrls || !interacoes.resumoVisivel) {
+      throw new Error("avaliacao local, troca ou ocultacao de imagem falhou");
     }
 
     const lista = await cdp.evaluate(`(() => {
@@ -190,7 +196,7 @@ async function main() {
 
 async function coletarMetricas(cdp) {
   return cdp.evaluate(`(() => {
-    const controles = Array.from(document.querySelectorAll('.gallery-view-btn,.gallery-nav-btn,.gallery-action-btn'));
+    const controles = Array.from(document.querySelectorAll('.gallery-view-btn,.gallery-nav-btn,.gallery-action-btn,.gallery-feedback-btn,.gallery-feedback-clear'));
     const alturasVisiveis = controles.map(item => item.getBoundingClientRect().height).filter(altura => altura > 0);
     const primeiro = document.querySelector('.event-gallery-card')?.getBoundingClientRect();
     return {

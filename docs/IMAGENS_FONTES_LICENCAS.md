@@ -89,11 +89,21 @@ Conclusao: Openverse e adequado como fonte gratuita complementar e fallback de d
 - A sonda Wikimedia Commons encontrou resultados permitidos, mas tambem ruido semantico, arquivos que nao eram imagens e HTTP 429; nao foi integrada automaticamente.
 - Evidencias e fontes: `docs/BENCHMARK_IMAGENS.md`.
 
+## Avaliacao local em 2026-07-14
+
+- Cada imagem pode ser marcada como adequada, generica ou inadequada.
+- A nota fica somente no navegador, ligada ao identificador exato da imagem.
+- Uma imagem inadequada troca automaticamente quando existe alternativa ja carregada.
+- Repeticoes futuras do mesmo identificador sao reordenadas; nao ha generalizacao por evento ou usuario.
+- O limite local e de 250 preferencias, sem URLs, evento, observacoes ou dados pessoais.
+- O usuario pode limpar apenas as preferencias visuais sem apagar o historico.
+- Contrato e roteiro de avaliacao: `docs/AVALIACAO_VISUAL_LOCAL.md`.
+
 ## Proxima porta
 
-1. obter avaliacao perceptiva do usuario sobre imagens externas em eventos reais;
-2. registrar quais imagens foram adequadas, genericas ou inadequadas por slot;
-3. estudar pontuacao por titulo/tags sem bloquear resultados bons por metadados fracos;
+1. usuario gerar e avaliar imagens em eventos reais;
+2. observar o resumo local de adequadas, genericas e inadequadas;
+3. estudar pontuacao por titulo/tags somente depois dessa avaliacao;
 4. manter Commons apenas como sonda ate existir estrategia de cota e relevancia;
 5. manter imagens fora do PDF ate validar CORS, estabilidade e politica de reutilizacao;
 6. avaliar Pexels somente se o ganho justificar cadastro e chave gratuita.
