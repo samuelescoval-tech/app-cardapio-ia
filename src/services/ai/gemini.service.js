@@ -33,6 +33,48 @@ function criarGeminiService(opcoes = {}) {
     };
   }
 
+  async function gerarEstrutura(prompt) {
+    const inicio = Date.now();
+    try {
+      if (!genAI) throw new Error("GEMINI_API_KEY ou GOOGLE_API_KEY nao configurada no .env");
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: opcoes.temperature ?? 0.7,
+          maxOutputTokens: opcoes.maxOutputTokens || 8192
+        }
+      });
+      const execucao = await executarComRetry(() => model.generateContent(prompt));
+      const result = execucao.valor;
+      const response = await result.response;
+      const candidate = response.candidates?.[0] || {};
+      const usage = response.usageMetadata || {};
+      const meta = {
+        tempo_ms: Date.now() - inicio,
+        tentativas: execucao.tentativas,
+        requested_model: modelName,
+        model_version: response.modelVersion || modelName,
+        finish_reason: candidate.finishReason || null,
+        prompt_tokens: usage.promptTokenCount || null,
+        thinking_tokens: usage.thoughtsTokenCount || null,
+        output_tokens: usage.candidatesTokenCount || null,
+        total_tokens: usage.totalTokenCount || null
+      };
+      try {
+        return { ok: true, dados: extrairJSON(response.text()), meta: { ...meta, schema_ok: true } };
+      } catch (error) {
+        return { ok: false, dados: null, meta: { ...meta, schema_ok: false, erro: error.message } };
+      }
+    } catch (error) {
+      return {
+        ok: false,
+        dados: null,
+        meta: { tempo_ms: Date.now() - inicio, requested_model: modelName, schema_ok: false, erro: error.message }
+      };
+    }
+  }
+
   async function gerar(prompt, contexto = {}) {
     const inicio = Date.now();
 
@@ -131,7 +173,29 @@ function criarGeminiService(opcoes = {}) {
     }
   }
 
-  return { gerarPlano: gerar, getGeminiStatus: getStatus };
+  return { gerarPlano: gerar, gerarEstrutura, getGeminiStatus: getStatus };
+}
+
+async function executarComRetry(executor, maximoTentativas = 2) {
+  let ultimoErro;
+  for (let tentativa = 1; tentativa <= maximoTentativas; tentativa += 1) {
+    try {
+      return { valor: await executor(), tentativas: tentativa };
+    } catch (error) {
+      ultimoErro = error;
+      if (tentativa >= maximoTentativas || !ehErroTransitorio(error)) throw error;
+      await aguardar(1200 * tentativa);
+    }
+  }
+  throw ultimoErro;
+}
+
+function ehErroTransitorio(error) {
+  return /\b429\b|\b503\b|resource_exhausted|service unavailable|high demand|fetch failed/i.test(String(error?.message || error));
+}
+
+function aguardar(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const defaultService = criarGeminiService();
@@ -143,6 +207,7 @@ if (!defaultService.getGeminiStatus().configured) {
 module.exports = {
   criarGeminiService,
   validarNomeModelo,
+  ehErroTransitorio,
   gerarPlano: defaultService.gerarPlano,
   getGeminiStatus: defaultService.getGeminiStatus
 };

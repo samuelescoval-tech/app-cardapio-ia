@@ -62,6 +62,15 @@ Executar os dez cenarios:
 npm run benchmark:models -- --full
 ```
 
+Testar o fluxo experimental em blocos, sem alterar o aplicativo:
+
+```bash
+npm run benchmark:split:dry
+npm run benchmark:split -- --scenarios=debutante
+```
+
+Nesse fluxo, o Gemini 3.5 Flash cria somente o cardapio; o Flash-Lite detalha receitas e experiencia em chamadas paralelas; as compras sao consolidadas pelo backend.
+
 Os relatorios sao gravados em `/tmp` por padrao. Eles nao incluem a chave da API.
 
 ## Regra de decisao
@@ -92,3 +101,13 @@ Resultados do modelo atual:
 O Gemini 3.5 Flash terminou os tres casos com `MAX_TOKENS` e JSON incompleto. O total de tokens indica que o modelo consumiu quase todo o limite com processamento interno antes de concluir a resposta extensa.
 
 Decisao: nao trocar o modelo por configuracao. Primeiro dividir o planejamento em blocos menores, registrar tokens de pensamento e somente entao repetir o ciclo rapido. O resultado tambem reforca a migracao futura do SDK legado para o SDK atual do Gemini, onde o nivel de raciocinio pode ser configurado explicitamente.
+
+## Experimento em blocos de 2026-07-14
+
+O fluxo experimental usa o Gemini 3.5 Flash somente para o cardapio e o Flash-Lite para receitas e experiencia. Compras sao derivadas dos ingredientes pelo backend.
+
+- debutante: 99/100, 22/22 itens, 13/13 expectativas, 21/21 receitas, 62/62 ingredientes, zero avisos e 50 segundos;
+- corporativo Premium: 87/100, 17/17 itens e cobertura completa, mas sem boas-vindas e cafe especial explicitos; um aviso e 57 segundos;
+- Natal: indisponibilidade `503 high demand` do Gemini 3.5 Flash mesmo com duas tentativas.
+
+Decisao: manter o fluxo fora do aplicativo. O orquestrador experimental passou a usar o Flash-Lite como fallback do cardapio quando o modelo criativo estiver indisponivel ou retornar estrutura invalida. O contrato Premium tambem passou a exigir que elementos esperados aparecam explicitamente nos itens.

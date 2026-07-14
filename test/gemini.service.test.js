@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { criarGeminiService, validarNomeModelo } = require("../src/services/ai/gemini.service");
+const { criarGeminiService, validarNomeModelo, ehErroTransitorio } = require("../src/services/ai/gemini.service");
 
 test("factory seleciona modelo isolado sem alterar o servico padrao", async () => {
   let configuracaoRecebida;
@@ -38,4 +38,10 @@ test("nome de modelo aceita apenas identificadores seguros", () => {
   assert.equal(validarNomeModelo("gemini-3.5-flash"), "gemini-3.5-flash");
   assert.throws(() => validarNomeModelo("gemini flash; apagar"), /invalido/);
   assert.throws(() => validarNomeModelo(""), /invalido/);
+});
+
+test("retry reconhece apenas erros transitórios do provider", () => {
+  assert.equal(ehErroTransitorio(new Error("503 Service Unavailable: high demand")), true);
+  assert.equal(ehErroTransitorio(new Error("429 RESOURCE_EXHAUSTED")), true);
+  assert.equal(ehErroTransitorio(new Error("400 API key not valid")), false);
 });
