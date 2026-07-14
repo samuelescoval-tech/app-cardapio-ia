@@ -33,6 +33,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
 
             ${renderResumoExecutivo(dados, pessoas, cardapio, compras)}
             ${renderQualidadeCulinaria(dados.qualidade_culinaria)}
+            ${renderReconciliacaoBebidas(dados.reconciliacao_bebidas)}
             ${renderVariedadeCulinaria(dados.variedade_culinaria)}
             ${renderCoerenciaEvento(dados.contexto_evento)}
             ${renderContextoInformado(evento, dados.motor_logistica?.premissas)}
@@ -74,11 +75,34 @@ function renderQualidadeCulinaria(qualidade) {
         <section class="quality-panel ${qualidade.status === "revisar" ? "quality-review" : "quality-adjusted"}">
             <div>
                 <strong>${escapeHTML(titulo)}</strong>
-                <p>${escapeHTML(cobertura.ingredientes_cobertos || 0)} de ${escapeHTML(cobertura.ingredientes_total || 0)} ingredientes ligados às compras · ${escapeHTML(cobertura.receitas_cobertas || 0)} de ${escapeHTML(cobertura.pratos_com_preparo || 0)} preparações com receita.</p>
+                <p>${escapeHTML(cobertura.ingredientes_cobertos || 0)} de ${escapeHTML(cobertura.ingredientes_total || 0)} ingredientes ligados às compras · ${escapeHTML(cobertura.receitas_cobertas || 0)} de ${escapeHTML(cobertura.pratos_com_preparo || 0)} preparações com receita${cobertura.receitas_recuperadas ? ` · ${escapeHTML(cobertura.receitas_recuperadas)} ficha(s) recuperada(s)` : ""}.</p>
             </div>
             ${mensagens.length ? `<ul>${mensagens.map(item => `<li>${escapeHTML(item)}</li>`).join("")}</ul>` : ""}
         </section>
     `;
+}
+
+function renderReconciliacaoBebidas(reconciliacao) {
+    const grupos = normalizarArray(reconciliacao?.grupos).filter(grupo => grupo.status === "ajustado");
+    if (!grupos.length) return "";
+
+    return `
+        <section class="quality-panel beverage-balance-panel">
+            <div>
+                <strong>Volumes reconciliados pelo motor</strong>
+                <p>As opções escolhidas foram preservadas e os litros foram distribuídos proporcionalmente até o mínimo operacional.</p>
+            </div>
+            <ul>
+                ${grupos.map(grupo => `<li><b>${escapeHTML(grupo.classe)}</b>: ${escapeHTML(formatarNumeroUI(grupo.antes))} L → ${escapeHTML(formatarNumeroUI(grupo.depois))} L em ${escapeHTML(normalizarArray(grupo.itens).length)} item(ns).</li>`).join("")}
+            </ul>
+        </section>
+    `;
+}
+
+function formatarNumeroUI(valor) {
+    const numero = Number(valor);
+    if (!Number.isFinite(numero)) return String(valor || 0);
+    return String(Math.round(numero * 10) / 10).replace(".", ",");
 }
 
 function renderVariedadeCulinaria(variedade) {
@@ -322,6 +346,7 @@ function baixarRelatorioPDF() {
     const variedade = dados.variedade_culinaria || null;
     const operacao = motor.operacao || null;
     const contextoEvento = dados.contexto_evento || null;
+    const reconciliacaoBebidas = dados.reconciliacao_bebidas || null;
 
     cabecalho();
 
@@ -428,6 +453,12 @@ function baixarRelatorioPDF() {
     secao("Receitas e preparo");
     listaOuVazio(receitas, "Receitas ainda nao detalhadas no plano.");
 
+    const gruposBebidasAjustados = normalizarArray(reconciliacaoBebidas?.grupos).filter(grupo => grupo.status === "ajustado");
+    if (gruposBebidasAjustados.length) {
+        secao("Ajustes de bebidas do motor");
+        gruposBebidasAjustados.forEach(grupo => escrever(`${grupo.classe}: ${formatarNumeroUI(grupo.antes)} L para ${formatarNumeroUI(grupo.depois)} L, distribuidos em ${normalizarArray(grupo.itens).length} item(ns).`));
+    }
+
     secao("Lista de compras");
     listaOuVazio(compras, "Lista de compras nao informada pela IA.");
 
@@ -518,6 +549,8 @@ function textoPDFItem(item) {
         item.categoria,
         item.setor,
         item.natureza,
+        item.status ? `status: ${item.status}` : "",
+        item.origem ? `origem: ${item.origem}` : "",
         normalizarArray(item.nomes_itens).length ? `itens: ${normalizarArray(item.nomes_itens).join(", ")}` : "",
         item.hora ? `horario: ${item.hora}` : "",
         ingredientes.length ? `ingredientes: ${ingredientes.join(", ")}` : "",
@@ -1019,6 +1052,7 @@ function renderReceitas(receitas) {
                 <div class="recipe-card"><p>${escapeHTML(r)}</p></div>
             ` : `
                 <div class="recipe-card">
+                    ${r.status === "ficha_operacional_recuperada" ? `<span class="recipe-recovered-badge">Ficha recuperada</span>` : ""}
                     <h4>${escapeHTML(r.nome || "Receita")}</h4>
                     ${normalizarArray(r.ingredientes).length ? `
                         <h5>Ingredientes</h5>
@@ -1031,6 +1065,7 @@ function renderReceitas(receitas) {
                         <ol class="recipe-steps">${normalizarArray(r.preparo_passos).map(passo => `<li>${escapeHTML(passo)}</li>`).join("")}</ol>
                     ` : `<p>${escapeHTML(r.preparo || "Preparo não informado.")}</p>`}
                     <small>${escapeHTML([r.tempo, r.rendimento, r.quantidade_total].filter(Boolean).join(" · "))}</small>
+                    ${r.observacao ? `<p class="recipe-operational-note">${escapeHTML(r.observacao)}</p>` : ""}
                 </div>
             `).join("")}
         </div>` : renderConteudoAusente("Receitas ainda não detalhadas no plano.")}

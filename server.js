@@ -33,7 +33,9 @@ app.get('/api/status', (req, res) => {
             culinary_variety_history: true,
             advanced_event_context: true,
             operational_complexity: true,
-            event_coherence_blocks: true
+            event_coherence_blocks: true,
+            recipe_operational_recovery: true,
+            beverage_volume_reconciliation: true
         },
         recipe_references: spoonacularService.getStatus()
     });
@@ -78,7 +80,10 @@ async function gerarCardapioHandler(req, res) {
                 avisos_culinarios: resposta.plano.qualidade_culinaria?.avisos?.length || 0,
                 variedade_culinaria_status: resposta.plano.variedade_culinaria?.status || "nao_avaliado",
                 repeticoes_culinarias_a_revisar: resposta.plano.variedade_culinaria?.repeticoes_a_revisar?.length || 0,
-                blocos_cardapio: resposta.plano.blocos_cardapio?.length || 0
+                blocos_cardapio: resposta.plano.blocos_cardapio?.length || 0,
+                receitas_recuperadas: resposta.plano.qualidade_culinaria?.cobertura?.receitas_recuperadas || 0,
+                reconciliacao_bebidas_status: resposta.plano.reconciliacao_bebidas?.status || "nao_avaliado",
+                grupos_bebidas_ajustados: resposta.plano.reconciliacao_bebidas?.grupos?.filter(grupo => grupo.status === "ajustado").length || 0
             };
         }
 

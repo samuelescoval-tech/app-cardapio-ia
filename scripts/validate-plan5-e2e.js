@@ -3,7 +3,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 require("dotenv").config({ quiet: true });
 
-const BASE_URL = "http://localhost:3000";
+const E2E_PORT = Number(process.env.CHEF_IA_E2E_PORT) || 32000 + (process.pid % 1000);
+const BASE_URL = `http://localhost:${E2E_PORT}`;
 const DEBUG_PORT = 9325;
 const runId = Date.now();
 const profileDir = `/tmp/chef-ia-plan5-profile-${runId}`;
@@ -412,6 +413,12 @@ function validarResultadoCiclo(result, scenario) {
   if (result.secoes.includes("Cronograma")) erros.push("titulo ambiguo Cronograma ainda presente");
   if (result.desktopOverflow) erros.push("overflow horizontal no desktop");
   if (result.recipeCards !== result.receitas) erros.push(`cards de receita ${result.recipeCards}/${result.receitas}`);
+  if (result.recipeRecoveredBadges !== (result.coberturaCulinaria.receitas_recuperadas || 0)) {
+    erros.push(`fichas recuperadas sem identificacao ${result.recipeRecoveredBadges}/${result.coberturaCulinaria.receitas_recuperadas || 0}`);
+  }
+  if (result.gruposBebidasAjustados > 0 && result.beverageBalancePanels !== 1) {
+    erros.push(`painel de reconciliacao de bebidas ${result.beverageBalancePanels}/1`);
+  }
   if (result.coherencePanels !== 1) erros.push(`paineis de coerencia ${result.coherencePanels}/1`);
   if (result.menuBlocks < 1 || result.menuBlocks >= result.cardapio) erros.push(`blocos do cardapio ${result.menuBlocks}/${result.cardapio}`);
   if (result.menuBlockDetails !== result.menuBlocks) erros.push(`detalhes de bloco ${result.menuBlockDetails}/${result.menuBlocks}`);
@@ -535,6 +542,9 @@ async function gerarScenario(cdp, scenario) {
         comprasBebidasDetalhes: (plano.lista_compras || [])
           .filter(item => /bebida/.test(normalizar([item.setor, item.natureza].join(' '))))
           .map(item => ({ item: item.item || '', quantidade: item.quantidade || '' })),
+        reconciliacaoBebidas: plano.reconciliacao_bebidas?.status || 'nao_avaliado',
+        gruposBebidasAjustados: (plano.reconciliacao_bebidas?.grupos || []).filter(grupo => grupo.status === 'ajustado').length,
+        beverageBalancePanels: document.querySelectorAll('.beverage-balance-panel').length,
         generationMeta: window.chefIALastResponseMeta || null,
         variedade: plano.variedade_culinaria?.status || 'sem_historico',
         historicosConsiderados: plano.variedade_culinaria?.historicos_considerados || 0,
@@ -558,6 +568,7 @@ async function gerarScenario(cdp, scenario) {
         opcoesAvancadasPresentes: Boolean(document.getElementById('advancedEventOptions')),
         secoes,
         recipeCards: document.querySelectorAll('.recipe-card').length,
+        recipeRecoveredBadges: document.querySelectorAll('.recipe-recovered-badge').length,
         shoppingItems: document.querySelectorAll('.shopping-item').length,
         historyCount: window.storageService.carregarHistorico().length,
         desktopOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
@@ -582,7 +593,7 @@ async function confirmarServidor() {
 
   const server = spawn(process.execPath, ["server.js"], {
     cwd: path.join(__dirname, ".."),
-    env: process.env,
+    env: { ...process.env, PORT: String(E2E_PORT) },
     stdio: "ignore"
   });
 

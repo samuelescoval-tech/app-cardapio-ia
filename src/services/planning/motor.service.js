@@ -92,28 +92,116 @@ function aplicarMotorAoPlano(plano, motor) {
     orcamento: null,
     precificacao: motor.precificacao
   };
-  validarCoberturaBebidas(resultado, motor);
+  resultado.reconciliacao_bebidas = reconciliarCoberturaBebidas(resultado, motor);
   return resultado;
 }
 
-function validarCoberturaBebidas(plano, motor) {
+function reconciliarCoberturaBebidas(plano, motor) {
   const relatorio = plano.qualidade_culinaria;
-  if (!relatorio || !Array.isArray(relatorio.avisos) || !Array.isArray(plano.cardapio)) return;
+  if (!relatorio || !Array.isArray(relatorio.avisos) || !Array.isArray(plano.cardapio)) {
+    return { status: "nao_avaliado", grupos: [] };
+  }
 
   const bebidas = plano.cardapio.filter(item => /bebida/i.test(item.categoria || ""));
-  const atual = bebidas.reduce((totais, item) => {
-    const litros = litrosDaQuantidade(item.quantidade);
-    if (ehBebidaAlcoolica(item)) totais.alcoolicas += litros;
-    else totais.naoAlcoolicas += litros;
-    return totais;
-  }, { alcoolicas: 0, naoAlcoolicas: 0 });
   const esperado = {
     naoAlcoolicas: litrosDoMotor(motor, "Bebidas nao alcoolicas"),
     alcoolicas: litrosDoMotor(motor, "Bebidas alcoolicas")
   };
+  const grupos = [
+    reconciliarGrupoBebidas(plano, relatorio, "nao alcoolicas", bebidas.filter(item => !ehBebidaAlcoolica(item)), esperado.naoAlcoolicas),
+    reconciliarGrupoBebidas(plano, relatorio, "alcoolicas", bebidas.filter(ehBebidaAlcoolica), esperado.alcoolicas)
+  ];
+  sincronizarComprasBebidas(plano);
 
-  registrarDeficitBebida(relatorio, "nao alcoolicas", atual.naoAlcoolicas, esperado.naoAlcoolicas);
-  registrarDeficitBebida(relatorio, "alcoolicas", atual.alcoolicas, esperado.alcoolicas);
+  return {
+    status: grupos.some(grupo => grupo.status === "insuficiente")
+      ? "revisar"
+      : grupos.some(grupo => grupo.status === "ajustado") ? "ajustado" : "conforme",
+    grupos
+  };
+}
+
+function reconciliarGrupoBebidas(plano, relatorio, rotulo, itens, esperado) {
+  const atual = arredondar1(itens.reduce((total, item) => total + litrosDaQuantidade(item.quantidade), 0));
+  if (esperado <= 0) {
+    return { classe: rotulo, status: "nao_previsto", esperado: 0, antes: atual, depois: atual, itens: [] };
+  }
+  if (atual + 0.01 >= esperado) {
+    return { classe: rotulo, status: "conforme", esperado, antes: atual, depois: atual, itens: [] };
+  }
+
+  const positivos = itens.filter(item => litrosDaQuantidade(item.quantidade) > 0);
+  if (!positivos.length) {
+    registrarDeficitBebida(relatorio, rotulo, atual, esperado);
+    return { classe: rotulo, status: "insuficiente", esperado, antes: atual, depois: atual, itens: [] };
+  }
+
+  const fator = esperado / atual;
+  let acumulado = 0;
+  const alteracoes = positivos.map((item, indice) => {
+    const antes = litrosDaQuantidade(item.quantidade);
+    const depois = indice === positivos.length - 1
+      ? arredondar1(esperado - acumulado)
+      : arredondar1(antes * fator);
+    acumulado = arredondar1(acumulado + depois);
+    item.quantidade = `${formatarLitros(depois)} L`;
+    return { cardapio_id: item.id || "", nome: item.nome || "Bebida", antes, depois };
+  });
+
+  registrarAjusteBebida(
+    relatorio,
+    `Volume de bebidas ${rotulo} reconciliado pelo motor: ${formatarLitros(atual)} L para ${formatarLitros(esperado)} L, distribuido entre ${alteracoes.length} item(ns).`
+  );
+
+  return {
+    classe: rotulo,
+    status: "ajustado",
+    esperado,
+    antes: atual,
+    depois: esperado,
+    fator: Math.round(fator * 1000) / 1000,
+    itens: alteracoes
+  };
+}
+
+function sincronizarComprasBebidas(plano) {
+  if (!Array.isArray(plano.lista_compras)) return;
+  const bebidas = plano.cardapio.filter(item => /bebida/i.test(item.categoria || ""));
+  const porId = new Map(bebidas.filter(item => item.id).map(item => [item.id, item]));
+
+  plano.lista_compras.forEach(compra => {
+    const origens = Array.isArray(compra.origens) ? compra.origens : [];
+    let relacionadas = origens.map(origem => porId.get(origem)).filter(Boolean);
+    if (!relacionadas.length && ehCompraDiretaBebida(compra)) {
+      const chaveCompra = chaveTexto(compra.item);
+      relacionadas = bebidas.filter(item => chaveTexto(item.nome) === chaveCompra);
+    }
+    if (!relacionadas.length) return;
+
+    const total = arredondar1(relacionadas.reduce((soma, item) => soma + litrosDaQuantidade(item.quantidade), 0));
+    if (total > 0 && ehCompraDiretaBebida(compra)) {
+      compra.quantidade = `${formatarLitros(total)} L`;
+    }
+  });
+}
+
+function ehCompraDiretaBebida(compra) {
+  return /^bebida$/i.test(compra?.natureza || "") || /^bebidas$/i.test(compra?.setor || "");
+}
+
+function chaveTexto(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function registrarAjusteBebida(relatorio, mensagem) {
+  if (!Array.isArray(relatorio.ajustes)) relatorio.ajustes = [];
+  relatorio.ajustes.push(mensagem);
+  if (relatorio.status === "aprovado") relatorio.status = "ajustado";
 }
 
 function registrarDeficitBebida(relatorio, rotulo, atual, esperado) {

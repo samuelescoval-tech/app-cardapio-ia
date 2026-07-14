@@ -320,18 +320,27 @@ Pontos condicionais para uma etapa futura, sem bloquear o ciclo concluido:
 - Duas amostras mantiveram portas funcionais ativas: corporativo com 11/14 receitas e churrasco com 35/48 L de bebidas nao alcoolicas.
 - Especificacao e evidencias: `docs/VALIDACAO_MOBILE.md`.
 
+### Evidencia de receitas e bebidas
+
+- Itens `preparo` e `montagem` agora terminam com ficha ligada por `cardapio_id`; `pronto` permanece sem receita obrigatoria.
+- Fichas omitidas ou parciais sao completadas somente com dados do cardapio, marcadas como recuperadas e acompanhadas de aviso profissional.
+- O motor reconcilia deficits de bebidas proporcionalmente entre opcoes existentes e atualiza compras diretas; sem item positivo, o aviso permanece.
+- O E2E usa porta propria para nao validar acidentalmente um servidor antigo aberto pelo usuario.
+- Resultado real: corporativo 15/15, churrasco 16/16 com 9 recuperadas e Natal 15/15; todos passaram em historico, PDF e mobile.
+- O corporativo ainda reprova sinais Premium e composicao 16/17. Nao tratar cobertura de receitas como aprovacao total do evento.
+- Especificacao: `docs/REGRA_COBERTURA_RECEITAS_BEBIDAS.md`.
+
 ## Proxima atualizacao curta
 
 O usuario escolheu teste controlado, pausou o Spoonacular por custo, concluiu cinco baselines tecnicos, o primeiro teste acompanhado e uma revisao corporativa Premium:
 
-1. Garantir receita operacional para toda preparacao que exigir preparo, sem criar receita artificial para agua ou produto pronto.
-2. Reconciliar bebidas geradas com os totais minimos do motor, preservando alcool, publico e duracao.
-3. Pedir ao usuario uma nova avaliacao perceptiva do workshop e do mobile atualizados.
+1. Receber do usuario a proxima atividade relacionada ao Chef IA antes de abrir outra frente.
+2. Manter como pendencia visivel a composicao e os sinais Premium do corporativo.
+3. Pedir uma nova avaliacao perceptiva do workshop e do mobile quando o usuario desejar retomar os testes.
 4. Separar qualidade culinaria, ambientacao, restricoes e clareza visual em notas independentes.
-5. Projetar a proxima melhoria visual a partir das referencias de sites que o usuario trouxer, preservando carrossel e lista.
-6. Definir um envelope orcamentario informativo por percentuais, sem transformar o valor desejado em cotacao.
-7. Planejar imagens com fonte, licenca, atribuicao e fallback antes de integrar qualquer biblioteca externa.
-8. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
+5. Projetar futuras referencias visuais somente depois da nova atividade solicitada.
+6. Manter envelope orcamentario, imagens licenciadas e fornecedores como trilhas separadas.
+7. Manter Spoonacular no backlog e os commits locais sem push ate um marco combinado.
 
 Nao fazer nesta atualizacao:
 

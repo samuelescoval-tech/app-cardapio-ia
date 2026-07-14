@@ -371,15 +371,24 @@ test("recupera litros quando bebida e compra chegam com quantidade numerica", ()
   assert.match(plano.qualidade_culinaria.ajustes.join(" "), /Unidade em litros recuperada/);
 });
 
-test("avisa sobre receita ausente sem descartar o evento", () => {
+test("cria ficha operacional rastreavel quando a IA omite uma receita", () => {
   const entrada = planoValido();
   entrada.receitas = entrada.receitas.filter(receita => receita.cardapio_id !== "prato-2");
 
   const plano = validarPlano(entrada);
+  const recuperada = plano.receitas.find(receita => receita.cardapio_id === "prato-2");
 
   assert.equal(plano.cardapio.length, 8);
-  assert.equal(plano.qualidade_culinaria.cobertura.receitas_cobertas, 7);
-  assert.match(plano.qualidade_culinaria.avisos.join(" "), /Receita ausente para Prato 2/);
+  assert.equal(plano.receitas.length, 8);
+  assert.equal(plano.qualidade_culinaria.cobertura.receitas_cobertas, 8);
+  assert.equal(plano.qualidade_culinaria.cobertura.receitas_completas, 8);
+  assert.equal(plano.qualidade_culinaria.cobertura.receitas_recuperadas, 1);
+  assert.equal(recuperada.origem, "backend");
+  assert.equal(recuperada.status, "ficha_operacional_recuperada");
+  assert.equal(recuperada.preparo_passos.length, 3);
+  assert.match(recuperada.observacao, /IA omitiu a receita/i);
+  assert.match(plano.qualidade_culinaria.ajustes.join(" "), /Ficha operacional criada/i);
+  assert.equal(plano.qualidade_culinaria.avisos.some(aviso => /Receita ausente/.test(aviso)), false);
 });
 
 test("recupera ingredientes e quantidade total da receita a partir do prato", () => {
@@ -393,4 +402,20 @@ test("recupera ingredientes e quantidade total da receita a partir do prato", ()
   assert.deepEqual(receita.ingredientes, plano.cardapio[0].ingredientes);
   assert.equal(receita.quantidade_total, plano.cardapio[0].quantidade);
   assert.equal(plano.qualidade_culinaria.status, "ajustado");
+});
+
+test("completa ficha parcial sem ocultar a origem do ajuste", () => {
+  const entrada = planoValido();
+  entrada.receitas[0].preparo_passos = ["Separar ingredientes", "Iniciar o preparo"];
+  entrada.receitas[0].tempo = "";
+  entrada.receitas[0].rendimento = "";
+
+  const plano = validarPlano(entrada);
+  const receita = plano.receitas[0];
+
+  assert.equal(receita.origem, "ia_complementada_backend");
+  assert.equal(receita.status, "ficha_operacional_recuperada");
+  assert.equal(receita.preparo_passos.length, 3);
+  assert.equal(receita.tempo, "Validar em teste de producao");
+  assert.equal(plano.qualidade_culinaria.cobertura.receitas_recuperadas, 1);
 });

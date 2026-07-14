@@ -15,6 +15,10 @@ function quantidade(lista, item) {
   return lista.find(entrada => entrada.item === item)?.quantidade;
 }
 
+function litros(valor) {
+  return Number(String(valor || "0").match(/\d+(?:[.,]\d+)?/)?.[0].replace(",", ".") || 0);
+}
+
 test("evento antigo sem criancas preserva os calculos anteriores", () => {
   const motor = calcularMotorEvento(eventoBase);
 
@@ -84,7 +88,7 @@ test("motor transforma o contexto avancado em operacao deterministica", () => {
   assert.ok(motor.staff.some(item => item.funcao === "Passe e montagem de pratos"));
 });
 
-test("motor sinaliza quando cardapio nao cobre os litros oficiais de bebidas", () => {
+test("motor reconcilia proporcionalmente bebidas abaixo dos litros oficiais", () => {
   const motor = calcularMotorEvento({
     tipo: "Churrasco",
     pessoas: 50,
@@ -99,14 +103,27 @@ test("motor sinaliza quando cardapio nao cobre os litros oficiais de bebidas", (
       { categoria: "Bebida", nome: "Suco natural", quantidade: "10 L" },
       { categoria: "Bebida", nome: "Agua mineral", quantidade: "8 L" }
     ],
+    lista_compras: [
+      { item: "Cerveja artesanal", quantidade: "30 L", setor: "Bebidas", natureza: "bebida", origens: [] },
+      { item: "Suco natural", quantidade: "10 L", setor: "Bebidas", natureza: "bebida", origens: [] },
+      { item: "Agua mineral", quantidade: "8 L", setor: "Bebidas", natureza: "bebida", origens: [] }
+    ],
     qualidade_culinaria: { status: "aprovado", ajustes: [], avisos: [] }
   };
 
   const resultado = aplicarMotorAoPlano(plano, motor);
+  const alcoolicas = resultado.cardapio.filter(item => /cerveja/i.test(item.nome));
+  const naoAlcoolicas = resultado.cardapio.filter(item => !/cerveja/i.test(item.nome));
 
-  assert.equal(resultado.qualidade_culinaria.status, "revisar");
-  assert.match(resultado.qualidade_culinaria.avisos.join(" "), /nao alcoolicas.*18\/48 L/i);
-  assert.match(resultado.qualidade_culinaria.avisos.join(" "), /alcoolicas.*30\/56 L/i);
+  assert.equal(resultado.qualidade_culinaria.status, "ajustado");
+  assert.equal(alcoolicas.reduce((total, item) => total + litros(item.quantidade), 0), 56);
+  assert.equal(naoAlcoolicas.reduce((total, item) => total + litros(item.quantidade), 0), 48);
+  assert.equal(resultado.reconciliacao_bebidas.status, "ajustado");
+  assert.equal(resultado.reconciliacao_bebidas.grupos.filter(grupo => grupo.status === "ajustado").length, 2);
+  assert.match(resultado.qualidade_culinaria.ajustes.join(" "), /30 L para 56 L/i);
+  assert.equal(resultado.qualidade_culinaria.avisos.length, 0);
+  assert.equal(litros(resultado.lista_compras[0].quantidade), 56);
+  assert.equal(litros(resultado.lista_compras[1].quantidade) + litros(resultado.lista_compras[2].quantidade), 48);
 });
 
 test("motor aceita distribuicao de bebidas que atinge os totais oficiais", () => {
@@ -131,4 +148,26 @@ test("motor aceita distribuicao de bebidas que atinge os totais oficiais", () =>
 
   assert.equal(resultado.qualidade_culinaria.status, "aprovado");
   assert.deepEqual(resultado.qualidade_culinaria.avisos, []);
+  assert.equal(resultado.reconciliacao_bebidas.status, "conforme");
+});
+
+test("motor preserva aviso quando nao existe bebida para distribuir", () => {
+  const motor = calcularMotorEvento({
+    tipo: "Corporativo",
+    pessoas: 20,
+    criancas: 0,
+    duracao: 3,
+    refeicao: "Coffee break",
+    alcool: "Sem alcool"
+  });
+  const plano = {
+    cardapio: [],
+    lista_compras: [],
+    qualidade_culinaria: { status: "aprovado", ajustes: [], avisos: [] }
+  };
+
+  const resultado = aplicarMotorAoPlano(plano, motor);
+
+  assert.equal(resultado.reconciliacao_bebidas.status, "revisar");
+  assert.match(resultado.qualidade_culinaria.avisos.join(" "), /nao alcoolicas abaixo da estimativa/i);
 });

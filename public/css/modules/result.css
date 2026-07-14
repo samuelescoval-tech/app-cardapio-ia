@@ -104,6 +104,16 @@
     background:#fff5ef;
 }
 
+.beverage-balance-panel{
+    border-color:rgba(32,113,167,.32);
+    background:#f2f9fd;
+}
+
+.beverage-balance-panel b{
+    color:#145f8a;
+    text-transform:capitalize;
+}
+
 @media (max-width:700px){
     .quality-panel{
         grid-template-columns:1fr;
@@ -673,6 +683,28 @@
     margin-top:12px;
     color:var(--gold-dark);
     font-weight:700;
+}
+
+.recipe-recovered-badge{
+    display:inline-flex;
+    margin-bottom:9px;
+    border-radius:999px;
+    padding:4px 9px;
+    background:#fff1c7;
+    color:#765800;
+    font-size:.66rem;
+    font-weight:900;
+    letter-spacing:.5px;
+    text-transform:uppercase;
+}
+
+.recipe-operational-note{
+    margin-top:10px;
+    border-left:3px solid var(--gold);
+    padding:8px 10px;
+    background:#fffaf0;
+    color:#6b6256 !important;
+    font-size:.74rem !important;
 }
 
 .empty-section{

@@ -131,11 +131,14 @@ O ciclo atual termina no Plano 10. Se a validacao final passar, as etapas seguin
 - Refinamento mobile de 2026-07-14: primeira dobra reduzida, campos de `54px`, controles de toque de `44px`, rotulos acessiveis e resultado responsivo.
 - Evidencia atual: viewport/documento `390/390`, sem overflow; cardapio com controles de `340px` e primeiro cartao de `296px`.
 - As portas funcionais nao foram relaxadas: amostras recentes expuseram 3 receitas ausentes no corporativo e deficit de bebidas no churrasco. Esses pontos passam a frente da proxima correcao de conteudo.
+- Cobertura funcional concluida em 2026-07-14: fichas ausentes ou parciais sao recuperadas com origem/status visiveis e bebidas abaixo do motor sao reconciliadas proporcionalmente.
+- E2E atual: corporativo 15/15 receitas, churrasco 16/16 com 9 recuperadas e Natal 15/15; historico, PDF e mobile passaram.
+- O corporativo continua em revisao por 16/17 itens, cha em sache e experiencia Premium insuficiente. Cobertura tecnica nao equivale a qualidade percebida.
 
 ## Proxima atualizacao curta
 
-1. Completar receitas ausentes e reconciliar bebidas com o motor sem mascarar insuficiencia da IA.
-2. Reavaliar o workshop corporativo e o novo mobile pela interface real.
+1. Aguardar e executar a proxima atividade do Chef IA indicada pelo usuario.
+2. Reavaliar o workshop corporativo e o novo mobile quando os testes forem retomados.
 3. Coletar referencias visuais do usuario e transformar somente padroes aprovados em componentes reutilizaveis.
 4. Projetar envelope orcamentario por percentuais e estado `A cotar`, sem precos de mercado inventados.
 5. Especificar a futura camada de imagens com licenca, atribuicao, cache e fallback.

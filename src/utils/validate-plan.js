@@ -87,7 +87,8 @@ function criarFallback(mensagem) {
         compras_derivadas: 0,
         pratos_com_preparo: 0,
         receitas_cobertas: 0,
-        receitas_completas: 0
+        receitas_completas: 0,
+        receitas_recuperadas: 0
       }
     },
     resumo_chef: mensagem || "A IA não retornou um plano válido desta vez."
@@ -140,7 +141,10 @@ function normalizarReceita(valor) {
     preparo: preparoLegado || preparoPassos.join(" "),
     tempo: textoSeguro(valor.tempo, ""),
     rendimento: textoSeguro(valor.rendimento, ""),
-    quantidade_total: textoSeguro(valor.quantidade_total, "")
+    quantidade_total: textoSeguro(valor.quantidade_total, ""),
+    origem: textoSeguro(valor.origem, "ia"),
+    status: textoSeguro(valor.status, "detalhada"),
+    observacao: textoSeguro(valor.observacao, "")
   };
 }
 
@@ -148,6 +152,70 @@ function normalizarTipoExecucao(valor, categoria) {
   const tipo = textoSeguro(valor, "").toLowerCase();
   if (["preparo", "montagem", "pronto"].includes(tipo)) return tipo;
   return /^bebida$/i.test(categoria) ? "pronto" : "preparo";
+}
+
+function criarFichaOperacional(prato) {
+  return {
+    cardapio_id: prato.id,
+    nome: prato.nome,
+    ingredientes: prato.ingredientes.map(ingrediente => ({ ...ingrediente })),
+    preparo_passos: construirPassosOperacionais(prato),
+    preparo: "",
+    tempo: "Validar em teste de producao",
+    rendimento: prato.quantidade || "Conforme quantidade final",
+    quantidade_total: prato.quantidade || "",
+    origem: "backend",
+    status: "ficha_operacional_recuperada",
+    observacao: "Ficha criada a partir do cardapio porque a IA omitiu a receita. Tecnica, tempo e seguranca devem ser conferidos pelo responsavel pela producao."
+  };
+}
+
+function completarFichaOperacional(receita, prato) {
+  if (!receita.ingredientes.length && prato.ingredientes.length) {
+    receita.ingredientes = prato.ingredientes.map(ingrediente => ({ ...ingrediente }));
+  }
+  if (receita.preparo_passos.length < 3) {
+    const complementares = construirPassosOperacionais(prato);
+    for (const passo of complementares) {
+      if (receita.preparo_passos.length >= 3) break;
+      if (!receita.preparo_passos.includes(passo)) receita.preparo_passos.push(passo);
+    }
+    receita.preparo = receita.preparo_passos.join(" ");
+  }
+  if (!receita.tempo) receita.tempo = "Validar em teste de producao";
+  if (!receita.rendimento) receita.rendimento = prato.quantidade || "Conforme quantidade final";
+  if (!receita.quantidade_total) receita.quantidade_total = prato.quantidade || "";
+  receita.origem = receita.origem === "ia" ? "ia_complementada_backend" : receita.origem;
+  receita.status = "ficha_operacional_recuperada";
+  receita.observacao = receita.observacao
+    || "Ficha completada a partir do cardapio. Tecnica, tempo e seguranca devem ser conferidos pelo responsavel pela producao.";
+}
+
+function construirPassosOperacionais(prato) {
+  const ingredientes = prato.ingredientes.map(item => item.item).filter(Boolean).slice(0, 6);
+  const lista = ingredientes.length ? `: ${ingredientes.join(", ")}` : "";
+  const descricao = textoSeguro(prato.descricao, "").replace(/[.!?]+$/, "");
+  const acao = prato.tipo_execucao === "montagem"
+    ? "Montar e finalizar"
+    : "Executar o preparo em lotes";
+  const orientacao = descricao ? `, seguindo a descricao operacional: ${descricao}` : " conforme a tecnica definida pela equipe";
+  const quantidade = prato.quantidade || "a quantidade planejada";
+
+  return [
+    `Conferir as quantidades, higienizar a area e organizar os ingredientes${lista}.`,
+    `${acao} ${prato.nome}${orientacao}.`,
+    `Porcionar ate ${quantidade}, identificar restricoes e manter em condicao segura ate o servico.`
+  ];
+}
+
+function receitaEstruturalmenteCompleta(receita) {
+  return Boolean(
+    receita.ingredientes.length
+    && receita.preparo_passos.length >= 3
+    && receita.tempo
+    && receita.rendimento
+    && receita.quantidade_total
+  );
 }
 
 function normalizarCompra(valor) {
@@ -186,7 +254,8 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
       compras_derivadas: 0,
       pratos_com_preparo: 0,
       receitas_cobertas: 0,
-      receitas_completas: 0
+      receitas_completas: 0,
+      receitas_recuperadas: 0
     }
   };
   const ids = new Set();
@@ -239,6 +308,7 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
 
   const pratosPorId = new Map(plano.cardapio.map(prato => [prato.id, prato]));
   const receitasPorPrato = new Map();
+  const receitasRecuperadas = new Set();
   plano.receitas = plano.receitas.filter(receita => {
     if (!receita.cardapio_id || !ids.has(receita.cardapio_id)) {
       registrarAviso(relatorio, `Receita sem prato valido foi separada para revisao: ${receita.nome || "sem nome"}.`);
@@ -257,10 +327,14 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
       receita.quantidade_total = prato.quantidade;
       registrarAjuste(relatorio, `Quantidade total da receita recuperada: ${prato.nome}.`);
     }
-    if (!receita.preparo_passos.length || !receita.tempo || !receita.rendimento) {
-      registrarAviso(relatorio, `Receita incompleta para ${receita.cardapio_id}.`);
-    } else {
-      relatorio.cobertura.receitas_completas += 1;
+    if (!receitaEstruturalmenteCompleta(receita)) {
+      completarFichaOperacional(receita, prato);
+      receitasRecuperadas.add(prato.id);
+      registrarAjuste(relatorio, `Ficha operacional completada a partir do cardapio: ${prato.nome}.`);
+    }
+    if (receitasPorPrato.has(receita.cardapio_id)) {
+      registrarAviso(relatorio, `Receita duplicada separada para revisao: ${prato.nome}.`);
+      return false;
     }
     receitasPorPrato.set(receita.cardapio_id, receita);
     return true;
@@ -268,12 +342,22 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
 
   plano.cardapio.forEach(prato => {
     if (prato.tipo_execucao === "pronto") return;
-    if (receitasPorPrato.has(prato.id)) {
-      relatorio.cobertura.receitas_cobertas += 1;
+    let receita = receitasPorPrato.get(prato.id);
+    if (!receita) {
+      receita = criarFichaOperacional(prato);
+      plano.receitas.push(receita);
+      receitasPorPrato.set(prato.id, receita);
+      receitasRecuperadas.add(prato.id);
+      registrarAjuste(relatorio, `Ficha operacional criada para receita omitida pela IA: ${prato.nome}.`);
+    }
+    relatorio.cobertura.receitas_cobertas += 1;
+    if (receitaEstruturalmenteCompleta(receita)) {
+      relatorio.cobertura.receitas_completas += 1;
     } else {
-      registrarAviso(relatorio, `Receita ausente para ${prato.nome}.`);
+      registrarAviso(relatorio, `Receita incompleta para ${prato.id}.`);
     }
   });
+  relatorio.cobertura.receitas_recuperadas = receitasRecuperadas.size;
 
   const compras = new Map();
   plano.lista_compras.forEach(compra => {

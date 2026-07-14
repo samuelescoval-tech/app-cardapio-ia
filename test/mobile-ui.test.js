@@ -55,3 +55,23 @@ test('E2E preserva evidencia mobile mesmo quando uma porta culinaria falha', () 
     assert.match(e2e, /Page\.captureScreenshot/);
     assert.match(e2e, /scrollWidth: document\.documentElement\.scrollWidth/);
 });
+
+test('resultado identifica fichas recuperadas e reconciliacao de bebidas', () => {
+    const render = ler('public/js/render.js');
+    const css = ler('public/css/modules/result.css');
+
+    assert.match(render, /function renderReconciliacaoBebidas/);
+    assert.match(render, /Volumes reconciliados pelo motor/);
+    assert.match(render, /recipe-recovered-badge/);
+    assert.match(render, /Ficha recuperada/);
+    assert.match(css, /\.beverage-balance-panel/);
+    assert.match(css, /\.recipe-operational-note/);
+});
+
+test('E2E usa porta isolada para nao validar servidor antigo', () => {
+    const e2e = ler('scripts/validate-plan5-e2e.js');
+
+    assert.match(e2e, /CHEF_IA_E2E_PORT/);
+    assert.match(e2e, /PORT: String\(E2E_PORT\)/);
+    assert.doesNotMatch(e2e, /const BASE_URL = "http:\/\/localhost:3000"/);
+});

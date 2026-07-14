@@ -225,6 +225,17 @@ Preferencias editoriais isoladas, novas categorias e expansoes de repertorio ent
 - Portas culinarias preservadas: uma amostra corporativa parou com 3 receitas ausentes e uma amostra de churrasco parou com `35/48 L` de bebidas nao alcoolicas.
 - Decisao: mobile aprovado como camada visual; cobertura de receitas e bebidas segue como proxima correcao funcional.
 
+### Cobertura de receitas e bebidas - regressao de 2026-07-14
+
+- Toda preparacao ou montagem sem receita recebe ficha operacional rastreavel a partir do proprio cardapio; produtos realmente prontos continuam dispensados.
+- A ficha recuperada informa origem, status e necessidade de validar tecnica, tempo e seguranca; nao inventa minutos nem ingredientes.
+- O motor passou de aviso passivo para reconciliacao proporcional de litros, preservando as bebidas escolhidas e sincronizando compras diretas.
+- Teste unitario: nao alcoolicas `18/48 L` e alcoolicas `30/56 L` foram elevadas aos dois minimos sem criar novos itens.
+- E2E isolado de servidores antigos: corporativo 15/15 receitas; churrasco 16/16 com 9 recuperadas; Natal 15/15.
+- Compras: 37 no corporativo, 31 no churrasco e 44 no Natal; PDFs entre 73.516 e 75.481 bytes.
+- Historico recarregado e mobile `390/390` sem overflow.
+- Porta Premium preservada: corporativo continuou em `revisar` por 16/17 itens, cha em sache e sinais de servico insuficientes.
+
 ## Spoonacular no backlog
 
 O Spoonacular nao e pre-condicao para os testes controlados. A consulta real esta pausada porque o servico pago nao faz parte do ciclo minimo atual.
