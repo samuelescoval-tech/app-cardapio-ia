@@ -126,10 +126,10 @@ function normalizarCardapio(valor) {
   const categoria = textoSeguro(valor.categoria, "");
   return {
     id: textoSeguro(valor.id, ""),
-    nome: textoSeguro(valor.nome, ""),
+    nome: simplificarNomeCulinario(textoSeguro(valor.nome, "")),
     categoria,
     tipo_execucao: normalizarTipoExecucao(valor.tipo_execucao, categoria),
-    descricao: textoSeguro(valor.descricao, ""),
+    descricao: simplificarTextoCulinario(textoSeguro(valor.descricao, "")),
     emoji: textoSeguro(valor.emoji, ""),
     quantidade: textoSeguro(valor.quantidade, ""),
     ingredientes: normalizarObjetos(valor.ingredientes, normalizarIngrediente)
@@ -163,7 +163,7 @@ function normalizarReceita(valor) {
   const preparoLegado = textoSeguro(valor.preparo, "");
   return {
     cardapio_id: textoSeguro(valor.cardapio_id, ""),
-    nome: textoSeguro(valor.nome, ""),
+    nome: simplificarNomeCulinario(textoSeguro(valor.nome, "")),
     ingredientes: normalizarObjetos(valor.ingredientes, normalizarIngrediente),
     preparo_passos: preparoPassos.length ? preparoPassos : preparoLegado ? [preparoLegado] : [],
     preparo: preparoLegado || preparoPassos.join(" "),
@@ -202,10 +202,10 @@ function completarFichaOperacional(receita, prato) {
   if (!receita.ingredientes.length && prato.ingredientes.length) {
     receita.ingredientes = prato.ingredientes.map(ingrediente => ({ ...ingrediente }));
   }
-  if (receita.preparo_passos.length < 3) {
+  if (receita.preparo_passos.length < 4) {
     const complementares = construirPassosOperacionais(prato);
     for (const passo of complementares) {
-      if (receita.preparo_passos.length >= 3) break;
+      if (receita.preparo_passos.length >= 4) break;
       if (!receita.preparo_passos.includes(passo)) receita.preparo_passos.push(passo);
     }
     receita.preparo = receita.preparo_passos.join(" ");
@@ -232,14 +232,15 @@ function construirPassosOperacionais(prato) {
   return [
     `Conferir as quantidades, higienizar a area e organizar os ingredientes${lista}.`,
     `${acao} ${prato.nome}${orientacao}.`,
-    `Porcionar ate ${quantidade}, identificar restricoes e manter em condicao segura ate o servico.`
+    `Dividir o preparo de maneira uniforme ate atingir ${quantidade} e conferir o rendimento.`,
+    "Identificar as restricoes alimentares e manter o preparo em temperatura segura ate o momento de servir."
   ];
 }
 
 function receitaEstruturalmenteCompleta(receita) {
   return Boolean(
     receita.ingredientes.length
-    && receita.preparo_passos.length >= 3
+    && receita.preparo_passos.length >= 4
     && receita.tempo
     && receita.rendimento
     && receita.quantidade_total
@@ -355,6 +356,7 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
       receita.quantidade_total = prato.quantidade;
       registrarAjuste(relatorio, `Quantidade total da receita recuperada: ${prato.nome}.`);
     }
+    detalharPassosReceita(receita, prato);
     if (!receitaEstruturalmenteCompleta(receita)) {
       completarFichaOperacional(receita, prato);
       receitasRecuperadas.add(prato.id);
@@ -484,6 +486,73 @@ function validarCoerenciaCulinaria(plano, diretrizCulinaria) {
   validarCompletudeEvento(plano, relatorio);
 
   return relatorio;
+}
+
+function detalharPassosReceita(receita, prato) {
+  const quantidade = receita.quantidade_total || prato.quantidade || "a quantidade planejada";
+  receita.preparo_passos = Array.from(new Set(
+    receita.preparo_passos
+      .map(passo => simplificarPassoReceita(passo, prato, quantidade))
+      .filter(Boolean)
+  ));
+
+  if (receita.preparo_passos.length < 4) {
+    const complementares = construirPassosOperacionais(prato);
+    for (const passo of complementares) {
+      if (receita.preparo_passos.length >= 4) break;
+      if (!receita.preparo_passos.includes(passo)) receita.preparo_passos.push(passo);
+    }
+  }
+  receita.preparo = receita.preparo_passos.join(" ");
+}
+
+function simplificarPassoReceita(valor, prato, quantidade) {
+  const passo = textoSeguro(valor, "").replace(/\*\*/g, "").trim();
+  if (!passo) return "";
+  const busca = normalizarTextoBusca(passo);
+  const nome = prato.nome || "o preparo";
+
+  if (/infusionar|adicionar (a|na) agua fervente|agua quente/.test(busca)) {
+    return "Colocar os ingredientes na água quente, deixar descansar por 5 a 10 minutos e coar antes de servir.";
+  }
+  if (/^gelad[oa]$|servir gelado/.test(busca)) {
+    return "Resfriar e manter refrigerado até o momento de servir.";
+  }
+  if (passo.split(/\s+/).length >= 5) return finalizarFrase(simplificarTextoCulinario(passo));
+
+  const regras = [
+    [/^porcionar|dividir/, `Distribuir ${nome} de maneira uniforme até atingir ${quantidade}.`],
+    [/^adicionar|acrescentar/, `Adicionar o ingrediente indicado aos poucos e misturar até ficar bem distribuído em ${nome}.`],
+    [/^decorar|finalizar/, `Finalizar a apresentação de ${nome} de forma uniforme e conferir todas as porções.`],
+    [/^refrigerar|resfriar/, `Cobrir, identificar e manter ${nome} refrigerado até o momento de servir.`],
+    [/^assar/, `Assar ${nome} conforme o tempo informado, até cozinhar por dentro e dourar de maneira uniforme.`],
+    [/^cozinhar/, `Cozinhar ${nome} em fogo controlado, mexendo quando necessário e conferindo o ponto antes de retirar.`],
+    [/^bater/, `Bater os ingredientes de ${nome} até obter uma mistura lisa e uniforme.`],
+    [/^misturar/, `Misturar os ingredientes de ${nome} até que fiquem distribuídos de maneira uniforme.`],
+    [/^cortar|fatiar/, `Cortar os ingredientes no tamanho indicado, mantendo porções uniformes para ${nome}.`],
+    [/^montar|dispor|rechear/, `Montar ${nome} em porções uniformes, distribuindo o recheio e os acabamentos de maneira equilibrada.`],
+    [/^servir/, `Organizar ${nome} nos recipientes de serviço e manter na temperatura adequada até a distribuição.`]
+  ];
+  const regra = regras.find(([padrao]) => padrao.test(busca));
+  return regra ? regra[1] : finalizarFrase(`${passo} com cuidado, conferindo o ponto, a uniformidade e o rendimento final`);
+}
+
+function simplificarNomeCulinario(valor) {
+  return String(valor || "").replace(/^infus[aã]o de\s+/i, "Chá de ").trim();
+}
+
+function simplificarTextoCulinario(valor) {
+  return String(valor || "")
+    .replace(/\binfusionad[ao]s?\b/gi, "aromatizada")
+    .replace(/\binfusionar\b/gi, "deixar na água quente e coar")
+    .trim();
+}
+
+function finalizarFrase(valor) {
+  const texto = String(valor || "").trim();
+  if (!texto) return "";
+  const comInicialMaiuscula = texto.charAt(0).toUpperCase() + texto.slice(1);
+  return /[.!?]$/.test(comInicialMaiuscula) ? comInicialMaiuscula : `${comInicialMaiuscula}.`;
 }
 
 function validarCompletudeEvento(plano, relatorio) {

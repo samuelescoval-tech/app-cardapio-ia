@@ -91,7 +91,7 @@ CONTRATO DA RESPOSTA
     {"id":"prato-1", "nome":"", "categoria":"Boas-vindas|Entrada|Prato Principal|Acompanhamento|Salada|Sobremesa|Bebida", "tipo_execucao":"preparo|montagem|pronto", "descricao":"", "emoji":"", "quantidade":"", "ingredientes":[{"item":"", "quantidade":"", "unidade":"kg|g|L|ml|un|maco|pacote"}]}
   ],
   "receitas": [
-    {"cardapio_id":"prato-1", "nome":"", "ingredientes":[{"item":"", "quantidade":"", "unidade":""}], "preparo_passos":["passo 1", "passo 2", "passo 3"], "tempo":"", "rendimento":"", "quantidade_total":""}
+    {"cardapio_id":"prato-1", "nome":"", "ingredientes":[{"item":"", "quantidade":"", "unidade":""}], "preparo_passos":["passo 1", "passo 2", "passo 3", "passo 4"], "tempo":"", "rendimento":"", "quantidade_total":""}
   ],
   "lista_compras": [
     {"item":"", "quantidade":"", "setor":"Hortifruti|Acougue|Bebidas|Mercearia|Frios|Padaria|Descartaveis|Limpeza|Outros", "natureza":"ingrediente|bebida|operacional", "origens":["prato-1"], "prioridade":"alta|media|baixa"}
@@ -134,7 +134,10 @@ ORIENTACOES DE CONTEUDO
 - Nenhum item de preparo ou montagem pode ter ingredientes vazio. Para alimento comprado pronto, informe o proprio produto e a quantidade como ingrediente; bebida pronta pode permanecer sem ficha de ingredientes.
 - Classifique tipo_execucao como preparo quando houver cocao ou tecnica culinaria, montagem quando houver combinacao/finalizacao e pronto somente para produto realmente pronto para servir.
 - Crie uma receita ligada por cardapio_id para todo item com tipo_execucao preparo ou montagem. Apenas itens tipo pronto podem ficar sem receita.
-- Cada receita deve repetir os ingredientes dimensionados do prato, trazer de 3 a 6 passos curtos, tempo, rendimento e quantidade_total produzida para o evento.
+- Cada receita deve repetir os ingredientes dimensionados do prato e trazer de 4 a 6 passos claros, tempo, rendimento e quantidade_total produzida para o evento.
+- Escreva o modo de preparo em portugues cotidiano. Cada passo deve explicar como executar a acao; evite instrucoes soltas como "decorar", "porcionar", "infusionar" ou "gelado".
+- Quando houver forno ou fogao, informe tempo e temperatura ou intensidade do fogo. Em preparos frios, informe refrigeracao, montagem e como conservar ate o servico.
+- Em chas e bebidas com ervas, prefira "deixar na agua quente por X minutos e coar" em vez de termos tecnicos desnecessarios.
 - Nao marque preparacoes culinarias como pronto apenas para evitar a receita.
 - Antes de responder, conte os itens preparo/montagem e confirme que receitas.length cobre exatamente todos esses ids. Bruschettas, sanduiches, saladas de frutas, espetinhos e canapes sao montagem e precisam de receita.
 - Consolide ingredientes repetidos na lista_compras. O nome de cada compra deve ser exatamente igual ao item do ingrediente correspondente.

@@ -34,6 +34,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             ${renderAvaliacaoEvento(dados.avaliacao_evento)}
             ${renderQualidadeCulinaria(dados.qualidade_culinaria)}
             ${renderReconciliacaoBebidas(dados.reconciliacao_bebidas)}
+            ${renderRendimentoAlimentar(dados.rendimento_alimentar)}
             ${renderVariedadeCulinaria(dados.variedade_culinaria)}
             ${renderCoerenciaEvento(dados.contexto_evento)}
             ${renderContextoInformado(evento, dados.motor_logistica?.premissas)}
@@ -119,7 +120,8 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
         if (resumo) resumo.textContent = "Fontes visuais indisponíveis";
         if (detalhes) detalhes.open = false;
         conteudo.className = "event-gallery-empty";
-        conteudo.innerHTML = `<strong>Referencias visuais indisponiveis.</strong><small>O planejamento culinario permanece completo e pode ser usado normalmente.</small>`;
+        conteudo.innerHTML = `<strong>Nenhuma fotografia confiável foi encontrada.</strong><small>Os pratos usam identificação visual neutra para não exibir imagens erradas ou repetidas.</small>`;
+        aplicarImagensAoCardapio(window.chefIAGaleriaEstado);
         return;
     }
 
@@ -129,7 +131,7 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     conteudo.className = "event-gallery-body";
     conteudo.innerHTML = `
         <div class="event-gallery-track" id="eventGalleryVisualizacao">
-            ${imagens.map(imagem => renderImagemEvento(imagem, alternativas[imagem.slot]?.length > 0, historico)).join("")}
+            ${imagens.map(imagem => renderImagemEvento(imagem, alternativas[alvoImagemGaleria(imagem)]?.length > 0, historico)).join("")}
         </div>
         ${renderResumoFeedbackVisual(historico)}
         <div class="gallery-notice">
@@ -137,7 +139,7 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
             <span>${escapeHTML(historico
                 ? "As imagens externas nao sao salvas. Gere o evento novamente para atualizar as referencias do Openverse."
                 : resultado?.attribution_notice || "Confira autoria, licenca e fonte antes de reutilizar uma imagem.")}</span>
-            ${normalizarArray(resultado?.warnings).length ? `<small>${escapeHTML(`${resultado.warnings.length} referencia(s) usaram a ilustracao local de contingencia.`)}</small>` : ""}
+            ${normalizarArray(resultado?.warnings).length ? `<small>${escapeHTML(`${resultado.warnings.length} item(ns) ficaram sem fotografia por falta de correspondência confiável.`)}</small>` : ""}
         </div>
     `;
     ativarFallbackImagensGaleria();
@@ -152,9 +154,10 @@ function aplicarPreferenciasVisuais(imagens, alternativas) {
     const selecionadas = [];
     const filas = {};
     imagens.forEach(imagem => {
-        const candidatos = service.ordenarCandidatos([imagem, ...normalizarArray(alternativas[imagem.slot])]);
+        const alvo = alvoImagemGaleria(imagem);
+        const candidatos = service.ordenarCandidatos([imagem, ...normalizarArray(alternativas[alvo])]);
         selecionadas.push(candidatos[0]);
-        if (candidatos.length > 1) filas[imagem.slot] = candidatos.slice(1);
+        if (candidatos.length > 1) filas[alvo] = candidatos.slice(1);
     });
     return { images: selecionadas, alternatives: filas };
 }
@@ -169,14 +172,14 @@ function normalizarAlternativasGaleria(valor) {
 
 function renderizarGaleriaEventoFallback(mensagem = "A fonte externa nao respondeu.") {
     renderizarGaleriaEvento({
-        images: imagensLocaisGaleria(),
+        images: [],
         warnings: [mensagem],
-        attribution_notice: "A fonte externa esta indisponivel; exibimos ilustracoes locais sem afetar o planejamento."
+        attribution_notice: "A fonte externa esta indisponivel; mantivemos identificações visuais neutras nos pratos."
     });
 }
 
 function renderizarGaleriaHistorico() {
-    renderizarGaleriaEvento({ images: imagensLocaisGaleria() }, { historico: true });
+    renderizarGaleriaEvento({ images: [], warnings: ["Imagens externas não são armazenadas no histórico."] }, { historico: true });
 }
 
 function imagensLocaisGaleria() {
@@ -212,6 +215,7 @@ function normalizarImagemEvento(imagem) {
 
     return {
         id: String(imagem.id || "referencia").slice(0, 100),
+        target_id: String(imagem.target_id || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80),
         slot: String(imagem.slot || "evento").slice(0, 40),
         provider,
         image_url: imageUrl,
@@ -245,8 +249,9 @@ function urlExternaHttpsSegura(valor) {
 function renderImagemEvento(imagem, possuiAlternativas = false, historico = false) {
     const fallbackUrl = fallbackGaleriaPorSlot(imagem.slot);
     const avaliacao = window.visualFeedbackService?.obterAvaliacao?.(imagem) || null;
+    const alvo = alvoImagemGaleria(imagem);
     return `
-        <figure class="event-gallery-card ${imagem.fallback ? "gallery-card-local" : ""}" data-gallery-slot="${escapeHTML(imagem.slot)}">
+        <figure class="event-gallery-card ${imagem.fallback ? "gallery-card-local" : ""}" data-gallery-key="${escapeHTML(alvo)}">
             <div class="gallery-image-frame">
                 <img src="${escapeHTML(imagem.image_url)}" data-gallery-fallback="${escapeHTML(fallbackUrl)}" alt="${escapeHTML(imagem.alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
                 <span>${escapeHTML(rotuloSlotGaleria(imagem.slot))}</span>
@@ -259,16 +264,16 @@ function renderImagemEvento(imagem, possuiAlternativas = false, historico = fals
                     ${imagem.source_url ? `<a href="${escapeHTML(imagem.source_url)}" target="_blank" rel="noopener noreferrer">Ver fonte original</a>` : `<span>Recurso local</span>`}
                 </div>
                 <div class="gallery-card-actions" aria-label="Acoes desta referencia visual">
-                    ${possuiAlternativas ? `<button type="button" class="gallery-action-btn gallery-swap-btn" onclick="trocarImagemGaleria('${escapeHTML(imagem.slot)}')">Trocar imagem</button>` : ""}
-                    <button type="button" class="gallery-action-btn gallery-hide-btn" onclick="ocultarImagemGaleria('${escapeHTML(imagem.slot)}')">Ocultar</button>
+                    ${possuiAlternativas ? `<button type="button" class="gallery-action-btn gallery-swap-btn" onclick="trocarImagemGaleria('${escapeHTML(alvo)}')">Trocar imagem</button>` : ""}
+                    <button type="button" class="gallery-action-btn gallery-hide-btn" onclick="ocultarImagemGaleria('${escapeHTML(alvo)}')">Ocultar</button>
                 </div>
-                ${historico ? "" : renderControlesFeedbackVisual(imagem.slot, avaliacao)}
+                ${historico ? "" : renderControlesFeedbackVisual(alvo, imagem.slot, avaliacao)}
             </figcaption>
         </figure>
     `;
 }
 
-function renderControlesFeedbackVisual(slot, avaliacao) {
+function renderControlesFeedbackVisual(alvo, slot, avaliacao) {
     if (!window.visualFeedbackService) return "";
     const opcoes = [
         ["adequada", "Adequada"],
@@ -279,7 +284,7 @@ function renderControlesFeedbackVisual(slot, avaliacao) {
         <div class="gallery-feedback" role="group" aria-label="Avaliar referencia de ${escapeHTML(rotuloSlotGaleria(slot))}">
             <span>Esta imagem combina com o evento?</span>
             <div>
-                ${opcoes.map(([valor, rotulo]) => `<button type="button" class="gallery-feedback-btn ${avaliacao === valor ? "active" : ""}" data-gallery-rating="${valor}" aria-pressed="${avaliacao === valor ? "true" : "false"}" onclick="avaliarImagemGaleria('${escapeHTML(slot)}','${valor}')">${rotulo}</button>`).join("")}
+                ${opcoes.map(([valor, rotulo]) => `<button type="button" class="gallery-feedback-btn ${avaliacao === valor ? "active" : ""}" data-gallery-rating="${valor}" aria-pressed="${avaliacao === valor ? "true" : "false"}" onclick="avaliarImagemGaleria('${escapeHTML(alvo)}','${valor}')">${rotulo}</button>`).join("")}
             </div>
         </div>
     `;
@@ -301,17 +306,17 @@ function conteudoResumoFeedbackVisual() {
     `;
 }
 
-function avaliarImagemGaleria(slot, rating) {
+function avaliarImagemGaleria(alvo, rating) {
     const estado = window.chefIAGaleriaEstado;
     const service = window.visualFeedbackService;
-    const imagem = estado?.images?.find(item => item.slot === slot);
+    const imagem = estado?.images?.find(item => alvoImagemGaleria(item) === alvo);
     if (!imagem || !service?.salvarAvaliacao?.(imagem, rating)) return;
 
-    if (rating === "inadequada" && normalizarArray(estado.alternatives?.[slot]).length) {
-        trocarImagemGaleria(slot);
+    if (rating === "inadequada" && normalizarArray(estado.alternatives?.[alvo]).length) {
+        trocarImagemGaleria(alvo);
         return;
     }
-    const cartao = document.querySelector(`[data-gallery-slot="${slot}"]`);
+    const cartao = document.querySelector(`[data-gallery-key="${alvo}"]`);
     cartao?.querySelectorAll("[data-gallery-rating]").forEach(botao => {
         const ativo = botao.dataset.galleryRating === rating;
         botao.classList.toggle("active", ativo);
@@ -330,11 +335,11 @@ function limparAvaliacoesGaleria() {
     if (estado) renderizarGaleriaEvento(estado, estado.opcoes);
 }
 
-function trocarImagemGaleria(slot) {
+function trocarImagemGaleria(alvo) {
     const estado = window.chefIAGaleriaEstado;
     if (!estado) return;
-    const indice = estado.images.findIndex(imagem => imagem.slot === slot);
-    const fila = normalizarArray(estado.alternatives?.[slot]);
+    const indice = estado.images.findIndex(imagem => alvoImagemGaleria(imagem) === alvo);
+    const fila = normalizarArray(estado.alternatives?.[alvo]);
     if (indice < 0 || !fila.length) return;
 
     const chavesAtuais = new Set(estado.images.map(chaveImagemGaleria));
@@ -344,20 +349,24 @@ function trocarImagemGaleria(slot) {
     const atual = estado.images[indice];
     estado.images[indice] = proxima;
     fila.push(atual);
-    estado.alternatives[slot] = fila;
+    estado.alternatives[alvo] = fila;
     renderizarGaleriaEvento(estado, estado.opcoes);
 }
 
-function ocultarImagemGaleria(slot) {
+function ocultarImagemGaleria(alvo) {
     const estado = window.chefIAGaleriaEstado;
     if (!estado) return;
-    estado.images = estado.images.filter(imagem => imagem.slot !== slot);
-    delete estado.alternatives[slot];
+    estado.images = estado.images.filter(imagem => alvoImagemGaleria(imagem) !== alvo);
+    delete estado.alternatives[alvo];
     renderizarGaleriaEvento(estado, estado.opcoes);
 }
 
 function chaveImagemGaleria(imagem) {
     return String(imagem?.source_url || imagem?.id || imagem?.image_url || "");
+}
+
+function alvoImagemGaleria(imagem) {
+    return String(imagem?.target_id || imagem?.slot || imagem?.id || "");
 }
 
 function fallbackGaleriaPorSlot(slot) {
@@ -392,30 +401,31 @@ function ativarFallbackImagensGaleria() {
 }
 
 function aplicarImagensAoCardapio(estado) {
-    const pools = {};
-    normalizarArray(estado?.images).forEach(imagem => {
-        if (!pools[imagem.slot]) pools[imagem.slot] = [];
-        pools[imagem.slot].push(imagem, ...normalizarArray(estado?.alternatives?.[imagem.slot]));
-    });
-    const indices = {};
-    document.querySelectorAll("[data-dish-slot]").forEach(cartao => {
-        const slot = cartao.dataset.dishSlot;
-        const candidatos = pools[slot] || [];
-        const indice = indices[slot] || 0;
-        indices[slot] = indice + 1;
-        const imagem = candidatos.length ? candidatos[indice % candidatos.length] : null;
+    const porPrato = new Map(normalizarArray(estado?.images)
+        .filter(imagem => imagem?.target_id && !imagem.fallback)
+        .map(imagem => [imagem.target_id, imagem]));
+    document.querySelectorAll("[data-dish-id]").forEach(cartao => {
+        const imagem = porPrato.get(cartao.dataset.dishId) || null;
         const elemento = cartao.querySelector("img[data-dish-image]");
+        const placeholder = cartao.querySelector(".dish-placeholder");
+        const selo = cartao.querySelector(".dish-image-label");
         const credito = cartao.querySelector(".dish-image-credit span");
         const fonte = cartao.querySelector(".dish-image-credit a");
         if (!elemento) return;
 
-        const fallback = fallbackGaleriaPorSlot(slot);
-        elemento.src = imagem?.image_url || fallback;
-        elemento.dataset.dishFallback = fallback;
-        elemento.alt = imagem?.alt || `Referência visual para ${cartao.dataset.dishName || "item do cardápio"}`;
+        elemento.hidden = !imagem;
+        if (placeholder) placeholder.hidden = Boolean(imagem);
+        if (selo) selo.hidden = !imagem;
+        if (imagem) {
+            elemento.src = imagem.image_url;
+            elemento.alt = `Fotografia relacionada a ${cartao.dataset.dishName || "item do cardápio"}: ${imagem.alt || "referência visual"}`;
+        } else {
+            elemento.removeAttribute("src");
+            elemento.alt = "";
+        }
         if (credito) credito.textContent = imagem
             ? `${imagem.creator || "Fonte visual"} · ${imagem.license || "licença informada"}`
-            : "Ilustração local de referência";
+            : "Sem fotografia confiável — identificação neutra";
         if (fonte) {
             if (imagem?.source_url) {
                 fonte.href = imagem.source_url;
@@ -434,10 +444,15 @@ function ativarFallbackImagensCardapio() {
         if (imagem.dataset.fallbackAtivado === "true") return;
         imagem.dataset.fallbackAtivado = "true";
         imagem.addEventListener("error", () => {
-            const fallback = imagem.dataset.dishFallback;
-            if (fallback && imagem.getAttribute("src") !== fallback) imagem.setAttribute("src", fallback);
-            const credito = imagem.closest(".dish-card-rich")?.querySelector(".dish-image-credit span");
-            if (credito) credito.textContent = "Ilustração local de referência";
+            imagem.hidden = true;
+            imagem.removeAttribute("src");
+            const cartao = imagem.closest(".dish-card-rich");
+            const placeholder = cartao?.querySelector(".dish-placeholder");
+            if (placeholder) placeholder.hidden = false;
+            const selo = cartao?.querySelector(".dish-image-label");
+            if (selo) selo.hidden = true;
+            const credito = cartao?.querySelector(".dish-image-credit span");
+            if (credito) credito.textContent = "Sem fotografia confiável — identificação neutra";
         });
     });
 }
@@ -537,6 +552,33 @@ function renderReconciliacaoBebidas(reconciliacao) {
             <ul>
                 ${grupos.map(grupo => `<li><b>${escapeHTML(grupo.classe)}</b>: ${escapeHTML(formatarNumeroUI(grupo.antes))} L → ${escapeHTML(formatarNumeroUI(grupo.depois))} L em ${escapeHTML(normalizarArray(grupo.itens).length)} item(ns).</li>`).join("")}
             </ul>
+        </section>
+    `;
+}
+
+function renderRendimentoAlimentar(rendimento) {
+    const verificacoes = normalizarArray(rendimento?.verificacoes);
+    if (!verificacoes.length) return "";
+    return `
+        <section class="yield-panel ${rendimento.status === "revisar" ? "yield-review" : ""}">
+            <div class="yield-panel-head">
+                <div>
+                    <strong>Conferência de rendimento</strong>
+                    <span>${escapeHTML(rendimento.pessoas_equivalentes)} pessoas equivalentes · ${escapeHTML(rendimento.contexto_servico || "evento")}</span>
+                </div>
+                <b>${escapeHTML(rendimento.status || "revisar")}</b>
+            </div>
+            <div class="yield-grid">
+                ${verificacoes.map(item => `
+                    <article class="${item.conforme ? "yield-ok" : "yield-low"}">
+                        <span>${escapeHTML(item.rotulo)}</span>
+                        <strong>${escapeHTML(formatarNumeroUI(item.planejado))} ${escapeHTML(item.unidade)} <small>de ${escapeHTML(formatarNumeroUI(item.minimo))} ${escapeHTML(item.unidade)}</small></strong>
+                        ${item.por_pessoa ? `<b>${escapeHTML(formatarNumeroUI(item.por_pessoa))} ${item.id === "proteinas" ? "g" : "un"} por pessoa</b>` : ""}
+                        <p>${escapeHTML(item.criterio || "")}</p>
+                    </article>
+                `).join("")}
+            </div>
+            <p class="yield-reading">${escapeHTML(rendimento.leitura || "")}</p>
         </section>
     `;
 }
@@ -662,319 +704,204 @@ function baixarRelatorioPDF() {
 
     const { dados, pessoas, evento } = ultimoPlano;
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const margem = 16;
-    const larguraTexto = 178;
-    const larguraPagina = 210;
-    const alturaPagina = 297;
-    const limiteTexto = 274;
-    const corTexto = [35, 31, 28];
-    const corDourado = [180, 137, 62];
-    const corFundo = [248, 246, 241];
-    let y = 44;
-
-    const novaPagina = () => {
-        doc.addPage();
-        y = 20;
-        doc.setDrawColor(...corDourado);
-        doc.setLineWidth(0.4);
-        doc.line(margem, 14, larguraPagina - margem, 14);
+    const pagina = { largura: 210, limite: 278, margem: 14, conteudo: 182 };
+    const cores = {
+        escuro: [28, 28, 36], dourado: [201, 151, 20], texto: [42, 38, 34],
+        suave: [112, 104, 94], fundo: [250, 248, 242], borda: [230, 222, 207], verde: [32, 133, 78], vermelho: [184, 55, 45]
     };
+    let y = 38;
+    let tituloPagina = "Resumo do evento";
 
-    const escrever = (texto, opcoes = {}) => {
-        const tamanho = opcoes.tamanho || 10;
-        const estilo = opcoes.estilo || "normal";
-        const espaco = opcoes.espaco || 5;
-        const linhas = doc.splitTextToSize(normalizarTextoPDF(texto), larguraTexto);
-        const altura = linhas.length * espaco;
-
-        if (y + altura > limiteTexto) novaPagina();
-
-        doc.setFont("helvetica", estilo);
-        doc.setFontSize(tamanho);
-        doc.setTextColor(...(opcoes.cor || corTexto));
-        doc.text(linhas, margem, y);
-        y += altura + (opcoes.depois || 1);
-    };
-
-    const secao = titulo => {
-        if (y > 252) novaPagina();
-        y += 4;
-        doc.setFillColor(...corFundo);
-        doc.setDrawColor(...corDourado);
-        doc.roundedRect(margem, y - 5, larguraTexto, 10, 1.5, 1.5, "FD");
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.setTextColor(...corTexto);
-        doc.text(normalizarTextoPDF(titulo).toUpperCase(), margem + 3, y + 2);
-        y += 12;
-    };
-
-    const lista = itens => {
-        normalizarArray(itens).forEach(item => escrever(`- ${textoPDFItem(item)}`, { espaco: 5 }));
-    };
-
-    const listaOuVazio = (itens, vazio = "Nao informado no plano gerado.") => {
-        const listaNormalizada = normalizarArray(itens).filter(item => textoPDFItem(item));
-        if (!listaNormalizada.length) {
-            escrever(vazio, { cor: [120, 110, 98] });
-            return;
-        }
-        lista(listaNormalizada);
-    };
-
-    const cabecalho = () => {
-        doc.setFillColor(...corTexto);
-        doc.rect(0, 0, larguraPagina, 30, "F");
-        doc.setFillColor(...corDourado);
-        doc.rect(0, 30, larguraPagina, 2, "F");
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(19);
+    const cabecalho = titulo => {
+        doc.setFillColor(...cores.escuro);
+        doc.rect(0, 0, pagina.largura, 27, "F");
+        doc.setFillColor(...cores.dourado);
+        doc.rect(0, 27, pagina.largura, 2, "F");
         doc.setTextColor(255, 255, 255);
-        doc.text("Chef IA Studio", margem, 14);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.text("Relatorio de planejamento de evento", margem, 22);
-        doc.text(new Date().toLocaleDateString("pt-BR"), larguraPagina - margem, 22, { align: "right" });
-        doc.setTextColor(...corTexto);
-    };
-
-    const cardResumo = (label, valor, x, yCard) => {
-        doc.setFillColor(255, 255, 255);
-        doc.setDrawColor(225, 218, 205);
-        doc.roundedRect(x, yCard, 55, 18, 2, 2, "FD");
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(7);
-        doc.setTextColor(92, 83, 72);
-        doc.text(normalizarTextoPDF(label).toUpperCase(), x + 3, yCard + 6);
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(11);
-        doc.setTextColor(...corTexto);
-        doc.text(doc.splitTextToSize(normalizarTextoPDF(valor || "A definir"), 48), x + 3, yCard + 13);
+        doc.setFontSize(16);
+        doc.text("Chef IA Studio", pagina.margem, 12);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.text(normalizarTextoPDF(titulo), pagina.margem, 20);
+        doc.text(new Date().toLocaleDateString("pt-BR"), pagina.largura - pagina.margem, 20, { align: "right" });
     };
-
+    const novaPagina = titulo => {
+        doc.addPage();
+        tituloPagina = titulo || tituloPagina;
+        cabecalho(tituloPagina);
+        y = 38;
+    };
+    const garantirEspaco = (altura, titulo) => {
+        if (y + altura > pagina.limite) novaPagina(titulo);
+    };
+    const tituloSecao = titulo => {
+        garantirEspaco(16, titulo);
+        doc.setTextColor(...cores.dourado);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(8);
+        doc.text(normalizarTextoPDF(titulo).toUpperCase(), pagina.margem, y);
+        doc.setDrawColor(...cores.dourado);
+        doc.line(pagina.margem, y + 3, pagina.largura - pagina.margem, y + 3);
+        y += 10;
+    };
+    const paragrafo = (texto, opcoes = {}) => {
+        if (!texto) return;
+        const largura = opcoes.largura || pagina.conteudo;
+        const linhas = doc.splitTextToSize(normalizarTextoPDF(texto), largura);
+        const alturaLinha = opcoes.alturaLinha || 4.3;
+        garantirEspaco(linhas.length * alturaLinha + 3, tituloPagina);
+        doc.setFont("helvetica", opcoes.negrito ? "bold" : "normal");
+        doc.setFontSize(opcoes.tamanho || 9);
+        doc.setTextColor(...(opcoes.cor || cores.texto));
+        doc.text(linhas, opcoes.x || pagina.margem, y);
+        y += linhas.length * alturaLinha + (opcoes.depois ?? 3);
+    };
+    const cardResumo = (rotulo, valor, x, largura = 56) => {
+        doc.setFillColor(...cores.fundo);
+        doc.setDrawColor(...cores.borda);
+        doc.roundedRect(x, y, largura, 19, 2, 2, "FD");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6.5);
+        doc.setTextColor(...cores.suave);
+        doc.text(normalizarTextoPDF(rotulo).toUpperCase(), x + 3, y + 6);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(...cores.texto);
+        doc.text(doc.splitTextToSize(normalizarTextoPDF(valor || "A definir"), largura - 6), x + 3, y + 13);
+    };
+    const cardTexto = (titulo, subtitulo, linhas, opcoes = {}) => {
+        const largura = opcoes.largura || pagina.conteudo;
+        const tituloLinhas = doc.splitTextToSize(normalizarTextoPDF(titulo || "Item"), largura - 8).slice(0, 2);
+        const cabecalhoAltura = 8 + tituloLinhas.length * 4 + (subtitulo ? 5 : 0);
+        const conteudo = normalizarArray(linhas).filter(Boolean).flatMap(item => doc.splitTextToSize(normalizarTextoPDF(item), largura - 8));
+        const altura = Math.max(opcoes.alturaMinima || 24, cabecalhoAltura + conteudo.length * 4 + 3);
+        garantirEspaco(altura + 5, opcoes.tituloPagina || tituloPagina);
+        const x = opcoes.x || pagina.margem;
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(...cores.borda);
+        doc.roundedRect(x, y, largura, altura, 2.5, 2.5, "FD");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10.5);
+        doc.setTextColor(...cores.texto);
+        doc.text(tituloLinhas, x + 4, y + 7);
+        if (subtitulo) {
+            doc.setFontSize(7);
+            doc.setTextColor(...cores.dourado);
+            doc.text(normalizarTextoPDF(subtitulo).toUpperCase(), x + 4, y + 8 + tituloLinhas.length * 4);
+        }
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.2);
+        doc.setTextColor(...cores.suave);
+        doc.text(conteudo, x + 4, y + cabecalhoAltura);
+        y += altura + 5;
+    };
     const rodape = () => {
-        const paginas = doc.getNumberOfPages();
-        for (let pagina = 1; pagina <= paginas; pagina++) {
-            doc.setPage(pagina);
-            doc.setDrawColor(225, 218, 205);
-            doc.line(margem, 286, larguraPagina - margem, 286);
+        const total = doc.getNumberOfPages();
+        for (let numero = 1; numero <= total; numero += 1) {
+            doc.setPage(numero);
+            doc.setDrawColor(...cores.borda);
+            doc.line(pagina.margem, 286, pagina.largura - pagina.margem, 286);
             doc.setFont("helvetica", "normal");
-            doc.setFontSize(8);
-            doc.setTextColor(120, 110, 98);
-            doc.text("Gerado por Chef IA Studio", margem, 291);
-            doc.text(`Pagina ${pagina} de ${paginas}`, larguraPagina - margem, 291, { align: "right" });
+            doc.setFontSize(7.5);
+            doc.setTextColor(...cores.suave);
+            doc.text("Planejamento operacional - conferir antes da execucao", pagina.margem, 291);
+            doc.text(`Pagina ${numero} de ${total}`, pagina.largura - pagina.margem, 291, { align: "right" });
         }
     };
 
     const motor = dados.motor_logistica || {};
     const premissas = motor.premissas || {};
+    const avaliacao = dados.avaliacao_evento || {};
+    const rendimento = dados.rendimento_alimentar || {};
     const precificacao = dados.precificacao || motor.precificacao || null;
     const precoConfiavel = precificacaoEhConfiavel(precificacao);
     const cardapio = normalizarArray(dados.cardapio);
     const compras = normalizarArray(dados.lista_compras);
     const receitas = normalizarArray(dados.receitas);
-    const utensilios = normalizarArray(dados.utensilios);
-    const locais = normalizarArray(dados.local);
-    const layout = normalizarArray(dados.layout);
     const cronograma = normalizarArray(dados.cronograma);
-    const equipeObs = normalizarArray(dados.equipe_obs);
-    const entretenimento = normalizarArray(dados.entretenimento);
-    const lembrancinhas = normalizarArray(dados.lembrancinhas);
-    const staff = normalizarArray(motor.staff);
-    const alimentacao = normalizarArray(motor.alimentacao);
-    const bebidas = normalizarArray(motor.bebidas);
-    const servico = motor.servico_mesa || dados.servico_mesa;
-    const variedade = dados.variedade_culinaria || null;
-    const operacao = motor.operacao || null;
-    const contextoEvento = dados.contexto_evento || null;
-    const reconciliacaoBebidas = dados.reconciliacao_bebidas || null;
-    const avaliacaoEvento = dados.avaliacao_evento || null;
 
-    cabecalho();
+    cabecalho(tituloPagina);
+    tituloSecao("Visao geral");
+    cardResumo("Convidados", pessoas || evento?.pessoas || premissas.pessoas || "Nao informado", pagina.margem);
+    cardResumo("Duracao", motor.duracao || evento?.duracao || "A definir", pagina.margem + 63);
+    cardResumo("Nota tecnica", avaliacao.nota !== undefined ? `${avaliacao.nota}/10` : "Em revisao", pagina.margem + 126);
+    y += 26;
+    paragrafo(evento?.tipo || premissas.tipo || "Evento", { tamanho: 16, negrito: true, depois: 2 });
+    paragrafo([
+        evento?.refeicao || premissas.refeicao,
+        evento?.estilo || premissas.estilo,
+        evento?.tema
+    ].filter(Boolean).join(" | "), { cor: cores.dourado, negrito: true });
+    paragrafo(dados.resumo_chef || "Resumo ainda nao informado.");
+    cardTexto("Leitura da auditoria", avaliacao.status || "revisar", [
+        avaliacao.resumo_textual || "O planejamento deve ser conferido antes da execucao.",
+        `Rendimento alimentar: ${rendimento.status || "nao avaliado"}. ${rendimento.leitura || ""}`
+    ]);
+    tituloSecao("Dados essenciais");
+    cardTexto("Evento e servico", evento?.formatoServico || premissas.formato_servico || "Formato a confirmar", [
+        `Data e horario: ${evento?.dataEvento || "nao informada"} - ${evento?.horarioInicio || premissas.horario_inicio || "horario a confirmar"}`,
+        `Espaco: ${motor.espaco || "a confirmar"}`,
+        `Infraestrutura: ${evento?.infraestrutura || premissas.infraestrutura || "a confirmar"}`,
+        `Restricoes: ${evento?.restricoes || "nenhuma informada"}`,
+        precoConfiavel ? `Estimativa: ${motor.estimativa_total || "consultar detalhamento"}` : "Custos: a cotar com fornecedores locais"
+    ]);
 
-    secao("Resumo executivo");
-    cardResumo("Convidados", pessoas || "Nao informado", margem, y);
-    cardResumo("Duracao", motor.duracao || "A definir", margem + 61, y);
-    cardResumo("Estimativa", precoConfiavel ? motor.estimativa_total : "A cotar", margem + 122, y);
-    y += 24;
-    if (motor.perfil) escrever(`Perfil: ${motor.perfil}`, { estilo: "bold" });
-    if (motor.espaco) escrever(`Espaco recomendado: ${motor.espaco}`);
-    if (precoConfiavel && motor.custo_adulto) escrever(`Custo por adulto: ${motor.custo_adulto}`);
-    if (precoConfiavel && premissas.criancas > 0 && motor.custo_crianca) escrever(`Custo por crianca: ${motor.custo_crianca}`);
-    if (dados.resumo_chef) escrever(dados.resumo_chef);
-    if (avaliacaoEvento) {
-        escrever(`Auditoria do evento: ${avaliacaoEvento.nota}/10 (${avaliacaoEvento.status || "revisar"}).`, { estilo: "bold" });
-        escrever(avaliacaoEvento.resumo_textual || "");
-    }
+    novaPagina("Cardapio");
+    tituloSecao(`Cardapio - ${cardapio.length} itens`);
+    cardapio.forEach(prato => {
+        cardTexto(prato.nome, prato.categoria, [
+            prato.descricao,
+            `Quantidade: ${prato.quantidade || "a confirmar"}`
+        ], { alturaMinima: 25, tituloPagina: "Cardapio" });
+    });
 
-    secao("Dados do evento");
-    lista([
-        `Tipo: ${evento?.tipo || premissas.tipo || "Nao informado"}`,
-        `Convidados: ${pessoas || evento?.pessoas || premissas.pessoas || "Nao informado"}`,
-        premissas.criancas > 0 ? `Publico: ${premissas.adultos} adultos e ${premissas.criancas} criancas` : "",
-        `Localidade: ${localidadePrecificacao(precificacao)}`,
-        `Data do evento: ${evento?.dataEvento || precificacao?.data_evento || "Nao informada"}`,
-        `Horario de inicio: ${evento?.horarioInicio || premissas.horario_inicio || "Nao informado"}`,
-        `Duracao: ${evento?.duracao || premissas.duracao_horas || motor.duracao || "Nao informado"}`,
-        `Refeicao: ${evento?.refeicao || premissas.refeicao || "Nao informado"}`,
-        `Formato do servico: ${evento?.formatoServico || premissas.formato_servico || "A definir pelo Chef IA"}`,
-        `Faixa etaria: ${evento?.faixaEtaria || premissas.faixa_etaria || "Publico misto"}`,
-        `Infraestrutura: ${evento?.infraestrutura || premissas.infraestrutura || "A confirmar"}`,
-        `Prioridade: ${evento?.prioridade || premissas.prioridade || "Equilibrio geral"}`,
-        `Estilo: ${evento?.estilo || premissas.estilo || "Nao informado"}`,
-        `Tema: ${evento?.tema || premissas.tema || "Nao informado"}`,
-        `Bebidas: ${evento?.alcool || premissas.alcool || "Nao informado"}`,
-        `Orcamento desejado: ${evento?.orcamentoBase || premissas.orcamento_base || "Nao informado"}`,
-        `Restricoes: ${evento?.restricoes || "Nenhuma"}`,
-        evento?.obs ? `Observacoes do cliente: ${evento.obs}` : ""
-    ].filter(Boolean));
-
-    if (contextoEvento) {
-        secao("Coerencia aplicada ao evento");
-        escrever(contextoEvento.significado_social_cultural || "Contexto geral aplicado.");
-        escrever(`Tipologia: ${contextoEvento.tipologia_reconhecida || "geral"} | Estilo: ${contextoEvento.estilo || "simples"}`);
-        escrever("Blocos alimentares esperados", { estilo: "bold" });
-        listaOuVazio(contextoEvento.blocos_alimentares_esperados);
-        escrever("Blocos de bebidas esperados", { estilo: "bold" });
-        listaOuVazio(contextoEvento.blocos_bebidas_esperados);
-        escrever("Cores e decoracao", { estilo: "bold" });
-        listaOuVazio([
-            ...normalizarArray(contextoEvento.cores_coerentes),
-            ...normalizarArray(contextoEvento.decoracao_coerente)
-        ]);
-        if (normalizarArray(contextoEvento.evitar).length) {
-            escrever("Evitar", { estilo: "bold" });
-            listaOuVazio(contextoEvento.evitar);
-        }
-        if (normalizarArray(contextoEvento.sinais_premium).length) {
-            escrever("Sinais Premium", { estilo: "bold" });
-            listaOuVazio(contextoEvento.sinais_premium);
-        }
-        if (normalizarArray(contextoEvento.restricoes_alimentares).length) {
-            escrever("Blocos de restricao", { estilo: "bold" });
-            listaOuVazio(contextoEvento.restricoes_alimentares.map(item => item.rotulo || item.id));
-        }
-        escrever(`Orcamento orientador: ${contextoEvento.orcamento?.valor_informado || "Nao informado"}`);
-        escrever(contextoEvento.orcamento?.regra || "Valores permanecem a cotar.");
-    }
-
-    secao("Motor logistico");
-    escrever("Alimentacao", { estilo: "bold" });
-    listaOuVazio(alimentacao);
-    escrever("Bebidas", { estilo: "bold" });
-    listaOuVazio(bebidas);
-    escrever("Equipe", { estilo: "bold" });
-    listaOuVazio(staff);
-
-    if (operacao) {
-        secao("Operacao deterministica");
-        escrever(`Complexidade: ${operacao.complexidade?.nivel || "A definir"} (${operacao.complexidade?.pontuacao ?? "-"} pontos)`, { estilo: "bold" });
-        escrever(`Modelo de producao: ${operacao.modelo_producao || "A confirmar"}`);
-        escrever(operacao.complexidade?.leitura || "");
-        escrever("Fluxo de producao, montagem e reposicao", { estilo: "bold" });
-        listaOuVazio(operacao.fluxo_producao);
-        escrever("Equipamentos por estacao", { estilo: "bold" });
-        listaOuVazio(operacao.estacoes);
-        escrever("Cronograma operacional", { estilo: "bold" });
-        listaOuVazio(operacao.cronograma_operacional);
-        if (normalizarArray(operacao.confirmacoes_pendentes).length) {
-            escrever("Confirmacoes pendentes", { estilo: "bold" });
-            listaOuVazio(operacao.confirmacoes_pendentes);
-        }
-    }
-
-    if (variedade?.historicos_considerados > 0) {
-        secao("Variedade culinaria");
-        escrever(`${variedade.pratos_novos || 0} pratos novos; ${normalizarArray(variedade.repeticoes_justificadas).length} repeticoes essenciais; ${normalizarArray(variedade.repeticoes_a_revisar).length} repeticoes para revisar.`);
-        normalizarArray(variedade.repeticoes_justificadas).forEach(item => escrever(`- ${item.nome}: mantido como elemento essencial.`));
-        normalizarArray(variedade.repeticoes_a_revisar).forEach(item => escrever(`- ${item.nome}: repeticao a revisar.`));
-    }
-
-    secao("Cardapio - itens e quantidades");
-    listaOuVazio(cardapio, "Cardapio nao informado pela IA.");
-
-    secao("Receitas e preparo");
-    listaOuVazio(receitas, "Receitas ainda nao detalhadas no plano.");
-
-    const gruposBebidasAjustados = normalizarArray(reconciliacaoBebidas?.grupos).filter(grupo => grupo.status === "ajustado");
-    if (gruposBebidasAjustados.length) {
-        secao("Ajustes de bebidas do motor");
-        gruposBebidasAjustados.forEach(grupo => escrever(`${grupo.classe}: ${formatarNumeroUI(grupo.antes)} L para ${formatarNumeroUI(grupo.depois)} L, distribuidos em ${normalizarArray(grupo.itens).length} item(ns).`));
-    }
-
-    secao("Lista de compras");
-    listaOuVazio(compras, "Lista de compras nao informada pela IA.");
-
-    secao("Servico de mesa e apoio");
-    if (servico && typeof servico === "object") {
-        ["talheres", "loucas", "copos", "descartaveis", "apoio_cozinha"].forEach(chave => {
-            const itens = normalizarArray(servico[chave]);
-            escrever(rotuloServico(chave), { estilo: "bold" });
-            listaOuVazio(itens);
-        });
-        if (servico.observacao) escrever(servico.observacao);
+    novaPagina("Rendimento e compras");
+    tituloSecao("Conferencia de quantidades");
+    if (normalizarArray(rendimento.verificacoes).length) {
+        rendimento.verificacoes.forEach(item => cardTexto(item.rotulo, item.conforme ? "Conforme" : "Revisar", [
+            `Planejado: ${formatarNumeroUI(item.planejado)} ${item.unidade} | Referencia: ${formatarNumeroUI(item.minimo)} ${item.unidade}`,
+            item.por_pessoa ? `Por pessoa equivalente: ${formatarNumeroUI(item.por_pessoa)} ${item.unidade === "kg" ? "g" : item.unidade}` : "",
+            item.criterio
+        ], { alturaMinima: 24, tituloPagina: "Rendimento e compras" }));
     } else {
-        escrever("Servico de mesa nao informado no plano.", { cor: [120, 110, 98] });
+        paragrafo("Nao foi possivel conferir quantidades numericas deste planejamento.", { cor: cores.suave });
     }
+    tituloSecao(`Lista de compras - ${compras.length} itens`);
+    const comprasPorSetor = compras.reduce((grupos, item) => {
+        const setor = item.setor || "Outros";
+        if (!grupos[setor]) grupos[setor] = [];
+        grupos[setor].push(`${item.item || "Item"}: ${item.quantidade || "a confirmar"}`);
+        return grupos;
+    }, {});
+    Object.entries(comprasPorSetor).forEach(([setor, itens]) => cardTexto(setor, `${itens.length} itens`, itens, { tituloPagina: "Rendimento e compras" }));
 
-    secao("Utensilios extras");
-    listaOuVazio(utensilios, "Utensilios extras nao informados no plano.");
+    novaPagina("Fichas de preparo");
+    tituloSecao(`Receitas - ${receitas.length} fichas`);
+    receitas.forEach(receita => {
+        const ingredientes = normalizarArray(receita.ingredientes).map(item => `Ingrediente: ${item.item || "item"} - ${[item.quantidade, item.unidade].filter(Boolean).join(" ")}`);
+        const passos = normalizarArray(receita.preparo_passos).map((passo, indice) => `${indice + 1}. ${passo}`);
+        cardTexto(receita.nome, `${receita.tempo || "tempo a confirmar"} | ${receita.quantidade_total || receita.rendimento || "rendimento a confirmar"}`, [
+            ...ingredientes,
+            "Modo de preparo:",
+            ...passos
+        ], { alturaMinima: 35, tituloPagina: "Fichas de preparo" });
+    });
 
-    secao("Opcoes de local");
-    listaOuVazio(locais, "Opcoes de local nao informadas no plano.");
-
-    secao("Layout do evento");
-    listaOuVazio(layout, "Layout nao informado no plano.");
-
-    secao("Decoracao e ambientacao");
-    const decoracao = dados.decoracao || {};
-    const temas = normalizarArray(decoracao.temas);
-    const itensDecoracao = normalizarArray(decoracao.itens);
-    escrever("Temas", { estilo: "bold" });
-    listaOuVazio(temas);
-    escrever("Itens", { estilo: "bold" });
-    listaOuVazio(itensDecoracao);
-    escrever(`Iluminacao: ${decoracao.iluminacao || "Nao informada"}`);
-
-    secao("Roteiro do evento");
-    listaOuVazio(cronograma, "Roteiro do evento nao informado no plano.");
-
-    secao("Observacoes de equipe");
-    listaOuVazio(equipeObs, "Observacoes de equipe nao informadas no plano.");
-
-    secao("Entretenimento");
-    listaOuVazio(entretenimento, "Entretenimento nao informado no plano.");
-
-    secao("Lembrancinhas");
-    listaOuVazio(lembrancinhas, "Lembrancinhas nao informadas no plano.");
-
-    secao("Checklist");
+    novaPagina("Operacao e conferencia");
+    tituloSecao("Roteiro resumido");
+    cronograma.forEach(item => cardTexto(item.atividade || "Etapa", item.hora || "Horario a confirmar", [item.descricao], { alturaMinima: 21, tituloPagina: "Operacao e conferencia" }));
+    tituloSecao("Checklist essencial");
     const checklist = dados.checklist || {};
     ["pre", "durante", "pos"].forEach(chave => {
         const itens = normalizarArray(checklist[chave]);
-        escrever(rotuloChecklist(chave), { estilo: "bold" });
-        listaOuVazio(itens);
+        if (itens.length) cardTexto(rotuloChecklist(chave), `${itens.length} tarefas`, itens.map(item => `- ${textoPDFItem(item)}`), { tituloPagina: "Operacao e conferencia" });
     });
+    paragrafo("Este documento organiza o planejamento, mas nao substitui ficha tecnica testada, conferencia de rotulos, seguranca alimentar nem cotacao de fornecedores.", { cor: cores.suave });
 
-    secao("Precificacao");
-    if (!precoConfiavel) {
-        escrever(precificacao?.mensagem || "Valores financeiros indisponiveis sem catalogo regional rastreavel.", { cor: [120, 110, 98] });
-        escrever(`Regiao: ${localidadePrecificacao(precificacao)}`);
-    } else {
-        const orcamento = dados.orcamento || {};
-        ["economico", "medio", "sofisticado"].forEach(chave => {
-            const tier = orcamento[chave];
-            escrever(rotuloOrcamento(chave), { estilo: "bold" });
-            listaOuVazio(tier && typeof tier === "object" ? Object.entries(tier).map(([item, valor]) => `${item}: ${valor}`) : []);
-        });
-        escrever(`Fonte: ${precificacao.fonte}`);
-        escrever(`Data-base: ${precificacao.data_base}`);
-    }
-
-    const nomeEvento = motor.premissas?.tipo || "evento";
-    const nomeArquivo = `chef-ia-${slugPDF(nomeEvento)}.pdf`;
+    const nomeEvento = evento?.tipo || premissas.tipo || "evento";
     rodape();
-    doc.save(nomeArquivo);
+    doc.save(`chef-ia-${slugPDF(nomeEvento)}.pdf`);
 }
 
 function textoPDFItem(item) {
@@ -1311,19 +1238,22 @@ function renderCardapio(cardapio) {
             <div class="dish-grid dish-carousel" id="cardapioVisualizacao">
                 ${cardapio.map((item, i) => {
                     const slot = slotGaleriaPrato(item);
-                    const fallback = fallbackGaleriaPorSlot(slot);
                     return `
-                        <article class="dish-card-rich menu-item-card" data-dish-slot="${escapeHTML(slot)}" data-dish-name="${escapeHTML(item.nome || "Item do cardápio")}">
+                        <article class="dish-card-rich menu-item-card" data-dish-id="${escapeHTML(item.id || `prato-${i + 1}`)}" data-dish-slot="${escapeHTML(slot)}" data-dish-name="${escapeHTML(item.nome || "Item do cardápio")}">
                             <div class="dish-visual g${i % 6}">
-                                <img src="${escapeHTML(fallback)}" data-dish-image data-dish-fallback="${escapeHTML(fallback)}" alt="Referência visual para ${escapeHTML(item.nome || "item do cardápio")}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-                                <span class="dish-image-label">Imagem de referência</span>
+                                <img data-dish-image alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" hidden>
+                                <div class="dish-placeholder">
+                                    <span>${escapeHTML(rotuloSlotGaleria(slot))}</span>
+                                    <b>${escapeHTML(item.nome || "Item do cardápio")}</b>
+                                </div>
+                                <span class="dish-image-label" hidden>Referência conferida</span>
                             </div>
                             <div class="dish-body">
                                 <span>${escapeHTML(item.categoria || "Cardápio")}</span>
                                 <h4>${escapeHTML(item.nome || "Item do cardápio")}</h4>
                                 <p>${escapeHTML(item.descricao || "Preparação selecionada para este evento.")}</p>
                                 ${item.quantidade ? `<strong>${escapeHTML(item.quantidade)}</strong>` : ""}
-                                <small class="dish-image-credit"><span>Ilustração local de referência</span><a target="_blank" rel="noopener noreferrer" hidden>Fonte</a></small>
+                                <small class="dish-image-credit"><span>Buscando fotografia relacionada...</span><a target="_blank" rel="noopener noreferrer" hidden>Fonte</a></small>
                             </div>
                         </article>
                     `;

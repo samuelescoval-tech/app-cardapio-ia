@@ -49,7 +49,9 @@ test("prompt usa secoes operacionais e nao pede o motor na resposta", () => {
   assert.match(prompt, /pedidos explicitos podem e devem ampliar a composicao/i);
   assert.match(prompt, /"origens":\["prato-1"\]/);
   assert.match(prompt, /"tipo_execucao":"preparo\|montagem\|pronto"/);
-  assert.match(prompt, /"preparo_passos":\["passo 1", "passo 2", "passo 3"\]/);
+  assert.match(prompt, /"preparo_passos":\["passo 1", "passo 2", "passo 3", "passo 4"\]/);
+  assert.match(prompt, /de 4 a 6 passos claros/i);
+  assert.match(prompt, /deixar na agua quente por X minutos e coar/i);
   assert.match(prompt, /todo item com tipo_execucao preparo ou montagem/i);
   assert.match(prompt, /receitas\.length cobre exatamente todos esses ids/i);
   assert.match(prompt, /pelo menos 2 opcoes de layout/i);

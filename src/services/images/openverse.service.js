@@ -72,12 +72,12 @@ function normalizarResultado(item, slot) {
     const fonteSegura = urlHttps(item.foreign_landing_url);
     if (!imagemSegura || !miniaturaSegura || !fonteSegura) return null;
     return validarImagem({
-      id: `openverse-${item.id}`, slot, provider: "openverse", image_url: imagemSegura,
+      id: `openverse-${item.id}`, target_id: null, slot, provider: "openverse", image_url: imagemSegura,
       thumbnail_url: miniaturaSegura, source_url: fonteSegura,
       creator: item.creator || null, creator_url: item.creator_url || null, license,
       license_url: item.license_url || null,
       attribution: item.attribution || `${item.title || "Imagem"} - ${item.creator || "autor nao informado"} (${license.toUpperCase()})`,
-      alt: item.title || "Imagem ilustrativa do evento", width: item.width, height: item.height, fallback: false
+      alt: item.title || "Imagem ilustrativa do evento", tags: item.tags, width: item.width, height: item.height, fallback: false
     });
   } catch { return null; }
 }

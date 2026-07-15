@@ -21,7 +21,7 @@ function salvarHistorico(evento, plano) {
       return null;
     }
 
-    const id = `evento_${Date.now()}`;
+    const id = `evento_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
     const planoPersistivel = prepararPlanoParaHistorico(plano);
     const entrada = {
       id,
@@ -31,6 +31,8 @@ function salvarHistorico(evento, plano) {
       duracao_horas: evento.duracao_horas || 'N/A',
       evento: evento,
       plano: planoPersistivel,
+      versao_historico: 2,
+      conteudo_salvo: true,
       resumo: extrairResumoPlano(planoPersistivel)
     };
 
@@ -38,9 +40,14 @@ function salvarHistorico(evento, plano) {
     historico.unshift(entrada); // Adiciona no início (mais recente)
     historico = historico.slice(0, MAX_ENTRIES); // Mantém apenas os últimos 50
 
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(historico));
+    const persistencia = persistirHistoricoComLimite(localStorage, historico);
+    historico = persistencia.historico;
+    const confirmacao = historico.find(item => item.id === id);
+    if (!confirmacao || !planoTemConteudo(confirmacao.plano)) {
+      throw new Error('A conferência após salvar não encontrou o conteúdo completo do planejamento.');
+    }
     ultimoErroHistorico = null;
-    console.log('✅ Histórico salvo:', id);
+    console.log('✅ Histórico salvo:', id, persistencia.removidos ? `| ${persistencia.removidos} registro(s) antigo(s) removido(s) por espaço` : '');
     return id;
   } catch (error) {
     ultimoErroHistorico = `Não foi possível salvar o histórico: ${error.message}`;
@@ -56,7 +63,7 @@ function salvarHistorico(evento, plano) {
 function prepararPlanoParaHistorico(plano) {
   if (!plano || typeof plano !== 'object' || Array.isArray(plano)) return plano;
 
-  const copia = { ...plano };
+  const copia = JSON.parse(JSON.stringify(plano));
   [
     'imagens_evento',
     'visual_references',
@@ -64,6 +71,30 @@ function prepararPlanoParaHistorico(plano) {
     'galeria_evento'
   ].forEach(campo => delete copia[campo]);
   return copia;
+}
+
+function persistirHistoricoComLimite(storage, historico) {
+  if (!storage || typeof storage.setItem !== 'function') throw new Error('Armazenamento local indisponível.');
+  let candidato = Array.isArray(historico) ? [...historico].slice(0, MAX_ENTRIES) : [];
+  let removidos = 0;
+  let ultimoErro;
+
+  while (candidato.length) {
+    try {
+      storage.setItem(STORAGE_KEY, JSON.stringify(candidato));
+      const confirmado = JSON.parse(storage.getItem(STORAGE_KEY) || '[]');
+      if (!Array.isArray(confirmado) || confirmado[0]?.id !== candidato[0]?.id || !planoTemConteudo(confirmado[0]?.plano)) {
+        throw new Error('Verificação do conteúdo salvo falhou.');
+      }
+      return { historico: confirmado, removidos };
+    } catch (error) {
+      ultimoErro = error;
+      if (candidato.length <= 1) break;
+      candidato.pop();
+      removidos += 1;
+    }
+  }
+  throw ultimoErro || new Error('Não foi possível salvar o planejamento completo.');
 }
 
 /**
@@ -253,6 +284,7 @@ if (typeof window !== 'undefined') {
     deletarEntrada,
     limparHistorico,
     criarMemoriaCulinaria,
+    persistirHistoricoComLimite,
     formatarDataBR,
     planoTemConteudo,
     prepararPlanoParaHistorico,
@@ -266,6 +298,7 @@ if (typeof module !== 'undefined' && module.exports) {
     normalizarEntradaHistorico,
     planoTemConteudo,
     prepararPlanoParaHistorico,
-    criarMemoriaCulinaria
+    criarMemoriaCulinaria,
+    persistirHistoricoComLimite
   };
 }

@@ -32,11 +32,14 @@ PREPARACOES: ${JSON.stringify(preparos)}
 
 TAREFA: retorne somente receitas operacionais para todos os ids recebidos.
 - Repita os ingredientes e quantidades do cardapio.
-- Use 3 a 5 passos curtos, tempo, rendimento e quantidade_total.
+- Use 4 a 6 passos claros, tempo, rendimento e quantidade_total.
+- Escreva em portugues cotidiano e explique como executar cada acao; nao use passos soltos como "decorar", "porcionar", "infusionar" ou "gelado".
+- Para forno ou fogao, informe tempo e temperatura ou intensidade do fogo. Para preparos frios, informe montagem, refrigeracao e conservacao ate o servico.
+- Para chas e ervas, escreva "deixar na agua quente por X minutos e coar".
 - Nao acrescente pratos e nao escreva compras ou explicacoes.
 
 CONTRATO JSON:
-{"receitas":[{"cardapio_id":"prato-1","nome":"","ingredientes":[{"item":"","quantidade":"","unidade":""}],"preparo_passos":["","",""],"tempo":"","rendimento":"","quantidade_total":""}]}`;
+{"receitas":[{"cardapio_id":"prato-1","nome":"","ingredientes":[{"item":"","quantidade":"","unidade":""}],"preparo_passos":["","","",""],"tempo":"","rendimento":"","quantidade_total":""}]}`;
 }
 
 function montarPromptExperiencia(evento, motor, cardapio) {

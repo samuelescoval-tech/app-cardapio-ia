@@ -292,7 +292,7 @@ async function gerarTudo() {
         }
 
         // Referencias visuais sao transitorias e nao bloqueiam historico ou PDF.
-        void carregarImagensEvento(evento, dadosIA.blocos_cardapio || [], demoAccessKey);
+        void carregarImagensEvento(evento, dadosIA.cardapio || [], demoAccessKey);
 
     } catch (error) {
         console.error(error);
@@ -303,7 +303,7 @@ async function gerarTudo() {
     }
 }
 
-async function carregarImagensEvento(evento, blocos = [], demoAccessKey = null) {
+async function carregarImagensEvento(evento, pratos = [], demoAccessKey = null) {
     const sequencia = ++sequenciaConsultaVisual;
     if (window.chefIAVisualReferencesAvailable === false) {
         renderizarGaleriaEventoFallback("A consulta visual externa nao esta configurada.");
@@ -316,7 +316,7 @@ async function carregarImagensEvento(evento, blocos = [], demoAccessKey = null) 
         const response = await fetch("/api/imagens-evento", {
             method: "POST",
             headers,
-            body: JSON.stringify({ evento, blocos })
+            body: JSON.stringify({ evento, pratos })
         });
         const resultado = await response.json().catch(() => ({}));
         if (sequencia !== sequenciaConsultaVisual) return;
@@ -457,10 +457,10 @@ function renderizarHistorico() {
                 ${entrada.plano_valido ? '' : '<br><strong>Geração incompleta — mantida apenas para diagnóstico.</strong>'}
             </div>
             <div class="historico-card-acoes">
-                <button class="historico-btn-carregar" ${entrada.plano_valido ? `onclick="carregarDoHistorico('${entrada.id}')"` : 'disabled'}>
+                <button type="button" class="historico-btn-carregar" ${entrada.plano_valido ? `onclick="carregarDoHistorico('${entrada.id}')"` : 'disabled'}>
                     ${entrada.plano_valido ? '📂 Carregar' : '⚠️ Incompleto'}
                 </button>
-                <button class="historico-btn-deletar" onclick="deletarDoHistorico('${entrada.id}')">
+                <button type="button" class="historico-btn-deletar" onclick="deletarDoHistorico('${entrada.id}')">
                     🗑️ Deletar
                 </button>
             </div>
@@ -522,15 +522,22 @@ function carregarDoHistorico(id) {
     const radioEstilo = document.querySelector(`input[name="estilo"][value="${evento.estilo}"]`);
     if (radioEstilo) radioEstilo.checked = true;
 
-    // Scroll para o formulário
-    document.getElementById('formCard').scrollIntoView({ behavior: 'smooth' });
-
     if (entrada.plano) {
         cancelarConsultaVisualPendente();
         exibirResultadoLuxo(entrada.plano, evento.pessoas || '', evento);
         renderizarGaleriaHistorico();
         const resultadoArea = document.getElementById('resultadoArea');
-        if (resultadoArea) resultadoArea.dataset.planoValido = "true";
+        if (resultadoArea) {
+            resultadoArea.dataset.planoValido = "true";
+            resultadoArea.insertAdjacentHTML('afterbegin', `
+                <div class="history-loaded-banner" role="status">
+                    <strong>Planejamento salvo carregado.</strong>
+                    <span>Nenhuma nova geração foi realizada.</span>
+                </div>
+            `);
+            resultadoArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        window.chefIAHistoricoCarregadoId = id;
     }
 
     console.log('✅ Planejamento carregado:', id);

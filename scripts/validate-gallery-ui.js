@@ -156,16 +156,16 @@ async function main() {
     fs.writeFileSync(screenshotPath, Buffer.from(captura.data, "base64"));
 
     const interacoes = await cdp.evaluate(`(() => {
-      const srcAntes = document.querySelector('[data-gallery-slot="capa"] img')?.getAttribute('src');
+      const srcAntes = document.querySelector('[data-gallery-key="capa"] img')?.getAttribute('src');
       avaliarImagemGaleria('capa', 'inadequada');
-      const srcDepois = document.querySelector('[data-gallery-slot="capa"] img')?.getAttribute('src');
+      const srcDepois = document.querySelector('[data-gallery-key="capa"] img')?.getAttribute('src');
       avaliarImagemGaleria('principal', 'adequada');
       ocultarImagemGaleria('sobremesa');
       const feedbackBruto = localStorage.getItem('chef_ia_visual_feedback_v1') || '';
       return {
         trocaAplicada: Boolean(srcAntes && srcDepois && srcAntes !== srcDepois),
         cardsDepoisDeOcultar: document.querySelectorAll('.event-gallery-card').length,
-        sobremesaOculta: !document.querySelector('[data-gallery-slot="sobremesa"]'),
+        sobremesaOculta: !document.querySelector('[data-gallery-key="sobremesa"]'),
         preferenciasSalvas: window.visualFeedbackService.resumir(),
         feedbackSemUrls: !feedbackBruto.includes('http') && !feedbackBruto.includes('image_url'),
         resumoVisivel: document.getElementById('galleryFeedbackSummary')?.textContent.includes('preferencias locais')
@@ -190,7 +190,55 @@ async function main() {
       throw new Error("alternancia para lista nao atualizou estado e navegacao");
     }
 
-    process.stdout.write(`${JSON.stringify({ ok: true, fontesRecolhidas, desktop, mobile, interacoes, lista, screenshotPath })}\n`);
+    const historico = await cdp.evaluate(`(() => {
+      localStorage.removeItem('chef_ia_historico');
+      let chamadasGeracao = 0;
+      const fetchOriginal = window.fetch;
+      window.fetch = (...args) => {
+        if (String(args[0] || '').includes('/gerar-cardapio')) chamadasGeracao += 1;
+        return fetchOriginal(...args);
+      };
+      const evento = { tipo: 'Evento corporativo', pessoas: 80, estilo: 'Premium', refeicao: 'Coffee break' };
+      const id = window.storageService.salvarHistorico(evento, window.chefIAUltimoPlano.dados);
+      renderizarHistorico();
+      document.querySelector('.historico-btn-carregar')?.click();
+      window.fetch = fetchOriginal;
+      return {
+        id,
+        carregadoId: window.chefIAHistoricoCarregadoId,
+        banner: document.querySelector('.history-loaded-banner')?.textContent || '',
+        chamadasGeracao,
+        cardapioPreservado: window.chefIAUltimoPlano?.dados?.cardapio?.length || 0,
+        receitaPreservada: Array.isArray(window.chefIAUltimoPlano?.dados?.receitas)
+      };
+    })()`);
+    if (!historico.id || historico.carregadoId !== historico.id || historico.chamadasGeracao !== 0 ||
+        historico.cardapioPreservado !== 3 || !historico.receitaPreservada || !historico.banner.includes('Nenhuma nova')) {
+      throw new Error("historico nao preservou o planejamento ou iniciou nova geracao");
+    }
+
+    const pdf = await cdp.evaluate(`(() => {
+      window.__pdfSalvo = null;
+      window.jspdf = { jsPDF: class {
+        constructor() {
+          const estado = { paginas: 1 };
+          return new Proxy({}, {
+            get(alvo, propriedade) {
+              if (propriedade === 'splitTextToSize') return texto => [String(texto || '')];
+              if (propriedade === 'addPage') return () => { estado.paginas += 1; };
+              if (propriedade === 'getNumberOfPages') return () => estado.paginas;
+              if (propriedade === 'save') return nome => { window.__pdfSalvo = nome; };
+              return () => {};
+            }
+          });
+        }
+      } };
+      baixarRelatorioPDF();
+      return { arquivo: window.__pdfSalvo };
+    })()`);
+    if (!pdf.arquivo || !pdf.arquivo.endsWith('.pdf')) throw new Error("PDF visual nao foi gerado");
+
+    process.stdout.write(`${JSON.stringify({ ok: true, fontesRecolhidas, desktop, mobile, interacoes, lista, historico, pdf, screenshotPath })}\n`);
   } finally {
     cdp?.close();
     if (chrome?.exitCode === null) chrome.kill("SIGTERM");
@@ -213,7 +261,9 @@ async function coletarMetricas(cdp) {
       brokenImages: Array.from(document.querySelectorAll('.event-gallery-card img')).filter(item => item.complete && item.naturalWidth === 0).length,
       dishCards: document.querySelectorAll('.menu-item-card').length,
       dishImages: document.querySelectorAll('.menu-item-card img[data-dish-image]').length,
-      brokenDishImages: Array.from(document.querySelectorAll('.menu-item-card img[data-dish-image]')).filter(item => item.complete && item.naturalWidth === 0).length,
+      visibleDishImages: Array.from(document.querySelectorAll('.menu-item-card img[data-dish-image]')).filter(item => !item.hidden).length,
+      dishPlaceholders: Array.from(document.querySelectorAll('.menu-item-card .dish-placeholder')).filter(item => !item.hidden).length,
+      brokenDishImages: Array.from(document.querySelectorAll('.menu-item-card img[data-dish-image]')).filter(item => !item.hidden && item.complete && item.naturalWidth === 0).length,
       firstCardWidth: Math.round(primeiro?.width || 0),
       visibleTouchTargets: alturasVisiveis.length,
       touchTargetHeights: alturasVisiveis.map(Math.round),
@@ -228,7 +278,8 @@ function assertMetricas(metricas, nome) {
   if (!metricas.controlsVisible) throw new Error(`${nome}: controles ocultos`);
   if (metricas.creditLines !== metricas.cards) throw new Error(`${nome}: creditos incompletos`);
   if (metricas.brokenImages !== 0) throw new Error(`${nome}: ${metricas.brokenImages} imagem(ns) quebrada(s)`);
-  if (metricas.dishCards !== 3 || metricas.dishImages !== 3) throw new Error(`${nome}: imagens nao aplicadas aos 3 itens individuais do cardapio`);
+  if (metricas.dishCards !== 3 || metricas.dishImages !== 3) throw new Error(`${nome}: estrutura visual ausente nos 3 itens individuais do cardapio`);
+  if (metricas.visibleDishImages !== 0 || metricas.dishPlaceholders !== 3) throw new Error(`${nome}: referencias genericas deveriam permanecer como identificacao neutra`);
   if (metricas.brokenDishImages !== 0) throw new Error(`${nome}: ${metricas.brokenDishImages} imagem(ns) de prato quebrada(s)`);
 }
 

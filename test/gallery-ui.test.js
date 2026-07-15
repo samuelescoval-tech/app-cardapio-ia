@@ -39,6 +39,9 @@ test("historico usa referencias locais e nao repete consulta externa", () => {
   assert.match(carregar, /cancelarConsultaVisualPendente\(\)/);
   assert.match(carregar, /renderizarGaleriaHistorico\(\)/);
   assert.doesNotMatch(carregar, /carregarImagensEvento|\/api\/imagens-evento/);
+  assert.match(carregar, /Nenhuma nova gera[cç][aã]o foi realizada/);
+  assert.match(app, /<button type="button" class="historico-btn-carregar"/);
+  assert.match(app, /<button type="button" class="historico-btn-deletar"/);
 });
 
 test("cartoes preservam credito, licenca, fonte segura e fallback local", () => {
@@ -65,11 +68,28 @@ test("cardapio renderiza itens individuais e recebe imagens da galeria", () => {
   assert.match(render, /cardapio\.map\(\(item, i\)/);
   assert.match(render, /class="dish-card-rich menu-item-card"/);
   assert.match(render, /data-dish-image/);
+  assert.match(render, /data-dish-id=/);
+  assert.match(render, /class="dish-placeholder"/);
+  assert.match(render, /imagem\.target_id/);
   assert.match(render, /function aplicarImagensAoCardapio/);
   assert.match(render, /Fontes das imagens do cardapio/);
   assert.match(render, /Ver fontes e avaliar/);
   assert.match(render, /eventGalleryDetails/);
   assert.doesNotMatch(render, /blocos\.map\(\(bloco, i\)/);
+});
+
+test("PDF usa paginas visuais resumidas em vez de despejo integral", () => {
+  const render = ler("public/js/render.js");
+  const inicio = render.indexOf("function baixarRelatorioPDF");
+  const fim = render.indexOf("function textoPDFItem", inicio);
+  const pdf = render.slice(inicio, fim);
+
+  assert.match(pdf, /Visao geral/);
+  assert.match(pdf, /Rendimento e compras/);
+  assert.match(pdf, /Fichas de preparo/);
+  assert.match(pdf, /Operacao e conferencia/);
+  assert.match(pdf, /roundedRect/);
+  assert.doesNotMatch(pdf, /Coerencia aplicada ao evento|Variedade culinaria|Opcoes de local|Lembrancinhas/);
 });
 
 test("normalizacao visual rejeita protocolo inseguro e caminho local arbitrario", () => {

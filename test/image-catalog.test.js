@@ -14,21 +14,21 @@ test("dicionario visual possui contextos, slots e fallbacks locais", () => {
   });
 });
 
-test("solicitacoes usam consultas curtas por contexto e preservam estilo como metadado", () => {
+test("solicitacoes sao especificas por prato e preservam o id de destino", () => {
   const solicitacoes = construirSolicitacoesImagem({ tipo: "Aniversario de debutante", tema: "Jardim dourado", estilo: "Premium" }, [
-    { id: "b1", nome: "Entradas", categoria: "Entrada" },
-    { id: "b2", nome: "Carnes da grelha", categoria: "Prato Principal" },
-    { id: "b3", nome: "Doces", categoria: "Sobremesa" }
+    { id: "p1", nome: "Mini sanduiche de carpaccio com alcaparras", categoria: "Entrada" },
+    { id: "p2", nome: "File de tilapia grelhado", categoria: "Prato Principal" },
+    { id: "p3", nome: "Agua mineral com hortela", categoria: "Bebida" }
   ]);
-  assert.ok(solicitacoes.length <= 8);
-  assert.equal(solicitacoes[0].slot, "capa");
-  assert.equal(solicitacoes[0].query, "quinceanera");
+  assert.equal(solicitacoes.length, 3);
+  assert.equal(solicitacoes[0].slot, "entrada");
+  assert.equal(solicitacoes[0].target_id, "p1");
+  assert.match(solicitacoes[0].query, /sandwich carpaccio capers/);
+  assert.ok(solicitacoes[0].match_terms.includes("carpaccio"));
   assert.equal(solicitacoes[0].style_id, "premium");
-  assert.equal(solicitacoes[0].fallback_query, "event reception");
-  assert.equal(solicitacoes.find(item => item.slot === "principal").query, "quinceanera food");
-  assert.equal(solicitacoes.find(item => item.slot === "sobremesa").query, "quinceanera cake");
-  assert.ok(solicitacoes.some(item => item.slot === "bebida"));
-  assert.ok(solicitacoes.some(item => item.slot === "ambiente"));
+  assert.match(solicitacoes[1].query, /tilapia fish/);
+  assert.match(solicitacoes[2].query, /mineral water/);
+  assert.equal(solicitacoes[2].match_terms.includes("beverage"), false);
 });
 
 test("contrato rejeita provider, licenca e URL externa inseguros", () => {

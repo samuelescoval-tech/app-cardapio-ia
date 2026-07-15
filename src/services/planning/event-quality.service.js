@@ -5,7 +5,7 @@ function avaliarQualidadeEvento(plano = {}, evento = {}, diretriz = {}) {
   const avisos = Array.isArray(plano.qualidade_culinaria?.avisos) ? plano.qualidade_culinaria.avisos : [];
   const comparacao = [
     avaliarIdentidade(cardapio, avisos),
-    avaliarComposicao(cardapio, diretriz),
+    avaliarComposicao(plano, diretriz),
     avaliarBebidas(cardapio, evento),
     avaliarPadrao(cardapio, evento, avisos),
     avaliarReceitas(plano),
@@ -48,7 +48,8 @@ function avaliarIdentidade(cardapio, avisos) {
     : `${cardapio.length} itens sem conflito estrutural pendente identificado.`);
 }
 
-function avaliarComposicao(cardapio, diretriz) {
+function avaliarComposicao(plano, diretriz) {
+  const cardapio = Array.isArray(plano.cardapio) ? plano.cardapio : [];
   const regras = Array.isArray(diretriz.composicao_minima) ? diretriz.composicao_minima : [];
   if (!regras.length) return criterio("Composição das refeições", cardapio.length ? 2 : 0, 2, "Sem matriz específica para comparação.");
   const proporcoes = regras.map(regra => {
@@ -56,7 +57,10 @@ function avaliarComposicao(cardapio, diretriz) {
     return Math.min(1, atual / Math.max(1, Number(regra.minimum) || 1));
   });
   const cobertura = proporcoes.reduce((total, valor) => total + valor, 0) / proporcoes.length;
-  return criterio("Composição das refeições", 2 * cobertura, 2, `${Math.round(cobertura * 100)}% dos mínimos por categoria cobertos.`);
+  const rendimentoConforme = plano.rendimento_alimentar?.status !== "revisar";
+  const pontos = 2 * cobertura * (rendimentoConforme ? 1 : 0.6);
+  const complemento = rendimentoConforme ? "" : " Há quantidades abaixo das referências por pessoa.";
+  return criterio("Composição das refeições", pontos, 2, `${Math.round(cobertura * 100)}% dos mínimos por categoria cobertos.${complemento}`);
 }
 
 function avaliarBebidas(cardapio, evento) {

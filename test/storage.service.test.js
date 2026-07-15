@@ -5,7 +5,8 @@ const {
   normalizarEntradaHistorico,
   planoTemConteudo,
   prepararPlanoParaHistorico,
-  criarMemoriaCulinaria
+  criarMemoriaCulinaria,
+  persistirHistoricoComLimite
 } = require("../public/js/storage.service");
 
 test("reconhece planejamento com conteudo e rejeita fallback vazio", () => {
@@ -68,6 +69,34 @@ test("remove referencias visuais antes de persistir o planejamento", () => {
   assert.equal("referencias_visuais" in persistivel, false);
   assert.equal("galeria_evento" in persistivel, false);
   assert.equal("imagens_evento" in plano, true);
+});
+
+test("persistencia preserva o plano completo e remove somente registros antigos quando falta espaco", () => {
+  const storage = {
+    valor: null,
+    setItem(chave, valor) {
+      if (valor.length > 650) throw new Error("QuotaExceededError");
+      this.valor = valor;
+    },
+    getItem() { return this.valor; }
+  };
+  const nova = {
+    id: "novo",
+    plano: {
+      cardapio: [{ nome: "Prato principal", ingredientes: [{ item: "Carne", quantidade: "16 kg" }] }],
+      receitas: [{ nome: "Prato principal", preparo_passos: ["Passo 1", "Passo 2", "Passo 3", "Passo 4"] }]
+    }
+  };
+  const antigos = Array.from({ length: 5 }, (_, indice) => ({
+    id: `antigo-${indice}`,
+    plano: { cardapio: [{ nome: "x".repeat(100) }] }
+  }));
+
+  const resultado = persistirHistoricoComLimite(storage, [nova, ...antigos]);
+
+  assert.equal(resultado.historico[0].id, "novo");
+  assert.deepEqual(resultado.historico[0].plano, nova.plano);
+  assert.ok(resultado.removidos > 0);
 });
 
 test("memoria culinaria envia somente contexto e nomes de pratos", () => {

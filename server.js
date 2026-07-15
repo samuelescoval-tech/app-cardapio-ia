@@ -13,6 +13,7 @@ const { criarSpoonacularService, SpoonacularError } = require('./src/services/re
 const { criarOpenverseService } = require('./src/services/images/openverse.service');
 const { criarImageSelectionService } = require('./src/services/images/image-selection.service');
 const { avaliarQualidadeEvento } = require('./src/services/planning/event-quality.service');
+const { avaliarRendimentoAlimentar } = require('./src/services/planning/food-yield.service');
 
 const app = express();
 const demoAccessKey = process.env.DEMO_ACCESS_KEY;
@@ -41,7 +42,8 @@ app.get('/api/status', (req, res) => {
             event_coherence_blocks: true,
             recipe_operational_recovery: true,
             beverage_volume_reconciliation: true,
-            event_quality_gate: true
+            event_quality_gate: true,
+            food_yield_gate: true
         },
         recipe_references: spoonacularService.getStatus(),
         visual_references: openverseService.getStatus()
@@ -76,6 +78,7 @@ async function gerarCardapioHandler(req, res) {
         }
         if (motor && resposta.plano) {
             resposta.plano = aplicarMotorAoPlano(resposta.plano, motor);
+            resposta.plano.rendimento_alimentar = avaliarRendimentoAlimentar(resposta.plano, evento, motor);
             resposta.plano.avaliacao_evento = avaliarQualidadeEvento(resposta.plano, evento, diretrizCulinaria);
             resposta.meta = {
                 ...(resposta.meta || {}),
@@ -93,7 +96,8 @@ async function gerarCardapioHandler(req, res) {
                 reconciliacao_bebidas_status: resposta.plano.reconciliacao_bebidas?.status || "nao_avaliado",
                 grupos_bebidas_ajustados: resposta.plano.reconciliacao_bebidas?.grupos?.filter(grupo => grupo.status === "ajustado").length || 0,
                 nota_evento: resposta.plano.avaliacao_evento?.nota ?? null,
-                status_avaliacao_evento: resposta.plano.avaliacao_evento?.status || "nao_avaliado"
+                status_avaliacao_evento: resposta.plano.avaliacao_evento?.status || "nao_avaliado",
+                rendimento_alimentar_status: resposta.plano.rendimento_alimentar?.status || "nao_avaliado"
             };
         }
 
@@ -156,14 +160,14 @@ async function buscarImagensEventoHandler(req, res) {
             return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
         }
         const evento = validarEvento(req.body?.evento);
-        const blocos = Array.isArray(req.body?.blocos)
-            ? req.body.blocos.slice(0, 20).map(item => ({
-                id: String(item?.id || "").slice(0, 80),
+        const pratos = Array.isArray(req.body?.pratos)
+            ? req.body.pratos.slice(0, 20).map((item, indice) => ({
+                id: String(item?.id || `prato-${indice + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80),
                 nome: String(item?.nome || "").slice(0, 120),
                 categoria: String(item?.categoria || "").slice(0, 80)
             }))
             : [];
-        const resultado = await imageSelectionService.selecionarParaEvento(evento, blocos);
+        const resultado = await imageSelectionService.selecionarParaEvento(evento, pratos);
         res.json({ ok: true, ...resultado });
     } catch (error) {
         if (error instanceof ErroValidacaoEvento) {

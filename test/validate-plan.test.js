@@ -397,7 +397,7 @@ test("cria ficha operacional rastreavel quando a IA omite uma receita", () => {
   assert.equal(plano.qualidade_culinaria.cobertura.receitas_recuperadas, 1);
   assert.equal(recuperada.origem, "backend");
   assert.equal(recuperada.status, "ficha_operacional_recuperada");
-  assert.equal(recuperada.preparo_passos.length, 3);
+  assert.equal(recuperada.preparo_passos.length, 4);
   assert.match(recuperada.observacao, /IA omitiu a receita/i);
   assert.match(plano.qualidade_culinaria.ajustes.join(" "), /Ficha operacional criada/i);
   assert.equal(plano.qualidade_culinaria.avisos.some(aviso => /Receita ausente/.test(aviso)), false);
@@ -427,7 +427,25 @@ test("completa ficha parcial sem ocultar a origem do ajuste", () => {
 
   assert.equal(receita.origem, "ia_complementada_backend");
   assert.equal(receita.status, "ficha_operacional_recuperada");
-  assert.equal(receita.preparo_passos.length, 3);
+  assert.equal(receita.preparo_passos.length, 4);
   assert.equal(receita.tempo, "Validar em teste de producao");
   assert.equal(plano.qualidade_culinaria.cobertura.receitas_recuperadas, 1);
+});
+
+test("reescreve passos vagos em linguagem simples e detalhada", () => {
+  const entrada = planoValido();
+  entrada.cardapio[0].nome = "Infusao de gengibre";
+  entrada.cardapio[0].descricao = "Bebida infusionada e servida gelada";
+  entrada.receitas[0].nome = "Infusao de gengibre";
+  entrada.receitas[0].preparo_passos = ["Adicionar a agua fervente", "Infusionar", "Gelado"];
+
+  const plano = validarPlano(entrada);
+  const receita = plano.receitas[0];
+
+  assert.equal(plano.cardapio[0].nome, "Chá de gengibre");
+  assert.match(plano.cardapio[0].descricao, /aromatizada/i);
+  assert.equal(receita.preparo_passos.length, 4);
+  assert.match(receita.preparo_passos.join(" "), /deixar descansar por 5 a 10 minutos e coar/i);
+  assert.match(receita.preparo_passos.join(" "), /manter refrigerado at[eé] o momento de servir/i);
+  assert.doesNotMatch(receita.preparo_passos.join(" "), /\binfusionar\b/i);
 });

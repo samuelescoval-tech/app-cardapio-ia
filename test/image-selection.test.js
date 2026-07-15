@@ -2,55 +2,71 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const { criarImageSelectionService } = require("../src/services/images/image-selection.service");
 
-test("selecao preserva uma imagem por slot e usa fallback em falha", async () => {
-  let chamada = 0;
+const pratos = [
+  { id: "p1", nome: "Mini sanduiche de carpaccio com alcaparras", categoria: "Entrada" },
+  { id: "p2", nome: "Agua mineral com hortela", categoria: "Bebida" }
+];
+
+test("seleciona fotografia relacionada e liga ao prato exato", async () => {
   const service = criarImageSelectionService({ openverseService: {
     async buscar(solicitacao) {
-      chamada += 1;
-      if (chamada === 1) return { images: [{ id: "externa", slot: solicitacao.slot, provider: "openverse", fallback: false }] };
-      throw new Error("indisponivel");
+      return { images: [{
+        id: `img-${solicitacao.target_id}`,
+        source_url: `https://example.com/${solicitacao.target_id}`,
+        provider: "openverse",
+        alt: solicitacao.target_id === "p1" ? "Carpaccio sandwich with capers" : "Mineral water with mint",
+        tags: []
+      }] };
     }
   } });
-  const resultado = await service.selecionarParaEvento({ tipo: "Casamento", estilo: "Elegante" }, []);
-  assert.ok(resultado.images.length >= 2);
-  assert.equal(resultado.images[0].id, "externa");
-  assert.ok(resultado.images.slice(1).every(item => item.provider === "local" && item.fallback));
-  assert.ok(resultado.warnings.length >= 1);
-  assert.equal(resultado.persistence, false);
+  const resultado = await service.selecionarParaEvento({ tipo: "Corporativo" }, pratos);
+
+  assert.equal(resultado.images.length, 2);
+  assert.equal(resultado.images[0].target_id, "p1");
+  assert.equal(resultado.images[1].target_id, "p2");
+  assert.equal(resultado.warnings.length, 0);
 });
 
-test("selecao tenta a consulta generica quando a contextual nao encontra imagem", async () => {
-  const consultas = [];
+test("rejeita foto de massa para carpaccio e usa identificacao neutra", async () => {
   const service = criarImageSelectionService({ openverseService: {
-    async buscar(solicitacao) {
-      consultas.push(solicitacao.query);
-      return consultas.length === 1 ? { images: [] } : { images: [{ id: "generica", slot: solicitacao.slot, provider: "openverse" }] };
+    async buscar() {
+      return { images: [{ id: "massa", source_url: "https://example.com/massa", provider: "openverse", alt: "Pasta with tomato sauce", tags: ["pasta"] }] };
     }
   } });
-  const resultado = await service.selecionarParaEvento({ tipo: "Casamento", estilo: "Premium" }, []);
-  assert.equal(resultado.images[0].id, "generica");
-  assert.equal(consultas[1], "event reception");
+  const resultado = await service.selecionarParaEvento({ tipo: "Corporativo" }, [pratos[0]]);
+
+  assert.equal(resultado.images.length, 0);
+  assert.match(resultado.warnings[0], /identificacao visual neutra/i);
 });
 
-test("selecao evita repeticao entre slots e preserva alternativas transitorias", async () => {
-  let chamada = 0;
-  const repetida = { id: "repetida", source_url: "https://example.com/repetida", provider: "openverse" };
+test("nao repete a mesma fotografia em pratos diferentes", async () => {
   const service = criarImageSelectionService({ openverseService: {
     async buscar(solicitacao) {
-      chamada += 1;
-      return { images: chamada === 1
-        ? [
-            { ...repetida, slot: solicitacao.slot },
-            { id: "alternativa", source_url: "https://example.com/alternativa", slot: solicitacao.slot, provider: "openverse" }
-          ]
-        : [{ ...repetida, slot: solicitacao.slot }]
-      };
+      return { images: [{
+        id: "repetida",
+        source_url: "https://example.com/repetida",
+        provider: "openverse",
+        alt: solicitacao.target_id === "p1" ? "Carpaccio sandwich" : "Mineral water"
+      }] };
     }
   } });
-  const resultado = await service.selecionarParaEvento({ tipo: "Casamento", estilo: "Elegante" }, []);
+  const resultado = await service.selecionarParaEvento({ tipo: "Corporativo" }, pratos);
 
-  assert.equal(resultado.images[0].id, "repetida");
-  assert.equal(resultado.alternatives.capa[0].id, "alternativa");
-  assert.ok(resultado.images.slice(1).every(imagem => imagem.id !== "repetida"));
-  assert.ok(resultado.warnings.some(aviso => aviso.includes("repetidos")));
+  assert.equal(resultado.images.length, 1);
+  assert.ok(resultado.warnings.some(aviso => /agua mineral/i.test(aviso)));
+});
+
+test("preserva alternativas relevantes por id do prato", async () => {
+  const service = criarImageSelectionService({ openverseService: {
+    async buscar() {
+      return { images: [
+        { id: "a", source_url: "https://example.com/a", provider: "openverse", alt: "Carpaccio sandwich with capers" },
+        { id: "b", source_url: "https://example.com/b", provider: "openverse", alt: "Carpaccio sandwich" }
+      ] };
+    }
+  } });
+  const resultado = await service.selecionarParaEvento({ tipo: "Corporativo" }, [pratos[0]]);
+
+  assert.equal(resultado.images[0].id, "a");
+  assert.equal(resultado.alternatives.p1[0].id, "b");
 });
