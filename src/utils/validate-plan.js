@@ -5,6 +5,10 @@ const CAMPOS_ARRAY_TEXTO = [
   "lembrancinhas"
 ];
 const { construirBlocosCardapio } = require("../services/planning/event-coherence.service");
+const {
+  calcularMinimoVariedadeBebidas,
+  garantirVariedadeBebidas
+} = require("../services/planning/beverage-variety.service");
 
 const CAMPOS_OBRIGATORIOS = [
   "cardapio",
@@ -48,8 +52,11 @@ function validarPlano(data, contexto = {}) {
   const resumo = normalizarResumoChef(data.resumo_chef, contexto.evento);
   plano.resumo_chef = resumo.texto;
 
+  const ajustesCategoria = corrigirCategoriasEvidentes(plano.cardapio);
+  const ajustesBebidas = garantirVariedadeBebidas(plano, contexto.evento);
   plano.qualidade_culinaria = validarCoerenciaCulinaria(plano, contexto.diretrizCulinaria);
   plano.blocos_cardapio = construirBlocosCardapio(plano.cardapio, contexto.evento);
+  [...ajustesCategoria, ...ajustesBebidas].forEach(ajuste => registrarAjuste(plano.qualidade_culinaria, ajuste));
   if (resumo.ajuste) {
     registrarAjuste(plano.qualidade_culinaria, resumo.ajuste);
   }
@@ -127,6 +134,27 @@ function normalizarCardapio(valor) {
     quantidade: textoSeguro(valor.quantidade, ""),
     ingredientes: normalizarObjetos(valor.ingredientes, normalizarIngrediente)
   };
+}
+
+function corrigirCategoriasEvidentes(cardapio) {
+  const ajustes = [];
+  cardapio.forEach(prato => {
+    const nome = normalizarTextoBusca(prato.nome);
+    const categoriaAnterior = prato.categoria;
+    let categoria = categoriaAnterior;
+    if (/agua|mineral|refrigerante|suco|limonada|cafe|cha|infus|cerveja|vinho|espumante|gin|vodka|whisky|uisque|caipirinha|mocktail/.test(nome)) {
+      categoria = "Bebida";
+    } else if (/brigadeiro|beijinho|bolo|torta|tartelete|trufa|pudim|mousse|sorvete|doce/.test(nome)) {
+      categoria = "Sobremesa";
+    } else if (/iogurte|mix de frutas|salada de frutas/.test(nome) && /prato principal/.test(normalizarTextoBusca(categoriaAnterior))) {
+      categoria = "Acompanhamento";
+    }
+    if (categoria !== categoriaAnterior) {
+      prato.categoria = categoria;
+      ajustes.push(`Categoria corrigida por coerencia: ${prato.nome} saiu de ${categoriaAnterior || "sem categoria"} para ${categoria}.`);
+    }
+  });
+  return ajustes;
 }
 
 function normalizarReceita(valor) {
@@ -681,14 +709,25 @@ function validarRequisitosDoEvento(plano, evento, relatorio) {
   const bebidas = itens.filter(item => /bebida/.test(item.categoria));
   const alcoolicas = bebidas.filter(item => ehBebidaAlcoolica(item.texto));
   const naoAlcoolicas = bebidas.filter(item => !ehBebidaAlcoolica(item.texto));
-  if (/bar completo/.test(alcool) && alcoolicas.length < 2) {
-    registrarAviso(relatorio, `Bar completo abaixo do minimo de bebidas alcoolicas: ${alcoolicas.length}/2.`);
+  const minimoVariedade = calcularMinimoVariedadeBebidas(evento.pessoas);
+  const minimoTotal = /bar completo/.test(alcool) ? Math.max(4, minimoVariedade) : minimoVariedade;
+  const minimoAlcoolicas = /bar completo/.test(alcool)
+    ? Math.max(2, Math.floor(minimoTotal / 2))
+    : 0;
+  const minimoNaoAlcoolicas = /bar completo/.test(alcool) ? minimoTotal - minimoAlcoolicas : minimoTotal;
+  if (minimoTotal && bebidas.length < minimoTotal) {
+    registrarAviso(relatorio, `Variedade de bebidas abaixo da metrica por publico: ${bebidas.length}/${minimoTotal}.`);
+  }
+  if (/sem alcool|nao alcool/.test(alcool) && alcoolicas.length) {
+    registrarAviso(relatorio, `Evento sem alcool contem ${alcoolicas.length} bebida(s) alcoolica(s).`);
+  } else if (/bar completo/.test(alcool) && alcoolicas.length < minimoAlcoolicas) {
+    registrarAviso(relatorio, `Bar completo abaixo do minimo de bebidas alcoolicas: ${alcoolicas.length}/${minimoAlcoolicas}.`);
   } else if (!/sem alcool|nao alcool/.test(alcool) && /alcool|bar/.test(alcool) && !alcoolicas.length) {
     registrarAviso(relatorio, "Evento com alcool sem bebida alcoolica identificada no cardapio.");
   }
 
-  if (/bar completo/.test(alcool) && naoAlcoolicas.length < 2) {
-    registrarAviso(relatorio, `Bar completo abaixo do minimo de bebidas nao alcoolicas: ${naoAlcoolicas.length}/2.`);
+  if (/bar completo/.test(alcool) && naoAlcoolicas.length < minimoNaoAlcoolicas) {
+    registrarAviso(relatorio, `Bar completo abaixo do minimo de bebidas nao alcoolicas: ${naoAlcoolicas.length}/${minimoNaoAlcoolicas}.`);
   }
 }
 
@@ -708,6 +747,19 @@ function validarContratoPremium(itens, estilo, relatorio) {
 
   if (encontrados.length) {
     registrarAviso(relatorio, `Contrato Premium violado por item comum: ${encontrados.join(", ")}.`);
+  }
+
+  const itensGenericos = itens.filter(item => {
+    if (/iogurte com mel/.test(item.texto)) {
+      return !/grego|artesanal|compota|granola|castanha|verrine|copo individual/.test(item.texto);
+    }
+    if (/biscoito (de )?especiarias/.test(item.texto)) {
+      return !/amanteigado|artesanal|decorado|ganache|castanha|citrico/.test(item.texto);
+    }
+    return false;
+  });
+  if (itensGenericos.length) {
+    registrarAviso(relatorio, `Contrato Premium exige apresentacao ou acabamento adicional em: ${itensGenericos.map(item => item.texto).join(", ")}.`);
   }
 }
 

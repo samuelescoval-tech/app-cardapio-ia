@@ -41,9 +41,10 @@ test("orquestrador recompõe e valida um plano gerado em blocos", async () => {
   });
 
   assert.equal(resposta.ok, true);
-  assert.equal(resposta.plano.cardapio.length, 1);
+  assert.equal(resposta.plano.cardapio.length, 4);
+  assert.equal(resposta.plano.cardapio.filter(item => item.categoria === "Bebida").length, 3);
   assert.equal(resposta.plano.receitas.length, 1);
-  assert.equal(resposta.plano.lista_compras[0].item, "Arroz");
+  assert.ok(resposta.plano.lista_compras.some(item => item.item === "Arroz"));
   assert.equal(resposta.meta.generation_mode, "split");
   assert.equal(resposta.meta.total_tokens, 60);
 });

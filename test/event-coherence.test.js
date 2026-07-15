@@ -66,6 +66,19 @@ test("blocos agrupam variacoes sem perder ids operacionais", () => {
   assert.deepEqual(blocos.flatMap(item => item.itens).sort(), cardapio.map(item => item.id).sort());
 });
 
+test("categoria impede iogurte de entrar em bloco de carnes por causa da descricao", () => {
+  const blocos = construirBlocosCardapio([{
+    id: "iogurte-1",
+    nome: "Iogurte com mel",
+    categoria: "Acompanhamento",
+    descricao: "Alternativa fresca servida após as carnes suínas e linguiças"
+  }], { tipo: "Evento premium" });
+
+  assert.equal(blocos.length, 1);
+  assert.notEqual(blocos[0].id, "carnes_suinas");
+  assert.equal(blocos[0].categoria, "Acompanhamento");
+});
+
 test("catalogo de contextos possui contrato valido", () => {
   assert.deepEqual(validarCatalogoContextos(catalogo), []);
 });

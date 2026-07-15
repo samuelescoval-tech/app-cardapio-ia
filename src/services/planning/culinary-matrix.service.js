@@ -2,6 +2,7 @@ const matriz = require("../../../data/culinary/matrix.json");
 const catalogoFontes = require("../../../data/culinary/source-catalog.json");
 const catalogoAlimentos = require("../../../data/culinary/food-catalog.json");
 const { construirContextoEvento } = require("./event-coherence.service");
+const { calcularMinimoVariedadeBebidas } = require("./beverage-variety.service");
 
 const errosTaxonomia = validarTaxonomiaCulinaria(matriz);
 if (errosTaxonomia.length) {
@@ -91,6 +92,11 @@ function obterDiretrizCulinaria(evento = {}) {
       incremento_minimo_por_categoria: estilo.minimum_increment_each_category
     } : null,
     contexto_operacional: contextoOperacional,
+    variedade_bebidas: {
+      minimo_opcoes: calcularMinimoVariedadeBebidas(evento.pessoas),
+      regra: "Ate 100 pessoas, uma opcao por 10 com minimo de 3; acima de 100, uma nova opcao por 50 pessoas adicionais.",
+      marcas: "Nao usar marcas; diferenciar sabor, presenca de acucar, base alcoolica ou estilo."
+    },
     quantidade_total_minima: composicaoMinima.reduce((total, item) => total + item.minimum, 0),
     composicao_minima: composicaoMinima,
     orientacoes: [
@@ -108,6 +114,7 @@ function obterDiretrizCulinaria(evento = {}) {
 
 function ajustarComposicaoAoEvento(composicao, evento, substituicoes = [], incrementoPorCategoria = 0) {
   const barCompleto = normalizar(evento.alcool).includes("bar completo");
+  const pessoas = Number(evento.pessoas);
   const categorias = new Map(composicao.map(item => [normalizar(item.category), { ...item }]));
   substituicoes.forEach(item => {
     const chave = normalizar(item.category);
@@ -117,12 +124,43 @@ function ajustarComposicaoAoEvento(composicao, evento, substituicoes = [], incre
       minimum: Math.max(Number(atual?.minimum) || 0, Number(item.minimum) || 0)
     });
   });
-  return Array.from(categorias.values()).map(item => ({
+  const resultado = Array.from(categorias.values()).map(item => ({
     ...item,
     minimum: barCompleto && normalizar(item.category) === "bebida"
       ? Math.max(item.minimum + incrementoPorCategoria, 4)
       : item.minimum + incrementoPorCategoria
   }));
+
+  if (Number.isFinite(pessoas) && pessoas > 0 && pessoas <= 20) {
+    resultado.forEach(item => {
+      if (normalizar(item.category) !== "bebida") item.minimum = Math.max(1, Math.ceil(item.minimum * 0.75));
+    });
+  }
+
+  if (Number.isFinite(pessoas) && pessoas > 100) {
+    const categoriasComida = resultado
+      .map((item, indice) => ({ item, indice, prioridade: prioridadeVariedadeComida(item.category) }))
+      .filter(entrada => normalizar(entrada.item.category) !== "bebida")
+      .sort((a, b) => a.prioridade - b.prioridade || a.indice - b.indice);
+    const adicionais = Math.ceil((pessoas - 100) / 50);
+    for (let indice = 0; indice < adicionais && categoriasComida.length; indice += 1) {
+      categoriasComida[indice % categoriasComida.length].item.minimum += 1;
+    }
+  }
+
+  const minimoBebidas = calcularMinimoVariedadeBebidas(pessoas);
+  const bebidas = resultado.find(item => normalizar(item.category) === "bebida");
+  if (bebidas && minimoBebidas) bebidas.minimum = Math.max(bebidas.minimum, minimoBebidas);
+  return resultado;
+}
+
+function prioridadeVariedadeComida(categoria) {
+  const chave = normalizar(categoria);
+  if (/prato principal/.test(chave)) return 0;
+  if (/acompanhamento|salada/.test(chave)) return 1;
+  if (/entrada|boas vindas/.test(chave)) return 2;
+  if (/sobremesa/.test(chave)) return 3;
+  return 4;
 }
 
 function combinarListas(base = [], adicional = []) {

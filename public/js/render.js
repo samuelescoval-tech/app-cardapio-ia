@@ -8,7 +8,6 @@
 function exibirResultadoLuxo(dados, pessoas, evento = null) {
     const area = document.getElementById('resultadoArea');
     const cardapio = normalizarArray(dados.cardapio);
-    const blocosCardapio = normalizarBlocosCardapio(dados.blocos_cardapio, cardapio);
     const compras = normalizarArray(dados.lista_compras);
     const receitas = normalizarArray(dados.receitas);
     const utensilios = normalizarArray(dados.utensilios);
@@ -32,16 +31,17 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             </div>
 
             ${renderResumoExecutivo(dados, pessoas, cardapio, compras)}
+            ${renderAvaliacaoEvento(dados.avaliacao_evento)}
             ${renderQualidadeCulinaria(dados.qualidade_culinaria)}
             ${renderReconciliacaoBebidas(dados.reconciliacao_bebidas)}
             ${renderVariedadeCulinaria(dados.variedade_culinaria)}
             ${renderCoerenciaEvento(dados.contexto_evento)}
             ${renderContextoInformado(evento, dados.motor_logistica?.premissas)}
-            ${renderGaleriaEventoPendente()}
             ${renderMotorLogistica(dados.motor_logistica)}
             ${renderDetalhesExpansiveis("Detalhes da operação", "Equipe, fluxo, estações e cronograma técnico", renderOperacaoDeterministica(dados.motor_logistica?.operacao))}
             ${renderServicoMesa(servicoMesa)}
-            ${renderCardapio(cardapio, blocosCardapio)}
+            ${renderCardapio(cardapio)}
+            ${renderGaleriaEventoPendente()}
             ${renderCompras(compras)}
             ${renderLocais(locais)}
             ${renderSecao("Layout", layout.length ? renderListaCards(layout, "layout-card") : renderConteudoAusente("Layout não informado."))}
@@ -58,6 +58,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             ${dados.resumo_chef ? renderSecao("Resumo do Chef", `<div class="chef-summary">${escapeHTML(dados.resumo_chef)}</div>`) : ""}
         </div>
     `;
+    ativarFallbackImagensCardapio();
 }
 
 function renderGaleriaEventoPendente() {
@@ -65,9 +66,12 @@ function renderGaleriaEventoPendente() {
         <section class="result-section event-gallery-section" id="eventGallerySection" aria-live="polite" aria-busy="true">
             <div class="section-head gallery-head">
                 <div>
-                    <h3>Referencias visuais do evento</h3>
-                    <small>Imagens ilustrativas para inspirar apresentacao, ambiente e cardapio.</small>
+                    <h3>Fontes das imagens do cardapio</h3>
+                    <small>Créditos e alternativas das referências aplicadas aos pratos acima.</small>
                 </div>
+            </div>
+            <details class="gallery-sources-details" id="eventGalleryDetails" open>
+                <summary id="eventGallerySummary">Preparando fontes visuais...</summary>
                 <div class="gallery-controls" id="eventGalleryControls" aria-label="Visualizacao das referencias visuais" hidden>
                     <span id="eventGalleryCount">Preparando</span>
                     <button type="button" class="gallery-view-btn active" data-gallery-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoGaleria('carousel')">Carrossel</button>
@@ -75,11 +79,11 @@ function renderGaleriaEventoPendente() {
                     <button type="button" class="gallery-nav-btn" data-gallery-nav="prev" aria-label="Imagens anteriores" onclick="rolarGaleria(-1)">←</button>
                     <button type="button" class="gallery-nav-btn" data-gallery-nav="next" aria-label="Proximas imagens" onclick="rolarGaleria(1)">→</button>
                 </div>
-            </div>
-            <div id="eventGalleryContent" class="event-gallery-loading">
-                <span class="gallery-loading-visual" aria-hidden="true"></span>
-                <div><strong>Buscando referencias compativeis...</strong><small>O planejamento ja esta disponivel; esta etapa visual acontece separadamente.</small></div>
-            </div>
+                <div id="eventGalleryContent" class="event-gallery-loading">
+                    <span class="gallery-loading-visual" aria-hidden="true"></span>
+                    <div><strong>Buscando referencias compativeis...</strong><small>O planejamento ja esta disponivel; esta etapa visual acontece separadamente.</small></div>
+                </div>
+            </details>
         </section>
     `;
 }
@@ -89,6 +93,8 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     const conteudo = document.getElementById("eventGalleryContent");
     const controles = document.getElementById("eventGalleryControls");
     const contador = document.getElementById("eventGalleryCount");
+    const detalhes = document.getElementById("eventGalleryDetails");
+    const resumo = document.getElementById("eventGallerySummary");
     if (!secao || !conteudo || !controles || !contador) return;
 
     const imagensBase = normalizarArray(resultado?.images).map(normalizarImagemEvento).filter(Boolean);
@@ -110,12 +116,15 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
 
     if (!imagens.length) {
         controles.hidden = true;
+        if (resumo) resumo.textContent = "Fontes visuais indisponíveis";
+        if (detalhes) detalhes.open = false;
         conteudo.className = "event-gallery-empty";
         conteudo.innerHTML = `<strong>Referencias visuais indisponiveis.</strong><small>O planejamento culinario permanece completo e pode ser usado normalmente.</small>`;
         return;
     }
 
     contador.textContent = `${imagens.length} ${imagens.length === 1 ? "imagem" : "imagens"}`;
+    if (resumo) resumo.textContent = `Ver fontes e avaliar ${imagens.length} ${imagens.length === 1 ? "imagem" : "imagens"}`;
     controles.hidden = false;
     conteudo.className = "event-gallery-body";
     conteudo.innerHTML = `
@@ -132,6 +141,8 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
         </div>
     `;
     ativarFallbackImagensGaleria();
+    aplicarImagensAoCardapio(window.chefIAGaleriaEstado);
+    if (detalhes) detalhes.open = false;
 }
 
 function aplicarPreferenciasVisuais(imagens, alternativas) {
@@ -380,6 +391,57 @@ function ativarFallbackImagensGaleria() {
     });
 }
 
+function aplicarImagensAoCardapio(estado) {
+    const pools = {};
+    normalizarArray(estado?.images).forEach(imagem => {
+        if (!pools[imagem.slot]) pools[imagem.slot] = [];
+        pools[imagem.slot].push(imagem, ...normalizarArray(estado?.alternatives?.[imagem.slot]));
+    });
+    const indices = {};
+    document.querySelectorAll("[data-dish-slot]").forEach(cartao => {
+        const slot = cartao.dataset.dishSlot;
+        const candidatos = pools[slot] || [];
+        const indice = indices[slot] || 0;
+        indices[slot] = indice + 1;
+        const imagem = candidatos.length ? candidatos[indice % candidatos.length] : null;
+        const elemento = cartao.querySelector("img[data-dish-image]");
+        const credito = cartao.querySelector(".dish-image-credit span");
+        const fonte = cartao.querySelector(".dish-image-credit a");
+        if (!elemento) return;
+
+        const fallback = fallbackGaleriaPorSlot(slot);
+        elemento.src = imagem?.image_url || fallback;
+        elemento.dataset.dishFallback = fallback;
+        elemento.alt = imagem?.alt || `Referência visual para ${cartao.dataset.dishName || "item do cardápio"}`;
+        if (credito) credito.textContent = imagem
+            ? `${imagem.creator || "Fonte visual"} · ${imagem.license || "licença informada"}`
+            : "Ilustração local de referência";
+        if (fonte) {
+            if (imagem?.source_url) {
+                fonte.href = imagem.source_url;
+                fonte.hidden = false;
+            } else {
+                fonte.removeAttribute("href");
+                fonte.hidden = true;
+            }
+        }
+    });
+    ativarFallbackImagensCardapio();
+}
+
+function ativarFallbackImagensCardapio() {
+    document.querySelectorAll("img[data-dish-image]").forEach(imagem => {
+        if (imagem.dataset.fallbackAtivado === "true") return;
+        imagem.dataset.fallbackAtivado = "true";
+        imagem.addEventListener("error", () => {
+            const fallback = imagem.dataset.dishFallback;
+            if (fallback && imagem.getAttribute("src") !== fallback) imagem.setAttribute("src", fallback);
+            const credito = imagem.closest(".dish-card-rich")?.querySelector(".dish-image-credit span");
+            if (credito) credito.textContent = "Ilustração local de referência";
+        });
+    });
+}
+
 function alternarVisualizacaoGaleria(modo) {
     const galeria = document.getElementById("eventGalleryVisualizacao");
     if (!galeria) return;
@@ -423,6 +485,41 @@ function renderQualidadeCulinaria(qualidade) {
                 <p>${escapeHTML(cobertura.ingredientes_cobertos || 0)} de ${escapeHTML(cobertura.ingredientes_total || 0)} ingredientes ligados às compras · ${escapeHTML(cobertura.receitas_cobertas || 0)} de ${escapeHTML(cobertura.pratos_com_preparo || 0)} preparações com receita${cobertura.receitas_recuperadas ? ` · ${escapeHTML(cobertura.receitas_recuperadas)} ficha(s) recuperada(s)` : ""}.</p>
             </div>
             ${mensagens.length ? `<ul>${mensagens.map(item => `<li>${escapeHTML(item)}</li>`).join("")}</ul>` : ""}
+        </section>
+    `;
+}
+
+function renderAvaliacaoEvento(avaliacao) {
+    if (!avaliacao || !Number.isFinite(Number(avaliacao.nota))) return "";
+    const comparacao = normalizarArray(avaliacao.comparacao);
+    const revisar = normalizarArray(avaliacao.itens_a_revisar);
+    return `
+        <section class="event-audit-panel event-audit-${escapeHTML(avaliacao.status || "revisar")}">
+            <div class="event-audit-score">
+                <span>Auditoria do evento</span>
+                <strong>${escapeHTML(Number(avaliacao.nota).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }))}<small>/10</small></strong>
+                <b>${escapeHTML(avaliacao.status || "revisar")}</b>
+            </div>
+            <div class="event-audit-content">
+                <h3>Os itens combinam com o evento?</h3>
+                <p>${escapeHTML(avaliacao.resumo_textual || "Avaliação indisponível.")}</p>
+                <div class="event-audit-criteria">
+                    ${comparacao.map(item => `
+                        <article>
+                            <span>${escapeHTML(item.criterio || "Critério")}</span>
+                            <strong>${escapeHTML(item.pontos)} / ${escapeHTML(item.maximo)}</strong>
+                            <small>${escapeHTML(item.resultado || "")}</small>
+                        </article>
+                    `).join("")}
+                </div>
+                ${revisar.length ? `
+                    <details class="event-audit-review">
+                        <summary>${revisar.length} item(ns) para revisar</summary>
+                        <ul>${revisar.map(item => `<li><strong>${escapeHTML(item.nome || "Item")}</strong>: ${escapeHTML(normalizarArray(item.motivos).join("; "))}</li>`).join("")}</ul>
+                    </details>
+                ` : ""}
+                <p class="event-audit-decision">${escapeHTML(avaliacao.decisao || "")}</p>
+            </div>
         </section>
     `;
 }
@@ -674,7 +771,6 @@ function baixarRelatorioPDF() {
     const precificacao = dados.precificacao || motor.precificacao || null;
     const precoConfiavel = precificacaoEhConfiavel(precificacao);
     const cardapio = normalizarArray(dados.cardapio);
-    const blocosCardapio = normalizarBlocosCardapio(dados.blocos_cardapio, cardapio);
     const compras = normalizarArray(dados.lista_compras);
     const receitas = normalizarArray(dados.receitas);
     const utensilios = normalizarArray(dados.utensilios);
@@ -692,6 +788,7 @@ function baixarRelatorioPDF() {
     const operacao = motor.operacao || null;
     const contextoEvento = dados.contexto_evento || null;
     const reconciliacaoBebidas = dados.reconciliacao_bebidas || null;
+    const avaliacaoEvento = dados.avaliacao_evento || null;
 
     cabecalho();
 
@@ -705,6 +802,10 @@ function baixarRelatorioPDF() {
     if (precoConfiavel && motor.custo_adulto) escrever(`Custo por adulto: ${motor.custo_adulto}`);
     if (precoConfiavel && premissas.criancas > 0 && motor.custo_crianca) escrever(`Custo por crianca: ${motor.custo_crianca}`);
     if (dados.resumo_chef) escrever(dados.resumo_chef);
+    if (avaliacaoEvento) {
+        escrever(`Auditoria do evento: ${avaliacaoEvento.nota}/10 (${avaliacaoEvento.status || "revisar"}).`, { estilo: "bold" });
+        escrever(avaliacaoEvento.resumo_textual || "");
+    }
 
     secao("Dados do evento");
     lista([
@@ -789,10 +890,7 @@ function baixarRelatorioPDF() {
         normalizarArray(variedade.repeticoes_a_revisar).forEach(item => escrever(`- ${item.nome}: repeticao a revisar.`));
     }
 
-    secao("Cardapio por blocos");
-    listaOuVazio(blocosCardapio, "Blocos de cardapio nao informados.");
-
-    secao("Itens e quantidades do cardapio");
+    secao("Cardapio - itens e quantidades");
     listaOuVazio(cardapio, "Cardapio nao informado pela IA.");
 
     secao("Receitas e preparo");
@@ -1193,19 +1291,17 @@ function renderMetricGroup(titulo, itens) {
     `;
 }
 
-function renderCardapio(cardapio, blocosCardapio = []) {
+function renderCardapio(cardapio) {
     if (!cardapio.length) return "";
-    const blocos = normalizarBlocosCardapio(blocosCardapio, cardapio);
-    const itensPorId = new Map(cardapio.map((item, indice) => [item.id || `item-${indice + 1}`, item]));
     return `
         <section class="result-section menu-section">
             <div class="section-head menu-head">
                 <div>
                     <h3>Selecao de Pratos</h3>
-                    <small>Preparacoes agrupadas por funcao; receitas e compras continuam detalhadas por item.</small>
+                    <small>Cada preparação e bebida aparece individualmente; os agrupamentos ficam restritos à operação e às compras.</small>
                 </div>
                 <div class="menu-controls" aria-label="Visualizacao do cardapio">
-                    <span>${blocos.length} blocos · ${cardapio.length} itens</span>
+                    <span>${cardapio.length} itens individuais</span>
                     <button type="button" class="menu-view-btn active" data-menu-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoCardapio('carousel')">Carrossel</button>
                     <button type="button" class="menu-view-btn" data-menu-view="list" aria-pressed="false" onclick="alternarVisualizacaoCardapio('list')">Lista</button>
                     <button type="button" class="menu-nav-btn" data-menu-nav="prev" aria-label="Pratos anteriores" onclick="rolarCardapio(-1)">←</button>
@@ -1213,28 +1309,21 @@ function renderCardapio(cardapio, blocosCardapio = []) {
                 </div>
             </div>
             <div class="dish-grid dish-carousel" id="cardapioVisualizacao">
-                ${blocos.map((bloco, i) => {
-                    const itens = normalizarArray(bloco.itens).map(id => itensPorId.get(id)).filter(Boolean);
-                    const emoji = itens.find(item => item.emoji)?.emoji || emojiBloco(bloco);
+                ${cardapio.map((item, i) => {
+                    const slot = slotGaleriaPrato(item);
+                    const fallback = fallbackGaleriaPorSlot(slot);
                     return `
-                        <article class="dish-card-rich menu-block-card">
-                            <div class="dish-visual g${i % 6}">${escapeHTML(emoji)}</div>
+                        <article class="dish-card-rich menu-item-card" data-dish-slot="${escapeHTML(slot)}" data-dish-name="${escapeHTML(item.nome || "Item do cardápio")}">
+                            <div class="dish-visual g${i % 6}">
+                                <img src="${escapeHTML(fallback)}" data-dish-image data-dish-fallback="${escapeHTML(fallback)}" alt="Referência visual para ${escapeHTML(item.nome || "item do cardápio")}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+                                <span class="dish-image-label">Imagem de referência</span>
+                            </div>
                             <div class="dish-body">
-                                <span>${escapeHTML(bloco.categoria || "Cardapio")}</span>
-                                <h4>${escapeHTML(bloco.nome || "Bloco do cardapio")}</h4>
-                                <p>${escapeHTML(bloco.descricao || "Preparacoes relacionadas e apresentadas como um conjunto coerente.")}</p>
-                                <strong>${itens.length} ${itens.length === 1 ? "item operacional" : "itens operacionais"}</strong>
-                                <p class="menu-block-preview">${itens.map(item => escapeHTML(item.nome || "Item")).join(" · ")}</p>
-                                <details class="menu-block-details">
-                                    <summary>Ver itens e quantidades</summary>
-                                    <ul>${itens.map(item => `
-                                        <li>
-                                            <b>${escapeHTML(item.nome || "Item")}</b>
-                                            ${item.quantidade ? `<span>${escapeHTML(item.quantidade)}</span>` : ""}
-                                            ${item.descricao ? `<small>${escapeHTML(item.descricao)}</small>` : ""}
-                                        </li>
-                                    `).join("")}</ul>
-                                </details>
+                                <span>${escapeHTML(item.categoria || "Cardápio")}</span>
+                                <h4>${escapeHTML(item.nome || "Item do cardápio")}</h4>
+                                <p>${escapeHTML(item.descricao || "Preparação selecionada para este evento.")}</p>
+                                ${item.quantidade ? `<strong>${escapeHTML(item.quantidade)}</strong>` : ""}
+                                <small class="dish-image-credit"><span>Ilustração local de referência</span><a target="_blank" rel="noopener noreferrer" hidden>Fonte</a></small>
                             </div>
                         </article>
                     `;
@@ -1244,45 +1333,15 @@ function renderCardapio(cardapio, blocosCardapio = []) {
     `;
 }
 
-function normalizarBlocosCardapio(blocos, cardapio) {
-    const informados = normalizarArray(blocos).filter(bloco => bloco && typeof bloco === "object");
-    if (informados.length) return informados;
-
-    const grupos = new Map();
-    cardapio.forEach((item, indice) => {
-        const categoria = item?.categoria || "Cardapio";
-        const idGrupo = normalizarSlug(categoria) || "cardapio";
-        if (!grupos.has(idGrupo)) {
-            grupos.set(idGrupo, {
-                id: `legado-${idGrupo}`,
-                nome: nomeBlocoLegado(categoria),
-                categoria,
-                descricao: "Agrupamento de compatibilidade para planejamento salvo anteriormente.",
-                itens: []
-            });
-        }
-        grupos.get(idGrupo).itens.push(item?.id || `item-${indice + 1}`);
-    });
-    return Array.from(grupos.values());
-}
-
-function nomeBlocoLegado(categoria) {
-    const chave = normalizarSlug(categoria);
-    if (/boas-vindas|entrada/.test(chave)) return "Boas-vindas e entradas";
-    if (/prato-principal/.test(chave)) return "Pratos principais";
-    if (/acompanhamento|salada/.test(chave)) return "Acompanhamentos e saladas";
-    if (/sobremesa/.test(chave)) return "Sobremesas";
-    if (/bebida/.test(chave)) return "Bebidas selecionadas";
-    return categoria || "Selecao do cardapio";
-}
-
-function emojiBloco(bloco) {
-    const texto = normalizarSlug([bloco.nome, bloco.categoria].filter(Boolean).join(" "));
-    if (/bebida|suco|agua|cafe|infus|mocktail|vinho|cerveja/.test(texto)) return "🥤";
-    if (/doce|sobremesa|bolo/.test(texto)) return "🍰";
-    if (/carne|ave|peixe|principal/.test(texto)) return "🍽️";
-    if (/fruta|salada|vegetal/.test(texto)) return "🥗";
-    return "🍴";
+function slotGaleriaPrato(item) {
+    const categoria = normalizarSlug(item?.categoria);
+    const texto = normalizarSlug([item?.nome, item?.categoria].filter(Boolean).join(" "));
+    if (/bebida|refrigerante|suco|agua|cafe|cha|infus|cerveja|vinho|gin|whisky|mocktail/.test(texto)) return "bebida";
+    if (/sobremesa|doce|bolo|torta|trufa|biscoito/.test(texto)) return "sobremesa";
+    if (/salada/.test(categoria)) return "salada";
+    if (/acompanhamento/.test(categoria)) return "acompanhamento";
+    if (/prato-principal|principal/.test(categoria)) return "principal";
+    return "entrada";
 }
 
 function alternarVisualizacaoCardapio(modo) {

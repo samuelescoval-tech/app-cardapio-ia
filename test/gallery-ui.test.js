@@ -59,6 +59,19 @@ test("cartoes preservam credito, licenca, fonte segura e fallback local", () => 
   assert.doesNotMatch(render, /onerror=/i);
 });
 
+test("cardapio renderiza itens individuais e recebe imagens da galeria", () => {
+  const render = ler("public/js/render.js");
+
+  assert.match(render, /cardapio\.map\(\(item, i\)/);
+  assert.match(render, /class="dish-card-rich menu-item-card"/);
+  assert.match(render, /data-dish-image/);
+  assert.match(render, /function aplicarImagensAoCardapio/);
+  assert.match(render, /Fontes das imagens do cardapio/);
+  assert.match(render, /Ver fontes e avaliar/);
+  assert.match(render, /eventGalleryDetails/);
+  assert.doesNotMatch(render, /blocos\.map\(\(bloco, i\)/);
+});
+
 test("normalizacao visual rejeita protocolo inseguro e caminho local arbitrario", () => {
   const contexto = { URL, console, window: {} };
   vm.createContext(contexto);

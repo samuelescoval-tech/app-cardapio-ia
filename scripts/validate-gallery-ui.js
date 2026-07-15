@@ -89,7 +89,7 @@ async function main() {
     await cdp.send("Runtime.enable");
     await aguardarDocumento(cdp);
 
-    await cdp.evaluate(`(() => {
+    const fontesRecolhidas = await cdp.evaluate(`(() => {
       const dados = {
         resumo_chef: 'Amostra local para validar a galeria sem consumir IA.',
         cardapio: [
@@ -115,9 +115,13 @@ async function main() {
         },
         attribution_notice: 'Amostra local de validacao; referencias externas nao persistem.'
       });
+      const detalhes = document.getElementById('eventGalleryDetails');
+      const recolhidoPorPadrao = !detalhes.open;
+      detalhes.open = true;
       document.getElementById('eventGallerySection').scrollIntoView({ block: 'start' });
-      return true;
+      return recolhidoPorPadrao;
     })()`);
+    if (!fontesRecolhidas) throw new Error("painel de fontes nao ficou recolhido por padrao");
 
     const desktop = await coletarMetricas(cdp);
     assertMetricas(desktop, "desktop");
@@ -186,7 +190,7 @@ async function main() {
       throw new Error("alternancia para lista nao atualizou estado e navegacao");
     }
 
-    process.stdout.write(`${JSON.stringify({ ok: true, desktop, mobile, interacoes, lista, screenshotPath })}\n`);
+    process.stdout.write(`${JSON.stringify({ ok: true, fontesRecolhidas, desktop, mobile, interacoes, lista, screenshotPath })}\n`);
   } finally {
     cdp?.close();
     if (chrome?.exitCode === null) chrome.kill("SIGTERM");
@@ -207,6 +211,9 @@ async function coletarMetricas(cdp) {
       controlsVisible: !document.getElementById('eventGalleryControls')?.hidden,
       creditLines: document.querySelectorAll('.gallery-credit-line').length,
       brokenImages: Array.from(document.querySelectorAll('.event-gallery-card img')).filter(item => item.complete && item.naturalWidth === 0).length,
+      dishCards: document.querySelectorAll('.menu-item-card').length,
+      dishImages: document.querySelectorAll('.menu-item-card img[data-dish-image]').length,
+      brokenDishImages: Array.from(document.querySelectorAll('.menu-item-card img[data-dish-image]')).filter(item => item.complete && item.naturalWidth === 0).length,
       firstCardWidth: Math.round(primeiro?.width || 0),
       visibleTouchTargets: alturasVisiveis.length,
       touchTargetHeights: alturasVisiveis.map(Math.round),
@@ -221,6 +228,8 @@ function assertMetricas(metricas, nome) {
   if (!metricas.controlsVisible) throw new Error(`${nome}: controles ocultos`);
   if (metricas.creditLines !== metricas.cards) throw new Error(`${nome}: creditos incompletos`);
   if (metricas.brokenImages !== 0) throw new Error(`${nome}: ${metricas.brokenImages} imagem(ns) quebrada(s)`);
+  if (metricas.dishCards !== 3 || metricas.dishImages !== 3) throw new Error(`${nome}: imagens nao aplicadas aos 3 itens individuais do cardapio`);
+  if (metricas.brokenDishImages !== 0) throw new Error(`${nome}: ${metricas.brokenDishImages} imagem(ns) de prato quebrada(s)`);
 }
 
 async function aguardarHttp(url) {

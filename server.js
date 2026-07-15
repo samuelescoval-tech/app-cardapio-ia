@@ -12,6 +12,7 @@ const { criarContextoVariedade, avaliarVariedadePlano } = require('./src/service
 const { criarSpoonacularService, SpoonacularError } = require('./src/services/recipes/spoonacular.service');
 const { criarOpenverseService } = require('./src/services/images/openverse.service');
 const { criarImageSelectionService } = require('./src/services/images/image-selection.service');
+const { avaliarQualidadeEvento } = require('./src/services/planning/event-quality.service');
 
 const app = express();
 const demoAccessKey = process.env.DEMO_ACCESS_KEY;
@@ -39,7 +40,8 @@ app.get('/api/status', (req, res) => {
             operational_complexity: true,
             event_coherence_blocks: true,
             recipe_operational_recovery: true,
-            beverage_volume_reconciliation: true
+            beverage_volume_reconciliation: true,
+            event_quality_gate: true
         },
         recipe_references: spoonacularService.getStatus(),
         visual_references: openverseService.getStatus()
@@ -74,6 +76,7 @@ async function gerarCardapioHandler(req, res) {
         }
         if (motor && resposta.plano) {
             resposta.plano = aplicarMotorAoPlano(resposta.plano, motor);
+            resposta.plano.avaliacao_evento = avaliarQualidadeEvento(resposta.plano, evento, diretrizCulinaria);
             resposta.meta = {
                 ...(resposta.meta || {}),
                 motor_local: true,
@@ -88,7 +91,9 @@ async function gerarCardapioHandler(req, res) {
                 blocos_cardapio: resposta.plano.blocos_cardapio?.length || 0,
                 receitas_recuperadas: resposta.plano.qualidade_culinaria?.cobertura?.receitas_recuperadas || 0,
                 reconciliacao_bebidas_status: resposta.plano.reconciliacao_bebidas?.status || "nao_avaliado",
-                grupos_bebidas_ajustados: resposta.plano.reconciliacao_bebidas?.grupos?.filter(grupo => grupo.status === "ajustado").length || 0
+                grupos_bebidas_ajustados: resposta.plano.reconciliacao_bebidas?.grupos?.filter(grupo => grupo.status === "ajustado").length || 0,
+                nota_evento: resposta.plano.avaliacao_evento?.nota ?? null,
+                status_avaliacao_evento: resposta.plano.avaliacao_evento?.status || "nao_avaliado"
             };
         }
 

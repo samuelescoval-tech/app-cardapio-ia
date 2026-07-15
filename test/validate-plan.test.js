@@ -119,6 +119,18 @@ test("aceita variacao de quantidade sem perder a validacao estrutural", () => {
   assert.equal(plano.qualidade_culinaria.avisos.some(aviso => /cronograma/i.test(aviso)), false);
 });
 
+test("corrige iogurte classificado pela IA como prato principal", () => {
+  const entrada = planoValido();
+  entrada.cardapio[0].nome = "Iogurte com mel";
+  entrada.cardapio[0].categoria = "Prato Principal";
+
+  const plano = validarPlano(entrada);
+
+  assert.equal(plano.cardapio[0].categoria, "Acompanhamento");
+  assert.match(plano.qualidade_culinaria.ajustes.join(" "), /Categoria corrigida por coerencia/i);
+  assert.equal(plano.blocos_cardapio.some(bloco => bloco.id === "carnes_suinas"), false);
+});
+
 test("substitui resumo que inventa restricao e promete garantia alimentar", () => {
   const entrada = planoValido();
   entrada.resumo_chef = "Atende rigorosamente as restricoes sem gluten e veganas, garantindo inclusao e qualidade.";

@@ -23,7 +23,7 @@ test("prompt usa secoes operacionais e nao pede o motor na resposta", () => {
   assert.match(prompt, /roteiro visivel do evento/i);
   assert.match(prompt, /Nao repita producao, transporte, mise en place/i);
   assert.match(prompt, /conte os itens do cardapio por categoria/i);
-  assert.match(prompt, /inclua ao menos uma bebida alcoolica coerente/i);
+  assert.match(prompt, /inclua bebidas alcoolicas coerentes/i);
   assert.match(prompt, /ignorando plural, diminutivo, formato de porcao/i);
   assert.match(prompt, /ao menos 70% de bases novas/i);
   assert.match(prompt, /Nenhum item de preparo ou montagem pode ter ingredientes vazio/i);
@@ -31,8 +31,8 @@ test("prompt usa secoes operacionais e nao pede o motor na resposta", () => {
   assert.match(prompt, /Preserve primeiro identidade_evento, momentos_servico e elementos_esperados/i);
   assert.match(prompt, /Leia primeiro contexto_evento/i);
   assert.match(prompt, /identificar evento; preservar significado; aplicar estilo/i);
-  assert.match(prompt, /Pense por blocos coerentes/i);
-  assert.match(prompt, /backend agrupa esses itens para apresentacao/i);
+  assert.match(prompt, /Use blocos somente como organizacao interna de compras e operacao/i);
+  assert.match(prompt, /cada prato e cada bebida devem aparecer como itens atomicos/i);
   assert.match(prompt, /orcamento\.status for orientador_sem_cotacao/i);
   assert.match(prompt, /comidas_tipicas como repertorio/i);
   assert.match(prompt, /Tema, estilo ou horario nao podem apagar a identidade/i);
@@ -74,13 +74,14 @@ test("prompt seleciona perfil e orientacao de tema pelo evento", () => {
   assert.doesNotMatch(prompt, /Prefira de 7 a 9 itens/);
 });
 
-test("prompt premium corporativo exige 17 itens e criterios de alto padrao", () => {
+test("prompt premium corporativo aplica variedade por publico e criterios de alto padrao", () => {
   const prompt = montarPromptPlanejamento(
     { tipo: "Workshop corporativo", refeicao: "Coffee break", estilo: "Premium", pessoas: 80 },
     { staff: [] }
   );
 
-  assert.match(prompt, /no minimo 17 itens no cardapio/i);
+  assert.match(prompt, /no minimo 20 itens no cardapio/i);
+  assert.match(prompt, /"minimo_opcoes": 8/);
   assert.match(prompt, /"id": "premium"/);
   assert.match(prompt, /estacao de bebidas especiais/i);
   assert.match(prompt, /alternativas inclusivas previamente identificadas/i);

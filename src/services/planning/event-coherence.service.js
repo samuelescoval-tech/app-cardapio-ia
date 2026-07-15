@@ -122,12 +122,13 @@ function construirBlocosCardapio(cardapio = [], evento = {}) {
 }
 
 function inferirFamiliaBloco(prato, evento) {
-  const texto = normalizar([prato.nome, prato.descricao, prato.categoria].filter(Boolean).join(" "));
+  const texto = normalizar([prato.nome, prato.descricao].filter(Boolean).join(" "));
   const categoria = String(prato.categoria || "Cardapio");
+  const categoriaNormalizada = normalizar(categoria);
   const tipo = normalizar(evento.tipo);
   const estilo = normalizarEstilo(evento.estilo);
 
-  const regras = [
+  const regrasBebidas = [
     [/agua de coco/, "agua_de_coco", "Agua de coco e hidratacao tropical", "Bebida"],
     [/\bagua\b|hidratacao/, "aguas_hidratacao", "Aguas e hidratacao", "Bebida"],
     [/suco|limonada/, "sucos_naturais", "Sucos naturais variados", "Bebida"],
@@ -137,16 +138,29 @@ function inferirFamiliaBloco(prato, evento) {
     [/\bcha\b|infus/, "infusoes", estilo === "premium" ? "Infusoes naturais" : "Chas e infusoes", "Bebida"],
     [/vinho|espumante/, "vinhos_espumantes", "Vinhos e espumantes", "Bebida"],
     [/cerveja/, "cervejas", "Cervejas", "Bebida"],
-    [/caipirinha|cachaca|gin|vodka|whisky|uisque|drink alcool|coquetel alcool/, "drinks_alcoolicos", "Drinks alcoolicos para adultos", "Bebida"],
+    [/caipirinha|cachaca|gin|vodka|whisky|uisque|drink alcool|coquetel alcool/, "drinks_alcoolicos", "Drinks alcoolicos para adultos", "Bebida"]
+  ];
+  const regrasPrincipais = [
     [/picanha|alcatra|maminha|fraldinha|patinho|carne bovina|rosbife|file mignon|contrafile/, "carnes_bovinas", estilo === "premium" ? "Carnes bovinas nobres" : "Carnes bovinas", "Prato Principal"],
     [/lombo|costelinha|pernil|linguica|carne suina|porco/, "carnes_suinas", "Carnes suinas e linguicas", "Prato Principal"],
     [/frango|sobrecoxa|coxa|asa|\baves?\b|peru|chester/, "aves", /natal/.test(tipo) ? "Aves e carnes natalinas" : "Aves", "Prato Principal"],
-    [/peixe|bacalhau|salmao|tilapia|camarao|frutos do mar/, "peixes", "Peixes e frutos do mar", "Prato Principal"],
+    [/peixe|bacalhau|salmao|tilapia|camarao|frutos do mar/, "peixes", "Peixes e frutos do mar", "Prato Principal"]
+  ];
+  const regrasSobremesas = [
+    [/brigadeiro|beijinho|cupcake|macaron|bem.casado|bombom|petit four|verrine|mini doce|bolo|torta|tartelete|trufa|biscoito/, "doces", nomeBlocoDoces(tipo, estilo), "Sobremesa"],
+    [/panetone|chocotone|rabanada|pave|sobremesa natalina/, "sobremesas_natalinas", "Sobremesas natalinas", "Sobremesa"]
+  ];
+  const regrasGerais = [
     [/fruta|salada de frutas/, "frutas", "Frutas e preparacoes frescas", categoria],
-    [/brigadeiro|beijinho|cupcake|macaron|bem.casado|bombom|petit four|verrine|mini doce/, "doces", nomeBlocoDoces(tipo, estilo), "Sobremesa"],
-    [/panetone|chocotone|rabanada|pave|sobremesa natalina/, "sobremesas_natalinas", "Sobremesas natalinas", "Sobremesa"],
     [/pao|croissant|brioche|torrada|sanduiche/, "paes_lanches", /brunch|corporativ|workshop/.test(tipo) ? "Paes artesanais e mini lanches" : "Paes e lanches", categoria]
   ];
+  const regras = categoriaNormalizada === "bebida"
+    ? regrasBebidas
+    : /prato principal/.test(categoriaNormalizada)
+      ? regrasPrincipais
+      : /sobremesa/.test(categoriaNormalizada)
+        ? regrasSobremesas
+        : regrasGerais;
   const correspondencia = regras.find(([padrao]) => padrao.test(texto));
   if (correspondencia) {
     const [, id, nome, categoriaBloco] = correspondencia;

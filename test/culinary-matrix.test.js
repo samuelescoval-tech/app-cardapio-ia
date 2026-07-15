@@ -57,6 +57,25 @@ test("estilo premium amplia todas as categorias e aplica contrato verificavel", 
   assert.ok(diretriz.contexto_evento.sinais_premium.includes("estacao de cafe especial"));
 });
 
+test("variedade de refeicoes reduz em eventos pequenos e cresce devagar acima de 100", () => {
+  const pequeno = obterDiretrizCulinaria({
+    tipo: "Workshop corporativo",
+    refeicao: "Coffee break",
+    estilo: "Premium",
+    pessoas: 10
+  });
+  const grande = obterDiretrizCulinaria({
+    tipo: "Workshop corporativo",
+    refeicao: "Coffee break",
+    estilo: "Premium",
+    pessoas: 150
+  });
+
+  assert.deepEqual(pequeno.composicao_minima.map(item => item.minimum), [4, 3, 3, 5]);
+  assert.deepEqual(grande.composicao_minima.map(item => item.minimum), [5, 4, 4, 11]);
+  assert.equal(grande.quantidade_total_minima, 24);
+});
+
 test("atendimento domiciliar recebe perfil proprio e modificador de brunch", () => {
   const diretriz = obterDiretrizCulinaria({
     tipo: "Atendimento domiciliar",

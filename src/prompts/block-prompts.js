@@ -9,6 +9,9 @@ REGRAS:
 - Aplique o estilo informado de modo concreto; Premium nao pode usar solucoes comuns ou sob demanda.
 - Materialize os elementos_esperados no nome ou na descricao dos itens aplicaveis; nao os deixe apenas implicitos.
 - Cada item precisa de id unico, quantidade final e ingredientes atomicos dimensionados para o evento.
+- Cada prato e bebida deve permanecer individual no cardapio; blocos servem apenas para compras e operacao.
+- Cumpra variedade_bebidas, diferencie refrigerantes por sabor e acucar sem marcas e, quando houver bar, varie bases e estilos alcoolicos.
+- Iogurte, frutas, doces e bebidas nunca podem ser classificados como Prato Principal.
 - Bebidas prontas podem ter ingredientes vazios; os demais itens nao.
 - Descricoes com no maximo 18 palavras. Nao escreva receitas, compras ou operacao.
 
@@ -74,6 +77,7 @@ DIRETRIZ CULINARIA: ${JSON.stringify({
     modificador_ocasiao: diretriz.modificador_ocasiao,
     modificador_estilo: diretriz.modificador_estilo,
     pedidos_culinarios_explicitos: diretriz.pedidos_culinarios_explicitos,
+    variedade_bebidas: diretriz.variedade_bebidas,
     composicao_minima: diretriz.composicao_minima
   })}`;
 }
