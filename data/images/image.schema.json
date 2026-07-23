@@ -12,13 +12,15 @@
     "source_url": { "type": ["string", "null"] },
     "creator": { "type": ["string", "null"] },
     "creator_url": { "type": ["string", "null"] },
-    "license": { "type": "string", "enum": ["cc0", "pdm", "by", "local-fallback"] },
+    "license": { "type": "string", "enum": ["cc0", "by", "local-fallback", "chef-ia-original"] },
     "license_url": { "type": ["string", "null"] },
     "attribution": { "type": "string", "minLength": 1 },
     "alt": { "type": "string" },
     "width": { "type": ["number", "null"] },
     "height": { "type": ["number", "null"] },
-    "fallback": { "type": "boolean" }
+    "fallback": { "type": "boolean" },
+    "match_type": { "type": ["string", "null"], "enum": ["dish-family", "category", "fallback", null] },
+    "relevance_score": { "type": ["number", "null"] }
   },
   "additionalProperties": false
 }

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Prato principal ilustrado</title><desc id="d">Composicao geral de prato principal e acompanhamentos</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#181821"/><stop offset="1" stop-color="#3b2b1b"/></linearGradient><filter id="s"><feDropShadow dy="20" stdDeviation="22" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#faf4e9" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<path d="M360 410c45-130 180-175 300-90 55 50 50 130-15 175-115 55-240 30-285-85z" fill="#9a503b"/><g fill="#6d8d54"><circle cx="770" cy="330" r="65"/><circle cx="850" cy="420" r="55"/></g><g fill="#d6aa3d"><circle cx="820" cy="300" r="35"/><circle cx="745" cy="440" r="45"/></g>
+</svg>

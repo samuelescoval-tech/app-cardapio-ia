@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Entradas ilustradas</title><desc id="d">Tres pequenas entradas em louca clara</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#17151c"/><stop offset="1" stop-color="#352719"/></linearGradient><filter id="s"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-opacity=".35"/></filter></defs>
+<rect width="1200" height="700" rx="42" fill="url(#b)"/><ellipse cx="600" cy="590" rx="430" ry="38" fill="#09090d" opacity=".42"/>
+<g filter="url(#s)"><ellipse cx="300" cy="360" rx="190" ry="150" fill="#f8f1e5" stroke="#c89a2b" stroke-width="10"/><ellipse cx="600" cy="330" rx="190" ry="150" fill="#fffaf0" stroke="#c89a2b" stroke-width="10"/><ellipse cx="900" cy="360" rx="190" ry="150" fill="#f8f1e5" stroke="#c89a2b" stroke-width="10"/></g>
+<g><circle cx="300" cy="360" r="72" fill="#9e4b39"/><path d="M250 350c40-80 95-70 110 10-42 54-78 58-110-10z" fill="#e1b64f"/><circle cx="600" cy="330" r="82" fill="#6f8e58"/><path d="M550 345c40-85 125-70 125 10-45 45-90 45-125-10z" fill="#e8d7a8"/><rect x="835" y="300" width="130" height="120" rx="34" fill="#d98c45"/><circle cx="900" cy="330" r="28" fill="#7b9c55"/></g>
+<g fill="#d7ae38"><circle cx="230" cy="300" r="9"/><circle cx="665" cy="250" r="8"/><circle cx="960" cy="430" r="10"/></g>
+</svg>

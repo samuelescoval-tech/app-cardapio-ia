@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Sobremesa ilustrada</title><desc id="d">Sobremesa em camadas com frutas e acabamento delicado</desc>
+<defs><radialGradient id="b"><stop stop-color="#4b2833"/><stop offset="1" stop-color="#18151d"/></radialGradient><filter id="s"><feDropShadow dy="20" stdDeviation="22" flood-opacity=".45"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="530" rx="360" ry="100" fill="#f7f0e5" stroke="#c89a2b" stroke-width="12" filter="url(#s)"/>
+<path d="M430 460h340l-45-250H485z" fill="#f1d7b5"/><path d="M455 350h290l-15-80H470z" fill="#9f4a52"/><path d="M440 430h320l-15-80H455z" fill="#6b3f33"/><path d="M485 210c45-70 185-85 240 0z" fill="#fff1d5"/>
+<g fill="#c8464b"><circle cx="540" cy="195" r="28"/><circle cx="610" cy="170" r="30"/><circle cx="680" cy="195" r="27"/></g><path d="M610 165c-8-42 12-72 48-88" fill="none" stroke="#6f9254" stroke-width="14" stroke-linecap="round"/>
+</svg>

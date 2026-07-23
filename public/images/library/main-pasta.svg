@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Massa ilustrada</title><desc id="d">Massa enrolada com molho e folhas aromaticas</desc>
+<defs><radialGradient id="b"><stop stop-color="#49311d"/><stop offset="1" stop-color="#17151b"/></radialGradient><filter id="s"><feDropShadow dy="20" stdDeviation="22" flood-opacity=".42"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#fbf4e7" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<g fill="none" stroke="#ddb44f" stroke-width="28" stroke-linecap="round"><path d="M365 420c90-190 250-180 330-15"/><path d="M405 455c70-135 190-145 260-25"/><path d="M430 365c90-100 215-80 275 25"/></g>
+<path d="M430 450c80 45 210 38 285-18" fill="none" stroke="#a84a35" stroke-width="30" stroke-linecap="round"/><g fill="#62824c"><ellipse cx="770" cy="320" rx="50" ry="28" transform="rotate(-32 770 320)"/><ellipse cx="825" cy="390" rx="46" ry="25" transform="rotate(25 825 390)"/></g>
+</svg>

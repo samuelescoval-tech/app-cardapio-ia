@@ -1,0 +1,102 @@
+{
+  "version": "1.0.0",
+  "creator": "Chef IA Studio",
+  "license": "chef-ia-original",
+  "entries": [
+    {
+      "id": "entrada-ilustrada",
+      "path": "/images/library/appetizer.svg",
+      "title": "Entrada e canapes",
+      "alt": "Ilustracao de pequenas entradas empratadas",
+      "slots": ["entrada"],
+      "match_terms": ["canape", "entrada", "petisco", "salgado", "bruschetta", "barquete", "tartare"],
+      "match_mode": "category",
+      "default": true
+    },
+    {
+      "id": "principal-carne",
+      "path": "/images/library/main-beef.svg",
+      "title": "Prato principal com carne",
+      "alt": "Ilustracao de prato principal com carne e guarnicao",
+      "slots": ["principal"],
+      "match_terms": ["carne", "bovina", "picanha", "mignon", "alcatra", "patinho", "costela", "medalhao"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "principal-frango",
+      "path": "/images/library/main-chicken.svg",
+      "title": "Prato principal com frango",
+      "alt": "Ilustracao de prato principal com frango e vegetais",
+      "slots": ["principal"],
+      "match_terms": ["frango", "galeto", "coxa", "sobrecoxa", "ave"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "principal-peixe",
+      "path": "/images/library/main-fish.svg",
+      "title": "Prato principal com peixe",
+      "alt": "Ilustracao de prato principal com peixe, limao e ervas",
+      "slots": ["principal"],
+      "match_terms": ["peixe", "tilapia", "salmao", "bacalhau", "camarao", "pescada", "linguado"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "principal-massa",
+      "path": "/images/library/main-pasta.svg",
+      "title": "Massa ou risoto",
+      "alt": "Ilustracao de massa empratada com molho e ervas",
+      "slots": ["principal", "acompanhamento"],
+      "match_terms": ["massa", "macarrao", "penne", "ravioli", "lasanha", "nhoque", "risoto", "arroz"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "principal-vegetal",
+      "path": "/images/library/main-vegetarian.svg",
+      "title": "Prato de vegetais",
+      "alt": "Ilustracao de prato colorido com vegetais",
+      "slots": ["principal"],
+      "match_terms": ["vegetal", "vegetais", "legume", "legumes", "vegetariano", "vegano", "berinjela", "abobrinha", "cogumelo"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "principal-geral",
+      "path": "/images/library/main-generic.svg",
+      "title": "Prato principal",
+      "alt": "Ilustracao geral de prato principal empratado",
+      "slots": ["principal"],
+      "match_terms": [],
+      "match_mode": "category",
+      "default": true
+    },
+    {
+      "id": "salada-acompanhamento",
+      "path": "/images/library/side-salad.svg",
+      "title": "Salada ou acompanhamento",
+      "alt": "Ilustracao de salada e acompanhamentos frescos",
+      "slots": ["salada", "acompanhamento"],
+      "match_terms": ["salada", "folhas", "vinagrete", "legumes", "acompanhamento", "farofa"],
+      "match_mode": "category",
+      "default": true
+    },
+    {
+      "id": "sobremesa-ilustrada",
+      "path": "/images/library/dessert.svg",
+      "title": "Doces e sobremesas",
+      "alt": "Ilustracao de sobremesa empratada com frutas",
+      "slots": ["sobremesa"],
+      "match_terms": ["sobremesa", "doce", "bolo", "torta", "pudim", "mousse", "trufa", "brigadeiro", "fruta"],
+      "match_mode": "category",
+      "default": true
+    },
+    {
+      "id": "bebida-ilustrada",
+      "path": "/images/library/beverage.svg",
+      "title": "Bebidas do evento",
+      "alt": "Ilustracao de bebidas servidas em copos",
+      "slots": ["bebida"],
+      "match_terms": ["bebida", "agua", "suco", "refrigerante", "cafe", "cha", "vinho", "cerveja", "drink", "mocktail"],
+      "match_mode": "category",
+      "default": true
+    }
+  ]
+}

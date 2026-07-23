@@ -94,7 +94,7 @@ async function main() {
         resumo_chef: 'Amostra local para validar a galeria sem consumir IA.',
         cardapio: [
           { id: 'entrada-1', nome: 'Canape vegetal', categoria: 'Entrada', descricao: 'Amostra' },
-          { id: 'principal-1', nome: 'Prato principal', categoria: 'Prato Principal', descricao: 'Amostra' },
+          { id: 'principal-1', nome: 'Tilapia grelhada', categoria: 'Prato Principal', descricao: 'Amostra' },
           { id: 'doce-1', nome: 'Sobremesa', categoria: 'Sobremesa', descricao: 'Amostra' }
         ],
         blocos_cardapio: [
@@ -108,10 +108,34 @@ async function main() {
       document.getElementById('resultadoArea').classList.remove('hidden');
       exibirResultadoLuxo(dados, 80, { tipo: 'Evento corporativo', estilo: 'Premium' });
       const imagensLocais = imagensLocaisGaleria();
+      imagensLocais[1] = {
+        id: 'local-library-entrada-ilustrada', target_id: 'entrada-1', slot: 'entrada',
+        provider: 'local', image_url: '/images/library/appetizer.svg',
+        thumbnail_url: '/images/library/appetizer.svg', source_url: null,
+        creator: 'Chef IA Studio', license: 'chef-ia-original',
+        attribution: 'Ilustracao original da biblioteca Chef IA Studio.',
+        alt: 'Entrada ilustrada', fallback: false, match_type: 'category'
+      };
+      imagensLocais[2] = {
+        id: 'local-library-principal-peixe', target_id: 'principal-1', slot: 'principal',
+        provider: 'local', image_url: '/images/library/main-fish.svg',
+        thumbnail_url: '/images/library/main-fish.svg', source_url: null,
+        creator: 'Chef IA Studio', license: 'chef-ia-original',
+        attribution: 'Ilustracao original da biblioteca Chef IA Studio.',
+        alt: 'Peixe ilustrado', fallback: false, match_type: 'dish-family'
+      };
+      imagensLocais[3] = {
+        id: 'local-library-sobremesa-ilustrada', target_id: 'doce-1', slot: 'sobremesa',
+        provider: 'local', image_url: '/images/library/dessert.svg',
+        thumbnail_url: '/images/library/dessert.svg', source_url: null,
+        creator: 'Chef IA Studio', license: 'chef-ia-original',
+        attribution: 'Ilustracao original da biblioteca Chef IA Studio.',
+        alt: 'Sobremesa ilustrada', fallback: false, match_type: 'category'
+      };
       renderizarGaleriaEvento({
         images: imagensLocais,
         alternatives: {
-          capa: [{ ...imagensLocais[1], id: 'local-capa-alternativa', slot: 'capa', alt: 'Capa alternativa do evento' }]
+          capa: [{ ...imagensLocais[1], id: 'local-capa-alternativa', target_id: '', slot: 'capa', alt: 'Capa alternativa do evento' }]
         },
         attribution_notice: 'Amostra local de validacao; referencias externas nao persistem.'
       });
@@ -159,13 +183,13 @@ async function main() {
       const srcAntes = document.querySelector('[data-gallery-key="capa"] img')?.getAttribute('src');
       avaliarImagemGaleria('capa', 'inadequada');
       const srcDepois = document.querySelector('[data-gallery-key="capa"] img')?.getAttribute('src');
-      avaliarImagemGaleria('principal', 'adequada');
-      ocultarImagemGaleria('sobremesa');
+      avaliarImagemGaleria('principal-1', 'adequada');
+      ocultarImagemGaleria('doce-1');
       const feedbackBruto = localStorage.getItem('chef_ia_visual_feedback_v1') || '';
       return {
         trocaAplicada: Boolean(srcAntes && srcDepois && srcAntes !== srcDepois),
         cardsDepoisDeOcultar: document.querySelectorAll('.event-gallery-card').length,
-        sobremesaOculta: !document.querySelector('[data-gallery-key="sobremesa"]'),
+        sobremesaOculta: !document.querySelector('[data-gallery-key="doce-1"]'),
         preferenciasSalvas: window.visualFeedbackService.resumir(),
         feedbackSemUrls: !feedbackBruto.includes('http') && !feedbackBruto.includes('image_url'),
         resumoVisivel: document.getElementById('galleryFeedbackSummary')?.textContent.includes('preferencias locais')
@@ -259,6 +283,8 @@ async function coletarMetricas(cdp) {
       controlsVisible: !document.getElementById('eventGalleryControls')?.hidden,
       creditLines: document.querySelectorAll('.gallery-credit-line').length,
       brokenImages: Array.from(document.querySelectorAll('.event-gallery-card img')).filter(item => item.complete && item.naturalWidth === 0).length,
+      coverageItems: document.querySelectorAll('.gallery-coverage dl div').length,
+      coverageText: document.querySelector('.gallery-coverage')?.textContent.replace(/\\s+/g, ' ').trim() || '',
       dishCards: document.querySelectorAll('.menu-item-card').length,
       dishImages: document.querySelectorAll('.menu-item-card img[data-dish-image]').length,
       visibleDishImages: Array.from(document.querySelectorAll('.menu-item-card img[data-dish-image]')).filter(item => !item.hidden).length,
@@ -279,7 +305,8 @@ function assertMetricas(metricas, nome) {
   if (metricas.creditLines !== metricas.cards) throw new Error(`${nome}: creditos incompletos`);
   if (metricas.brokenImages !== 0) throw new Error(`${nome}: ${metricas.brokenImages} imagem(ns) quebrada(s)`);
   if (metricas.dishCards !== 3 || metricas.dishImages !== 3) throw new Error(`${nome}: estrutura visual ausente nos 3 itens individuais do cardapio`);
-  if (metricas.visibleDishImages !== 0 || metricas.dishPlaceholders !== 3) throw new Error(`${nome}: referencias genericas deveriam permanecer como identificacao neutra`);
+  if (metricas.visibleDishImages !== 3 || metricas.dishPlaceholders !== 0) throw new Error(`${nome}: biblioteca local nao foi aplicada aos 3 itens do cardapio`);
+  if (metricas.coverageItems !== 4 || !metricas.coverageText.includes("Família local")) throw new Error(`${nome}: resumo de cobertura visual ausente`);
   if (metricas.brokenDishImages !== 0) throw new Error(`${nome}: ${metricas.brokenDishImages} imagem(ns) de prato quebrada(s)`);
 }
 

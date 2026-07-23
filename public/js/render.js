@@ -106,12 +106,14 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
         : aplicarPreferenciasVisuais(imagensBase, alternativasBase);
     const imagens = preferencias.images;
     const alternativas = preferencias.alternatives;
+    const cobertura = criarResumoCoberturaVisual(imagens, resultado?.requested_targets);
     secao.setAttribute("aria-busy", "false");
     window.chefIAGaleriaEstado = {
         images: imagens,
         alternatives: alternativas,
         warnings: normalizarArray(resultado?.warnings),
         attribution_notice: resultado?.attribution_notice || "",
+        coverage: cobertura,
         opcoes: { historico }
     };
 
@@ -130,6 +132,7 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     controles.hidden = false;
     conteudo.className = "event-gallery-body";
     conteudo.innerHTML = `
+        ${renderCoberturaVisual(cobertura, historico)}
         <div class="event-gallery-track" id="eventGalleryVisualizacao">
             ${imagens.map(imagem => renderImagemEvento(imagem, alternativas[alvoImagemGaleria(imagem)]?.length > 0, historico)).join("")}
         </div>
@@ -139,12 +142,47 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
             <span>${escapeHTML(historico
                 ? "As imagens externas nao sao salvas. Gere o evento novamente para atualizar as referencias do Openverse."
                 : resultado?.attribution_notice || "Confira autoria, licenca e fonte antes de reutilizar uma imagem.")}</span>
-            ${normalizarArray(resultado?.warnings).length ? `<small>${escapeHTML(`${resultado.warnings.length} item(ns) ficaram sem fotografia por falta de correspondência confiável.`)}</small>` : ""}
+            ${normalizarArray(resultado?.warnings).length ? `<small>${escapeHTML(`${resultado.warnings.length} observação(ões) de correspondência visual.`)}</small>` : ""}
         </div>
     `;
     ativarFallbackImagensGaleria();
     aplicarImagensAoCardapio(window.chefIAGaleriaEstado);
     if (detalhes) detalhes.open = false;
+}
+
+function criarResumoCoberturaVisual(imagens, solicitados) {
+    const totalSolicitado = Number.isFinite(Number(solicitados)) ? Number(solicitados) : imagens.length;
+    const familiaLocal = imagens.filter(imagem => imagem.provider === "local" && imagem.match_type === "dish-family").length;
+    const categoriaLocal = imagens.filter(imagem => imagem.provider === "local" && imagem.match_type === "category").length;
+    const externas = imagens.filter(imagem => imagem.provider === "openverse").length;
+    const ausentes = Math.max(0, totalSolicitado - imagens.length);
+    return {
+        requested: totalSolicitado,
+        displayed: imagens.length,
+        local_family: familiaLocal,
+        local_category: categoriaLocal,
+        external: externas,
+        missing: ausentes,
+        status: ausentes ? "incomplete" : categoriaLocal || externas ? "review" : "controlled"
+    };
+}
+
+function renderCoberturaVisual(cobertura, historico = false) {
+    if (historico) return "";
+    const rotulo = cobertura.status === "controlled"
+        ? "Cobertura local controlada"
+        : cobertura.status === "incomplete" ? "Cobertura visual incompleta" : "Cobertura visual para avaliar";
+    return `
+        <div class="gallery-coverage gallery-coverage-${escapeHTML(cobertura.status)}" aria-label="Cobertura visual do cardapio">
+            <div><span>Leitura visual</span><strong>${escapeHTML(rotulo)}</strong></div>
+            <dl>
+                <div><dt>Família local</dt><dd>${escapeHTML(cobertura.local_family)}</dd></div>
+                <div><dt>Categoria</dt><dd>${escapeHTML(cobertura.local_category)}</dd></div>
+                <div><dt>Openverse</dt><dd>${escapeHTML(cobertura.external)}</dd></div>
+                <div><dt>Sem imagem</dt><dd>${escapeHTML(cobertura.missing)}</dd></div>
+            </dl>
+        </div>
+    `;
 }
 
 function aplicarPreferenciasVisuais(imagens, alternativas) {
@@ -224,14 +262,15 @@ function normalizarImagemEvento(imagem) {
         license: String(imagem.license || "licenca nao informada").toUpperCase().slice(0, 40),
         attribution: String(imagem.attribution || "Credito nao informado").slice(0, 500),
         alt: String(imagem.alt || "Referencia visual do evento").slice(0, 220),
-        fallback: Boolean(imagem.fallback || provider === "local")
+        fallback: Boolean(imagem.fallback),
+        match_type: ["dish-family", "category", "fallback"].includes(imagem.match_type) ? imagem.match_type : null
     };
 }
 
 function urlImagemEventoSegura(valor, provider) {
     if (typeof valor !== "string") return null;
     if (provider === "local") {
-        return /^\/images\/fallback\/[a-z0-9-]+\.svg$/i.test(valor) ? valor : null;
+        return /^\/images\/(?:fallback|library)\/[a-z0-9-]+\.svg$/i.test(valor) ? valor : null;
     }
     return urlExternaHttpsSegura(valor);
 }
@@ -251,7 +290,7 @@ function renderImagemEvento(imagem, possuiAlternativas = false, historico = fals
     const avaliacao = window.visualFeedbackService?.obterAvaliacao?.(imagem) || null;
     const alvo = alvoImagemGaleria(imagem);
     return `
-        <figure class="event-gallery-card ${imagem.fallback ? "gallery-card-local" : ""}" data-gallery-key="${escapeHTML(alvo)}">
+        <figure class="event-gallery-card ${imagem.provider === "local" ? "gallery-card-local" : ""}" data-gallery-key="${escapeHTML(alvo)}">
             <div class="gallery-image-frame">
                 <img src="${escapeHTML(imagem.image_url)}" data-gallery-fallback="${escapeHTML(fallbackUrl)}" alt="${escapeHTML(imagem.alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
                 <span>${escapeHTML(rotuloSlotGaleria(imagem.slot))}</span>
@@ -418,7 +457,12 @@ function aplicarImagensAoCardapio(estado) {
         if (selo) selo.hidden = !imagem;
         if (imagem) {
             elemento.src = imagem.image_url;
-            elemento.alt = `Fotografia relacionada a ${cartao.dataset.dishName || "item do cardápio"}: ${imagem.alt || "referência visual"}`;
+            elemento.alt = imagem.provider === "local"
+                ? `Ilustração aplicada a ${cartao.dataset.dishName || "item do cardápio"}: ${imagem.alt || "categoria visual"}`
+                : `Fotografia externa relacionada a ${cartao.dataset.dishName || "item do cardápio"}: ${imagem.alt || "referência visual"}`;
+            if (selo) selo.textContent = imagem.provider === "local"
+                ? imagem.match_type === "category" ? "Imagem de categoria" : "Ilustração da família"
+                : "Referência externa";
         } else {
             elemento.removeAttribute("src");
             elemento.alt = "";

@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "max_images_per_event": 20,
-  "allowed_licenses": ["cc0", "pdm", "by"],
+  "allowed_licenses": ["cc0", "by"],
   "default_context": {
     "id": "evento-geral",
     "match": [],

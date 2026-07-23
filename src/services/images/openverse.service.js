@@ -17,7 +17,7 @@ function criarOpenverseService(opcoes = {}) {
 
   function getStatus() {
     atualizarDia();
-    return { configured: typeof fetchImpl === "function", provider: "openverse", authentication: "anonymous", allowed_licenses: ["cc0", "pdm", "by"], daily_search_limit: limiteDiario, searches_remaining: Math.max(0, limiteDiario - consultas), cache_ttl_hours: cacheMs / 3600000 };
+    return { configured: typeof fetchImpl === "function", provider: "openverse", authentication: "anonymous", allowed_licenses: ["cc0", "by"], color_policy: "reject-monochrome-and-archival", daily_search_limit: limiteDiario, searches_remaining: Math.max(0, limiteDiario - consultas), cache_ttl_hours: cacheMs / 3600000 };
   }
 
   async function buscar(solicitacao) {
@@ -33,7 +33,7 @@ function criarOpenverseService(opcoes = {}) {
 
     const url = new URL(API_URL);
     url.searchParams.set("q", query);
-    url.searchParams.set("license", "cc0,pdm,by");
+    url.searchParams.set("license", "cc0,by");
     url.searchParams.set("license_type", "commercial");
     url.searchParams.set("mature", "false");
     url.searchParams.set("page_size", "6");
@@ -66,7 +66,7 @@ function criarOpenverseService(opcoes = {}) {
 function normalizarResultado(item, slot) {
   try {
     const license = String(item?.license || "").toLowerCase();
-    if (!["cc0", "pdm", "by"].includes(license) || item?.mature === true) return null;
+    if (!["cc0", "by"].includes(license) || item?.mature === true || ehResultadoVisualInadequado(item)) return null;
     const imagemSegura = urlHttps(item.url) || urlHttps(item.thumbnail);
     const miniaturaSegura = urlHttps(item.thumbnail) || imagemSegura;
     const fonteSegura = urlHttps(item.foreign_landing_url);
@@ -82,6 +82,24 @@ function normalizarResultado(item, slot) {
   } catch { return null; }
 }
 
+function ehResultadoVisualInadequado(item) {
+  const textoVisual = [
+    item?.title, item?.attribution, item?.description, item?.category,
+    ...(Array.isArray(item?.tags) ? item.tags.map(tag => typeof tag === "object" ? tag.name : tag) : [])
+  ].filter(Boolean).join(" ").toLowerCase();
+  if (/black[ -]?and[ -]?white|monochrom|grayscale|greyscale|engraving|etching|lithograph|woodcut|vintage|historic|archive|poster|drawing|painting/.test(textoVisual)) return true;
+  const cores = Array.isArray(item?.colors) ? item.colors.map(cor => String(cor || "")).filter(cor => /^#?[0-9a-f]{6}$/i.test(cor)) : [];
+  return cores.length >= 2 && cores.every(cor => saturacaoHex(cor) < 0.12);
+}
+
+function saturacaoHex(valor) {
+  const hex = valor.replace("#", "");
+  const canais = [0, 2, 4].map(indice => parseInt(hex.slice(indice, indice + 2), 16) / 255);
+  const max = Math.max(...canais);
+  const min = Math.min(...canais);
+  return max ? (max - min) / max : 0;
+}
+
 function validarQuery(valor) {
   if (typeof valor !== "string") throw new OpenverseError("Consulta visual ausente.", 400);
   const query = valor.replace(/[^\p{L}\p{N}\s-]/gu, " ").replace(/\s+/g, " ").trim();
@@ -91,4 +109,4 @@ function validarQuery(valor) {
 function inteiro(valor, min, max, fallback) { const numero = Number(valor); return Number.isInteger(numero) && numero >= min && numero <= max ? numero : fallback; }
 function urlHttps(valor) { try { const url = new URL(valor); return url.protocol === "https:" ? url.toString() : null; } catch { return null; } }
 
-module.exports = { criarOpenverseService, OpenverseError, normalizarResultado, validarQuery };
+module.exports = { criarOpenverseService, OpenverseError, normalizarResultado, validarQuery, ehResultadoVisualInadequado };

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Prato principal com peixe</title><desc id="d">File de peixe com limao, ervas e legumes</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#102126"/><stop offset="1" stop-color="#1c1820"/></linearGradient><filter id="s"><feDropShadow dy="20" stdDeviation="20" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#f8f3e8" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<path d="M330 390c95-135 315-160 445-45-80 135-290 175-445 45z" fill="#e9c786"/><path d="M395 355c100-48 220-48 320 5M390 410c95-35 205-30 295 20" fill="none" stroke="#fff0bd" stroke-width="18" stroke-linecap="round"/>
+<g fill="#6f9357"><path d="M780 410c45-115 130-110 145-20-35 68-95 75-145 20z"/><circle cx="830" cy="300" r="38"/></g><circle cx="875" cy="340" r="66" fill="#e7c94b"/><circle cx="875" cy="340" r="42" fill="#f8f0bd"/>
+</svg>

@@ -1,3 +1,9 @@
+// Suite consolidada por dominio. Cada bloco preserva o escopo do arquivo original.
+
+// -----------------------------------------------------------------------------
+// Origem consolidada: model-benchmark.test.js
+// -----------------------------------------------------------------------------
+{
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const {
@@ -80,3 +86,5 @@ test("benchmark nao premia cobertura vazia quando a geracao falha", () => {
   assert.equal(resultado.pontuacao_tecnica, 0);
   assert.deepEqual(new Set(Object.values(resultado.componentes)), new Set([0]));
 });
+}
+

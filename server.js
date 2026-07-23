@@ -46,7 +46,12 @@ app.get('/api/status', (req, res) => {
             food_yield_gate: true
         },
         recipe_references: spoonacularService.getStatus(),
-        visual_references: openverseService.getStatus()
+        visual_references: openverseService.getStatus(),
+        visual_library: {
+            configured: true,
+            strategy: "local-first",
+            version: "1.0.0"
+        }
     });
 });
 

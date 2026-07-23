@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Prato principal com frango</title><desc id="d">Frango dourado acompanhado de vegetais</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#15161d"/><stop offset="1" stop-color="#43301d"/></linearGradient><filter id="s"><feDropShadow dy="20" stdDeviation="20" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#fbf4e7" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<path d="M355 350c45-100 170-140 285-95 100 38 130 145 65 220-85 80-250 72-335-5-35-35-40-80-15-120z" fill="#c67735"/><path d="M405 318c75-42 175-32 245 20M385 390c90-32 190-18 265 40" fill="none" stroke="#f0b65c" stroke-width="18" stroke-linecap="round"/>
+<g><circle cx="780" cy="330" r="58" fill="#63864d"/><circle cx="860" cy="410" r="52" fill="#7f9c55"/><path d="M750 470c60-90 165-55 160 25-65 40-120 30-160-25z" fill="#d9a83e"/></g>
+</svg>

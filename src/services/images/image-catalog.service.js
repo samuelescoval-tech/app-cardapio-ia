@@ -1,7 +1,10 @@
 const dictionary = require("../../../data/images/visual-dictionary.json");
+const localLibrary = require("../../../data/images/local-library.json");
 
 const erros = validarDicionario(dictionary);
 if (erros.length) throw new Error(`Dicionario visual invalido: ${erros.join("; ")}`);
+const errosBiblioteca = validarBibliotecaLocal(localLibrary);
+if (errosBiblioteca.length) throw new Error(`Biblioteca visual invalida: ${errosBiblioteca.join("; ")}`);
 
 function construirSolicitacoesImagem(evento = {}, pratos = []) {
   const contextoTexto = normalizar([evento.tipo, evento.tema, evento.refeicao, evento.obs].filter(Boolean).join(" "));
@@ -19,6 +22,7 @@ function construirSolicitacoesImagem(evento = {}, pratos = []) {
       slot,
       query: construirConsultaPrato(prato, slot),
       match_terms: construirTermosCorrespondencia(prato, slot),
+      anchor_terms: construirTermosAncora(prato),
       orientation: config.orientation,
       fallback_url: config.fallback,
       context_id: contexto.id,
@@ -72,17 +76,54 @@ function criarImagemFallback(solicitacao) {
   });
 }
 
+function selecionarImagensLocais(solicitacao) {
+  const nome = normalizar(solicitacao?.nome);
+  return localLibrary.entries
+    .filter(item => item.slots.includes(solicitacao?.slot))
+    .map(item => {
+      const correspondencias = item.match_terms.filter(termo => nome.includes(normalizar(termo)));
+      const score = correspondencias.length ? 10 + correspondencias.length : item.default ? 1 : 0;
+      if (!score) return null;
+      const matchType = item.match_mode === "dish-family" && correspondencias.length ? "dish-family" : "category";
+      return validarImagem({
+        id: `local-library-${item.id}`,
+        target_id: solicitacao.target_id || null,
+        slot: solicitacao.slot,
+        provider: "local",
+        image_url: item.path,
+        thumbnail_url: item.path,
+        source_url: null,
+        creator: localLibrary.creator,
+        creator_url: null,
+        license: localLibrary.license,
+        license_url: null,
+        attribution: "Ilustracao original da biblioteca Chef IA Studio.",
+        alt: `${item.alt}. ${matchType === "category" ? "Imagem ilustrativa de categoria." : "Imagem ilustrativa da familia do prato."}`,
+        width: 1200,
+        height: 700,
+        fallback: false,
+        match_type: matchType,
+        relevance_score: score
+      });
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.relevance_score - a.relevance_score);
+}
+
 function validarImagem(valor) {
   if (!valor || typeof valor !== "object") throw new Error("Imagem invalida.");
   const slots = new Set(Object.keys(dictionary.slots));
   if (!slots.has(valor.slot)) throw new Error("Slot visual invalido.");
   if (!new Set(["openverse", "local"]).has(valor.provider)) throw new Error("Provider visual invalido.");
-  if (!new Set([...dictionary.allowed_licenses, "local-fallback"]).has(valor.license)) throw new Error("Licenca visual nao permitida.");
+  if (!new Set([...dictionary.allowed_licenses, "local-fallback", "chef-ia-original"]).has(valor.license)) throw new Error("Licenca visual nao permitida.");
   if (!texto(valor.id) || !texto(valor.image_url) || !texto(valor.thumbnail_url) || !texto(valor.attribution)) {
     throw new Error("Metadados visuais incompletos.");
   }
   if (valor.provider === "openverse" && (!urlHttps(valor.image_url) || !urlHttps(valor.thumbnail_url) || !urlHttps(valor.source_url))) {
     throw new Error("Imagem externa sem URLs HTTPS validas.");
+  }
+  if (valor.provider === "local" && (!urlLocal(valor.image_url) || !urlLocal(valor.thumbnail_url))) {
+    throw new Error("Imagem local fora da biblioteca permitida.");
   }
   return {
     id: texto(valor.id), target_id: texto(valor.target_id) || null, slot: valor.slot, provider: valor.provider,
@@ -91,7 +132,9 @@ function validarImagem(valor) {
     creator_url: urlHttps(valor.creator_url), license: valor.license,
     license_url: urlHttps(valor.license_url), attribution: texto(valor.attribution),
     alt: texto(valor.alt), tags: normalizarTags(valor.tags), width: numeroOuNull(valor.width), height: numeroOuNull(valor.height),
-    fallback: Boolean(valor.fallback)
+    fallback: Boolean(valor.fallback),
+    match_type: ["dish-family", "category", "fallback"].includes(valor.match_type) ? valor.match_type : null,
+    relevance_score: numeroOuNull(valor.relevance_score)
   };
 }
 
@@ -128,12 +171,29 @@ function validarDicionario(valor) {
   return erros;
 }
 
+function validarBibliotecaLocal(valor) {
+  const erros = [];
+  if (!valor?.version || valor?.license !== "chef-ia-original") erros.push("cabecalho invalido");
+  if (!Array.isArray(valor?.entries) || valor.entries.length < 6) return [...erros, "itens insuficientes"];
+  const ids = new Set();
+  valor.entries.forEach(item => {
+    if (!item?.id || ids.has(item.id)) erros.push(`id local invalido: ${item?.id || "ausente"}`);
+    ids.add(item?.id);
+    if (!urlLocal(item?.path)) erros.push(`caminho local invalido: ${item?.id || "desconhecido"}`);
+    if (!Array.isArray(item?.slots) || !item.slots.length || item.slots.some(slot => !dictionary.slots[slot])) erros.push(`slots locais invalidos: ${item?.id || "desconhecido"}`);
+    if (!Array.isArray(item?.match_terms)) erros.push(`termos locais invalidos: ${item?.id || "desconhecido"}`);
+    if (!["dish-family", "category"].includes(item?.match_mode)) erros.push(`modo local invalido: ${item?.id || "desconhecido"}`);
+  });
+  return erros;
+}
+
 function limparTermo(valor, limite) {
   return String(valor || "").replace(/[^\p{L}\p{N}\s-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, limite);
 }
 function normalizar(valor) { return limparTermo(valor, 500).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
 function texto(valor) { return typeof valor === "string" ? valor.trim() : ""; }
 function urlHttps(valor) { try { const url = new URL(valor); return url.protocol === "https:" ? url.toString() : null; } catch { return null; } }
+function urlLocal(valor) { return typeof valor === "string" && /^\/images\/(?:fallback|library)\/[a-z0-9-]+\.svg$/i.test(valor) ? valor : null; }
 function numeroOuNull(valor) { const numero = Number(valor); return Number.isFinite(numero) && numero >= 0 ? numero : null; }
 function normalizarTags(valor) {
   return Array.isArray(valor)
@@ -143,6 +203,9 @@ function normalizarTags(valor) {
 
 const STOPWORDS = new Set(["mini", "com", "sem", "para", "de", "da", "do", "dos", "das", "especial", "artesanal", "natural", "integral", "acucar", "vegetariano", "vegano", "gluten"]);
 const CONCEITOS_VISUAIS = [
+  [/pao de alho/, "garlic bread"], [/cachorro quente/, "hot dog"], [/pizza/, "pizza"],
+  [/brigadeiro/, "brigadeiro chocolate truffle"], [/mousse(?: de)? chocolate|mousse/, "chocolate mousse"],
+  [/farofa/, "Brazilian farofa"], [/rabanada/, "French toast"], [/panetone/, "panettone"], [/feijoada/, "Brazilian feijoada"],
   [/sanduiche|sanduich/, "sandwich"], [/carpaccio/, "carpaccio"], [/alcaparra/, "capers"],
   [/espetinho/, "skewer"], [/queijo coalho/, "grilled cheese"], [/tartare/, "tartare"], [/vegetais?/, "vegetable"], [/barquete/, "tartlet"],
   [/tilapia/, "tilapia fish"], [/salmao/, "salmon"], [/carne bovina|picanha|alcatra|patinho/, "beef"], [/linguica/, "sausage"], [/frango|coxa|asa/, "chicken"],
@@ -152,4 +215,20 @@ const CONCEITOS_VISUAIS = [
   [/gin/, "gin cocktail"], [/whisky|uisque/, "whisky"], [/cerveja.*ipa/, "IPA beer"], [/cerveja.*pilsen/, "pilsner beer"], [/vinho/, "wine"]
 ];
 
-module.exports = { construirSolicitacoesImagem, criarImagemFallback, validarImagem, validarDicionario, inferirSlot, construirConsultaPrato, construirTermosCorrespondencia };
+const TERMOS_VISUAIS_GENERICOS = new Set(["food", "photography", "drink", "juice", "water", "main", "course", "dessert", "appetizer", "side", "dish"]);
+
+function construirTermosAncora(prato) {
+  const nome = normalizar(prato?.nome);
+  return Array.from(new Set(CONCEITOS_VISUAIS
+    .filter(([padrao]) => padrao.test(nome))
+    .flatMap(([, traducao]) => traducao.split(" "))
+    .map(normalizar)
+    .filter(termo => termo.length >= 3 && !TERMOS_VISUAIS_GENERICOS.has(termo))
+  )).slice(0, 8);
+}
+
+module.exports = {
+  construirSolicitacoesImagem, criarImagemFallback, selecionarImagensLocais,
+  validarImagem, validarDicionario, validarBibliotecaLocal, inferirSlot,
+  construirConsultaPrato, construirTermosCorrespondencia, construirTermosAncora
+};

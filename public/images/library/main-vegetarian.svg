@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Prato de vegetais</title><desc id="d">Composicao colorida de vegetais em prato claro</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#142019"/><stop offset="1" stop-color="#211820"/></linearGradient><filter id="s"><feDropShadow dy="20" stdDeviation="22" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#faf5e9" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<g><circle cx="470" cy="345" r="82" fill="#739755"/><circle cx="615" cy="330" r="70" fill="#d89a39"/><circle cx="735" cy="390" r="84" fill="#9f493b"/><circle cx="555" cy="440" r="72" fill="#e1c44e"/><circle cx="810" cy="310" r="45" fill="#668b55"/></g>
+<g fill="none" stroke="#f1de9d" stroke-width="10"><circle cx="470" cy="345" r="42"/><path d="M570 290l85 80M575 370l85-80"/><circle cx="735" cy="390" r="40"/></g>
+</svg>

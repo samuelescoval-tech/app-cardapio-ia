@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Prato principal com carne</title><desc id="d">Carne fatiada com molho e vegetais</desc>
+<defs><radialGradient id="b"><stop stop-color="#46301f"/><stop offset="1" stop-color="#15141b"/></radialGradient><filter id="s"><feDropShadow dy="18" stdDeviation="22" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#f8f3e9" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<path d="M390 315c95-75 245-68 315 22 30 40 16 120-35 156-105 52-265 28-330-48-30-45-9-96 50-130z" fill="#713a31"/><path d="M410 340c75-45 180-40 250 20M385 395c88-35 205-23 275 42" fill="none" stroke="#d69567" stroke-width="20" stroke-linecap="round"/>
+<g fill="#6e8f55"><circle cx="780" cy="320" r="52"/><circle cx="840" cy="390" r="46"/><circle cx="760" cy="440" r="40"/></g><g fill="#d7a836"><circle cx="830" cy="305" r="30"/><circle cx="890" cy="350" r="25"/></g>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Salada e acompanhamentos</title><desc id="d">Tigela com folhas, vegetais e graos coloridos</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#132019"/><stop offset="1" stop-color="#2c2018"/></linearGradient><filter id="s"><feDropShadow dy="20" stdDeviation="22" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><path d="M250 300h700c-25 230-155 330-350 330S275 530 250 300z" fill="#f5efe4" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<g><ellipse cx="420" cy="300" rx="110" ry="70" fill="#668b50" transform="rotate(22 420 300)"/><ellipse cx="590" cy="280" rx="125" ry="75" fill="#7b9e59" transform="rotate(-15 590 280)"/><ellipse cx="760" cy="305" rx="120" ry="70" fill="#557b4a" transform="rotate(18 760 305)"/><circle cx="485" cy="350" r="48" fill="#c8503b"/><circle cx="690" cy="360" r="46" fill="#d8a43a"/><circle cx="805" cy="350" r="38" fill="#9b493b"/></g>
+</svg>
