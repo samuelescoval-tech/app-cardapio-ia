@@ -75,10 +75,6 @@ biblioteca.
 6. DEMO_ACCESS_KEY nao substitui autenticacao de producao.
 7. Alergenicos e contaminacao cruzada exigem confirmacao profissional.
 8. Operacao deve ser conferida contra o espaco e os equipamentos reais.
-9. O trabalho do Plano 11 (biblioteca visual) e do Plano 12 (correcao de
-   correspondencia) descrito neste handoff ainda nao foi commitado; o HEAD do
-   git esta em 3664ddb e nao inclui nenhuma dessas mudancas. Commitar antes de
-   qualquer nova migracao ou backup baseado em git.
 
 ## Informacoes prioritarias do evento
 
