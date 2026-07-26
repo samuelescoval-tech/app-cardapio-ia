@@ -476,14 +476,26 @@ responderam certo em producao), mas `GET /` deu 500. Causa: a Vercel serve
 (`/(.*)`) tambem capturava a rota raiz `/` e mandava pra funcao, que tentava
 `res.sendFile` num arquivo que nao existe no pacote da funcao. Corrigido no
 `vercel.json` adicionando uma regra especifica antes da generica, mandando
-`/` direto pro `index.html` estatico (sem passar pela funcao). Esse ajuste e
-so de config da Vercel, nao da pra validar localmente (a suite e a simulacao
-com `http.createServer` continuam passando, pois reproduzem so o
-comportamento do Express, nao o roteamento estatico/funcao da Vercel).
+`/` direto pro `index.html` estatico (sem passar pela funcao). Esse ajuste
+sozinho nao resolveu: o log do proximo deploy mostrou o mesmo erro exato
+("Exportação inválida... /var/task/server.js"), sugerindo que o projeto na
+Vercel guardou uma configuracao de framework ("Express") vinculada
+diretamente ao `server.js`, independente do `vercel.json` ou do `main` do
+`package.json`.
+
+Correcao definitiva, na raiz: `server.js` agora exporta a propria funcao
+Express como padrao (`module.exports = app`) e anexa os handlers como
+propriedades via `Object.assign` (`app.gerarCardapioHandler = ...` etc.),
+preservando `const { app, xHandler } = require('../server')` nos testes.
+Assim, seja qual for o arquivo que a Vercel decidir usar como entrada
+(`server.js` ou `api/index.js`), ambos agora exportam uma funcao valida.
+Confirmado localmente com `http.createServer` chamando os dois diretamente:
+os dois respondem `GET /` e `GET /api/status` corretamente. Suite completa
+(164 testes) revalidada.
 
 ## Proxima acao curta
 
-1. commitar e enviar a correcao do `vercel.json` (rota raiz), disparar novo
+1. commitar e enviar a correcao do `server.js` (exportacao), disparar novo
    deploy e confirmar `GET /` (pagina principal) em producao;
 2. opcional, antes de lancar para usuarios reais: ativar protecao contra
    senha vazada no Supabase e revisar o acesso a `rls_auto_enable()`;

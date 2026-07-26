@@ -387,9 +387,14 @@ if (require.main === module) {
     app.listen(process.env.PORT || 3000, () => console.log(`✅ Chef IA Rodando! Acesse: http://localhost:${process.env.PORT || 3000}`));
 }
 
-module.exports = {
+// A exportacao padrao precisa ser a propria funcao Express (nao um objeto),
+// pois o preset "Express" da Vercel exige isso do modulo apontado por
+// package.json.main. Os handlers continuam disponiveis como propriedades
+// para os testes que fazem `const { app, xHandler } = require('../server')`.
+module.exports = app;
+Object.assign(module.exports, {
     app, gerarCardapioHandler, buscarReferenciasHandler, buscarImagensEventoHandler,
     registrarHandler, loginHandler, perfilHandler,
     listarFornecedoresHandler, criarFornecedorHandler, atualizarFornecedorHandler, removerFornecedorHandler,
     listarFotosHandler, criarFotoHandler, removerFotoHandler
-};
+});
