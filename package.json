@@ -21,13 +21,13 @@
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@supabase/supabase-js": "^2.110.8",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
   },
   "directories": {
     "doc": "docs"
   },
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/samuelescoval-tech/app-cardapio-ia.git"

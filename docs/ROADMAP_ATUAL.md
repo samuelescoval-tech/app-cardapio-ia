@@ -1,13 +1,15 @@
 # Roadmap atual - Chef IA Studio
 
-Atualizado em 2026-07-15.
+Atualizado em 2026-07-23.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
 
 ## Etapa atual
 
-Plano 12 em validacao do usuario: cobertura visual acompanhada.
+Plano 13 concluido. Plano 14 iniciado: contas de usuario, banco de dados,
+personalizacao (fornecedores e fotos proprias) e deploy. Plano 15 (auditoria
+geral do app) fica anotado para o futuro, ainda sem inicio.
 
 | Plano | Resultado | Estado |
 |---|---|---|
@@ -23,13 +25,17 @@ Plano 12 em validacao do usuario: cobertura visual acompanhada.
 | 9 | Calcular complexidade e operacao | Concluido |
 | 10 | Revisar conteudo e validar o ciclo | Concluido |
 | 11 | Criar biblioteca visual local e controlada | Concluido |
-| 12 | Medir e corrigir cobertura visual em eventos representativos | Novo teste do usuario |
+| 12 | Medir e corrigir cobertura visual em eventos representativos | Concluido |
+| 13 | Ampliar biblioteca visual e reduzir imagens de categoria | Concluido |
+| 14 | Contas, banco de dados, personalizacao e deploy | Em andamento |
+| 15 | Auditoria geral do app (o que ainda condiz, o que limpar/ajustar) | Planejado, sem inicio |
 
 Contagem atual:
 
-- 11 planos principais concluidos;
+- 13 planos principais concluidos;
 - 1 subplano tecnico concluido;
-- 1 plano tecnicamente pronto para validacao do usuario;
+- 1 plano em andamento;
+- 1 plano planejado, aguardando o Plano 14 terminar;
 - nenhuma etapa posterior aprovada automaticamente.
 
 ## Plano 11 - resultado
@@ -73,10 +79,103 @@ continuidade tecnica.
    alho, mini pizza e cachorro-quente.
 6. Desktop e mobile passaram sem imagens quebradas ou overflow.
 
-O plano sera marcado como concluido depois da avaliacao visual do usuario. O
-Plano 13 nao deve iniciar automaticamente.
-
 Feedback real reabriu o Plano 12: uma imagem de laranja foi associada a suco de
 uva e apareceram referencias monocromaticas. A selecao foi endurecida para
 exigir ingrediente distintivo no titulo, rejeitar conteudo monocromatico ou
-arquivistico e manter categorias explicitamente genericas. Aguarda novo teste.
+arquivistico e manter categorias explicitamente genericas.
+
+Teste tecnico com evento real em 2026-07-23 (detalhes no handoff): corrigido um
+bug que truncava a resposta do Gemini em eventos Premium; a cobertura visual
+real caiu quase toda em imagem de categoria, sugerindo que a lacuna da
+biblioteca e maior que os quatro itens originais.
+
+**Plano 12 concluido em 2026-07-23**: o usuario gerou um evento real (Ceia de
+Natal, 15 pessoas) pela tela e aprovou o conteudo (nota 9,8/10, sem problema
+apontado). A cobertura visual generica foi aceita como pendencia conhecida,
+nao como bloqueio. Corrigido tambem um painel de carregamento sem indicacao
+visual durante a geracao (agora com spinner e aviso de tempo).
+
+## Plano 13 - ampliar biblioteca visual
+
+Objetivo: reduzir a proporcao de pratos que caem em imagem de categoria.
+
+Primeiro incremento aplicado em 2026-07-23: nova ilustracao dish-family para
+porco/tender/pernil e termos peru/chester adicionados a familia de aves.
+Reteste com os 20 pratos reais da Ceia de Natal: familia local subiu de 1/20
+para 3/20. Detalhes tecnicos e o diagnostico corrigido (o gap era peru e
+porco faltando, nao "nomes elaborados" em geral) ficam no handoff.
+
+Segundo incremento (2026-07-23): tres sub-familias de bebida (laranja, uva,
+cafe). Fecha definitivamente o caso original do Plano 12 (suco de uva/laranja)
+- esse cenario agora resolve local, sem consultar Openverse.
+
+Terceiro incremento (2026-07-23, plano concluido): sete sub-familias de
+bebida adicionais (agua, refrigerante cola, guarana, vinho tinto, vinho
+branco/espumante, cerveja, cha) e quatro sub-familias de entrada cobrindo os
+itens genericos originais (mini sanduiche, pao de alho, mini pizza,
+cachorro-quente). Reteste real: os quatro itens originais agora resolvem
+4/4 como familia local, cobertura "controlled", zero dependencia externa. No
+evento real da Ceia de Natal, familia local subiu de 3/20 para 7/20 e a
+dependencia de Openverse caiu a zero. Detalhes tecnicos, incluindo um risco de
+colisao de termo corrigido (cola/chocolate), ficam no handoff.
+
+Escopo remanescente, nao feito por falta de gap concreto identificado: entrada
+alem dos quatro itens, salada e sobremesa continuam apenas em category. Fica
+para decisao futura caso surja evidencia de necessidade.
+
+## Plano 14 - contas, banco de dados, personalizacao e deploy
+
+Decisao do usuario em 2026-07-23 (prioridade: custo zero para comecar, com
+caminho de migracao pago depois):
+
+- **Hospedagem do app**: Vercel (gratuito para comecar).
+- **Banco de dados + autenticacao + armazenamento de fotos**: Supabase
+  (Postgres, Auth e Storage no mesmo plano gratuito).
+- **Pagamentos**: adiado. Quando houver modelo de cobranca definido, Mercado
+  Pago e o candidato principal (PIX/boleto/cartao, mercado brasileiro).
+
+Objetivo: sair do estado atual (zero contas, historico so no navegador) para
+usuarios com conta propria, cada um podendo cadastrar seus proprios
+fornecedores/locais de compra e enviar suas proprias fotos de pratos e
+receitas, com o app publicado (nao so local).
+
+Fases previstas:
+
+1. Criar projeto Supabase (banco + auth + storage), RLS automatico ativado;
+   chaves no `.env`, nunca versionadas. **Concluido em 2026-07-23.**
+2. Cadastro/login de usuario via Supabase Auth. **Concluido em 2026-07-23**
+   (backend: endpoints `/api/auth/registrar`, `/api/auth/login`,
+   `/api/auth/perfil`; frontend: modal de login/cadastro na tela principal).
+   Testado ponta a ponta com conta real.
+3. Tabela e endpoints para fornecedores proprios por usuario (CRUD);
+4. Tabela, endpoints e Storage para fotos proprias de prato/receita por
+   usuario;
+5. Adaptar o app para rodar como funcao serverless, criar o projeto Vercel
+   (importar o repositorio) e conectar ao Supabase; deploy e teste ponta a
+   ponta em producao. So aqui a conta Vercel e efetivamente usada.
+
+Pre-requisito do usuario antes da fase 1: criar conta gratuita em
+supabase.com (feito em 2026-07-23, RLS automatico ativado, chaves no `.env`
+confirmadas). Conta Vercel ja criada tambem, mas so sera configurada na
+fase 5 — nao ha nada a fazer la por enquanto.
+
+## Plano 15 - auditoria geral do app (planejado, sem inicio)
+
+Registrado a pedido do usuario para o futuro, depois do Plano 14: revisar o
+app como um todo, o que ainda condiz com o codigo/documentacao atual e o que
+precisa ser limpo ou ajustado. Sem escopo detalhado ainda.
+
+## Depois do Plano 13
+
+O item "decisao de produto sobre deploy, login, banco e pagamentos" virou o
+Plano 14 (acima). Direcoes ainda sem escolha do usuario:
+
+1. ampliacao de eventos, temas e repertorio regional;
+2. catalogo de precos piloto em uma unica cidade;
+3. ampliar entrada/salada/sobremesa dish-family alem dos quatro itens ja
+   cobertos, se surgir evidencia de necessidade;
+4. Plano 15 (auditoria geral, acima) - so depois do Plano 14 terminar.
+
+Nao iniciar precificacao, SaaS ou infraestrutura de producao apenas por
+continuidade tecnica. Novas tarefas devem ser adicionadas aqui conforme forem
+decididas, mantendo o estado somente neste roadmap e no handoff.

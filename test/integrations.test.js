@@ -263,3 +263,225 @@ test("POST /api/imagens-evento valida o evento antes de consultar fontes externa
   assert.equal(response.body.campo, "pessoas");
 });
 }
+
+// -----------------------------------------------------------------------------
+// Origem: Plano 14 - autenticacao via Supabase
+// -----------------------------------------------------------------------------
+{
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { registrarHandler, loginHandler, perfilHandler } = require("../server");
+const { criarSupabaseAuthService, ErroAutenticacao } = require("../src/services/auth/supabase-auth.service");
+
+function respostaFake() {
+  return {
+    statusCode: 200,
+    body: null,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(body) {
+      this.body = body;
+      return this;
+    }
+  };
+}
+
+function requisicaoFake(body, headers = {}) {
+  const cabecalhos = { "x-demo-access-key": process.env.DEMO_ACCESS_KEY || undefined, ...headers };
+  return {
+    body,
+    get(nome) {
+      return cabecalhos[nome.toLowerCase()];
+    }
+  };
+}
+
+test("POST /api/auth/registrar rejeita email invalido antes de chamar o Supabase", async () => {
+  const response = respostaFake();
+  await registrarHandler(requisicaoFake({ email: "invalido", senha: "123456" }), response);
+  assert.equal(response.statusCode, 400);
+  assert.equal(response.body.ok, false);
+});
+
+test("POST /api/auth/registrar rejeita senha curta antes de chamar o Supabase", async () => {
+  const response = respostaFake();
+  await registrarHandler(requisicaoFake({ email: "teste@teste.com", senha: "123" }), response);
+  assert.equal(response.statusCode, 400);
+});
+
+test("POST /api/auth/registrar exige a senha de demo quando configurada", async () => {
+  const response = respostaFake();
+  await registrarHandler(requisicaoFake({ email: "teste@teste.com", senha: "123456" }, { "x-demo-access-key": "errada" }), response);
+  assert.equal(response.statusCode, 401);
+});
+
+test("GET /api/auth/perfil rejeita chamada sem token", async () => {
+  const response = respostaFake();
+  await perfilHandler(requisicaoFake(null), response);
+  assert.equal(response.statusCode, 401);
+});
+
+test("supabase-auth.service nao configurado retorna erro claro", async () => {
+  const service = criarSupabaseAuthService({ url: null, anonKey: null });
+  assert.equal(service.getStatus().configured, false);
+  await assert.rejects(() => service.cadastrar("a@a.com", "123456"), ErroAutenticacao);
+});
+
+test("cadastrar mapeia sucesso e erro do Supabase", async () => {
+  const servicoOk = criarSupabaseAuthService({ client: {
+    auth: {
+      async signUp() {
+        return { data: { user: { id: "u1", email: "a@a.com" }, session: null }, error: null };
+      }
+    }
+  } });
+  const resultado = await servicoOk.cadastrar("a@a.com", "123456");
+  assert.equal(resultado.usuario_id, "u1");
+  assert.equal(resultado.confirmacao_pendente, true);
+
+  const servicoErro = criarSupabaseAuthService({ client: {
+    auth: {
+      async signUp() {
+        return { data: {}, error: { message: "Email ja cadastrado", status: 422 } };
+      }
+    }
+  } });
+  await assert.rejects(() => servicoErro.cadastrar("a@a.com", "123456"), ErroAutenticacao);
+});
+
+test("login mapeia sucesso e erro do Supabase", async () => {
+  const servicoOk = criarSupabaseAuthService({ client: {
+    auth: {
+      async signInWithPassword() {
+        return { data: { user: { id: "u1", email: "a@a.com" }, session: { access_token: "tok123", expires_at: 999 } }, error: null };
+      }
+    }
+  } });
+  const resultado = await servicoOk.login("a@a.com", "123456");
+  assert.equal(resultado.access_token, "tok123");
+
+  const servicoErro = criarSupabaseAuthService({ client: {
+    auth: {
+      async signInWithPassword() {
+        return { data: {}, error: { message: "Credenciais invalidas", status: 400 } };
+      }
+    }
+  } });
+  await assert.rejects(() => servicoErro.login("a@a.com", "senhaerrada"), ErroAutenticacao);
+});
+
+test("obterUsuario valida token ausente e token invalido", async () => {
+  const service = criarSupabaseAuthService({ client: {
+    auth: {
+      async getUser() {
+        return { data: { user: null }, error: { message: "invalido" } };
+      }
+    }
+  } });
+  await assert.rejects(() => service.obterUsuario(""), ErroAutenticacao);
+  await assert.rejects(() => service.obterUsuario("token-invalido"), ErroAutenticacao);
+});
+}
+
+// -----------------------------------------------------------------------------
+// Origem: Plano 14 - fornecedores proprios por usuario
+// -----------------------------------------------------------------------------
+{
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const {
+  listarFornecedoresHandler, criarFornecedorHandler, atualizarFornecedorHandler, removerFornecedorHandler
+} = require("../server");
+const { criarFornecedoresService, ErroFornecedor } = require("../src/services/personalizacao/fornecedores.service");
+
+function respostaFake() {
+  return {
+    statusCode: 200,
+    body: null,
+    status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; }
+  };
+}
+
+function requisicaoFake(body, headers = {}, params = {}) {
+  const cabecalhos = { "x-demo-access-key": process.env.DEMO_ACCESS_KEY || undefined, ...headers };
+  return { body, params, get(nome) { return cabecalhos[nome.toLowerCase()]; } };
+}
+
+function builderFake(resultado) {
+  const builder = {
+    select() { return builder; },
+    insert() { return builder; },
+    update() { return builder; },
+    delete() { return builder; },
+    eq() { return builder; },
+    order() { return builder; },
+    single: async () => resultado,
+    maybeSingle: async () => resultado,
+    then(resolve, reject) { return Promise.resolve(resultado).then(resolve, reject); }
+  };
+  return builder;
+}
+
+function clienteFake(resultado) {
+  return { from() { return builderFake(resultado); } };
+}
+
+test("GET /api/fornecedores exige token de acesso", async () => {
+  const response = respostaFake();
+  await listarFornecedoresHandler(requisicaoFake(null), response);
+  assert.equal(response.statusCode, 401);
+});
+
+test("POST /api/fornecedores exige a senha de demo quando configurada", async () => {
+  const response = respostaFake();
+  await criarFornecedorHandler(requisicaoFake({ nome: "Distribuidora Boa Vista" }, { "x-demo-access-key": "errada" }), response);
+  assert.equal(response.statusCode, 401);
+});
+
+test("PUT/DELETE /api/fornecedores/:id exigem a senha de demo quando configurada", async () => {
+  const responseUpdate = respostaFake();
+  await atualizarFornecedorHandler(requisicaoFake({ nome: "X" }, { "x-demo-access-key": "errada" }, { id: "f1" }), responseUpdate);
+  assert.equal(responseUpdate.statusCode, 401);
+
+  const responseDelete = respostaFake();
+  await removerFornecedorHandler(requisicaoFake(null, { "x-demo-access-key": "errada" }, { id: "f1" }), responseDelete);
+  assert.equal(responseDelete.statusCode, 401);
+});
+
+test("fornecedoresService valida nome obrigatorio e categoria permitida", async () => {
+  const service = criarFornecedoresService({ criarClientePorToken: () => clienteFake({ data: {}, error: null }) });
+  await assert.rejects(() => service.criar("tok", "u1", { nome: "" }), ErroFornecedor);
+  await assert.rejects(() => service.criar("tok", "u1", { nome: "Ok", categoria: "Categoria invalida" }), ErroFornecedor);
+});
+
+test("fornecedoresService cria, lista, atualiza e remove com sucesso", async () => {
+  const registro = { id: "f1", user_id: "u1", nome: "Distribuidora Boa Vista", categoria: "Hortifruti" };
+
+  const servicoCriar = criarFornecedoresService({ criarClientePorToken: () => clienteFake({ data: registro, error: null }) });
+  const criado = await servicoCriar.criar("tok", "u1", { nome: registro.nome, categoria: registro.categoria });
+  assert.equal(criado.id, "f1");
+
+  const servicoListar = criarFornecedoresService({ criarClientePorToken: () => clienteFake({ data: [registro], error: null }) });
+  const lista = await servicoListar.listar("tok");
+  assert.equal(lista.length, 1);
+
+  const servicoAtualizar = criarFornecedoresService({ criarClientePorToken: () => clienteFake({ data: { ...registro, telefone: "11999999999" }, error: null }) });
+  const atualizado = await servicoAtualizar.atualizar("tok", "f1", { telefone: "11999999999" });
+  assert.equal(atualizado.telefone, "11999999999");
+
+  const servicoRemover = criarFornecedoresService({ criarClientePorToken: () => clienteFake({ data: registro, error: null }) });
+  const removido = await servicoRemover.remover("tok", "f1");
+  assert.equal(removido.removido, true);
+});
+
+test("fornecedoresService retorna 404 ao atualizar/remover id que nao existe (ou nao e do usuario)", async () => {
+  const servicoAtualizar = criarFornecedoresService({ criarClientePorToken: () => clienteFake({ data: null, error: null }) });
+  await assert.rejects(() => servicoAtualizar.atualizar("tok", "inexistente", { nome: "X" }), ErroFornecedor);
+
+  const servicoRemover = criarFornecedoresService({ criarClientePorToken: () => clienteFake({ data: null, error: null }) });
+  await assert.rejects(() => servicoRemover.remover("tok", "inexistente"), ErroFornecedor);
+});
+}

@@ -103,6 +103,143 @@ function limparDemoAccessKey(message = "") {
     demoAccessMessage = message;
 }
 
+/* TAG: autenticacao-usuario | Plano 14 - cadastro e login via Supabase */
+let authModoCadastro = false;
+
+function obterSessaoUsuario() {
+    try {
+        const bruto = sessionStorage.getItem('chef_ia_sessao_usuario');
+        return bruto ? JSON.parse(bruto) : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+function salvarSessaoUsuario(sessao) {
+    sessionStorage.setItem('chef_ia_sessao_usuario', JSON.stringify(sessao));
+    atualizarBotaoConta();
+}
+
+function encerrarSessaoUsuario() {
+    sessionStorage.removeItem('chef_ia_sessao_usuario');
+    atualizarBotaoConta();
+}
+
+function atualizarBotaoConta() {
+    const botao = document.getElementById('btnConta');
+    if (!botao) return;
+    const sessao = obterSessaoUsuario();
+    botao.textContent = sessao ? `👤 ${sessao.email}` : '👤 ENTRAR';
+}
+
+function abrirModalConta() {
+    const sessao = obterSessaoUsuario();
+    if (sessao) {
+        if (confirm(`Sair da conta ${sessao.email}?`)) encerrarSessaoUsuario();
+        return;
+    }
+    authModoCadastro = false;
+    atualizarTextoModalAuth();
+
+    const modal = document.getElementById('authModal');
+    const email = document.getElementById('authEmailInput');
+    const senha = document.getElementById('authSenhaInput');
+    const erro = document.getElementById('authModalError');
+    const info = document.getElementById('authModalInfo');
+    const submit = document.getElementById('authModalSubmit');
+    const toggle = document.getElementById('authModalToggle');
+    const close = document.getElementById('authModalClose');
+
+    email.value = "";
+    senha.value = "";
+    erro.textContent = "";
+    info.textContent = "";
+
+    const fechar = () => {
+        modal.classList.add('hidden');
+        document.body.classList.remove('modal-open');
+        modal.removeEventListener('keydown', handleKeydown);
+    };
+
+    async function enviar() {
+        erro.textContent = "";
+        info.textContent = "";
+        const demoAccessKey = await obterDemoAccessKey();
+        const headers = { "Content-Type": "application/json" };
+        if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
+
+        const rota = authModoCadastro ? "/api/auth/registrar" : "/api/auth/login";
+        try {
+            const response = await fetch(rota, {
+                method: "POST",
+                headers,
+                body: JSON.stringify({ email: email.value.trim(), senha: senha.value })
+            });
+            const dados = await response.json();
+            if (!response.ok || dados.ok === false) {
+                erro.textContent = dados.error || "Nao foi possivel completar a operacao.";
+                return;
+            }
+
+            if (authModoCadastro) {
+                if (dados.confirmacao_pendente) {
+                    info.textContent = "Cadastro criado. Confira seu e-mail para confirmar antes de entrar.";
+                    return;
+                }
+                salvarSessaoUsuario({ email: dados.email, accessToken: dados.access_token });
+                fechar();
+                return;
+            }
+
+            salvarSessaoUsuario({ email: dados.email, accessToken: dados.access_token });
+            fechar();
+        } catch (error) {
+            erro.textContent = "Erro de conexao. Tente novamente.";
+        }
+    }
+
+    function handleKeydown(event) {
+        if (event.key === "Escape") fechar();
+        if (event.key === "Enter") enviar();
+    }
+
+    submit.onclick = enviar;
+    close.onclick = fechar;
+    toggle.onclick = () => {
+        authModoCadastro = !authModoCadastro;
+        erro.textContent = "";
+        info.textContent = "";
+        atualizarTextoModalAuth();
+    };
+
+    document.body.classList.add('modal-open');
+    modal.classList.remove('hidden');
+    modal.addEventListener('keydown', handleKeydown);
+    requestAnimationFrame(() => email.focus());
+}
+
+function atualizarTextoModalAuth() {
+    const tag = document.getElementById('authModalTag');
+    const titulo = document.getElementById('authModalTitle');
+    const descricao = document.getElementById('authModalDescricao');
+    const submit = document.getElementById('authModalSubmit');
+    const toggle = document.getElementById('authModalToggle');
+
+    if (authModoCadastro) {
+        tag.textContent = "Cadastro";
+        titulo.textContent = "Criar minha conta";
+        descricao.textContent = "Crie sua conta para salvar fornecedores e fotos proprias.";
+        submit.textContent = "Cadastrar";
+        toggle.textContent = "Ja tenho conta";
+    } else {
+        tag.textContent = "Entrar";
+        titulo.textContent = "Acesse sua conta";
+        descricao.textContent = "Entre com seu e-mail e senha.";
+        submit.textContent = "Entrar";
+        toggle.textContent = "Ainda nao tenho conta";
+    }
+}
+
 function exibirErroResultado(resultadoArea, mensagem, resultadoAnterior = "") {
     resultadoArea.classList.remove('hidden');
     resultadoArea.innerHTML = `
@@ -232,8 +369,9 @@ async function gerarTudo() {
         resultadoArea.dataset.planoValido = "false";
         resultadoArea.innerHTML = `
             <div class="glass-panel" style="text-align:center; border-top: 4px solid var(--gold);">
+                <span class="gallery-loading-visual" aria-hidden="true" style="display:inline-block; margin-bottom:12px;"></span>
                 <p><strong>O Chef IA está arquitetando seu evento...</strong></p>
-                <p style="font-size:0.8rem; opacity:0.7;">Calculando logística para ${pessoas} convidados (${estilo})</p>
+                <p style="font-size:0.8rem; opacity:0.7;">Calculando logística para ${pessoas} convidados (${estilo}). Pode levar de 15 a 40 segundos.</p>
             </div>
         `;
 
@@ -582,6 +720,7 @@ function limparHistoricoUI() {
 /* TAG: init-historico | Chamar ao carregar página */
 document.addEventListener('DOMContentLoaded', function() {
     inicializarAcessoDemo();
+    atualizarBotaoConta();
 
     // Renderizar histórico ao carregar
     setTimeout(() => {

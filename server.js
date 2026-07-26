@@ -14,12 +14,16 @@ const { criarOpenverseService } = require('./src/services/images/openverse.servi
 const { criarImageSelectionService } = require('./src/services/images/image-selection.service');
 const { avaliarQualidadeEvento } = require('./src/services/planning/event-quality.service');
 const { avaliarRendimentoAlimentar } = require('./src/services/planning/food-yield.service');
+const { criarSupabaseAuthService, ErroAutenticacao } = require('./src/services/auth/supabase-auth.service');
+const { criarFornecedoresService, ErroFornecedor } = require('./src/services/personalizacao/fornecedores.service');
 
 const app = express();
 const demoAccessKey = process.env.DEMO_ACCESS_KEY;
 const spoonacularService = criarSpoonacularService();
 const openverseService = criarOpenverseService();
 const imageSelectionService = criarImageSelectionService({ openverseService });
+const supabaseAuthService = criarSupabaseAuthService();
+const fornecedoresService = criarFornecedoresService();
 
 app.use(express.json({ limit: '20kb' }));
 
@@ -51,9 +55,150 @@ app.get('/api/status', (req, res) => {
             configured: true,
             strategy: "local-first",
             version: "1.0.0"
-        }
+        },
+        auth: supabaseAuthService.getStatus()
     });
 });
+
+function validarCredenciais(body) {
+    const email = String(body?.email || "").trim().slice(0, 200);
+    const senha = String(body?.senha || "");
+    if (!email || !email.includes("@")) {
+        throw new ErroAutenticacao("Informe um e-mail valido.", 400);
+    }
+    if (senha.length < 6) {
+        throw new ErroAutenticacao("A senha deve ter pelo menos 6 caracteres.", 400);
+    }
+    return { email, senha };
+}
+
+async function registrarHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const { email, senha } = validarCredenciais(req.body);
+        const resultado = await supabaseAuthService.cadastrar(email, senha);
+        res.json({ ok: true, ...resultado });
+    } catch (error) {
+        if (error instanceof ErroAutenticacao) {
+            return res.status(error.statusCode).json({ ok: false, error: error.message });
+        }
+        console.error("❌ Erro no cadastro:", error.message);
+        res.status(500).json({ ok: false, error: "Nao foi possivel completar o cadastro." });
+    }
+}
+
+async function loginHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const { email, senha } = validarCredenciais(req.body);
+        const resultado = await supabaseAuthService.login(email, senha);
+        res.json({ ok: true, ...resultado });
+    } catch (error) {
+        if (error instanceof ErroAutenticacao) {
+            return res.status(error.statusCode).json({ ok: false, error: error.message });
+        }
+        console.error("❌ Erro no login:", error.message);
+        res.status(500).json({ ok: false, error: "Nao foi possivel completar o login." });
+    }
+}
+
+async function perfilHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const token = (req.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+        const usuario = await supabaseAuthService.obterUsuario(token);
+        res.json({ ok: true, ...usuario });
+    } catch (error) {
+        if (error instanceof ErroAutenticacao) {
+            return res.status(error.statusCode).json({ ok: false, error: error.message });
+        }
+        console.error("❌ Erro ao obter perfil:", error.message);
+        res.status(500).json({ ok: false, error: "Nao foi possivel obter o perfil." });
+    }
+}
+
+app.post('/api/auth/registrar', registrarHandler);
+app.post('/api/auth/login', loginHandler);
+app.get('/api/auth/perfil', perfilHandler);
+
+function obterToken(req) {
+    return (req.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
+}
+
+function tratarErroPersonalizacao(error, res, mensagemPadrao) {
+    if (error instanceof ErroAutenticacao || error instanceof ErroFornecedor) {
+        return res.status(error.statusCode).json({ ok: false, error: error.message });
+    }
+    console.error("❌ Erro na personalizacao:", error.message);
+    res.status(500).json({ ok: false, error: mensagemPadrao });
+}
+
+async function listarFornecedoresHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const fornecedores = await fornecedoresService.listar(token);
+        res.json({ ok: true, fornecedores });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel listar os fornecedores.");
+    }
+}
+
+async function criarFornecedorHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const token = obterToken(req);
+        const usuario = await supabaseAuthService.obterUsuario(token);
+        const fornecedor = await fornecedoresService.criar(token, usuario.usuario_id, req.body);
+        res.json({ ok: true, fornecedor });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel criar o fornecedor.");
+    }
+}
+
+async function atualizarFornecedorHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const fornecedor = await fornecedoresService.atualizar(token, req.params.id, req.body);
+        res.json({ ok: true, fornecedor });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel atualizar o fornecedor.");
+    }
+}
+
+async function removerFornecedorHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const resultado = await fornecedoresService.remover(token, req.params.id);
+        res.json({ ok: true, ...resultado });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel remover o fornecedor.");
+    }
+}
+
+app.get('/api/fornecedores', listarFornecedoresHandler);
+app.post('/api/fornecedores', criarFornecedorHandler);
+app.put('/api/fornecedores/:id', atualizarFornecedorHandler);
+app.delete('/api/fornecedores/:id', removerFornecedorHandler);
 
 async function gerarCardapioHandler(req, res) {
     try {
@@ -194,4 +339,8 @@ if (require.main === module) {
     app.listen(process.env.PORT || 3000, () => console.log(`✅ Chef IA Rodando! Acesse: http://localhost:${process.env.PORT || 3000}`));
 }
 
-module.exports = { app, gerarCardapioHandler, buscarReferenciasHandler, buscarImagensEventoHandler };
+module.exports = {
+    app, gerarCardapioHandler, buscarReferenciasHandler, buscarImagensEventoHandler,
+    registrarHandler, loginHandler, perfilHandler,
+    listarFornecedoresHandler, criarFornecedorHandler, atualizarFornecedorHandler, removerFornecedorHandler
+};
