@@ -469,11 +469,22 @@ rotacionadas por precaucao. Nenhum codigo do app usa
 manualmente, pra criar o bucket de storage), entao a rotacao nao teve
 impacto funcional.
 
+Segundo deploy (apos a correcao do `main`): a funcao parou de crashar
+(`/api/status`, `/js/app.js`, `/gerar-cardapio` e `/api/auth/login`
+responderam certo em producao), mas `GET /` deu 500. Causa: a Vercel serve
+`public/` como estatico separado da funcao; minha regra de rewrite generica
+(`/(.*)`) tambem capturava a rota raiz `/` e mandava pra funcao, que tentava
+`res.sendFile` num arquivo que nao existe no pacote da funcao. Corrigido no
+`vercel.json` adicionando uma regra especifica antes da generica, mandando
+`/` direto pro `index.html` estatico (sem passar pela funcao). Esse ajuste e
+so de config da Vercel, nao da pra validar localmente (a suite e a simulacao
+com `http.createServer` continuam passando, pois reproduzem so o
+comportamento do Express, nao o roteamento estatico/funcao da Vercel).
+
 ## Proxima acao curta
 
-1. commitar e enviar a correcao do `package.json` (`main` e `engines`),
-   depois disparar um novo deploy na Vercel e confirmar que a funcao nao
-   crasha mais;
+1. commitar e enviar a correcao do `vercel.json` (rota raiz), disparar novo
+   deploy e confirmar `GET /` (pagina principal) em producao;
 2. opcional, antes de lancar para usuarios reais: ativar protecao contra
    senha vazada no Supabase e revisar o acesso a `rls_auto_enable()`;
 3. manter o estado somente neste handoff e no roadmap.
