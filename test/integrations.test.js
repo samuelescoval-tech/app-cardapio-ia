@@ -485,3 +485,100 @@ test("fornecedoresService retorna 404 ao atualizar/remover id que nao existe (ou
   await assert.rejects(() => servicoRemover.remover("tok", "inexistente"), ErroFornecedor);
 });
 }
+
+// -----------------------------------------------------------------------------
+// Origem: Plano 14 - fotos proprias de prato/receita por usuario
+// -----------------------------------------------------------------------------
+{
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { listarFotosHandler, criarFotoHandler, removerFotoHandler } = require("../server");
+const { criarFotosService, ErroFoto } = require("../src/services/personalizacao/fotos.service");
+
+const PNG_1X1_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+
+function respostaFake() {
+  return {
+    statusCode: 200,
+    body: null,
+    status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; }
+  };
+}
+
+function requisicaoFake(body, headers = {}, params = {}) {
+  const cabecalhos = { "x-demo-access-key": process.env.DEMO_ACCESS_KEY || undefined, ...headers };
+  return { body, params, get(nome) { return cabecalhos[nome.toLowerCase()]; } };
+}
+
+function clienteStorageFake({ tabela, storageUpload, storageRemove, storageSignedUrl } = {}) {
+  const tabelaBuilder = {
+    select() { return tabelaBuilder; },
+    insert() { return tabelaBuilder; },
+    delete() { return tabelaBuilder; },
+    eq() { return tabelaBuilder; },
+    order() { return tabelaBuilder; },
+    single: async () => tabela,
+    maybeSingle: async () => tabela,
+    then(resolve, reject) { return Promise.resolve(tabela).then(resolve, reject); }
+  };
+  return {
+    from() { return tabelaBuilder; },
+    storage: {
+      from() {
+        return {
+          upload: async () => storageUpload || { data: { path: "x" }, error: null },
+          remove: async () => storageRemove || { data: {}, error: null },
+          createSignedUrl: async () => storageSignedUrl || { data: { signedUrl: "https://exemplo.com/assinada" }, error: null }
+        };
+      }
+    }
+  };
+}
+
+test("GET /api/fotos exige token de acesso", async () => {
+  const response = respostaFake();
+  await listarFotosHandler(requisicaoFake(null), response);
+  assert.equal(response.statusCode, 401);
+});
+
+test("POST /api/fotos exige a senha de demo quando configurada", async () => {
+  const response = respostaFake();
+  await criarFotoHandler(requisicaoFake({ tipo: "image/png", arquivo: PNG_1X1_BASE64 }, { "x-demo-access-key": "errada" }), response);
+  assert.equal(response.statusCode, 401);
+});
+
+test("fotosService rejeita tipo de imagem invalido e arquivo ausente", async () => {
+  const service = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: {}, error: null } }) });
+  await assert.rejects(() => service.criar("tok", "u1", { tipo: "application/pdf", arquivo: PNG_1X1_BASE64 }), ErroFoto);
+  await assert.rejects(() => service.criar("tok", "u1", { tipo: "image/png", arquivo: "" }), ErroFoto);
+});
+
+test("fotosService rejeita imagem acima de 5MB", async () => {
+  const service = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: {}, error: null } }) });
+  const grande = Buffer.alloc(6 * 1024 * 1024, 1).toString("base64");
+  await assert.rejects(() => service.criar("tok", "u1", { tipo: "image/png", arquivo: grande }), ErroFoto);
+});
+
+test("fotosService envia, lista com url assinada e remove com sucesso", async () => {
+  const registro = { id: "p1", user_id: "u1", nome_prato: "Bolo de cenoura", storage_path: "u1/abc.png" };
+
+  const servicoCriar = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: registro, error: null } }) });
+  const criada = await servicoCriar.criar("tok", "u1", { tipo: "image/png", arquivo: PNG_1X1_BASE64, nome_prato: "Bolo de cenoura" });
+  assert.equal(criada.id, "p1");
+
+  const servicoListar = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: [registro], error: null } }) });
+  const lista = await servicoListar.listar("tok");
+  assert.equal(lista.length, 1);
+  assert.equal(lista[0].url, "https://exemplo.com/assinada");
+
+  const servicoRemover = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: registro, error: null } }) });
+  const removida = await servicoRemover.remover("tok", "p1");
+  assert.equal(removida.removido, true);
+});
+
+test("fotosService retorna 404 ao remover foto que nao existe (ou nao e do usuario)", async () => {
+  const service = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: null, error: null } }) });
+  await assert.rejects(() => service.remover("tok", "inexistente"), ErroFoto);
+});
+}

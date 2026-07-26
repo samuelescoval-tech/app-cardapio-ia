@@ -25,12 +25,15 @@ alter table public.fornecedores enable row level security;
 grant select, insert, update, delete on public.fornecedores to authenticated;
 
 create or replace function public.fornecedores_atualizar_timestamp()
-returns trigger as $$
+returns trigger
+language plpgsql
+set search_path = public
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 drop trigger if exists fornecedores_set_updated_at on public.fornecedores;
 create trigger fornecedores_set_updated_at

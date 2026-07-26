@@ -16,6 +16,7 @@ const { avaliarQualidadeEvento } = require('./src/services/planning/event-qualit
 const { avaliarRendimentoAlimentar } = require('./src/services/planning/food-yield.service');
 const { criarSupabaseAuthService, ErroAutenticacao } = require('./src/services/auth/supabase-auth.service');
 const { criarFornecedoresService, ErroFornecedor } = require('./src/services/personalizacao/fornecedores.service');
+const { criarFotosService, ErroFoto } = require('./src/services/personalizacao/fotos.service');
 
 const app = express();
 const demoAccessKey = process.env.DEMO_ACCESS_KEY;
@@ -24,6 +25,7 @@ const openverseService = criarOpenverseService();
 const imageSelectionService = criarImageSelectionService({ openverseService });
 const supabaseAuthService = criarSupabaseAuthService();
 const fornecedoresService = criarFornecedoresService();
+const fotosService = criarFotosService();
 
 app.use(express.json({ limit: '20kb' }));
 
@@ -132,7 +134,7 @@ function obterToken(req) {
 }
 
 function tratarErroPersonalizacao(error, res, mensagemPadrao) {
-    if (error instanceof ErroAutenticacao || error instanceof ErroFornecedor) {
+    if (error instanceof ErroAutenticacao || error instanceof ErroFornecedor || error instanceof ErroFoto) {
         return res.status(error.statusCode).json({ ok: false, error: error.message });
     }
     console.error("❌ Erro na personalizacao:", error.message);
@@ -199,6 +201,52 @@ app.get('/api/fornecedores', listarFornecedoresHandler);
 app.post('/api/fornecedores', criarFornecedorHandler);
 app.put('/api/fornecedores/:id', atualizarFornecedorHandler);
 app.delete('/api/fornecedores/:id', removerFornecedorHandler);
+
+async function listarFotosHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const fotos = await fotosService.listar(token);
+        res.json({ ok: true, fotos });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel listar as fotos.");
+    }
+}
+
+async function criarFotoHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const token = obterToken(req);
+        const usuario = await supabaseAuthService.obterUsuario(token);
+        const foto = await fotosService.criar(token, usuario.usuario_id, req.body);
+        res.json({ ok: true, foto });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel enviar a foto.");
+    }
+}
+
+async function removerFotoHandler(req, res) {
+    try {
+        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
+        }
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const resultado = await fotosService.remover(token, req.params.id);
+        res.json({ ok: true, ...resultado });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel remover a foto.");
+    }
+}
+
+app.get('/api/fotos', listarFotosHandler);
+app.post('/api/fotos', express.json({ limit: '8mb' }), criarFotoHandler);
+app.delete('/api/fotos/:id', removerFotoHandler);
 
 async function gerarCardapioHandler(req, res) {
     try {
@@ -342,5 +390,6 @@ if (require.main === module) {
 module.exports = {
     app, gerarCardapioHandler, buscarReferenciasHandler, buscarImagensEventoHandler,
     registrarHandler, loginHandler, perfilHandler,
-    listarFornecedoresHandler, criarFornecedorHandler, atualizarFornecedorHandler, removerFornecedorHandler
+    listarFornecedoresHandler, criarFornecedorHandler, atualizarFornecedorHandler, removerFornecedorHandler,
+    listarFotosHandler, criarFotoHandler, removerFotoHandler
 };
