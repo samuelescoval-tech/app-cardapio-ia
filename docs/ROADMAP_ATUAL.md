@@ -180,6 +180,110 @@ Registrado a pedido do usuario para o futuro, depois do Plano 14: revisar o
 app como um todo, o que ainda condiz com o codigo/documentacao atual e o que
 precisa ser limpo ou ajustado. Sem escopo detalhado ainda.
 
+## Plano 16 - preparacao para escala e lancamento real (planejado, sem inicio)
+
+Registrado a pedido do usuario em 2026-07-26, logo apos a fase 5 do Plano 14
+ficar pronta: uma lista de perguntas e ideias para o **futuro**, para nao
+perder de vista na formulacao dos proximos planos. Nada aqui foi implementado
+nesta sessao.
+
+### 1. Capacidade atual na configuracao gratuita (pesquisado em 2026-07-26)
+
+Numeros reais dos tres servicos usados hoje, todos no plano gratuito:
+
+- **Gemini API (`gemini-flash-lite-latest`, usado em
+  `src/services/ai/gemini.service.js`)**: 1.500 requisicoes/dia, 30
+  requisicoes/minuto, 1M tokens/minuto, por projeto Google Cloud (nao por
+  chave). Reseta a meia-noite no horario do Pacifico. Como hoje 1 evento
+  gerado = 1 chamada ao Gemini, isso da um teto teorico de ~1.500 eventos
+  gerados por dia somando todos os usuarios (a chave e unica, compartilhada
+  — ver item 2 abaixo).
+- **Supabase (banco + auth + storage)**: 500 MB de banco, 1 GB de storage de
+  arquivos, 50.000 usuarios ativos por mes (MAU, so conta quem loga no mes),
+  5 GB de saida de dados (egress) por mes. O storage de 1 GB tende a ser o
+  primeiro limite real a bater (fotos de prato dos usuarios), bem antes do
+  banco ou do limite de MAU. Projeto gratuito tambem pausa apos uma semana
+  sem uso.
+- **Vercel (hospedagem, plano Hobby)**: 100 GB de banda/mes, ate 1 milhao de
+  invocacoes de funcao/mes, 100 horas de execucao de funcao/mes. A duracao
+  maxima por chamada e 300s (5 min) por padrao no Hobby com Fluid Compute —
+  confirmado direto na documentacao oficial da Vercel em 2026-07-26, entao a
+  geracao de cardapio (15 a 40s observados) tem folga confortavel e nao deve
+  estourar timeout na configuracao atual.
+- **Ponto de atencao legal, nao so tecnico**: o plano Hobby da Vercel e para
+  uso pessoal/nao comercial; o proprio termo de uso da Vercel proibe projetos
+  que cobram de usuarios ou rodam anuncios nesse plano. Isso bate exatamente
+  com a decisao ja tomada (custo zero agora, pago quando houver cobranca via
+  Mercado Pago) — o gatilho concreto para migrar a Vercel para o plano Pro
+  (pago) e o momento em que o Plano 14 de pagamentos entrar em producao, nao
+  antes.
+
+Resumo pratico: hoje o gargalo mais provavel de aparecer primeiro, por ordem,
+seria (1) storage de fotos do Supabase (1 GB), depois (2) o limite diario do
+Gemini (1.500/dia) se o uso crescer bastante, e so depois (3) os limites da
+Vercel. Nenhum desses limites e um problema agora, com poucos usuarios de
+teste; isso deve ser reavaliado quando houver uso real recorrente.
+
+### 2. Usuario usar a propria chave de IA em vez da chave compartilhada
+
+Hoje toda geracao usa uma unica `GEMINI_API_KEY`/`GOOGLE_API_KEY` do `.env`
+do dono do app — o custo/quota e sempre do dono, nunca do usuario. E possivel
+no futuro deixar o usuario colar sua propria chave Gemini no perfil (apos
+login) e o backend usar essa chave nas chamadas daquele usuario, em vez da
+chave compartilhada. Isso distribuiria custo/quota entre os usuarios, mas
+teria custo de implementacao (guardar a chave com seguranca — nunca em texto
+puro no banco — e cair de volta pra chave padrao quando o usuario nao tiver a
+propria). Ideia registrada, sem decisao de fazer ainda.
+
+### 3. Politicas para protecao legal e de dados (a implementar antes do lancamento real)
+
+- Politica de Privacidade e Termos de Uso publicados no site, cobrindo o que
+  e coletado (e-mail, fornecedores, fotos de prato) e como e usado;
+- adequacao a LGPD (o app e brasileiro, tem usuarios reais com e-mail e
+  fotos pessoais no Supabase): direito de exclusao de conta e dos dados,
+  base legal para o tratamento, retencao de dados;
+- revisar se `DEMO_ACCESS_KEY` deve sair das rotas de auth antes de usuarios
+  reais se cadastrarem (ja listado como pendencia no Plano 14, fase 5);
+- ativar protecao contra senha vazada no Supabase Auth (ja listado como
+  pendencia opcional no Plano 14).
+
+### 4. Ajustes visuais no app (a definir)
+
+Mencionado como necessario, ainda sem lista concreta do que precisa mudar.
+Quando o usuario tiver exemplos especificos (telas, prints, comportamentos),
+detalhar aqui antes de qualquer implementacao.
+
+### 5. Revisao de seguranca de dados e do site/privacidade
+
+Revisao dedicada de seguranca (nao so o Security Advisor automatico do
+Supabase ja aplicado no Plano 14) cobrindo: exposicao de dados entre
+usuarios (RLS), superficie de ataque das rotas publicas, cabecalhos de
+seguranca HTTP do site, e politica de privacidade tecnica (o que realmente e
+armazenado e por quanto tempo). Pode ser feita junto do Plano 15 (auditoria
+geral) ou como etapa propria — a definir quando comecar.
+
+### 6. Precos proprios por usuario (perfil) e documento de precos
+
+Ideia: permitir que cada usuario cadastre seus proprios precos (por
+fornecedor/ingrediente) no perfil, alem de gerar um documento/lista de
+precos exportavel. Isso resolveria diretamente o risco ja registrado no
+handoff ("Nao existe catalogo regional real de precos", item 4 de "Falhas e
+riscos abertos") de forma personalizada por usuario, em vez de um catalogo
+regional unico e centralizado. Depende da tabela de fornecedores do Plano 14
+(fase 3) como base, adicionando um campo/tabela de preco por item.
+
+### 7. Reestruturar a navegacao: apresentacao -> login -> app
+
+Hoje (`public/index.html`) a navegacao mostra tres botoes lado a lado com o
+mesmo peso: "GERADOR IA" (abre direto, e a tela inicial padrao), "APRESENTACAO"
+e "ENTRAR" — o usuario pode pular a apresentacao e o login e ir direto pro
+gerador. A ideia registrada e inverter isso: o visitante ve a apresentacao
+primeiro, depois faz login/cadastro, e so entao cai na tela do Chef IA
+(gerador). Isso muda o fluxo de "abas paralelas" para um fluxo sequencial
+com o login como porta de entrada. Ainda sem decisao de como tratar visitantes
+que querem so espiar sem conta (ex.: modo demonstracao antes do login, ou
+login obrigatorio para tudo) — decidir quando esse item for priorizado.
+
 ## Depois do Plano 13
 
 O item "decisao de produto sobre deploy, login, banco e pagamentos" virou o
