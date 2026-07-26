@@ -351,6 +351,20 @@ test("cadastrar mapeia sucesso e erro do Supabase", async () => {
   await assert.rejects(() => servicoErro.cadastrar("a@a.com", "123456"), ErroAutenticacao);
 });
 
+test("cadastrar detecta e-mail ja existente (usuario fantasma sem identities do Supabase)", async () => {
+  const servicoFantasma = criarSupabaseAuthService({ client: {
+    auth: {
+      async signUp() {
+        return { data: { user: { id: "u1", email: "a@a.com", identities: [] }, session: null }, error: null };
+      }
+    }
+  } });
+  await assert.rejects(
+    () => servicoFantasma.cadastrar("a@a.com", "123456"),
+    error => error instanceof ErroAutenticacao && error.statusCode === 409
+  );
+});
+
 test("login mapeia sucesso e erro do Supabase", async () => {
   const servicoOk = criarSupabaseAuthService({ client: {
     auth: {

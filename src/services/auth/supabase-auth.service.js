@@ -27,6 +27,15 @@ function criarSupabaseAuthService(opcoes = {}) {
     exigirClient();
     const { data, error } = await client.auth.signUp({ email, password: senha });
     if (error) throw new ErroAutenticacao(error.message, error.status || 400);
+
+    // Quando o e-mail ja possui conta e a confirmacao por e-mail esta ativa,
+    // o Supabase nao retorna erro (protecao contra enumeracao de usuarios):
+    // ele responde com um usuario "fantasma" sem identidades e sem sessao.
+    const jaCadastrado = !data.session && Array.isArray(data.user?.identities) && data.user.identities.length === 0;
+    if (jaCadastrado) {
+      throw new ErroAutenticacao("Este e-mail ja possui uma conta. Tente entrar ou recuperar sua senha.", 409);
+    }
+
     return {
       usuario_id: data.user?.id || null,
       email: data.user?.email || null,
