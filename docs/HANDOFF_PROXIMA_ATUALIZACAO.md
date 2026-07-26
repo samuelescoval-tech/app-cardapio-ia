@@ -1,14 +1,13 @@
 # Handoff - Chef IA Studio
 
-Atualizado em 2026-07-23.
+Atualizado em 2026-07-26.
 
 ## Estado em uma frase
 
 O Chef IA Studio e um MVP local funcional; os Planos 1 a 13 estao concluidos.
-O Plano 14 comecou: contas de usuario, banco de dados, personalizacao
-(fornecedores e fotos proprias) e deploy, usando Supabase (banco, auth e
-storage) e Vercel (hospedagem), ambos no plano gratuito. Bloqueado ate o
-usuario criar as duas contas gratuitas.
+O Plano 14 (contas, banco, personalizacao e deploy via Supabase + Vercel)
+tem as fases 1 a 4 concluidas e testadas com conta real (contas, login,
+fornecedores, fotos proprias); falta so a fase 5 (deploy no Vercel).
 
 ## Arquitetura atual
 
@@ -393,12 +392,61 @@ abertura animada com o logo do Chef IA Studio, que dai leva para cadastro ou
 para o app. Guardar essa intencao para quando a tela de login for revisada;
 o modal atual foi escolhido para nao bloquear o Plano 14 agora.
 
-Ainda nao feito: fases 3 e 4 do Plano 14 (fornecedores e fotos proprias por
-usuario).
+### Plano 14 - fase 3: fornecedores proprios (2026-07-25)
+
+Migracao `supabase/migrations/001_fornecedores.sql`: tabela `fornecedores`
+(nome, categoria, telefone, endereco, observacoes), RLS por dono, grant
+explicito para `authenticated` (sem isso da "permission denied" mesmo com RLS
+certo), trigger para `updated_at`, `check` na categoria usando as mesmas
+opcoes de `setor` da lista de compras (Hortifruti/Acougue/Bebidas/Mercearia/
+Frios/Padaria/Descartaveis/Limpeza/Outros).
+
+`src/services/personalizacao/fornecedores.service.js`: usa um client Supabase
+por requisicao, autenticado com o token do proprio usuario (nao o
+service_role), entao a RLS filtra tudo automaticamente. Endpoints:
+`GET/POST /api/fornecedores`, `PUT/DELETE /api/fornecedores/:id`, todos atras
+da senha de demo + token de usuario valido. Testado ponta a ponta com conta
+real. 6 testes novos.
+
+### Plano 14 - fase 4: fotos proprias de prato/receita (2026-07-26)
+
+Bucket de storage `fotos-pratos` criado direto por codigo (API do
+service_role, nao pelo painel): privado, limite 5MB, so jpeg/png/webp.
+Migracao `supabase/migrations/002_fotos_pratos.sql`: tabela `fotos_pratos`
+(nome_prato opcional, storage_path unico), RLS por dono na tabela e em
+`storage.objects` (cada usuario so acessa arquivos dentro da propria pasta
+`<user_id>/...`), `check` garantindo que `storage_path` sempre comeca com o
+`user_id` da linha.
+
+`src/services/personalizacao/fotos.service.js`: recebe a imagem em base64 no
+corpo JSON (rota com limite de 8MB, maior que o padrao de 20KB do resto do
+app), decodifica, valida tipo/tamanho, envia pro storage com nome aleatorio
+(uuid) dentro da pasta do usuario, salva metadados. Ao listar, gera URL
+assinada (valida 10 minutos) por foto. Endpoints: `GET/POST /api/fotos`,
+`DELETE /api/fotos/:id`. Testado ponta a ponta com conta real (enviar, listar
+com URL assinada, remover, confirmar remocao no storage e no banco). 6 testes
+novos.
+
+Revisao de seguranca (Supabase Advisors) apos as migracoes: 0 erros, 4
+avisos. Corrigido o que era meu (funcao de trigger sem `search_path` fixo,
+ver `003_fix_search_path.sql`). Os outros 3 avisos sao da plataforma, nao do
+codigo deste projeto, e ficam registrados como pendencia de baixa prioridade
+para antes de qualquer lancamento real:
+
+- `rls_auto_enable()` (criada pelo proprio Supabase ao ativar RLS automatico)
+  pode ser chamada por qualquer usuario autenticado ou publico; risco baixo
+  na pratica (so faz sentido em contexto de trigger), mas pode ser travada
+  com um `revoke execute` se quiser reforcar;
+- protecao contra senha vazada (checagem contra bases de senhas vazadas)
+  esta desativada no painel de Authentication - ativar antes de producao,
+  e gratuito;
+- (ja registrado antes) "Confirm email" continua ativo, que e o correto.
 
 ## Proxima acao curta
 
-1. fase 3 do Plano 14: criar tabela de fornecedores no Supabase (com RLS por
-   usuario) e endpoints CRUD;
-2. fase 4: tabela + Storage para fotos proprias de prato/receita;
+1. fase 5 do Plano 14 (ultima): adaptar o app para rodar como funcao
+   serverless, criar o projeto Vercel (importar o repositorio), conectar ao
+   Supabase e testar ponta a ponta em producao;
+2. opcional, antes de lancar para usuarios reais: ativar protecao contra
+   senha vazada no Supabase e revisar o acesso a `rls_auto_enable()`;
 3. manter o estado somente neste handoff e no roadmap.

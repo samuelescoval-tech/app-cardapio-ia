@@ -7,9 +7,9 @@ no handoff.
 
 ## Etapa atual
 
-Plano 13 concluido. Plano 14 iniciado: contas de usuario, banco de dados,
-personalizacao (fornecedores e fotos proprias) e deploy. Plano 15 (auditoria
-geral do app) fica anotado para o futuro, ainda sem inicio.
+Plano 13 concluido. Plano 14 em andamento: fases 1 a 4 concluidas (contas,
+banco, fornecedores e fotos proprias); falta so a fase 5 (deploy no Vercel).
+Plano 15 (auditoria geral do app) fica anotado para o futuro, ainda sem inicio.
 
 | Plano | Resultado | Estado |
 |---|---|---|
@@ -147,9 +147,14 @@ Fases previstas:
    (backend: endpoints `/api/auth/registrar`, `/api/auth/login`,
    `/api/auth/perfil`; frontend: modal de login/cadastro na tela principal).
    Testado ponta a ponta com conta real.
-3. Tabela e endpoints para fornecedores proprios por usuario (CRUD);
+3. Tabela e endpoints para fornecedores proprios por usuario (CRUD).
+   **Concluido em 2026-07-25** (endpoints `/api/fornecedores` GET/POST/PUT/DELETE,
+   RLS por dono, testado ponta a ponta com conta real).
 4. Tabela, endpoints e Storage para fotos proprias de prato/receita por
-   usuario;
+   usuario. **Concluido em 2026-07-26** (bucket privado `fotos-pratos` criado
+   via API, endpoints `/api/fotos` GET/POST/DELETE, URL assinada por 10 min
+   ao listar, RLS por dono na tabela e no storage, testado ponta a ponta com
+   conta real).
 5. Adaptar o app para rodar como funcao serverless, criar o projeto Vercel
    (importar o repositorio) e conectar ao Supabase; deploy e teste ponta a
    ponta em producao. So aqui a conta Vercel e efetivamente usada.
