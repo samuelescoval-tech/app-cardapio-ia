@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Prato principal com porco</title><desc id="d">Pernil ou tender glaceado com guarnicao</desc>
+<defs><radialGradient id="b"><stop stop-color="#4a2e22"/><stop offset="1" stop-color="#161319"/></radialGradient><filter id="s"><feDropShadow dy="18" stdDeviation="22" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#f8f3e9" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<path d="M360 340c60-110 220-130 320-55 85 65 90 165 10 220-110 75-280 45-345-35-35-42-25-92 15-130z" fill="#b8654f"/>
+<path d="M410 335c80-50 190-45 260 15M385 385c85-45 195-30 270 30M430 300c60 40 130 70 200 40M400 430c75 30 175 15 250-40" fill="none" stroke="#8a4536" stroke-width="6" stroke-linecap="round"/>
+<g fill="#e8b93a"><circle cx="500" cy="345" r="7"/><circle cx="560" cy="330" r="7"/><circle cx="470" cy="400" r="7"/><circle cx="540" cy="415" r="7"/></g>
+<g><circle cx="840" cy="330" r="55" fill="#e7c94b"/><circle cx="840" cy="330" r="36" fill="#f8f0bd"/><circle cx="790" cy="425" r="46" fill="#e7c94b"/><circle cx="790" cy="425" r="30" fill="#f8f0bd"/></g>
+</svg>

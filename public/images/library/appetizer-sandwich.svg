@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Mini sanduiche ou canape</title><desc id="d">Mini sanduiche empilhado com recheio</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#241d10"/><stop offset="1" stop-color="#171319"/></linearGradient><filter id="s"><feDropShadow dy="20" stdDeviation="20" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#f8f3e9" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<g><path d="M400 470h260l-14-30H414z" fill="#e0a95a"/><path d="M410 440h240l-10-40H420z" fill="#8a4536"/><path d="M418 400h224l-12-38H430z" fill="#e0a95a"/><path d="M428 362h204l-10-34H438z" fill="#7f9c55"/><path d="M436 328h188l-16-30H452z" fill="#e8caa0"/></g>
+<g fill="#6e8f55"><circle cx="820" cy="330" r="46"/><circle cx="870" cy="380" r="40"/></g>
+</svg>

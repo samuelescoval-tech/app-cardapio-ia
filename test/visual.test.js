@@ -197,8 +197,13 @@ test("biblioteca local possui metadados validos e arquivos existentes", () => {
   assert.equal(peixe.provider, "local");
   assert.equal(peixe.match_type, "dish-family");
   assert.match(peixe.image_url, /main-fish\.svg$/);
-  const [bebida] = selecionarImagensLocais({
+  const [uva] = selecionarImagensLocais({
     target_id: "p2", nome: "Suco de uva integral", slot: "bebida"
+  });
+  assert.equal(uva.match_type, "dish-family");
+  assert.match(uva.image_url, /beverage-grape\.svg$/);
+  const [bebida] = selecionarImagensLocais({
+    target_id: "p3", nome: "Drink autoral da casa", slot: "bebida"
   });
   assert.equal(bebida.match_type, "category");
 });
@@ -240,8 +245,8 @@ const assert = require("node:assert/strict");
 const { criarImageSelectionService } = require("../src/services/images/image-selection.service");
 
 const pratos = [
-  { id: "p1", nome: "Mini sanduiche de carpaccio com alcaparras", categoria: "Entrada" },
-  { id: "p2", nome: "Agua mineral com hortela", categoria: "Bebida" }
+  { id: "p1", nome: "Carpaccio com alcaparras", categoria: "Entrada" },
+  { id: "p2", nome: "Gin tonica com limao", categoria: "Bebida" }
 ];
 
 test("seleciona fotografia relacionada e liga ao prato exato", async () => {
@@ -251,7 +256,7 @@ test("seleciona fotografia relacionada e liga ao prato exato", async () => {
         id: `img-${solicitacao.target_id}`,
         source_url: `https://example.com/${solicitacao.target_id}`,
         provider: "openverse",
-        alt: solicitacao.target_id === "p1" ? "Carpaccio sandwich with capers" : "Mineral water with mint",
+        alt: solicitacao.target_id === "p1" ? "Carpaccio with capers" : "Gin and tonic cocktail with lime",
         tags: []
       }] };
     }
@@ -327,14 +332,18 @@ test("suco de uva rejeita fotografia de laranja e exige ancora grape", async () 
   } });
   const rejeitado = await serviceLaranja.selecionarParaEvento({ tipo: "Corporativo" }, prato);
   assert.equal(rejeitado.images[0].provider, "local");
-  assert.equal(rejeitado.images[0].match_type, "category");
+  assert.equal(rejeitado.images[0].match_type, "dish-family");
+  assert.match(rejeitado.images[0].image_url, /beverage-grape\.svg$/);
 
-  const serviceUva = criarImageSelectionService({ openverseService: {
+  // Whisky nao tem familia local dedicada, entao uma foto do Openverse bem
+  // ancorada ainda deve ser aceita normalmente.
+  const pratoWhisky = [{ id: "whisky", nome: "Whisky puro", categoria: "Bebida" }];
+  const serviceWhisky = criarImageSelectionService({ openverseService: {
     async buscar() {
-      return { images: [{ id: "uva", source_url: "https://example.com/uva", provider: "openverse", alt: "Fresh grape juice", tags: ["grape", "juice"] }] };
+      return { images: [{ id: "whisky", source_url: "https://example.com/whisky", provider: "openverse", alt: "Whisky glass with ice", tags: ["whisky"] }] };
     }
   } });
-  const aceito = await serviceUva.selecionarParaEvento({ tipo: "Corporativo" }, prato);
+  const aceito = await serviceWhisky.selecionarParaEvento({ tipo: "Corporativo" }, pratoWhisky);
   assert.equal(aceito.images[0].provider, "openverse");
   assert.equal(aceito.coverage.external, 1);
 });

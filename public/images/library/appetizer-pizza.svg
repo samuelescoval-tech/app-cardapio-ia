@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Mini pizza</title><desc id="d">Fatia de mini pizza com cobertura</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#241810"/><stop offset="1" stop-color="#171319"/></linearGradient><filter id="s"><feDropShadow dy="20" stdDeviation="20" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="385" rx="430" ry="245" fill="#f8f3e9" stroke="#c89a2b" stroke-width="14" filter="url(#s)"/>
+<path d="M600 220l260 320H340z" fill="#e0a95a"/>
+<path d="M600 260l210 268H390z" fill="#c94a34"/>
+<path d="M600 300l160 214H440z" fill="#e8c05a" opacity=".85"/>
+<g fill="#7a2a1e"><circle cx="560" cy="380" r="22"/><circle cx="650" cy="420" r="22"/><circle cx="600" cy="470" r="22"/></g>
+<g fill="#6e8f55"><circle cx="520" cy="450" r="8"/><circle cx="680" cy="470" r="8"/><circle cx="600" cy="410" r="7"/></g>
+</svg>

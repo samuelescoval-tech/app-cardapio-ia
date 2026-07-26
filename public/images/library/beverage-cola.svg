@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Refrigerante cola</title><desc id="d">Copo com refrigerante de cola e gelo</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#24170f"/><stop offset="1" stop-color="#171319"/></linearGradient><filter id="s"><feDropShadow dy="18" stdDeviation="20" flood-opacity=".45"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="560" cy="585" rx="180" ry="32" fill="#080a0d" opacity=".4"/>
+<path d="M460 190h240l-32 400H492z" fill="#eef7f5" fill-opacity=".85" stroke="#d0b15c" stroke-width="10" filter="url(#s)"/>
+<path d="M478 300h204l-26 270H502z" fill="#3b2415"/>
+<g fill="#eef7f5" opacity=".8"><rect x="520" y="330" width="46" height="46" rx="8"/><rect x="590" y="360" width="42" height="42" rx="8"/></g>
+<g fill="#f4df9b" opacity=".7"><circle cx="560" cy="470" r="7"/><circle cx="610" cy="430" r="6"/></g>
+</svg>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Vinho branco ou espumante</title><desc id="d">Taca de vinho branco ou espumante</desc>
+<defs><radialGradient id="b"><stop stop-color="#241f10"/><stop offset="1" stop-color="#171319"/></radialGradient><filter id="s"><feDropShadow dy="18" stdDeviation="20" flood-opacity=".45"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="585" rx="150" ry="28" fill="#080a0d" opacity=".4"/>
+<path d="M600 560v-90M520 560h160M480 200c-15 130 20 210 120 210s135-80 120-210z" fill="none" stroke="#d0b15c" stroke-width="10" filter="url(#s)"/>
+<path d="M492 250c8 90 34 132 108 132s100-42 108-132c-70 22-146 22-216 0z" fill="#e8d9a0"/>
+<g fill="#f6efc8" opacity=".85"><circle cx="570" cy="330" r="5"/><circle cx="630" cy="300" r="4"/><circle cx="600" cy="270" r="4"/></g>
+</svg>

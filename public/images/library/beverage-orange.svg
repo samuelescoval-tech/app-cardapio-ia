@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Suco de laranja</title><desc id="d">Copo com suco de laranja e rodela de laranja</desc>
+<defs><linearGradient id="b" x2="1" y2="1"><stop stop-color="#2b1a10"/><stop offset="1" stop-color="#171319"/></linearGradient><filter id="s"><feDropShadow dy="18" stdDeviation="20" flood-opacity=".45"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="560" cy="585" rx="180" ry="32" fill="#080a0d" opacity=".4"/>
+<path d="M460 190h240l-32 400H492z" fill="#eef7f5" fill-opacity=".85" stroke="#d0b15c" stroke-width="10" filter="url(#s)"/>
+<path d="M478 300h204l-26 270H502z" fill="#f0932b"/>
+<ellipse cx="580" cy="300" rx="102" ry="14" fill="#f7b967" opacity=".85"/>
+<g><circle cx="860" cy="340" r="72" fill="#f0932b"/><circle cx="860" cy="340" r="46" fill="#f7b967"/><path d="M860 300v80M822 340h76M832 312l56 56M888 312l-56 56" stroke="#c96a1c" stroke-width="5" stroke-linecap="round"/></g>
+</svg>

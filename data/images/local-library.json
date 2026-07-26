@@ -14,6 +14,42 @@
       "default": true
     },
     {
+      "id": "entrada-sanduiche",
+      "path": "/images/library/appetizer-sandwich.svg",
+      "title": "Mini sanduiche",
+      "alt": "Ilustracao de mini sanduiche empilhado",
+      "slots": ["entrada"],
+      "match_terms": ["sanduiche"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "entrada-pao-de-alho",
+      "path": "/images/library/appetizer-garlic-bread.svg",
+      "title": "Pao de alho",
+      "alt": "Ilustracao de fatias de pao de alho tostado",
+      "slots": ["entrada", "acompanhamento"],
+      "match_terms": ["pao de alho"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "entrada-pizza",
+      "path": "/images/library/appetizer-pizza.svg",
+      "title": "Mini pizza",
+      "alt": "Ilustracao de fatia de mini pizza",
+      "slots": ["entrada"],
+      "match_terms": ["pizza"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "entrada-cachorro-quente",
+      "path": "/images/library/appetizer-hotdog.svg",
+      "title": "Cachorro-quente",
+      "alt": "Ilustracao de cachorro-quente com molhos",
+      "slots": ["entrada"],
+      "match_terms": ["cachorro quente", "cachorro-quente"],
+      "match_mode": "dish-family"
+    },
+    {
       "id": "principal-carne",
       "path": "/images/library/main-beef.svg",
       "title": "Prato principal com carne",
@@ -28,7 +64,7 @@
       "title": "Prato principal com frango",
       "alt": "Ilustracao de prato principal com frango e vegetais",
       "slots": ["principal"],
-      "match_terms": ["frango", "galeto", "coxa", "sobrecoxa", "ave"],
+      "match_terms": ["frango", "galeto", "coxa", "sobrecoxa", "ave", "peru", "chester", "peru natalino", "peru assado"],
       "match_mode": "dish-family"
     },
     {
@@ -38,6 +74,15 @@
       "alt": "Ilustracao de prato principal com peixe, limao e ervas",
       "slots": ["principal"],
       "match_terms": ["peixe", "tilapia", "salmao", "bacalhau", "camarao", "pescada", "linguado"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "principal-porco",
+      "path": "/images/library/main-pork.svg",
+      "title": "Prato principal com porco",
+      "alt": "Ilustracao de pernil ou tender glaceado com guarnicao",
+      "slots": ["principal"],
+      "match_terms": ["porco", "suino", "tender", "lombo", "pernil", "presunto", "bacon", "linguica", "leitao"],
       "match_mode": "dish-family"
     },
     {
@@ -89,12 +134,102 @@
       "default": true
     },
     {
+      "id": "bebida-laranja",
+      "path": "/images/library/beverage-orange.svg",
+      "title": "Suco de laranja",
+      "alt": "Ilustracao de copo com suco de laranja",
+      "slots": ["bebida"],
+      "match_terms": ["laranja"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-uva",
+      "path": "/images/library/beverage-grape.svg",
+      "title": "Suco de uva",
+      "alt": "Ilustracao de copo com suco de uva",
+      "slots": ["bebida"],
+      "match_terms": ["uva"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-cafe",
+      "path": "/images/library/beverage-coffee.svg",
+      "title": "Cafe",
+      "alt": "Ilustracao de xicara de cafe quente",
+      "slots": ["bebida"],
+      "match_terms": ["cafe"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-agua",
+      "path": "/images/library/beverage-water.svg",
+      "title": "Agua mineral",
+      "alt": "Ilustracao de copo com agua mineral",
+      "slots": ["bebida"],
+      "match_terms": ["agua"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-cola",
+      "path": "/images/library/beverage-cola.svg",
+      "title": "Refrigerante cola",
+      "alt": "Ilustracao de copo com refrigerante de cola",
+      "slots": ["bebida"],
+      "match_terms": ["refrigerante cola", "cola tradicional", "coca-cola", "coca cola"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-guarana",
+      "path": "/images/library/beverage-guarana.svg",
+      "title": "Refrigerante guarana",
+      "alt": "Ilustracao de copo com refrigerante de guarana",
+      "slots": ["bebida"],
+      "match_terms": ["guarana"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-vinho-tinto",
+      "path": "/images/library/beverage-red-wine.svg",
+      "title": "Vinho tinto",
+      "alt": "Ilustracao de taca de vinho tinto",
+      "slots": ["bebida"],
+      "match_terms": ["vinho tinto"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-vinho-branco",
+      "path": "/images/library/beverage-white-wine.svg",
+      "title": "Vinho branco ou espumante",
+      "alt": "Ilustracao de taca de vinho branco ou espumante",
+      "slots": ["bebida"],
+      "match_terms": ["vinho branco", "espumante", "champagne", "prosecco"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-cerveja",
+      "path": "/images/library/beverage-beer.svg",
+      "title": "Cerveja",
+      "alt": "Ilustracao de copo de cerveja com espuma",
+      "slots": ["bebida"],
+      "match_terms": ["cerveja"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "bebida-cha",
+      "path": "/images/library/beverage-tea.svg",
+      "title": "Cha",
+      "alt": "Ilustracao de xicara de cha quente",
+      "slots": ["bebida"],
+      "match_terms": ["cha de", "cha gelado", "cha quente"],
+      "match_mode": "dish-family"
+    },
+    {
       "id": "bebida-ilustrada",
       "path": "/images/library/beverage.svg",
       "title": "Bebidas do evento",
       "alt": "Ilustracao de bebidas servidas em copos",
       "slots": ["bebida"],
-      "match_terms": ["bebida", "agua", "suco", "refrigerante", "cafe", "cha", "vinho", "cerveja", "drink", "mocktail"],
+      "match_terms": ["bebida", "agua", "suco", "refrigerante", "cha", "vinho", "cerveja", "drink", "mocktail"],
       "match_mode": "category",
       "default": true
     }
