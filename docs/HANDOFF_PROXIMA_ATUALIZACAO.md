@@ -6,8 +6,10 @@ Atualizado em 2026-07-26.
 
 O Chef IA Studio e um MVP local funcional; os Planos 1 a 13 estao concluidos.
 O Plano 14 (contas, banco, personalizacao e deploy via Supabase + Vercel)
-tem as fases 1 a 4 concluidas e testadas com conta real (contas, login,
-fornecedores, fotos proprias); falta so a fase 5 (deploy no Vercel).
+tem as fases 1 a 5 concluidas: contas, login, fornecedores, fotos proprias e
+deploy real na Vercel, todos testados com conta real. Um bug real de cadastro
+(e-mail ja existente reportado como sucesso falso) foi encontrado apos o
+deploy e corrigido em 2026-07-26 (ver secao da fase 5 abaixo).
 
 ## Arquitetura atual
 
@@ -493,10 +495,52 @@ Confirmado localmente com `http.createServer` chamando os dois diretamente:
 os dois respondem `GET /` e `GET /api/status` corretamente. Suite completa
 (164 testes) revalidada.
 
+### Plano 14 - fase 5, bug real pos-deploy: cadastro "sem retorno" para e-mail ja existente (2026-07-26)
+
+Apos o deploy funcionar, o usuario testou a producao e relatou tres pontos:
+(a) nao conseguia criar conta — bug real; (b) nao ha login social/Google —
+funcionalidade ausente, sem urgencia; (c) a exigencia da senha demo no
+cadastro/login e aceitavel agora, mas precisa sair antes do lancamento real.
+
+Investigando (a): reproduzido localmente com CDP (Chrome headless) o fluxo
+exato do usuario (abrir modal de conta, alternar para cadastro, preencher,
+clicar em "Cadastrar", responder ao modal aninhado de senha demo). Com um
+e-mail novo o fluxo funcionou de ponta a ponta sem erro. A diferenca: o
+usuario tentou cadastrar `escoval54@gmail.com`, que ja tinha conta criada
+durante os testes da fase 2.
+
+Causa raiz confirmada com uma chamada direta ao Supabase (`auth.signUp` no
+projeto real, fora do app): quando o e-mail ja tem conta e "Confirm email"
+esta ativo, o Supabase **nao retorna erro** — devolve um usuario "fantasma"
+(`identities: []`, sem sessao) como protecao contra enumeracao de contas por
+e-mail. `src/services/auth/supabase-auth.service.js` nao tratava esse caso e
+interpretava a ausencia de sessao como `confirmacao_pendente: true`, entao a
+tela mostrava "Cadastro criado. Confira seu e-mail..." mesmo sem criar nada e
+sem enviar e-mail algum — por isso "o botao nao da retorno": a mensagem
+aparecia, mas era falsa, e nenhuma confirmacao chegava.
+
+Corrigido em `cadastrar()`: quando `data.session` for nulo e
+`data.user.identities` for um array vazio, agora lanca `ErroAutenticacao`
+("Este e-mail ja possui uma conta. Tente entrar ou recuperar sua senha.",
+status 409) em vez de reportar sucesso falso. `server.js` ja propagava
+`error.statusCode`/`error.message` corretamente, entao nenhuma mudanca foi
+necessaria ali. Verificado com uma chamada real contra
+`escoval54@gmail.com`: o erro 409 correto agora e retornado. Teste de
+regressao adicionado em `test/integrations.test.js`
+("cadastrar detecta e-mail ja existente..."); suite completa em 165/165.
+
+(b) e (c) permanecem como pendencias documentadas, sem acao nesta sessao.
+
 ## Proxima acao curta
 
-1. commitar e enviar a correcao do `server.js` (exportacao), disparar novo
-   deploy e confirmar `GET /` (pagina principal) em producao;
-2. opcional, antes de lancar para usuarios reais: ativar protecao contra
-   senha vazada no Supabase e revisar o acesso a `rls_auto_enable()`;
-3. manter o estado somente neste handoff e no roadmap.
+1. commitar e enviar a correcao de `src/services/auth/supabase-auth.service.js`
+   (deteccao de e-mail ja cadastrado) e revalidar em producao com um e-mail
+   real que ja tenha conta (deve mostrar o erro 409, nao a falsa mensagem de
+   sucesso);
+2. avaliar adicionar login social (Google) — pendencia sem urgencia relatada
+   pelo usuario;
+3. antes de lancar para usuarios reais: remover a exigencia de
+   `DEMO_ACCESS_KEY` nas rotas de auth (ela deve valer so para as rotas de
+   geracao/demo, nao para contas reais), ativar protecao contra senha
+   vazada no Supabase e revisar o acesso a `rls_auto_enable()`;
+4. manter o estado somente neste handoff e no roadmap.

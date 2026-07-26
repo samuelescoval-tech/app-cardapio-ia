@@ -1,14 +1,17 @@
 # Roadmap atual - Chef IA Studio
 
-Atualizado em 2026-07-23.
+Atualizado em 2026-07-26.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
 
 ## Etapa atual
 
-Plano 13 concluido. Plano 14 em andamento: fases 1 a 4 concluidas (contas,
-banco, fornecedores e fotos proprias); falta so a fase 5 (deploy no Vercel).
+Plano 13 concluido. Plano 14 concluido: fases 1 a 5 (contas, banco,
+fornecedores, fotos proprias e deploy na Vercel), todas testadas com conta
+real. Um bug de cadastro encontrado apos o deploy foi corrigido em
+2026-07-26 (ver handoff). Ficam pendentes, sem urgencia: login social e
+remocao do gate de demo nas rotas de auth antes do lancamento real.
 Plano 15 (auditoria geral do app) fica anotado para o futuro, ainda sem inicio.
 
 | Plano | Resultado | Estado |
@@ -158,6 +161,13 @@ Fases previstas:
 5. Adaptar o app para rodar como funcao serverless, criar o projeto Vercel
    (importar o repositorio) e conectar ao Supabase; deploy e teste ponta a
    ponta em producao. So aqui a conta Vercel e efetivamente usada.
+   **Concluido em 2026-07-26** (`api/index.js` + `vercel.json`, apos tres
+   rounds de correcao de exportacao/rewrite; `GET /` e as rotas de API
+   confirmadas em producao). Teste do usuario em producao revelou um bug real
+   de cadastro (e-mail ja existente reportado como sucesso falso pelo
+   Supabase) — corrigido no mesmo dia; ver detalhes no handoff. Login social
+   e remocao do gate de `DEMO_ACCESS_KEY` nas rotas de auth ficam como
+   pendencias para antes do lancamento real.
 
 Pre-requisito do usuario antes da fase 1: criar conta gratuita em
 supabase.com (feito em 2026-07-23, RLS automatico ativado, chaves no `.env`
