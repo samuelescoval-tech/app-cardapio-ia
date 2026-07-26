@@ -442,11 +442,38 @@ para antes de qualquer lancamento real:
   e gratuito;
 - (ja registrado antes) "Confirm email" continua ativo, que e o correto.
 
+### Plano 14 - fase 5: primeiro deploy na Vercel, crash e correcao (2026-07-26)
+
+Criados `api/index.js` (reexporta so o `app` de `server.js`) e `vercel.json`
+(rewrite geral pra essa funcao). Testado localmente com `http.createServer`
+simulando exatamente a invocacao da Vercel: todas as rotas (estatico, API,
+protegida) responderam certo.
+
+Primeiro deploy real: **crash** (`500 FUNCTION_INVOCATION_FAILED`). Log real:
+"Exportação inválida encontrada no módulo /var/task/server.js. A exportação
+padrão deve ser uma função ou um servidor." Causa: a Vercel detectou o preset
+"Express" e usou `server.js` direto (via `"main"` do `package.json`),
+ignorando `api/index.js`; `server.js` exporta um objeto (`{ app, ... }`), nao
+uma funcao, e o preset exige a exportacao padrao ser a funcao/app diretamente.
+
+Corrigido mudando so o `"main"` do `package.json` para `api/index.js` (nao
+mexe em `server.js` nem nos testes, que importam por caminho relativo).
+Tambem chave `engines.node` atualizada de `22.x` para `24.x` (a Vercel avisou
+que 22.x seria substituido). Suite completa revalidada apos a mudanca.
+
+Tambem chave `rotacionada` em 2026-07-26: `SUPABASE_SERVICE_ROLE_KEY`,
+`GEMINI_API_KEY`/`GOOGLE_API_KEY` e `DEMO_ACCESS_KEY` local foram expostas
+sem querer numa saida de comando durante o troubleshooting e foram
+rotacionadas por precaucao. Nenhum codigo do app usa
+`SUPABASE_SERVICE_ROLE_KEY` em tempo de execucao hoje (so foi usada uma vez,
+manualmente, pra criar o bucket de storage), entao a rotacao nao teve
+impacto funcional.
+
 ## Proxima acao curta
 
-1. fase 5 do Plano 14 (ultima): adaptar o app para rodar como funcao
-   serverless, criar o projeto Vercel (importar o repositorio), conectar ao
-   Supabase e testar ponta a ponta em producao;
+1. commitar e enviar a correcao do `package.json` (`main` e `engines`),
+   depois disparar um novo deploy na Vercel e confirmar que a funcao nao
+   crasha mais;
 2. opcional, antes de lancar para usuarios reais: ativar protecao contra
    senha vazada no Supabase e revisar o acesso a `rls_auto_enable()`;
 3. manter o estado somente neste handoff e no roadmap.
