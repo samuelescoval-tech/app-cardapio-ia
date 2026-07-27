@@ -1,6 +1,11 @@
 const express = require('express');
 const path = require('path');
-require('dotenv').config();
+const helmet = require('helmet');
+const { rateLimit } = require('express-rate-limit');
+// quiet: true suprime as dicas promocionais que o proprio pacote dotenv
+// imprime no console a cada carregamento (inclusive links para outros
+// produtos do mantenedor, sem relacao com este projeto).
+require('dotenv').config({ quiet: true });
 
 const { gerarPlano, getGeminiStatus } = require('./src/services/ai/gemini.service');
 const { montarPromptPlanejamento } = require('./src/prompts/event.prompt');
@@ -19,6 +24,10 @@ const { criarFornecedoresService, ErroFornecedor } = require('./src/services/per
 const { criarFotosService, ErroFoto } = require('./src/services/personalizacao/fotos.service');
 
 const app = express();
+// Necessario para o express-rate-limit identificar o IP real do cliente
+// atras do proxy da Vercel (1 hop); sem isso ele usaria sempre o IP do
+// proxy e todo mundo cairia no mesmo balde de limite.
+app.set('trust proxy', 1);
 const demoAccessKey = process.env.DEMO_ACCESS_KEY;
 const spoonacularService = criarSpoonacularService();
 const openverseService = criarOpenverseService();
@@ -26,6 +35,43 @@ const imageSelectionService = criarImageSelectionService({ openverseService });
 const supabaseAuthService = criarSupabaseAuthService();
 const fornecedoresService = criarFornecedoresService();
 const fotosService = criarFotosService();
+
+// Cabecalhos de seguranca (Plano 15, auditoria). O front-end usa onclick=""
+// e style="" inline em varios lugares, entao script-src/style-src precisam
+// de 'unsafe-inline'; ainda assim, frame-ancestors bloqueia clickjacking e
+// img-src/font-src/connect-src ficam restritos as origens realmente usadas.
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            scriptSrcAttr: ["'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
+            connectSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            baseUri: ["'self'"],
+            frameAncestors: ["'none'"]
+        }
+    }
+}));
+
+const limitadorAuth = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." }
+});
+
+const limitadorGeracao = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, error: "Muitas solicitacoes seguidas. Aguarde um minuto e tente novamente." }
+});
 
 app.use(express.json({ limit: '20kb' }));
 
@@ -125,8 +171,8 @@ async function perfilHandler(req, res) {
     }
 }
 
-app.post('/api/auth/registrar', registrarHandler);
-app.post('/api/auth/login', loginHandler);
+app.post('/api/auth/registrar', limitadorAuth, registrarHandler);
+app.post('/api/auth/login', limitadorAuth, loginHandler);
 app.get('/api/auth/perfil', perfilHandler);
 
 function obterToken(req) {
@@ -321,7 +367,7 @@ async function gerarCardapioHandler(req, res) {
     }
 }
 
-app.post('/gerar-cardapio', gerarCardapioHandler);
+app.post('/gerar-cardapio', limitadorGeracao, gerarCardapioHandler);
 
 async function buscarReferenciasHandler(req, res) {
     try {
