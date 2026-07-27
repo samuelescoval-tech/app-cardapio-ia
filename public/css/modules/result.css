@@ -387,16 +387,14 @@
 }
 
 .motor-pills,
-.theme-row,
-.tag-list{
+.theme-row{
     display:flex;
     flex-wrap:wrap;
     gap:8px;
 }
 
 .motor-pills span,
-.theme-row span,
-.tag-list span{
+.theme-row span{
     border:1px solid rgba(212,175,55,.25);
     background:rgba(212,175,55,.1);
     color:var(--gold-dark);

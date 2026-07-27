@@ -1008,31 +1008,11 @@ function slugPDF(texto) {
         .slice(0, 40) || "planejamento";
 }
 
-function rotuloServico(chave) {
-    const labels = {
-        talheres: "Talheres",
-        loucas: "Loucas",
-        copos: "Copos",
-        descartaveis: "Descartaveis",
-        apoio_cozinha: "Apoio de cozinha"
-    };
-    return labels[chave] || chave;
-}
-
 function rotuloChecklist(chave) {
     const labels = {
         pre: "Pre-evento",
         durante: "Durante",
         pos: "Pos-evento"
-    };
-    return labels[chave] || chave;
-}
-
-function rotuloOrcamento(chave) {
-    const labels = {
-        economico: "Economico",
-        medio: "Medio",
-        sofisticado: "Sofisticado"
     };
     return labels[chave] || chave;
 }
@@ -1553,10 +1533,6 @@ function renderConteudoAusente(mensagem) {
 
 function renderListaCards(lista, classe) {
     return `<div class="info-grid">${normalizarArray(lista).map(item => `<div class="${classe}">${escapeHTML(textoItem(item))}</div>`).join("")}</div>`;
-}
-
-function renderListaTags(lista) {
-    return `<div class="tag-list">${normalizarArray(lista).map(item => `<span>${escapeHTML(textoItem(item))}</span>`).join("")}</div>`;
 }
 
 function pill(valor) {
