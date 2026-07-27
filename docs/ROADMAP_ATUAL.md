@@ -9,9 +9,12 @@ no handoff.
 
 Plano 13 e Plano 14 concluidos (contas, banco, fornecedores, fotos proprias
 e deploy na Vercel, todos testados com conta real; bug de cadastro
-corrigido em 2026-07-26). Plano 15 (auditoria geral) teve sua primeira
-rodada em 2026-07-27: README e handoff atualizados, bibliotecas de frontend
-sem uso removidas, scripts orfaos removidos — ver secao do Plano 15 para
+corrigido em 2026-07-26). Plano 15 (auditoria geral) teve tres rodadas em
+2026-07-27: docs/README atualizados e codigo morto removido (rodadas 1 e
+2), e uma revisao de seguranca completa (rodada 3) — helmet/CSP, rate
+limiting em auth e geracao, RLS revalidada sem lacunas, 2 vulnerabilidades
+de dependencias corrigidas. Nada disso foi commitado ainda (a pedido do
+usuario, sera feito em lote depois). Ver secao do Plano 15 para todos os
 detalhes. Plano 16 (preparacao para escala e lancamento) registrado, ainda
 sem inicio de implementacao.
 
@@ -212,12 +215,115 @@ Primeira rodada (2026-07-27), achados e correcoes:
   ter migrado para Supabase.
 - Suite completa revalidada apos as remocoes: 165/165.
 
-Ainda nao verificado nesta rodada (proximas rodadas, se o usuario quiser
-continuar o Plano 15): revisao de seguranca de dados/site (isso se sobrepoe
-ao item 5 do Plano 16), consistencia dos dados em `data/culinary/` e
-`data/pricing/` contra o codigo, e uma leitura mais a fundo do frontend
-(`public/js/app.js`, `render.js`) em busca de codigo morto equivalente ao
-das bibliotecas removidas.
+Segunda rodada (2026-07-27), consistencia de dados e codigo morto no
+frontend:
+
+- `data/culinary/*.json` (event-contexts, food-catalog, matrix,
+  source-catalog): todos confirmados em uso real por
+  `culinary-matrix.service.js`/`event-coherence.service.js` e cobertos por
+  `test/planning.test.js`. Nenhuma divergencia encontrada.
+- `data/pricing/catalog.schema.json` e `sao-paulo.example.json`: confirmado
+  que nao sao carregados por nenhum codigo hoje. Isso e esperado, nao e
+  achado de limpeza — sao o schema/exemplo de referencia para o catalogo
+  regional de precos que ainda nao existe (ver item 6 do Plano 16); mantidos
+  como estao.
+- `data/images/image.schema.json`: tambem sem nenhum carregamento em tempo
+  de execucao (e so referencia de schema para `local-library.json`, sem
+  validacao automatizada contra ele). Baixa prioridade; poderia virar um
+  teste de validacao de schema no futuro, mas nao e uma pendencia urgente.
+- Busca por funcoes definidas e nunca chamadas em `public/js/*.js`: achadas
+  e removidas `rotuloServico(chave)` e `rotuloOrcamento(chave)` em
+  `render.js` (a rotulagem real ja acontece inline em outro ponto do mesmo
+  arquivo, essas eram sobras de uma versao anterior) e `renderListaTags()`
+  (nunca chamada; a classe CSS `.tag-list` que so ela usava tambem foi
+  removida de `result.css`, mantendo `.motor-pills`/`.theme-row` que
+  continuam em uso no mesmo seletor combinado).
+- Erro cometido e corrigido nesta rodada: `imagensLocaisGaleria()` parecia
+  igualmente morta pela mesma busca (zero chamadas em `public/`), mas
+  `npm run test:gallery-ui` quebrou com `ReferenceError` ao rodar de
+  verdade — a funcao e chamada via CDP por `scripts/validate-gallery-ui.js`,
+  fora da pasta `public/`. Restaurada; suite completa (165/165) e o E2E de
+  galeria (`npm run test:gallery-ui`, desktop e mobile) revalidados com
+  sucesso depois. Licao registrada: para achar codigo morto no frontend,
+  buscar em todo o repositorio (inclusive `scripts/`), nao so em
+  `public/js/` e `public/index.html` — scripts de validacao E2E injetam e
+  chamam funcoes do browser por nome.
+
+Leitura de `app.js`/`storage.service.js`/`utils.js`/`visual-feedback.service.js`
+em busca de mais codigo morto (mesma busca da segunda rodada, agora cobrindo
+esses arquivos): nenhuma funcao morta encontrada.
+
+Terceira rodada (2026-07-27), revisao de seguranca de dados/site (fecha o
+item 5 do Plano 16):
+
+- **RLS revisada de novo, ponta a ponta**: `fornecedores` tem policy
+  separada para select/insert/update/delete, todas exigindo
+  `auth.uid() = user_id`; `fotos_pratos` (select/insert/delete, sem update —
+  condiz com o servico) e o `storage.objects` do bucket `fotos-pratos`
+  (select/insert/delete por pasta do usuario) tambem. Nenhuma lacuna
+  encontrada — um usuario nao consegue ler/alterar/apagar dado de outro nem
+  adivinhando IDs.
+- **Sem nenhum cabecalho de seguranca HTTP** (`helmet`, `cors`,
+  `express-rate-limit` — nenhum dos tres estava instalado). Adicionado
+  `helmet` com uma Content-Security-Policy pragmatica: o front-end usa
+  `onclick=""` e `style=""` inline em varios lugares, entao `script-src`,
+  `script-src-attr` e `style-src` precisam de `'unsafe-inline'` (senão a
+  pagina toda quebra); ainda assim `frame-ancestors 'none'` bloqueia
+  clickjacking, `object-src`/`base-uri` ficam travados e `img-src`/
+  `font-src`/`connect-src` ficam restritos as origens realmente usadas
+  (cdnjs, fonts.google, images.unsplash, mais `'self'`). CORS nao foi
+  adicionado: o front-end so chama a propria origem (`fetch` sempre para
+  caminhos relativos), entao nao ha necessidade.
+  - **Armadilha encontrada e corrigida**: o valor padrao do helmet para
+    `script-src-attr` e `'none'`, que sobrepoe `script-src` especificamente
+    para atributos tipo `onclick=""` — isso quebraria todos os botoes da
+    pagina silenciosamente. Só foi percebido inspecionando o header CSP
+    devolvido pelo servidor real antes de testar no navegador. Corrigido
+    explicitando `scriptSrcAttr: ["'unsafe-inline'"]`.
+  - Validado depois com `npm run test:gallery-ui` completo (desktop e
+    mobile, troca de imagem, ocultar prato, lista, historico, PDF) e com
+    Chrome headless direto: tudo funcionando sob a CSP nova, zero erro de
+    console.
+- **Sem rate limiting em nenhuma rota**: `/api/auth/login` podia ser
+  tentada infinitamente (forca bruta contra contas reais) e
+  `/gerar-cardapio` podia ser chamada sem limite, o que estoura a cota
+  diaria compartilhada do Gemini (1.500/dia, ver Plano 16 item 1) de
+  proposito ou nao. Adicionado `express-rate-limit`: 20 tentativas/15min
+  por IP em `/api/auth/registrar` e `/api/auth/login` (o limite e
+  compartilhado entre as duas rotas, por IP), e 10 chamadas/min em
+  `/gerar-cardapio`. `app.set('trust proxy', 1)` adicionado — necessario
+  para o rate limit identificar o IP real do visitante atras do proxy da
+  Vercel; sem isso, todo mundo cairia no mesmo balde (ou o pacote lança um
+  aviso/erro de configuracao).
+  - Testado ao vivo: 21ª tentativa de login em 15 min retorna 429; testado
+    tambem pela propria pagina (nao só via requisicao direta) que a UI real
+    mostra a mensagem "Muitas tentativas..." corretamente quando o limite e
+    atingido durante um cadastro de verdade (passando pelo modal de senha
+    demo aninhado).
+- **`npm audit`: 2 vulnerabilidades conhecidas** (`body-parser` 2.0.0-2.2.2 e
+  `qs` 6.11.1-6.15.1, ambas DoS de severidade baixa/moderada, trazidas como
+  dependencias transitivas do `express@5.2.1`, que ainda nao foi atualizado
+  rio acima). Como ja existem versoes corrigidas publicadas dessas duas
+  libs de forma independente, adicionado um bloco `overrides` no
+  `package.json` forcando `body-parser@^2.3.0` e `qs@^6.15.3`. `npm audit`
+  agora reporta 0 vulnerabilidades; suite completa revalidada (165/165).
+- **Achado, nao critico**: o proprio pacote `dotenv` (usado para carregar o
+  `.env`) imprime "dicas" promocionais aleatorias no console a cada
+  carregamento, incluindo uma que divulga um produto nao relacionado do
+  mantenedor (`vestauth`, ligado a um dominio externo). Confirmado que isso
+  esta no codigo-fonte oficial do pacote (nao e sinal de pacote
+  comprometido), mas e ruido desnecessario em log de producao vindo de uma
+  dependencia amplamente usada. Suprimido com a opcao `{ quiet: true }` no
+  `dotenv.config()`.
+- **Nota, nao corrigida**: `package.json` exige `engines.node: "24.x"`
+  (ajustado no Plano 14 fase 5 para a Vercel), mas a maquina de
+  desenvolvimento local roda Node 22.22.1, gerando um aviso `EBADENGINE` a
+  cada `npm install`. Nao afeta a Vercel (que usa a versao declarada) nem
+  quebra nada localmente; registrado para quando fizer sentido atualizar o
+  Node local.
+
+Com isso, a auditoria de seguranca de dados/site do Plano 15 esta concluida
+e o item 5 do Plano 16 pode ser considerado feito.
 
 ## Plano 16 - preparacao para escala e lancamento real (planejado, sem inicio)
 
@@ -294,12 +400,14 @@ detalhar aqui antes de qualquer implementacao.
 
 ### 5. Revisao de seguranca de dados e do site/privacidade
 
-Revisao dedicada de seguranca (nao so o Security Advisor automatico do
-Supabase ja aplicado no Plano 14) cobrindo: exposicao de dados entre
-usuarios (RLS), superficie de ataque das rotas publicas, cabecalhos de
-seguranca HTTP do site, e politica de privacidade tecnica (o que realmente e
-armazenado e por quanto tempo). Pode ser feita junto do Plano 15 (auditoria
-geral) ou como etapa propria — a definir quando comecar.
+**Concluido em 2026-07-27** dentro da terceira rodada do Plano 15 (ver
+secao do Plano 15 acima para detalhes completos): RLS revalidada sem
+lacunas, `helmet` com CSP adicionado, rate limiting adicionado em
+auth/geracao, 2 vulnerabilidades de dependencias corrigidas via
+`overrides`. O que ainda falta, fora do escopo tecnico desta rodada: a
+politica de privacidade tecnica (o que e armazenado e por quanto tempo) em
+formato de documento publicavel para os usuarios — isso fica com o item 3
+abaixo (politicas legais), que ainda nao foi iniciado.
 
 ### 6. Precos proprios por usuario (perfil) e documento de precos
 
