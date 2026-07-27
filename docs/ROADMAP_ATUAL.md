@@ -1,18 +1,19 @@
 # Roadmap atual - Chef IA Studio
 
-Atualizado em 2026-07-26.
+Atualizado em 2026-07-27.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
 
 ## Etapa atual
 
-Plano 13 concluido. Plano 14 concluido: fases 1 a 5 (contas, banco,
-fornecedores, fotos proprias e deploy na Vercel), todas testadas com conta
-real. Um bug de cadastro encontrado apos o deploy foi corrigido em
-2026-07-26 (ver handoff). Ficam pendentes, sem urgencia: login social e
-remocao do gate de demo nas rotas de auth antes do lancamento real.
-Plano 15 (auditoria geral do app) fica anotado para o futuro, ainda sem inicio.
+Plano 13 e Plano 14 concluidos (contas, banco, fornecedores, fotos proprias
+e deploy na Vercel, todos testados com conta real; bug de cadastro
+corrigido em 2026-07-26). Plano 15 (auditoria geral) teve sua primeira
+rodada em 2026-07-27: README e handoff atualizados, bibliotecas de frontend
+sem uso removidas, scripts orfaos removidos — ver secao do Plano 15 para
+detalhes. Plano 16 (preparacao para escala e lancamento) registrado, ainda
+sem inicio de implementacao.
 
 | Plano | Resultado | Estado |
 |---|---|---|
@@ -174,11 +175,49 @@ supabase.com (feito em 2026-07-23, RLS automatico ativado, chaves no `.env`
 confirmadas). Conta Vercel ja criada tambem, mas so sera configurada na
 fase 5 — nao ha nada a fazer la por enquanto.
 
-## Plano 15 - auditoria geral do app (planejado, sem inicio)
+## Plano 15 - auditoria geral do app (primeira rodada concluida em 2026-07-27)
 
-Registrado a pedido do usuario para o futuro, depois do Plano 14: revisar o
-app como um todo, o que ainda condiz com o codigo/documentacao atual e o que
-precisa ser limpo ou ajustado. Sem escopo detalhado ainda.
+Registrado a pedido do usuario depois do Plano 14: revisar o app como um
+todo, o que ainda condiz com o codigo/documentacao atual e o que precisa ser
+limpo ou ajustado.
+
+Primeira rodada (2026-07-27), achados e correcoes:
+
+- `README.md` estava desatualizado (ainda dizia "MVP local", "sem conta ou
+  sincronizacao" e "login/banco exigem decisao separada" — tudo isso ja foi
+  resolvido pelo Plano 14). Corrigido para refletir o estado atual.
+- Contagem de testes no handoff estava desatualizada (139/144, de antes do
+  Plano 14); atualizada para 160 verificacoes declaradas / 165 execucoes.
+- `public/index.html` carregava tres bibliotecas via CDN (PptxGenJS, GSAP,
+  Swiper — incluindo o CSS do Swiper) sem nenhum uso real no codigo
+  (confirmado por busca em todo o projeto). Removidas; `jsPDF` foi mantido
+  por ser realmente usado em `public/js/render.js`. Testado com Chrome
+  headless apos a remocao: pagina carrega sem erro de console (so um 404 de
+  favicon, pre-existente e sem relacao).
+- `scripts/` tinha 5 arquivos avulsos de validacao manual dos Planos 5-7
+  (`inspect-plan-history.js`, `validate-plan5-api.js`,
+  `validate-plan6-api.js`, `validate-plan7-variety.js` e, por engano,
+  `validate-plan5-e2e.js`) sem entrada correspondente no `package.json`.
+  Removidos os 4 primeiros (confirmado que nada os referencia). O quinto
+  (`validate-plan5-e2e.js`) foi restaurado: `test/visual.test.js` le o
+  arquivo como texto para validar convencoes do proprio script-fonte, entao
+  ele nao e orfao — leitura de codigo-fonte por outro teste, nao execucao.
+  Licao: antes de remover um script "sem uso aparente", buscar tambem por
+  leituras de conteudo (`fs.readFileSync` do caminho), nao so por chamadas
+  de execucao.
+- `.env.example`: secao do Supabase estava rotulada "OPCIONAIS - para
+  futuro" junto com Firebase, mas o Supabase ja e usado de verdade desde o
+  Plano 14. Reordenado: Supabase vira sua propria secao obrigatoria (para
+  contas), Firebase fica comentado como registro historico da decisao de
+  ter migrado para Supabase.
+- Suite completa revalidada apos as remocoes: 165/165.
+
+Ainda nao verificado nesta rodada (proximas rodadas, se o usuario quiser
+continuar o Plano 15): revisao de seguranca de dados/site (isso se sobrepoe
+ao item 5 do Plano 16), consistencia dos dados em `data/culinary/` e
+`data/pricing/` contra o codigo, e uma leitura mais a fundo do frontend
+(`public/js/app.js`, `render.js`) em busca de codigo morto equivalente ao
+das bibliotecas removidas.
 
 ## Plano 16 - preparacao para escala e lancamento real (planejado, sem inicio)
 

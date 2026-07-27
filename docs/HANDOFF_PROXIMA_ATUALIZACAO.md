@@ -129,8 +129,9 @@ resposta de /api/status.
 - historico recarregado no navegador;
 - mobile sem overflow horizontal;
 - PDFs A4 pesquisaveis;
-- testes consolidados em seis suites, com 139 verificacoes declaradas (144
-  execucoes ao rodar npm test, incluindo subtestes de um loop de cenarios);
+- testes consolidados em seis suites, com 160 verificacoes declaradas (165
+  execucoes ao rodar npm test, incluindo subtestes de um loop de cenarios;
+  contagem revalidada em 2026-07-27 na auditoria do Plano 15);
 - E2E visual com tres de tres imagens aplicadas aos pratos no desktop e mobile,
   sem imagem quebrada ou overflow;
 - ambiente migrado de Pop!_OS para Ubuntu 26.04 LTS em 2026-07-23; npm test e
