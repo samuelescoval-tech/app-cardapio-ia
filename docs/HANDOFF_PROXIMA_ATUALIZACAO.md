@@ -1,15 +1,15 @@
 # Handoff - Chef IA Studio
 
-Atualizado em 2026-07-26.
+Atualizado em 2026-07-27.
 
 ## Estado em uma frase
 
-O Chef IA Studio e um MVP local funcional; os Planos 1 a 13 estao concluidos.
-O Plano 14 (contas, banco, personalizacao e deploy via Supabase + Vercel)
-tem as fases 1 a 5 concluidas: contas, login, fornecedores, fotos proprias e
-deploy real na Vercel, todos testados com conta real. Um bug real de cadastro
-(e-mail ja existente reportado como sucesso falso) foi encontrado apos o
-deploy e corrigido em 2026-07-26 (ver secao da fase 5 abaixo).
+O Chef IA Studio esta em producao na Vercel, com contas de usuario reais
+(Supabase Auth), fornecedores e fotos proprias por usuario; os Planos 1 a
+14 estao concluidos. O Plano 15 (auditoria geral) teve tres rodadas
+(consistencia de docs/codigo, codigo morto e seguranca) em 2026-07-27; o
+`DEMO_ACCESS_KEY` foi removido das rotas de conta no mesmo dia, com rate
+limiting proprio adicionado em seu lugar (ver secoes abaixo).
 
 ## Arquitetura atual
 
@@ -134,9 +134,9 @@ resposta de /api/status.
 - historico recarregado no navegador;
 - mobile sem overflow horizontal;
 - PDFs A4 pesquisaveis;
-- testes consolidados em seis suites, com 160 verificacoes declaradas (165
+- testes consolidados em seis suites, com 156 verificacoes declaradas (161
   execucoes ao rodar npm test, incluindo subtestes de um loop de cenarios;
-  contagem revalidada em 2026-07-27 na auditoria do Plano 15);
+  contagem revalidada em 2026-07-27 apos a remocao do gate de demo);
 - E2E visual com tres de tres imagens aplicadas aos pratos no desktop e mobile,
   sem imagem quebrada ou overflow;
 - ambiente migrado de Pop!_OS para Ubuntu 26.04 LTS em 2026-07-23; npm test e
