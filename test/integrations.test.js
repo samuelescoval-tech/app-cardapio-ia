@@ -225,8 +225,8 @@ function respostaFake() {
 function requisicaoFake(body) {
   return {
     body,
-    get() {
-      return process.env.DEMO_ACCESS_KEY || undefined;
+    get(nome) {
+      return nome.toLowerCase() === "x-demo-access-key" ? (process.env.DEMO_ACCESS_KEY || undefined) : undefined;
     }
   };
 }
@@ -566,5 +566,101 @@ test("fotosService envia, lista com url assinada e remove com sucesso", async ()
 test("fotosService retorna 404 ao remover foto que nao existe (ou nao e do usuario)", async () => {
   const service = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: null, error: null } }) });
   await assert.rejects(() => service.remover("tok", "inexistente"), ErroFoto);
+});
+}
+
+// -----------------------------------------------------------------------------
+// Origem: Plano 16, item 2 - usuario usar a propria chave Gemini
+// -----------------------------------------------------------------------------
+{
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { cifrar, decifrar } = require("../src/utils/crypto-chave-ia");
+const { criarChaveIAService, ErroChaveIA } = require("../src/services/personalizacao/chave-ia.service");
+const { obterStatusChaveIAHandler, salvarChaveIAHandler, removerChaveIAHandler } = require("../server");
+
+const SEGREDO_TESTE = "segredo-de-teste-nao-usar-em-producao";
+
+function respostaFake() {
+  return {
+    statusCode: 200,
+    body: null,
+    status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; }
+  };
+}
+
+function requisicaoFake(body, headers = {}) {
+  return { body, get(nome) { return headers[nome.toLowerCase()]; } };
+}
+
+function clienteFake(resultado) {
+  const builder = {
+    select() { return builder; },
+    upsert() { return builder; },
+    delete() { return builder; },
+    eq() { return builder; },
+    maybeSingle: async () => resultado,
+    then(resolve, reject) { return Promise.resolve(resultado).then(resolve, reject); }
+  };
+  return { from() { return builder; } };
+}
+
+test("cifrar/decifrar fazem round-trip e rejeitam segredo errado", () => {
+  const original = "AIzaSy-chave-fake-de-teste-1234567890";
+  const cifrado = cifrar(original, SEGREDO_TESTE);
+  assert.equal(decifrar(cifrado, SEGREDO_TESTE), original);
+  assert.throws(() => decifrar(cifrado, "segredo-errado"));
+});
+
+test("chaveIAService rejeita chave vazia ou com formato invalido", async () => {
+  const service = criarChaveIAService({ segredoCifragem: SEGREDO_TESTE, criarClientePorToken: () => clienteFake({ data: null, error: null }) });
+  await assert.rejects(() => service.salvar("tok", "u1", { chave: "" }), ErroChaveIA);
+  await assert.rejects(() => service.salvar("tok", "u1", { chave: "curta" }), ErroChaveIA);
+});
+
+test("chaveIAService salva, informa status e permite obter decifrada", async () => {
+  const service = criarChaveIAService({ segredoCifragem: SEGREDO_TESTE, criarClientePorToken: () => clienteFake({ data: null, error: null }) });
+  const salvo = await service.salvar("tok", "u1", { chave: "AIzaSy-chave-fake-de-teste-1234567890" });
+  assert.equal(salvo.configurada, true);
+
+  const { chave_cifrada, iv, tag } = cifrar("AIzaSy-chave-fake-de-teste-1234567890", SEGREDO_TESTE);
+  const serviceComDados = criarChaveIAService({
+    segredoCifragem: SEGREDO_TESTE,
+    criarClientePorToken: () => clienteFake({ data: { chave_cifrada, iv, tag, atualizado_em: "2026-01-01" }, error: null })
+  });
+  const status = await serviceComDados.obterStatus("tok");
+  assert.equal(status.configurada, true);
+
+  const decifrada = await serviceComDados.obterChaveDecifrada("tok");
+  assert.equal(decifrada, "AIzaSy-chave-fake-de-teste-1234567890");
+});
+
+test("chaveIAService informa nao configurada quando nao ha registro", async () => {
+  const service = criarChaveIAService({ segredoCifragem: SEGREDO_TESTE, criarClientePorToken: () => clienteFake({ data: null, error: null }) });
+  const status = await service.obterStatus("tok");
+  assert.equal(status.configurada, false);
+  const decifrada = await service.obterChaveDecifrada("tok");
+  assert.equal(decifrada, null);
+});
+
+test("chaveIAService remove com sucesso", async () => {
+  const service = criarChaveIAService({ segredoCifragem: SEGREDO_TESTE, criarClientePorToken: () => clienteFake({ data: null, error: null }) });
+  const removido = await service.remover("tok", "u1");
+  assert.equal(removido.removido, true);
+});
+
+test("GET/PUT/DELETE /api/perfil/chave-ia exigem token de acesso", async () => {
+  const respGet = respostaFake();
+  await obterStatusChaveIAHandler(requisicaoFake(null), respGet);
+  assert.equal(respGet.statusCode, 401);
+
+  const respPut = respostaFake();
+  await salvarChaveIAHandler(requisicaoFake({ chave: "AIzaSy-chave-fake-de-teste-1234567890" }), respPut);
+  assert.equal(respPut.statusCode, 401);
+
+  const respDelete = respostaFake();
+  await removerChaveIAHandler(requisicaoFake(null), respDelete);
+  assert.equal(respDelete.statusCode, 401);
 });
 }

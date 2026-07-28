@@ -7,7 +7,7 @@ const { rateLimit } = require('express-rate-limit');
 // produtos do mantenedor, sem relacao com este projeto).
 require('dotenv').config({ quiet: true });
 
-const { gerarPlano, getGeminiStatus } = require('./src/services/ai/gemini.service');
+const { gerarPlano, getGeminiStatus, criarGeminiService } = require('./src/services/ai/gemini.service');
 const { montarPromptPlanejamento } = require('./src/prompts/event.prompt');
 const { calcularMotorEvento, aplicarMotorAoPlano } = require('./src/services/planning/motor.service');
 const { obterDiretrizCulinaria } = require('./src/services/planning/culinary-matrix.service');
@@ -22,6 +22,7 @@ const { avaliarRendimentoAlimentar } = require('./src/services/planning/food-yie
 const { criarSupabaseAuthService, ErroAutenticacao } = require('./src/services/auth/supabase-auth.service');
 const { criarFornecedoresService, ErroFornecedor } = require('./src/services/personalizacao/fornecedores.service');
 const { criarFotosService, ErroFoto } = require('./src/services/personalizacao/fotos.service');
+const { criarChaveIAService, ErroChaveIA } = require('./src/services/personalizacao/chave-ia.service');
 
 const app = express();
 // Necessario para o express-rate-limit identificar o IP real do cliente
@@ -35,6 +36,7 @@ const imageSelectionService = criarImageSelectionService({ openverseService });
 const supabaseAuthService = criarSupabaseAuthService();
 const fornecedoresService = criarFornecedoresService();
 const fotosService = criarFotosService();
+const chaveIAService = criarChaveIAService();
 
 // Cabecalhos de seguranca (Plano 15, auditoria). O front-end usa onclick=""
 // e style="" inline em varios lugares, entao script-src/style-src precisam
@@ -183,7 +185,7 @@ function obterToken(req) {
 }
 
 function tratarErroPersonalizacao(error, res, mensagemPadrao) {
-    if (error instanceof ErroAutenticacao || error instanceof ErroFornecedor || error instanceof ErroFoto) {
+    if (error instanceof ErroAutenticacao || error instanceof ErroFornecedor || error instanceof ErroFoto || error instanceof ErroChaveIA) {
         return res.status(error.statusCode).json({ ok: false, error: error.message });
     }
     console.error("❌ Erro na personalizacao:", error.message);
@@ -276,9 +278,60 @@ app.get('/api/fotos', limitadorPersonalizacao, listarFotosHandler);
 app.post('/api/fotos', limitadorPersonalizacao, express.json({ limit: '8mb' }), criarFotoHandler);
 app.delete('/api/fotos/:id', limitadorPersonalizacao, removerFotoHandler);
 
+async function obterStatusChaveIAHandler(req, res) {
+    try {
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const status = await chaveIAService.obterStatus(token);
+        res.json({ ok: true, ...status });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel consultar a chave de IA.");
+    }
+}
+
+async function salvarChaveIAHandler(req, res) {
+    try {
+        const token = obterToken(req);
+        const usuario = await supabaseAuthService.obterUsuario(token);
+        const resultado = await chaveIAService.salvar(token, usuario.usuario_id, req.body);
+        res.json({ ok: true, ...resultado });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel salvar a chave de IA.");
+    }
+}
+
+async function removerChaveIAHandler(req, res) {
+    try {
+        const token = obterToken(req);
+        const usuario = await supabaseAuthService.obterUsuario(token);
+        const resultado = await chaveIAService.remover(token, usuario.usuario_id);
+        res.json({ ok: true, ...resultado });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel remover a chave de IA.");
+    }
+}
+
+app.get('/api/perfil/chave-ia', limitadorPersonalizacao, obterStatusChaveIAHandler);
+app.put('/api/perfil/chave-ia', limitadorPersonalizacao, salvarChaveIAHandler);
+app.delete('/api/perfil/chave-ia', limitadorPersonalizacao, removerChaveIAHandler);
+
+async function obterChaveIAUsuarioOuNulo(req) {
+    const token = obterToken(req);
+    if (!token) return null;
+    try {
+        await supabaseAuthService.obterUsuario(token);
+        return await chaveIAService.obterChaveDecifrada(token);
+    } catch {
+        return null;
+    }
+}
+
 async function gerarCardapioHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+        // Usuario com a propria chave Gemini configurada (Plano 16, item 2) nao
+        // consome a cota compartilhada, entao a senha demo nao se aplica a ele.
+        const chaveIAUsuario = await obterChaveIAUsuarioOuNulo(req);
+        if (!chaveIAUsuario && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
             return res.status(401).json({
                 ok: false,
                 error: "Senha de teste inválida ou ausente."
@@ -287,17 +340,21 @@ async function gerarCardapioHandler(req, res) {
 
         const evento = validarEvento(req.body.evento);
         console.log('📨 Evento recebido:', evento.tipo, `| ${evento.pessoas} pessoas`);
-        
+
         const diretrizCulinaria = obterDiretrizCulinaria(evento);
         const motor = calcularMotorEvento(evento, diretrizCulinaria);
         const historicoCulinario = validarHistoricoCulinario(req.body.historico_culinario);
         const contextoVariedade = criarContextoVariedade(evento, diretrizCulinaria, historicoCulinario);
         console.log('⚙️ Motor: Calculado');
-        
+
         const prompt = montarPromptPlanejamento(evento, motor, diretrizCulinaria, contextoVariedade);
         console.log('📝 Prompt:', `${prompt.length} chars`);
 
-        const resposta = await gerarPlano(prompt, { diretrizCulinaria, evento });
+        const gerarPlanoComChave = chaveIAUsuario
+            ? criarGeminiService({ apiKey: chaveIAUsuario }).gerarPlano
+            : gerarPlano;
+        const resposta = await gerarPlanoComChave(prompt, { diretrizCulinaria, evento });
+        resposta.meta = { ...(resposta.meta || {}), chave_ia_propria: Boolean(chaveIAUsuario) };
         if (resposta.ok && resposta.plano) {
             resposta.plano.variedade_culinaria = avaliarVariedadePlano(resposta.plano, contextoVariedade);
             resposta.plano.contexto_evento = diretrizCulinaria.contexto_evento;
@@ -424,5 +481,6 @@ Object.assign(module.exports, {
     app, gerarCardapioHandler, buscarReferenciasHandler, buscarImagensEventoHandler,
     registrarHandler, loginHandler, perfilHandler,
     listarFornecedoresHandler, criarFornecedorHandler, atualizarFornecedorHandler, removerFornecedorHandler,
-    listarFotosHandler, criarFotoHandler, removerFotoHandler
+    listarFotosHandler, criarFotoHandler, removerFotoHandler,
+    obterStatusChaveIAHandler, salvarChaveIAHandler, removerChaveIAHandler
 });
