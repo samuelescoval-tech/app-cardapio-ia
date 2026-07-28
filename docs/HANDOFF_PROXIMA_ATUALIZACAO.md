@@ -564,6 +564,19 @@ POST/PUT/DELETE fornecedores, POST fotos) foram removidos de
 `test/integrations.test.js` por descreverem um comportamento que nao
 existe mais; suite completa em 161/161.
 
+**Falha encontrada numa segunda revisao pedida pelo usuario, e corrigida no
+mesmo dia**: ao remover o gate de demo de `/api/fornecedores` e
+`/api/fotos`, essas rotas ficaram sem nenhum throttling — diferente de
+`/api/imagens-evento` e `/api/referencias-receitas`, que tem contadores
+diarios proprios (Openverse/Spoonacular), fornecedores e fotos so validam
+o token do usuario, sem limite de quantas escritas por minuto. Um usuario
+autenticado rodando um script em loop podia estourar a cota gratuita de
+banco/storage do Supabase rapidamente (ex.: ~200 chamadas de upload de
+foto de 5MB esgotariam o 1GB gratuito). Corrigido com um novo limitador
+(`limitadorPersonalizacao`, 30 requisicoes/min por IP) aplicado as 7 rotas
+de fornecedores e fotos. Testado ao vivo: 30 requisicoes passam, a 31a
+recebe 429. Suite completa e E2E de galeria revalidados sem regressao.
+
 ## Proxima acao curta
 
 1. avaliar adicionar login social (Google) — pendencia sem urgencia relatada
