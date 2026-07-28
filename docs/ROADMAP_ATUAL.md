@@ -10,13 +10,13 @@ no handoff.
 Plano 13 e Plano 14 concluidos (contas, banco, fornecedores, fotos proprias
 e deploy na Vercel, todos testados com conta real; bug de cadastro
 corrigido em 2026-07-26). Plano 15 (auditoria geral) teve tres rodadas em
-2026-07-27: docs/README atualizados e codigo morto removido (rodadas 1 e
-2), e uma revisao de seguranca completa (rodada 3) — helmet/CSP, rate
-limiting em auth e geracao, RLS revalidada sem lacunas, 2 vulnerabilidades
-de dependencias corrigidas. Nada disso foi commitado ainda (a pedido do
-usuario, sera feito em lote depois). Ver secao do Plano 15 para todos os
-detalhes. Plano 16 (preparacao para escala e lancamento) registrado, ainda
-sem inicio de implementacao.
+2026-07-27, ja commitadas e enviadas: docs/README atualizados e codigo
+morto removido (rodadas 1 e 2), e uma revisao de seguranca completa
+(rodada 3) — helmet/CSP, rate limiting em auth e geracao, RLS revalidada
+sem lacunas, 2 vulnerabilidades de dependencias corrigidas. Ver secao do
+Plano 15 para todos os detalhes. Do Plano 16, o `DEMO_ACCESS_KEY` foi
+removido das rotas de conta em 2026-07-27 (ver handoff); os demais itens
+seguem sem inicio de implementacao.
 
 | Plano | Resultado | Estado |
 |---|---|---|
@@ -169,9 +169,10 @@ Fases previstas:
    rounds de correcao de exportacao/rewrite; `GET /` e as rotas de API
    confirmadas em producao). Teste do usuario em producao revelou um bug real
    de cadastro (e-mail ja existente reportado como sucesso falso pelo
-   Supabase) — corrigido no mesmo dia; ver detalhes no handoff. Login social
-   e remocao do gate de `DEMO_ACCESS_KEY` nas rotas de auth ficam como
-   pendencias para antes do lancamento real.
+   Supabase) — corrigido no mesmo dia; ver detalhes no handoff. Gate de
+   `DEMO_ACCESS_KEY` removido das rotas de auth/fornecedores/fotos em
+   2026-07-27 (ver handoff). Login social continua como pendencia sem
+   urgencia para antes do lancamento real.
 
 Pre-requisito do usuario antes da fase 1: criar conta gratuita em
 supabase.com (feito em 2026-07-23, RLS automatico ativado, chaves no `.env`
@@ -387,8 +388,8 @@ propria). Ideia registrada, sem decisao de fazer ainda.
 - adequacao a LGPD (o app e brasileiro, tem usuarios reais com e-mail e
   fotos pessoais no Supabase): direito de exclusao de conta e dos dados,
   base legal para o tratamento, retencao de dados;
-- revisar se `DEMO_ACCESS_KEY` deve sair das rotas de auth antes de usuarios
-  reais se cadastrarem (ja listado como pendencia no Plano 14, fase 5);
+- ~~revisar se `DEMO_ACCESS_KEY` deve sair das rotas de auth~~ — **feito em
+  2026-07-27**, removido de auth/fornecedores/fotos (ver handoff);
 - ativar protecao contra senha vazada no Supabase Auth (ja listado como
   pendencia opcional no Plano 14).
 

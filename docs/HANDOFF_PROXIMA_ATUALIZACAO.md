@@ -76,7 +76,12 @@ biblioteca.
 3. O Gemini pode exigir recuperacao automatica de receitas ou compras.
 4. Nao existe catalogo regional real de precos.
 5. Historico permanece restrito ao navegador atual.
-6. DEMO_ACCESS_KEY nao substitui autenticacao de producao.
+6. DEMO_ACCESS_KEY protege so as rotas de geracao/consulta externa
+   (`/gerar-cardapio`, `/api/imagens-evento`, `/api/referencias-receitas`),
+   nao existe controle de cota por usuario nessas rotas — qualquer
+   possuidor da senha demo consome a cota compartilhada. Removido das
+   rotas de conta (auth/fornecedores/fotos) em 2026-07-27, que ja usam
+   autenticacao real do Supabase.
 7. Alergenicos e contaminacao cruzada exigem confirmacao profissional.
 8. Operacao deve ser conferida contra o espaco e os equipamentos reais.
 9. maxOutputTokens do Gemini foi ampliado de 8192 para 32768 em 2026-07-23
@@ -532,16 +537,38 @@ regressao adicionado em `test/integrations.test.js`
 
 (b) e (c) permanecem como pendencias documentadas, sem acao nesta sessao.
 
+### Remocao do DEMO_ACCESS_KEY das rotas de conta (2026-07-27)
+
+Pendencia (c) acima resolvida. `DEMO_ACCESS_KEY` agora protege **so** as
+rotas que consomem cota externa paga/limitada: `/gerar-cardapio`
+(Gemini), `/api/imagens-evento` (Openverse) e `/api/referencias-receitas`
+(Spoonacular). Removido de `registrarHandler`, `loginHandler`,
+`perfilHandler` e de todos os handlers de `/api/fornecedores` e
+`/api/fotos` em `server.js` — essas rotas ja sao protegidas de verdade
+pelo token do Supabase (RLS + `obterUsuario`), a senha demo nunca foi mais
+que uma camada extra redundante ali, e para contas reais ela so atrapalhava.
+
+Efeito colateral bom: o front-end (`public/js/app.js`, funcao `enviar()`
+do modal de conta) parou de chamar `obterDemoAccessKey()` antes de
+cadastrar/logar, entao o modal aninhado de senha demo (a causa do bug
+original desta fase) nao aparece mais nesse fluxo — resolvido de forma
+definitiva, nao so contornado.
+
+Testado ao vivo: login/registro sem nenhum header de demo key retornam o
+erro real de credenciais (nao mais 401 de senha demo); `/gerar-cardapio`
+sem a chave continua dando 401 normalmente; `/api/fornecedores` sem token
+continua dando 401 por token ausente. Fluxo completo de cadastro
+reproduzido via Chrome headless: sem modal de demo, cadastro concluido em
+uma unica etapa. 4 testes que verificavam o gate antigo (registrar,
+POST/PUT/DELETE fornecedores, POST fotos) foram removidos de
+`test/integrations.test.js` por descreverem um comportamento que nao
+existe mais; suite completa em 161/161.
+
 ## Proxima acao curta
 
-1. commitar e enviar a correcao de `src/services/auth/supabase-auth.service.js`
-   (deteccao de e-mail ja cadastrado) e revalidar em producao com um e-mail
-   real que ja tenha conta (deve mostrar o erro 409, nao a falsa mensagem de
-   sucesso);
-2. avaliar adicionar login social (Google) — pendencia sem urgencia relatada
+1. avaliar adicionar login social (Google) — pendencia sem urgencia relatada
    pelo usuario;
-3. antes de lancar para usuarios reais: remover a exigencia de
-   `DEMO_ACCESS_KEY` nas rotas de auth (ela deve valer so para as rotas de
-   geracao/demo, nao para contas reais), ativar protecao contra senha
-   vazada no Supabase e revisar o acesso a `rls_auto_enable()`;
-4. manter o estado somente neste handoff e no roadmap.
+2. antes de lancar para usuarios reais: ativar protecao contra senha
+   vazada no Supabase e revisar o acesso a `rls_auto_enable()` (unicos itens
+   remanescentes da lista de pre-lancamento desta fase);
+3. manter o estado somente neste handoff e no roadmap.
