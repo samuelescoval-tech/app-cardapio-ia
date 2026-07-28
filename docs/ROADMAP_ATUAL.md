@@ -1,6 +1,6 @@
 # Roadmap atual - Chef IA Studio
 
-Atualizado em 2026-07-27.
+Atualizado em 2026-07-28.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
@@ -9,13 +9,11 @@ no handoff.
 
 Plano 13 e Plano 14 concluidos (contas, banco, fornecedores, fotos proprias
 e deploy na Vercel, todos testados com conta real; bug de cadastro
-corrigido em 2026-07-26). Plano 15 (auditoria geral) teve tres rodadas em
-2026-07-27, ja commitadas e enviadas: docs/README atualizados e codigo
-morto removido (rodadas 1 e 2), e uma revisao de seguranca completa
-(rodada 3) — helmet/CSP, rate limiting em auth e geracao, RLS revalidada
-sem lacunas, 2 vulnerabilidades de dependencias corrigidas. Ver secao do
-Plano 15 para todos os detalhes. Do Plano 16, o `DEMO_ACCESS_KEY` foi
-removido das rotas de conta em 2026-07-27 (ver handoff); os demais itens
+corrigido em 2026-07-26). Plano 15 (auditoria geral, tres rodadas) e a
+remocao do `DEMO_ACCESS_KEY` das rotas de conta foram feitos em
+2026-07-27 — ver secao do Plano 15 para detalhes. Do Plano 16, o item 2
+(usuario usar a propria chave Gemini) teve o backend concluido e testado
+com o Supabase real em 2026-07-28 (falta so a interface); os demais itens
 seguem sem inicio de implementacao.
 
 | Plano | Resultado | Estado |
@@ -372,14 +370,19 @@ teste; isso deve ser reavaliado quando houver uso real recorrente.
 
 ### 2. Usuario usar a propria chave de IA em vez da chave compartilhada
 
-Hoje toda geracao usa uma unica `GEMINI_API_KEY`/`GOOGLE_API_KEY` do `.env`
-do dono do app — o custo/quota e sempre do dono, nunca do usuario. E possivel
-no futuro deixar o usuario colar sua propria chave Gemini no perfil (apos
-login) e o backend usar essa chave nas chamadas daquele usuario, em vez da
-chave compartilhada. Isso distribuiria custo/quota entre os usuarios, mas
-teria custo de implementacao (guardar a chave com seguranca — nunca em texto
-puro no banco — e cair de volta pra chave padrao quando o usuario nao tiver a
-propria). Ideia registrada, sem decisao de fazer ainda.
+**Backend concluido em 2026-07-28** (ver detalhes completos no handoff).
+Tabela `chave_ia_usuario` (RLS por dono, igual ao padrao de
+fornecedores/fotos), chave cifrada com AES-256-GCM antes de gravar (nunca
+em texto puro no banco), rotas `GET/PUT/DELETE /api/perfil/chave-ia`, e
+`/gerar-cardapio` passa a usar a chave do usuario (e pular o gate de
+`DEMO_ACCESS_KEY`) quando ela estiver configurada — cai de volta pra chave
+compartilhada automaticamente quando nao estiver. Testado ao vivo contra
+o Supabase real com um usuario de teste descartavel (geracao real de
+cardapio usando a chave propria, sem senha demo). Falta so a interface:
+hoje nao existe nenhuma tela onde o usuario cola a propria chave (mesma
+situacao de fornecedores/fotos, que tambem sao backend-only ainda) — a
+proxima etapa natural e uma tela de perfil que junte os tres (fornecedores,
+fotos, chave de IA) em vez de telas separadas.
 
 ### 3. Politicas para protecao legal e de dados (a implementar antes do lancamento real)
 

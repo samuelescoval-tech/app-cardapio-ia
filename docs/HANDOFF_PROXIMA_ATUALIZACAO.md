@@ -1,15 +1,16 @@
 # Handoff - Chef IA Studio
 
-Atualizado em 2026-07-27.
+Atualizado em 2026-07-28.
 
 ## Estado em uma frase
 
 O Chef IA Studio esta em producao na Vercel, com contas de usuario reais
 (Supabase Auth), fornecedores e fotos proprias por usuario; os Planos 1 a
-14 estao concluidos. O Plano 15 (auditoria geral) teve tres rodadas
-(consistencia de docs/codigo, codigo morto e seguranca) em 2026-07-27; o
-`DEMO_ACCESS_KEY` foi removido das rotas de conta no mesmo dia, com rate
-limiting proprio adicionado em seu lugar (ver secoes abaixo).
+14 estao concluidos. O Plano 15 (auditoria geral, tres rodadas) e a
+remocao do `DEMO_ACCESS_KEY` das rotas de conta (com rate limiting proprio
+no lugar) foram feitos em 2026-07-27. Em 2026-07-28, o item 2 do Plano 16
+(usuario usar a propria chave Gemini) foi implementado por completo no
+backend, testado ao vivo com o Supabase real (ver secoes abaixo).
 
 ## Arquitetura atual
 
@@ -134,9 +135,9 @@ resposta de /api/status.
 - historico recarregado no navegador;
 - mobile sem overflow horizontal;
 - PDFs A4 pesquisaveis;
-- testes consolidados em seis suites, com 156 verificacoes declaradas (161
+- testes consolidados em seis suites, com 162 verificacoes declaradas (167
   execucoes ao rodar npm test, incluindo subtestes de um loop de cenarios;
-  contagem revalidada em 2026-07-27 apos a remocao do gate de demo);
+  contagem revalidada em 2026-07-28 apos a chave de IA propria por usuario);
 - E2E visual com tres de tres imagens aplicadas aos pratos no desktop e mobile,
   sem imagem quebrada ou overflow;
 - ambiente migrado de Pop!_OS para Ubuntu 26.04 LTS em 2026-07-23; npm test e
@@ -577,11 +578,49 @@ foto de 5MB esgotariam o 1GB gratuito). Corrigido com um novo limitador
 de fornecedores e fotos. Testado ao vivo: 30 requisicoes passam, a 31a
 recebe 429. Suite completa e E2E de galeria revalidados sem regressao.
 
+### Plano 16, item 2: usuario usar a propria chave Gemini (2026-07-28)
+
+Implementado por completo (so backend, sem UI ainda — mesmo padrao de
+fornecedores/fotos na Fase 3/4, que tambem ficaram sem tela dedicada).
+
+- Nova tabela `chave_ia_usuario` (migracao
+  `supabase/migrations/004_chave_ia_usuario.sql`, aplicada pelo usuario no
+  painel do Supabase): uma linha por usuario, RLS identica ao padrao de
+  fornecedores/fotos (`auth.uid() = user_id` em select/insert/update/delete).
+- A chave nunca chega ao banco em texto plano: `src/utils/crypto-chave-ia.js`
+  cifra com AES-256-GCM antes de gravar (`chave_cifrada` + `iv` + `tag`),
+  usando uma chave mestra propria (`CHAVE_IA_ENCRYPTION_SECRET`, gerada e
+  gravada direto no `.env` nesta sessao, nunca exibida no chat). Um segredo
+  errado ou ausente faz a decifragem falhar (GCM detecta), tratado como "sem
+  chave configurada" em vez de erro fatal.
+- `src/services/personalizacao/chave-ia.service.js` segue o mesmo formato
+  de `fornecedores.service.js`/`fotos.service.js` (cliente por token,
+  `ErroChaveIA` com `statusCode`).
+- Novas rotas em `server.js`: `GET/PUT/DELETE /api/perfil/chave-ia`
+  (status/salvar/remover), protegidas por token real (nao por senha demo) e
+  pelo `limitadorPersonalizacao` ja existente.
+- `gerarCardapioHandler` agora verifica, antes do gate de demo, se quem
+  fez a chamada tem token valido **e** chave propria configurada; se tiver,
+  usa `criarGeminiService({ apiKey: chaveDoUsuario })` (a factory ja
+  aceitava uma chave alternativa, criada para os scripts de benchmark) em
+  vez do servico padrao, **e pula o gate de `DEMO_ACCESS_KEY`** — faz
+  sentido, pois quem traz a propria chave nao consome a cota compartilhada.
+  O rate limit de geracao (`limitadorGeracao`) continua valendo para todos.
+  A resposta ganha `meta.chave_ia_propria: true/false` para transparencia.
+- Testado ao vivo contra o Supabase real (usuario de teste descartavel,
+  criado e removido via `service_role`, nunca a conta pessoal do usuario):
+  status antes/depois de configurar, geracao real de cardapio (13 pratos)
+  **sem nenhum header de senha demo**, `meta.chave_ia_propria: true`
+  confirmado, remocao da chave e volta correta a exigir a senha demo depois
+  de removida. Suite completa (167/167, 6 testes novos) e E2E de galeria
+  revalidados sem regressao.
+
 ## Proxima acao curta
 
 1. avaliar adicionar login social (Google) — pendencia sem urgencia relatada
    pelo usuario;
 2. antes de lancar para usuarios reais: ativar protecao contra senha
-   vazada no Supabase e revisar o acesso a `rls_auto_enable()` (unicos itens
-   remanescentes da lista de pre-lancamento desta fase);
-3. manter o estado somente neste handoff e no roadmap.
+   vazada no Supabase e revisar o acesso a `rls_auto_enable()`;
+3. Plano 16, item 2: falta so a interface (tela de perfil onde o usuario
+   cola a propria chave) — backend e testes ja prontos;
+4. manter o estado somente neste handoff e no roadmap.
