@@ -73,6 +73,18 @@ const limitadorGeracao = rateLimit({
     message: { ok: false, error: "Muitas solicitacoes seguidas. Aguarde um minuto e tente novamente." }
 });
 
+// Fornecedores e fotos nao chamam nenhuma IA/API externa (so Supabase), mas
+// sem isso um usuario autenticado podia escrever sem nenhum limite e estourar
+// a cota gratuita de banco/storage do Supabase (Plano 15, revisao apos remover
+// o gate de DEMO_ACCESS_KEY dessas rotas).
+const limitadorPersonalizacao = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, error: "Muitas solicitacoes seguidas. Aguarde um minuto e tente novamente." }
+});
+
 app.use(express.json({ limit: '20kb' }));
 
 // Serve os arquivos estáticos da pasta public/
@@ -222,10 +234,10 @@ async function removerFornecedorHandler(req, res) {
     }
 }
 
-app.get('/api/fornecedores', listarFornecedoresHandler);
-app.post('/api/fornecedores', criarFornecedorHandler);
-app.put('/api/fornecedores/:id', atualizarFornecedorHandler);
-app.delete('/api/fornecedores/:id', removerFornecedorHandler);
+app.get('/api/fornecedores', limitadorPersonalizacao, listarFornecedoresHandler);
+app.post('/api/fornecedores', limitadorPersonalizacao, criarFornecedorHandler);
+app.put('/api/fornecedores/:id', limitadorPersonalizacao, atualizarFornecedorHandler);
+app.delete('/api/fornecedores/:id', limitadorPersonalizacao, removerFornecedorHandler);
 
 async function listarFotosHandler(req, res) {
     try {
@@ -260,9 +272,9 @@ async function removerFotoHandler(req, res) {
     }
 }
 
-app.get('/api/fotos', listarFotosHandler);
-app.post('/api/fotos', express.json({ limit: '8mb' }), criarFotoHandler);
-app.delete('/api/fotos/:id', removerFotoHandler);
+app.get('/api/fotos', limitadorPersonalizacao, listarFotosHandler);
+app.post('/api/fotos', limitadorPersonalizacao, express.json({ limit: '8mb' }), criarFotoHandler);
+app.delete('/api/fotos/:id', limitadorPersonalizacao, removerFotoHandler);
 
 async function gerarCardapioHandler(req, res) {
     try {
