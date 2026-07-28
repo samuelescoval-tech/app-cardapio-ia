@@ -311,12 +311,6 @@ test("POST /api/auth/registrar rejeita senha curta antes de chamar o Supabase", 
   assert.equal(response.statusCode, 400);
 });
 
-test("POST /api/auth/registrar exige a senha de demo quando configurada", async () => {
-  const response = respostaFake();
-  await registrarHandler(requisicaoFake({ email: "teste@teste.com", senha: "123456" }, { "x-demo-access-key": "errada" }), response);
-  assert.equal(response.statusCode, 401);
-});
-
 test("GET /api/auth/perfil rejeita chamada sem token", async () => {
   const response = respostaFake();
   await perfilHandler(requisicaoFake(null), response);
@@ -449,22 +443,6 @@ test("GET /api/fornecedores exige token de acesso", async () => {
   assert.equal(response.statusCode, 401);
 });
 
-test("POST /api/fornecedores exige a senha de demo quando configurada", async () => {
-  const response = respostaFake();
-  await criarFornecedorHandler(requisicaoFake({ nome: "Distribuidora Boa Vista" }, { "x-demo-access-key": "errada" }), response);
-  assert.equal(response.statusCode, 401);
-});
-
-test("PUT/DELETE /api/fornecedores/:id exigem a senha de demo quando configurada", async () => {
-  const responseUpdate = respostaFake();
-  await atualizarFornecedorHandler(requisicaoFake({ nome: "X" }, { "x-demo-access-key": "errada" }, { id: "f1" }), responseUpdate);
-  assert.equal(responseUpdate.statusCode, 401);
-
-  const responseDelete = respostaFake();
-  await removerFornecedorHandler(requisicaoFake(null, { "x-demo-access-key": "errada" }, { id: "f1" }), responseDelete);
-  assert.equal(responseDelete.statusCode, 401);
-});
-
 test("fornecedoresService valida nome obrigatorio e categoria permitida", async () => {
   const service = criarFornecedoresService({ criarClientePorToken: () => clienteFake({ data: {}, error: null }) });
   await assert.rejects(() => service.criar("tok", "u1", { nome: "" }), ErroFornecedor);
@@ -553,12 +531,6 @@ function clienteStorageFake({ tabela, storageUpload, storageRemove, storageSigne
 test("GET /api/fotos exige token de acesso", async () => {
   const response = respostaFake();
   await listarFotosHandler(requisicaoFake(null), response);
-  assert.equal(response.statusCode, 401);
-});
-
-test("POST /api/fotos exige a senha de demo quando configurada", async () => {
-  const response = respostaFake();
-  await criarFotoHandler(requisicaoFake({ tipo: "image/png", arquivo: PNG_1X1_BASE64 }, { "x-demo-access-key": "errada" }), response);
   assert.equal(response.statusCode, 401);
 });
 

@@ -122,9 +122,6 @@ function validarCredenciais(body) {
 
 async function registrarHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const { email, senha } = validarCredenciais(req.body);
         const resultado = await supabaseAuthService.cadastrar(email, senha);
         res.json({ ok: true, ...resultado });
@@ -139,9 +136,6 @@ async function registrarHandler(req, res) {
 
 async function loginHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const { email, senha } = validarCredenciais(req.body);
         const resultado = await supabaseAuthService.login(email, senha);
         res.json({ ok: true, ...resultado });
@@ -156,9 +150,6 @@ async function loginHandler(req, res) {
 
 async function perfilHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const token = (req.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
         const usuario = await supabaseAuthService.obterUsuario(token);
         res.json({ ok: true, ...usuario });
@@ -189,9 +180,6 @@ function tratarErroPersonalizacao(error, res, mensagemPadrao) {
 
 async function listarFornecedoresHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const token = obterToken(req);
         await supabaseAuthService.obterUsuario(token);
         const fornecedores = await fornecedoresService.listar(token);
@@ -203,9 +191,6 @@ async function listarFornecedoresHandler(req, res) {
 
 async function criarFornecedorHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const token = obterToken(req);
         const usuario = await supabaseAuthService.obterUsuario(token);
         const fornecedor = await fornecedoresService.criar(token, usuario.usuario_id, req.body);
@@ -217,9 +202,6 @@ async function criarFornecedorHandler(req, res) {
 
 async function atualizarFornecedorHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const token = obterToken(req);
         await supabaseAuthService.obterUsuario(token);
         const fornecedor = await fornecedoresService.atualizar(token, req.params.id, req.body);
@@ -231,9 +213,6 @@ async function atualizarFornecedorHandler(req, res) {
 
 async function removerFornecedorHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const token = obterToken(req);
         await supabaseAuthService.obterUsuario(token);
         const resultado = await fornecedoresService.remover(token, req.params.id);
@@ -250,9 +229,6 @@ app.delete('/api/fornecedores/:id', removerFornecedorHandler);
 
 async function listarFotosHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const token = obterToken(req);
         await supabaseAuthService.obterUsuario(token);
         const fotos = await fotosService.listar(token);
@@ -264,9 +240,6 @@ async function listarFotosHandler(req, res) {
 
 async function criarFotoHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const token = obterToken(req);
         const usuario = await supabaseAuthService.obterUsuario(token);
         const foto = await fotosService.criar(token, usuario.usuario_id, req.body);
@@ -278,9 +251,6 @@ async function criarFotoHandler(req, res) {
 
 async function removerFotoHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const token = obterToken(req);
         await supabaseAuthService.obterUsuario(token);
         const resultado = await fotosService.remover(token, req.params.id);

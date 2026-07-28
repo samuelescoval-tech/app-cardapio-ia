@@ -164,15 +164,12 @@ function abrirModalConta() {
     async function enviar() {
         erro.textContent = "";
         info.textContent = "";
-        const demoAccessKey = await obterDemoAccessKey();
-        const headers = { "Content-Type": "application/json" };
-        if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
 
         const rota = authModoCadastro ? "/api/auth/registrar" : "/api/auth/login";
         try {
             const response = await fetch(rota, {
                 method: "POST",
-                headers,
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email: email.value.trim(), senha: senha.value })
             });
             const dados = await response.json();
