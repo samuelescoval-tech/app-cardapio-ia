@@ -11,10 +11,16 @@ Plano 13 e Plano 14 concluidos (contas, banco, fornecedores, fotos proprias
 e deploy na Vercel, todos testados com conta real; bug de cadastro
 corrigido em 2026-07-26). Plano 15 (auditoria geral, tres rodadas) e a
 remocao do `DEMO_ACCESS_KEY` das rotas de conta foram feitos em
-2026-07-27 — ver secao do Plano 15 para detalhes. Do Plano 16, o item 2
-(usuario usar a propria chave Gemini) teve o backend concluido e testado
-com o Supabase real em 2026-07-28 (falta so a interface); os demais itens
+2026-07-27 — ver secao do Plano 15 para detalhes. Em 2026-07-28: item 2 do
+Plano 16 (chave Gemini propria por usuario) teve o backend concluido e
+testado com o Supabase real (falta so a interface); e o login social com
+Google foi implementado e testado ao vivo (ver handoff para os detalhes de
+configuracao do Google Cloud + Supabase). Os demais itens do Plano 16
 seguem sem inicio de implementacao.
+
+**Pendencia registrada sem prazo**: o nome "Chef IA" tem conflito de
+marca/patente e precisa ser trocado antes do lancamento real; nenhum nome
+novo foi escolhido ainda (ver detalhes no handoff).
 
 | Plano | Resultado | Estado |
 |---|---|---|
@@ -434,6 +440,11 @@ primeiro, depois faz login/cadastro, e so entao cai na tela do Chef IA
 com o login como porta de entrada. Ainda sem decisao de como tratar visitantes
 que querem so espiar sem conta (ex.: modo demonstracao antes do login, ou
 login obrigatorio para tudo) — decidir quando esse item for priorizado.
+
+**Reforcado pelo usuario em 2026-07-28**, testando o login com Google pela
+primeira vez: com a conta logada, o e-mail do usuario passou a ocupar um
+terceiro botao no mesmo nivel visual de "GERADOR IA"/"APRESENTACAO",
+confirmando ao vivo o problema de hierarquia ja descrito acima.
 
 ## Depois do Plano 13
 

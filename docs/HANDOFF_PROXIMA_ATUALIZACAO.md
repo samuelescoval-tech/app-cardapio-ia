@@ -5,12 +5,15 @@ Atualizado em 2026-07-28.
 ## Estado em uma frase
 
 O Chef IA Studio esta em producao na Vercel, com contas de usuario reais
-(Supabase Auth), fornecedores e fotos proprias por usuario; os Planos 1 a
-14 estao concluidos. O Plano 15 (auditoria geral, tres rodadas) e a
-remocao do `DEMO_ACCESS_KEY` das rotas de conta (com rate limiting proprio
-no lugar) foram feitos em 2026-07-27. Em 2026-07-28, o item 2 do Plano 16
-(usuario usar a propria chave Gemini) foi implementado por completo no
-backend, testado ao vivo com o Supabase real (ver secoes abaixo).
+(Supabase Auth, agora com login por e-mail/senha **e** login social com
+Google), fornecedores e fotos proprias por usuario; os Planos 1 a 14 estao
+concluidos. O Plano 15 (auditoria geral, tres rodadas) e a remocao do
+`DEMO_ACCESS_KEY` das rotas de conta foram feitos em 2026-07-27. Em
+2026-07-28: item 2 do Plano 16 (chave Gemini propria por usuario,
+so backend) e login social com Google implementados e testados ao vivo
+(ver secoes abaixo). **Pendencia importante sem prazo**: o nome "Chef IA"
+tem conflito de marca/patente e precisa mudar antes do lancamento real,
+ainda sem nome novo escolhido.
 
 ## Arquitetura atual
 
@@ -615,12 +618,58 @@ fornecedores/fotos na Fase 3/4, que tambem ficaram sem tela dedicada).
   de removida. Suite completa (167/167, 6 testes novos) e E2E de galeria
   revalidados sem regressao.
 
+### Login social com Google (2026-07-28)
+
+Implementado e testado ao vivo. Diferente do login por e-mail/senha (100%
+backend), OAuth com Google exige o navegador ser redirecionado pro Google e
+voltar com a sessao — isso e feito pelo `supabase-js` direto no
+navegador (carregado via CDN jsdelivr), so para esse fluxo. O resto do app
+continua falando so com o nosso backend, sem mudanca.
+
+- **Google Cloud**: projeto `app-cardapio-ia` criado (nome tecnico neutro —
+  ver `project_name_trademark_conflict` na memoria: "Chef IA" tem conflito
+  de marca/patente e vai precisar ser renomeado antes do lancamento real,
+  ainda sem nome definido; por isso nada novo foi criado usando esse nome).
+  Tela de consentimento OAuth (Externo, modo Teste) + credencial Web com
+  redirect URI `https://<projeto>.supabase.co/auth/v1/callback`.
+- **Supabase**: provider Google habilitado (Authentication → Providers) com
+  o Client ID/Secret do Google; `Redirect URLs` em URL Configuration inclui
+  `http://localhost:3000/**`. "Skip nonce checks" e "Allow users without an
+  email" deixados desligados (nao se aplicam ao nosso caso e reduziriam
+  seguranca/exigem tratamento que o app nao tem).
+- **Backend**: `/api/status` agora expoe `auth.supabase_url` e
+  `auth.supabase_anon_key` — seguro por design (RLS protege os dados; a
+  anon key sozinha nao da acesso a nada). CSP (`server.js`) ganhou
+  `https://cdn.jsdelivr.net` em `script-src` e a URL do proprio Supabase em
+  `connect-src`, senao o `supabase-js` no navegador seria bloqueado.
+- **Front-end**: botao "Entrar com Google" no modal de conta
+  (`public/index.html`); `public/js/app.js` inicializa um `supabaseClient`
+  com a URL/chave publicas, e um listener `onAuthStateChange` converte a
+  sessao do Google pro mesmo formato que o login por e-mail/senha ja usa
+  (`salvarSessaoUsuario`), fechando o modal automaticamente.
+- Testado ao vivo (Chrome headless) ate o ponto onde so falta a senha real
+  do Google: biblioteca carregada sem erro de CSP, `supabaseClient`
+  inicializado, clique no botao navegou corretamente ate
+  `accounts.google.com` com o Client ID e redirect_uri certos. O usuario
+  completou o login de verdade manualmente depois e confirmou funcionando
+  (nav trocou de "ENTRAR" para o e-mail da conta Google).
+- **Achado do usuario durante o teste, registrado para o Plano 16 item 7**:
+  a barra de navegacao mostra "GERADOR IA", "APRESENTACAO" e a conta do
+  usuario logado com o mesmo peso visual (tres botoes lado a lado) — reforca
+  a necessidade da reestruturacao ja planejada (apresentacao -> login ->
+  gerador, com a conta tratada como status, nao como aba de navegacao).
+
 ## Proxima acao curta
 
-1. avaliar adicionar login social (Google) — pendencia sem urgencia relatada
-   pelo usuario;
-2. antes de lancar para usuarios reais: ativar protecao contra senha
-   vazada no Supabase e revisar o acesso a `rls_auto_enable()`;
-3. Plano 16, item 2: falta so a interface (tela de perfil onde o usuario
-   cola a propria chave) — backend e testes ja prontos;
-4. manter o estado somente neste handoff e no roadmap.
+1. antes de lancar para usuarios reais: ativar protecao contra senha
+   vazada no Supabase, revisar o acesso a `rls_auto_enable()`, e publicar o
+   app do Google em modo "Producao" (hoje esta em "Teste", so e-mails
+   cadastrados como testadores conseguem logar com Google);
+2. Plano 16, item 2: falta so a interface (tela de perfil onde o usuario
+   cola a propria chave Gemini) — backend e testes ja prontos;
+3. Plano 16, item 7: reestruturar a navegacao (apresentacao -> login ->
+   gerador) — reforcado pelo achado acima sobre a hierarquia visual do
+   menu; ainda sem decisao de quando comecar;
+4. decidir o novo nome do app (conflito de marca com "Chef IA" ainda sem
+   resolucao) antes de mais qualquer coisa voltada a lancamento real;
+5. manter o estado somente neste handoff e no roadmap.
