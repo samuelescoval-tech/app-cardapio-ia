@@ -429,7 +429,12 @@ riscos abertos") de forma personalizada por usuario, em vez de um catalogo
 regional unico e centralizado. Depende da tabela de fornecedores do Plano 14
 (fase 3) como base, adicionando um campo/tabela de preco por item.
 
-### 7. Reestruturar a navegacao: apresentacao -> login -> app
+### 7. Reestruturar a navegacao: apresentacao -> login -> app — **CRITICO, nao e so estetica**
+
+O usuario classificou este item como algo que "nao pode ser esquecido pois
+isso resulta na falha do projeto" (2026-07-28). Nao tratar como polimento
+cosmetico de baixa prioridade — e um problema de arquitetura de produto na
+visao do usuario.
 
 Hoje (`public/index.html`) a navegacao mostra tres botoes lado a lado com o
 mesmo peso: "GERADOR IA" (abre direto, e a tela inicial padrao), "APRESENTACAO"
