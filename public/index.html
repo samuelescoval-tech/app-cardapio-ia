@@ -9,8 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- TAG: libs-suporte | PDF -->
+    <!-- TAG: libs-suporte | PDF e login social (Supabase Auth no navegador) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <!-- TAG: chef-modulos | ordem obrigatoria: storage -> feedback visual -> utils -> render -> app -->
     <script defer src="js/storage.service.js"></script>
     <script defer src="js/visual-feedback.service.js"></script>
@@ -46,6 +47,9 @@
             <span class="flabel" id="authModalTag">Entrar</span>
             <h2 id="authModalTitle">Acesse sua conta</h2>
             <p id="authModalDescricao">Entre com seu e-mail e senha.</p>
+
+            <button type="button" class="btn-secondary" id="authGoogleButton" style="width:100%; margin-bottom:14px;">Entrar com Google</button>
+            <p class="flabel" style="text-align:center; margin:0 0 14px;">ou</p>
 
             <label class="flabel" for="authEmailInput">E-mail</label>
             <input type="email" id="authEmailInput" class="premium-input" autocomplete="email" placeholder="seu@email.com">

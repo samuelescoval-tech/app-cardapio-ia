@@ -15,6 +15,8 @@ let sequenciaConsultaVisual = 0;
 window.chefIARecipeReferencesAvailable = false;
 window.chefIAVisualReferencesAvailable = null;
 
+let supabaseClient = null;
+
 async function inicializarAcessoDemo() {
     try {
         const response = await fetch('/api/status');
@@ -22,9 +24,35 @@ async function inicializarAcessoDemo() {
         demoAccessRequired = Boolean(status.demo_access?.required);
         window.chefIARecipeReferencesAvailable = Boolean(status.recipe_references?.configured);
         window.chefIAVisualReferencesAvailable = Boolean(status.visual_references?.configured);
+        inicializarLoginSocial(status.auth?.supabase_url, status.auth?.supabase_anon_key);
     } catch (error) {
         console.warn('Não foi possível verificar acesso demo:', error.message);
     }
+}
+
+// Login social (Google): usa o supabase-js direto no navegador so para esse
+// fluxo (redireciona pro Google e volta com a sessao). O restante do app
+// continua falando so com o nosso backend, como sempre.
+function inicializarLoginSocial(supabaseUrl, supabaseAnonKey) {
+    if (!supabaseUrl || !supabaseAnonKey || !window.supabase?.createClient) return;
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event !== 'SIGNED_IN' || !session?.user) return;
+        salvarSessaoUsuario({ email: session.user.email, accessToken: session.access_token });
+        const modal = document.getElementById('authModal');
+        if (modal && !modal.classList.contains('hidden')) {
+            modal.classList.add('hidden');
+            document.body.classList.remove('modal-open');
+        }
+    });
+}
+
+async function entrarComGoogle() {
+    if (!supabaseClient) return;
+    await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin }
+    });
 }
 
 async function obterDemoAccessKey() {
@@ -198,6 +226,12 @@ function abrirModalConta() {
     function handleKeydown(event) {
         if (event.key === "Escape") fechar();
         if (event.key === "Enter") enviar();
+    }
+
+    const google = document.getElementById('authGoogleButton');
+    if (google) {
+        google.disabled = !supabaseClient;
+        google.onclick = entrarComGoogle;
     }
 
     submit.onclick = enviar;

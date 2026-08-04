@@ -42,16 +42,19 @@ const chaveIAService = criarChaveIAService();
 // e style="" inline em varios lugares, entao script-src/style-src precisam
 // de 'unsafe-inline'; ainda assim, frame-ancestors bloqueia clickjacking e
 // img-src/font-src/connect-src ficam restritos as origens realmente usadas.
+// connect-src inclui a URL do proprio projeto Supabase: o login social
+// (Google) usa o supabase-js direto no navegador, que fala com o Supabase
+// sem passar pelo nosso backend.
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
-            connectSrc: ["'self'"],
+            connectSrc: ["'self'", ...(process.env.SUPABASE_URL ? [process.env.SUPABASE_URL] : [])],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],
             frameAncestors: ["'none'"]
@@ -118,7 +121,14 @@ app.get('/api/status', (req, res) => {
             strategy: "local-first",
             version: "1.0.0"
         },
-        auth: supabaseAuthService.getStatus()
+        auth: {
+            ...supabaseAuthService.getStatus(),
+            // URL e chave anon sao seguras para expor no navegador por design
+            // (RLS protege os dados; a anon key nao da acesso a nada sozinha).
+            // Usadas pelo supabase-js no front-end so para o login social (Google).
+            supabase_url: process.env.SUPABASE_URL || null,
+            supabase_anon_key: process.env.SUPABASE_ANON_KEY || null
+        }
     });
 });
 
