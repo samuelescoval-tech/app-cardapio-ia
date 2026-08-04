@@ -399,8 +399,11 @@ fotos, chave de IA) em vez de telas separadas.
   base legal para o tratamento, retencao de dados;
 - ~~revisar se `DEMO_ACCESS_KEY` deve sair das rotas de auth~~ — **feito em
   2026-07-27**, removido de auth/fornecedores/fotos (ver handoff);
-- ativar protecao contra senha vazada no Supabase Auth (ja listado como
-  pendencia opcional no Plano 14).
+- ~~ativar protecao contra senha vazada no Supabase Auth~~ — **avaliado em
+  2026-07-28**: e recurso pago (Pro plan), nao ativavel no plano gratuito.
+  Registrado como limitacao conhecida, sem acao (ver handoff);
+- ~~revogar execute publico de `rls_auto_enable()`~~ — **feito em
+  2026-07-28** (migracao 005), testado ao vivo sem regressao.
 
 ### 4. Ajustes visuais no app (a definir)
 

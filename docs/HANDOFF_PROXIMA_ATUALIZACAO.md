@@ -445,14 +445,43 @@ ver `003_fix_search_path.sql`). Os outros 3 avisos sao da plataforma, nao do
 codigo deste projeto, e ficam registrados como pendencia de baixa prioridade
 para antes de qualquer lancamento real:
 
-- `rls_auto_enable()` (criada pelo proprio Supabase ao ativar RLS automatico)
-  pode ser chamada por qualquer usuario autenticado ou publico; risco baixo
-  na pratica (so faz sentido em contexto de trigger), mas pode ser travada
-  com um `revoke execute` se quiser reforcar;
-- protecao contra senha vazada (checagem contra bases de senhas vazadas)
-  esta desativada no painel de Authentication - ativar antes de producao,
-  e gratuito;
+- `rls_auto_enable()` (criada pelo proprio Supabase ao ativar RLS automatico):
+  **corrigido em 2026-07-28** (`supabase/migrations/005_revoke_rls_auto_enable.sql`,
+  aplicado pelo usuario no painel). `revoke execute` de `public`, `anon` e
+  `authenticated` — so o Supabase internamente ainda pode chamar a funcao
+  via trigger. Confirmado ao vivo depois: insert/select/delete em
+  `fornecedores` via RLS continuam funcionando normalmente para um usuario
+  de teste descartavel; nada quebrou;
+- protecao contra senha vazada (checagem contra o HaveIBeenPwned): **correcao
+  de registro anterior** — nao e gratuita. Testado ao vivo em 2026-07-28: o
+  toggle em Authentication → Sign In / Providers → Email → "Prevent use of
+  leaked passwords" fica travado com a nota "Only available on Pro plan and
+  above". Como o projeto prioriza plano gratuito (ver decisao do Plano 14),
+  fica registrada como limitacao conhecida, sem acao — nao migrar de plano
+  so por causa disso;
 - (ja registrado antes) "Confirm email" continua ativo, que e o correto.
+
+### CAPTCHA nas rotas de auth: avaliado e adiado (2026-07-28)
+
+Cogitado ativar "Enable Captcha protection" (hCaptcha) no Supabase junto
+com a checagem de senha vazada, mas descartado por enquanto. Motivo:
+
+- as rotas `/api/auth/registrar` e `/api/auth/login` ja tem
+  `limitadorAuth` (20 tentativas/15min por IP, ver Plano 15) — isso ja cobre
+  a maior parte do abuso automatizado (criacao de contas em massa, forca
+  bruta de senha) que o CAPTCHA tambem resolveria;
+- CAPTCHA adiciona friccao real ao usuario (mais uma etapa visivel no
+  cadastro/login) sem beneficio adicional relevante no volume de trafego
+  atual (projeto em fase de teste, poucos usuarios reais);
+- nao e so um toggle: exigiria criar conta no hCaptcha, adicionar o widget
+  no formulario de cadastro/login (`public/index.html`/`app.js`), e propagar
+  o token do captcha do front-end ate `supabaseAuthService.cadastrar/login`
+  no backend — trabalho de implementacao real, nao configuracao.
+
+Reavaliar se: (a) aparecer spam real de contas na lista de usuarios do
+Supabase, ou (b) o trafego crescer significativamente antes do lancamento
+real. Ate la, nao e uma pendencia — foi avaliado e decidido nao fazer, com
+motivo registrado.
 
 ### Plano 14 - fase 5: primeiro deploy na Vercel, crash e correcao (2026-07-26)
 
@@ -661,15 +690,15 @@ continua falando so com o nosso backend, sem mudanca.
 
 ## Proxima acao curta
 
-1. antes de lancar para usuarios reais: ativar protecao contra senha
-   vazada no Supabase, revisar o acesso a `rls_auto_enable()`, e publicar o
-   app do Google em modo "Producao" (hoje esta em "Teste", so e-mails
-   cadastrados como testadores conseguem logar com Google);
+1. antes de lancar para usuarios reais: publicar o app do Google em modo
+   "Producao" (hoje esta em "Teste", so e-mails cadastrados como testadores
+   conseguem logar com Google) — protecao de senha vazada e
+   `rls_auto_enable()` ja resolvidos/registrados, ver secoes acima;
 2. Plano 16, item 2: falta so a interface (tela de perfil onde o usuario
    cola a propria chave Gemini) — backend e testes ja prontos;
-3. Plano 16, item 7: reestruturar a navegacao (apresentacao -> login ->
-   gerador) — reforcado pelo achado acima sobre a hierarquia visual do
-   menu; ainda sem decisao de quando comecar;
+3. Plano 16, item 7 (**CRITICO**, nao so estetico — ver roadmap): reestruturar
+   a navegacao (apresentacao -> login -> gerador); ainda sem decisao de
+   quando comecar;
 4. decidir o novo nome do app (conflito de marca com "Chef IA" ainda sem
    resolucao) antes de mais qualquer coisa voltada a lancamento real;
 5. manter o estado somente neste handoff e no roadmap.
