@@ -1,6 +1,6 @@
 # Roadmap atual - Chef IA Studio
 
-Atualizado em 2026-07-28.
+Atualizado em 2026-08-05.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
@@ -15,12 +15,18 @@ remocao do `DEMO_ACCESS_KEY` das rotas de conta foram feitos em
 Plano 16 (chave Gemini propria por usuario) teve o backend concluido e
 testado com o Supabase real (falta so a interface); e o login social com
 Google foi implementado e testado ao vivo (ver handoff para os detalhes de
-configuracao do Google Cloud + Supabase). Os demais itens do Plano 16
+configuracao do Google Cloud + Supabase). Em 2026-08-05: protecao de senha
+vazada avaliada (pago, nao ativavel no plano gratuito) e `rls_auto_enable()`
+corrigido (Security Advisor do Supabase limpo). Os demais itens do Plano 16
 seguem sem inicio de implementacao.
 
-**Pendencia registrada sem prazo**: o nome "Chef IA" tem conflito de
-marca/patente e precisa ser trocado antes do lancamento real; nenhum nome
-novo foi escolhido ainda (ver detalhes no handoff).
+**Nome novo decidido: "Karamu"** (2026-08-05, ver handoff para todo o
+processo de escolha). Substitui "Chef IA"/"Chef IA Studio" por conflito de
+marca/patente. Execucao da troca no codigo/docs foi adiada de proposito
+pelo usuario para acontecer junto com a reestruturacao de navegacao (item 7
+abaixo) — ate la o projeto continua se chamando "Chef IA Studio" em todo
+lugar. Falta tambem busca formal do INPI por classe antes de registrar a
+marca de verdade.
 
 | Plano | Resultado | Estado |
 |---|---|---|
@@ -453,6 +459,10 @@ login obrigatorio para tudo) — decidir quando esse item for priorizado.
 primeira vez: com a conta logada, o e-mail do usuario passou a ocupar um
 terceiro botao no mesmo nivel visual de "GERADOR IA"/"APRESENTACAO",
 confirmando ao vivo o problema de hierarquia ja descrito acima.
+
+**Combinado com a troca de nome**: quando esse item comecar, a execucao da
+troca de "Chef IA"/"Chef IA Studio" para "Karamu" (decidido em 2026-08-05,
+ver handoff) acontece junto — nao sao dois trabalhos separados.
 
 ## Depois do Plano 13
 

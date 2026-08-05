@@ -1,6 +1,6 @@
 # Handoff - Chef IA Studio
 
-Atualizado em 2026-07-28.
+Atualizado em 2026-08-05.
 
 ## Estado em uma frase
 
@@ -11,9 +11,11 @@ concluidos. O Plano 15 (auditoria geral, tres rodadas) e a remocao do
 `DEMO_ACCESS_KEY` das rotas de conta foram feitos em 2026-07-27. Em
 2026-07-28: item 2 do Plano 16 (chave Gemini propria por usuario,
 so backend) e login social com Google implementados e testados ao vivo
-(ver secoes abaixo). **Pendencia importante sem prazo**: o nome "Chef IA"
-tem conflito de marca/patente e precisa mudar antes do lancamento real,
-ainda sem nome novo escolhido.
+(ver secoes abaixo). **Nome novo decidido em 2026-08-05: "Karamu"** (troca
+de "Chef IA" por conflito de marca/patente) — decisao registrada, execucao
+da troca no codigo/docs adiada de proposito para junto da reestruturacao
+de navegacao (Plano 16, item 7). Ate la, o projeto continua sendo chamado
+de "Chef IA Studio" no codigo e nestes documentos.
 
 ## Arquitetura atual
 
@@ -688,6 +690,36 @@ continua falando so com o nosso backend, sem mudanca.
   a necessidade da reestruturacao ja planejada (apresentacao -> login ->
   gerador, com a conta tratada como status, nao como aba de navegacao).
 
+### Nome novo escolhido: "Karamu" (2026-08-05)
+
+Resolvida a pendencia de conflito de marca/patente com "Chef IA" (ver
+Plano 15/16 mais acima). Processo: brainstorm de nomes compostos por raizes
+de idiomas diferentes (portugues/latim, arabe, turco, frances, sanscrito,
+japones, suaili), testando cada candidato via busca na web antes de
+apresentar — varias colisoes reais encontradas nesse processo (Convivia,
+Saboria, Cardápia e Nutrivia ja existem como apps no mesmo nicho de
+comida/eventos/IA; Sofra, Hostly, Gatherly, Feastify, Utsav e Bereket
+tambem colidem forte). Shortlist final: Karamu (suaili, "banquete/festa")
+vs Convive (frances, "comensal"). O usuario fez a busca real no INPI
+(busca.inpi.gov.br) em "Convive": so achou marca de administradora de
+condominios, uma extinta e duas com pedido indeferido, classe nao
+relacionada — nao seria problema, mas decidiu por Karamu mesmo assim
+("Karamu" tambem sem nada registrado no INPI).
+
+Decidido explicitamente **nao** usar "Chef Karamu": juntar de volta a
+palavra generica problematica ("Chef") enfraqueceria a marca (uma palavra
+unica e distintiva sozinha e mais forte juridicamente) e soaria mais como
+nome de uma pessoa/chef do que de um produto.
+
+**Forma final confirmada: "Karamu" sozinho, sem "Studio".** Execucao da
+troca (README, estes documentos, texto visivel em `public/index.html`,
+`package.json`, e opcionalmente os nomes ja criados no Google Cloud/OAuth
+que usam o placeholder neutro `app-cardapio-ia`) foi **adiada de proposito
+pelo usuario** para acontecer junto com a reestruturacao de navegacao
+(Plano 16, item 7) — nao fazer a troca antes disso sem o usuario pedir.
+Falta ainda: busca formal no INPI por classe (provavel NCL 42, possivelmente
+9/35/41) antes de registrar de verdade a marca ou comprar dominio.
+
 ## Proxima acao curta
 
 1. antes de lancar para usuarios reais: publicar o app do Google em modo
@@ -697,8 +729,10 @@ continua falando so com o nosso backend, sem mudanca.
 2. Plano 16, item 2: falta so a interface (tela de perfil onde o usuario
    cola a propria chave Gemini) — backend e testes ja prontos;
 3. Plano 16, item 7 (**CRITICO**, nao so estetico — ver roadmap): reestruturar
-   a navegacao (apresentacao -> login -> gerador); ainda sem decisao de
-   quando comecar;
-4. decidir o novo nome do app (conflito de marca com "Chef IA" ainda sem
-   resolucao) antes de mais qualquer coisa voltada a lancamento real;
+   a navegacao (apresentacao -> login -> gerador) **e, junto, executar a
+   troca de nome para "Karamu"** (ja decidido em 2026-08-05, so falta
+   executar) — ainda sem decisao de quando comecar;
+4. antes de registrar a marca/comprar dominio de verdade: fazer a busca
+   formal do INPI por classe para "Karamu" (so foram feitas buscas pontuais
+   ate agora);
 5. manter o estado somente neste handoff e no roadmap.
