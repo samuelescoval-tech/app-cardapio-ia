@@ -1,21 +1,23 @@
 # Handoff - Chef IA Studio
 
-Atualizado em 2026-08-05.
+Atualizado em 2026-08-06.
 
 ## Estado em uma frase
 
 O Chef IA Studio esta em producao na Vercel, com contas de usuario reais
 (Supabase Auth, agora com login por e-mail/senha **e** login social com
-Google), fornecedores e fotos proprias por usuario; os Planos 1 a 14 estao
-concluidos. O Plano 15 (auditoria geral, tres rodadas) e a remocao do
-`DEMO_ACCESS_KEY` das rotas de conta foram feitos em 2026-07-27. Em
-2026-07-28: item 2 do Plano 16 (chave Gemini propria por usuario,
-so backend) e login social com Google implementados e testados ao vivo
-(ver secoes abaixo). **Nome novo decidido em 2026-08-05: "Karamu"** (troca
-de "Chef IA" por conflito de marca/patente) — decisao registrada, execucao
-da troca no codigo/docs adiada de proposito para junto da reestruturacao
-de navegacao (Plano 16, item 7). Ate la, o projeto continua sendo chamado
-de "Chef IA Studio" no codigo e nestes documentos.
+Google), fornecedores, fotos e precos proprios por usuario; os Planos 1 a
+14 estao concluidos. O Plano 15 (auditoria geral, tres rodadas) e a
+remocao do `DEMO_ACCESS_KEY` das rotas de conta foram feitos em
+2026-07-27. Em 2026-07-28: item 2 do Plano 16 (chave Gemini propria por
+usuario, so backend) e login social com Google implementados e testados
+ao vivo. Em 2026-08-06: item 6 do Plano 16 (precos proprios por usuario +
+exportacao CSV, so backend) implementado e testado ao vivo (ver secoes
+abaixo). **Nome novo decidido em 2026-08-05: "Karamu"** (troca de "Chef
+IA" por conflito de marca/patente) — decisao registrada, execucao da
+troca no codigo/docs adiada de proposito para junto da reestruturacao de
+navegacao (Plano 16, item 7). Ate la, o projeto continua sendo chamado de
+"Chef IA Studio" no codigo e nestes documentos.
 
 ## Arquitetura atual
 
@@ -140,9 +142,9 @@ resposta de /api/status.
 - historico recarregado no navegador;
 - mobile sem overflow horizontal;
 - PDFs A4 pesquisaveis;
-- testes consolidados em seis suites, com 162 verificacoes declaradas (167
+- testes consolidados em seis suites, com 171 verificacoes declaradas (176
   execucoes ao rodar npm test, incluindo subtestes de um loop de cenarios;
-  contagem revalidada em 2026-07-28 apos a chave de IA propria por usuario);
+  contagem revalidada em 2026-08-06 apos precos proprios por usuario);
 - E2E visual com tres de tres imagens aplicadas aos pratos no desktop e mobile,
   sem imagem quebrada ou overflow;
 - ambiente migrado de Pop!_OS para Ubuntu 26.04 LTS em 2026-07-23; npm test e
@@ -720,14 +722,48 @@ pelo usuario** para acontecer junto com a reestruturacao de navegacao
 Falta ainda: busca formal no INPI por classe (provavel NCL 42, possivelmente
 9/35/41) antes de registrar de verdade a marca ou comprar dominio.
 
+### Plano 16, item 6: precos proprios por usuario (2026-08-06)
+
+Implementado por completo no backend (mesmo padrao das outras rotas de
+personalizacao: fornecedores/fotos/chave-ia).
+
+- Nova tabela `precos_usuario` (migracao
+  `supabase/migrations/006_precos_usuario.sql`, aplicada pelo usuario no
+  Supabase): `item`, `unidade`, `preco` (numeric, >= 0), `categoria`
+  (mesma lista de `fornecedores`), `observacoes`, e `fornecedor_id`
+  opcional (FK para `fornecedores`, `on delete set null`). RLS identica ao
+  padrao existente (`auth.uid() = user_id` em select/insert/update/delete).
+- `src/services/personalizacao/precos.service.js`: reaproveita
+  `CATEGORIAS_VALIDAS` de `fornecedores.service.js` em vez de duplicar a
+  lista. Quando `fornecedor_id` e informado, o service confirma que o
+  fornecedor pertence ao mesmo usuario antes de gravar (consulta usando o
+  client escopado pelo token do proprio usuario — a RLS de `fornecedores`
+  ja faz o trabalho de esconder fornecedores de outra pessoa, entao a
+  consulta so "encontra" o registro se for realmente do dono).
+- Rotas em `server.js`: `GET/POST/PUT/DELETE /api/precos` e
+  `GET /api/precos/exportar` — exportacao em CSV com separador `;` e
+  virgula decimal (formato que o Excel brasileiro espera nativamente,
+  sem precisar de configuracao especial na importacao), com BOM UTF-8 no
+  inicio do arquivo para acentos aparecerem corretos no Excel.
+- Testado ao vivo contra o Supabase real (usuario de teste descartavel):
+  criar fornecedor, criar preco vinculado a ele, listar, atualizar,
+  exportar CSV (conferido o conteudo exato), e confirmado que tentar
+  vincular um preco ao fornecedor de **outro** usuario retorna 404
+  corretamente (RLS bloqueando por baixo). Suite completa (171/171
+  declaradas, 176 execucoes) e E2E de galeria revalidados sem regressao.
+- Falta so a interface — mesma situacao das outras rotas de personalizacao
+  (fornecedores/fotos/chave-ia), nenhuma tem tela ainda.
+
 ## Proxima acao curta
 
 1. antes de lancar para usuarios reais: publicar o app do Google em modo
    "Producao" (hoje esta em "Teste", so e-mails cadastrados como testadores
    conseguem logar com Google) — protecao de senha vazada e
    `rls_auto_enable()` ja resolvidos/registrados, ver secoes acima;
-2. Plano 16, item 2: falta so a interface (tela de perfil onde o usuario
-   cola a propria chave Gemini) — backend e testes ja prontos;
+2. interface de perfil unificada: fornecedores, fotos, chave de IA e agora
+   precos estao todos com backend pronto e testado, mas **nenhum tem
+   tela** — quando for construir a UI, vale fazer uma tela de perfil so,
+   nao quatro telas separadas;
 3. Plano 16, item 7 (**CRITICO**, nao so estetico — ver roadmap): reestruturar
    a navegacao (apresentacao -> login -> gerador) **e, junto, executar a
    troca de nome para "Karamu"** (ja decidido em 2026-08-05, so falta

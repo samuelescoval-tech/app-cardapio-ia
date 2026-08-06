@@ -1,6 +1,6 @@
 # Roadmap atual - Chef IA Studio
 
-Atualizado em 2026-08-05.
+Atualizado em 2026-08-06.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
@@ -17,7 +17,9 @@ testado com o Supabase real (falta so a interface); e o login social com
 Google foi implementado e testado ao vivo (ver handoff para os detalhes de
 configuracao do Google Cloud + Supabase). Em 2026-08-05: protecao de senha
 vazada avaliada (pago, nao ativavel no plano gratuito) e `rls_auto_enable()`
-corrigido (Security Advisor do Supabase limpo). Os demais itens do Plano 16
+corrigido (Security Advisor do Supabase limpo). Em 2026-08-06: item 6 do
+Plano 16 (precos proprios por usuario + exportacao CSV) teve o backend
+concluido e testado com o Supabase real. Os demais itens do Plano 16
 seguem sem inicio de implementacao.
 
 **Nome novo decidido: "Karamu"** (2026-08-05, ver handoff para todo o
@@ -430,13 +432,19 @@ abaixo (politicas legais), que ainda nao foi iniciado.
 
 ### 6. Precos proprios por usuario (perfil) e documento de precos
 
-Ideia: permitir que cada usuario cadastre seus proprios precos (por
-fornecedor/ingrediente) no perfil, alem de gerar um documento/lista de
-precos exportavel. Isso resolveria diretamente o risco ja registrado no
-handoff ("Nao existe catalogo regional real de precos", item 4 de "Falhas e
-riscos abertos") de forma personalizada por usuario, em vez de um catalogo
-regional unico e centralizado. Depende da tabela de fornecedores do Plano 14
-(fase 3) como base, adicionando um campo/tabela de preco por item.
+**Backend concluido em 2026-08-06** (ver detalhes completos no handoff).
+Tabela `precos_usuario` (RLS por dono, mesmo padrao das outras tabelas de
+personalizacao), ligada opcionalmente a um fornecedor proprio do usuario
+(`fornecedor_id`, valida que o fornecedor pertence a quem esta criando o
+preco). Rotas `GET/POST/PUT/DELETE /api/precos` e `GET /api/precos/exportar`
+(CSV com separador `;` e virgula decimal, formato que o Excel brasileiro
+espera). Isso resolve diretamente o risco ja registrado no handoff ("Nao
+existe catalogo regional real de precos", item 4 de "Falhas e riscos
+abertos") de forma personalizada por usuario, em vez de um catalogo
+regional unico e centralizado. Testado ao vivo contra o Supabase real,
+incluindo a validacao de que um preco nao pode ser vinculado ao fornecedor
+de outro usuario (404 correto). Falta so a interface — mesma situacao de
+fornecedores/fotos/chave de IA, todos backend-only por enquanto.
 
 ### 7. Reestruturar a navegacao: apresentacao -> login -> app — **CRITICO, nao e so estetica**
 
