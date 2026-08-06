@@ -18,6 +18,7 @@
     <script defer src="js/utils.js"></script>
     <script defer src="js/render.js"></script>
     <script defer src="js/app.js"></script>
+    <script defer src="js/perfil.js"></script>
 </head>
 <body>
 
@@ -272,6 +273,133 @@
 
         <!-- TAG: resultado-ia | Area preenchida por render.js -->
         <div id="resultadoArea" class="hidden" aria-live="polite"></div>
+    </main>
+
+    <!-- TAG: perfil-usuario | Fornecedores, fotos, chave de IA e precos proprios -->
+    <main class="app-container hidden" id="perfilSection">
+        <section class="glass-panel">
+            <h2 class="panel-title"><span>👤</span> Meu Perfil</h2>
+            <p class="field-hint" id="perfilEmailLabel"></p>
+
+            <div class="perfil-tabs">
+                <button type="button" class="perfil-tab active" data-perfil-tab="fornecedores">Fornecedores</button>
+                <button type="button" class="perfil-tab" data-perfil-tab="fotos">Fotos</button>
+                <button type="button" class="perfil-tab" data-perfil-tab="chave-ia">Chave de IA</button>
+                <button type="button" class="perfil-tab" data-perfil-tab="precos">Preços</button>
+            </div>
+
+            <!-- FORNECEDORES -->
+            <div class="perfil-painel active" id="perfilPainelFornecedores">
+                <div id="fornecedoresLista" class="perfil-item-grid"></div>
+                <p class="perfil-vazio hidden" id="fornecedoresVazio">Nenhum fornecedor cadastrado ainda.</p>
+                <h3 class="panel-title" style="font-size:1rem;">Adicionar fornecedor</h3>
+                <div class="form-grid">
+                    <div class="fgroup">
+                        <label class="flabel" for="fornecedorNome">Nome</label>
+                        <input type="text" id="fornecedorNome" class="premium-input" maxlength="120" placeholder="Ex: Hortifruti Central">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="fornecedorCategoria">Categoria</label>
+                        <select id="fornecedorCategoria" class="premium-input">
+                            <option value="">Sem categoria</option>
+                        </select>
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="fornecedorTelefone">Telefone</label>
+                        <input type="text" id="fornecedorTelefone" class="premium-input" maxlength="40" placeholder="Opcional">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="fornecedorEndereco">Endereço</label>
+                        <input type="text" id="fornecedorEndereco" class="premium-input" maxlength="200" placeholder="Opcional">
+                    </div>
+                    <div class="fgroup" style="grid-column: 1 / -1;">
+                        <label class="flabel" for="fornecedorObservacoes">Observações</label>
+                        <input type="text" id="fornecedorObservacoes" class="premium-input" maxlength="500" placeholder="Opcional">
+                    </div>
+                </div>
+                <p class="access-modal-error" id="fornecedorErro" role="alert"></p>
+                <button type="button" class="btn-epic" id="fornecedorSubmit" style="margin-top:14px;">Adicionar Fornecedor</button>
+            </div>
+
+            <!-- FOTOS -->
+            <div class="perfil-painel" id="perfilPainelFotos">
+                <div id="fotosLista" class="perfil-item-grid"></div>
+                <p class="perfil-vazio hidden" id="fotosVazio">Nenhuma foto enviada ainda.</p>
+                <h3 class="panel-title" style="font-size:1rem;">Enviar foto</h3>
+                <div class="form-grid">
+                    <div class="fgroup">
+                        <label class="flabel" for="fotoNomePrato">Nome do prato (opcional)</label>
+                        <input type="text" id="fotoNomePrato" class="premium-input" maxlength="120" placeholder="Ex: Bolo de cenoura">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="fotoArquivo">Arquivo (JPEG, PNG ou WEBP, até 5MB)</label>
+                        <input type="file" id="fotoArquivo" class="premium-input" accept="image/jpeg,image/png,image/webp">
+                    </div>
+                </div>
+                <p class="access-modal-error" id="fotoErro" role="alert"></p>
+                <button type="button" class="btn-epic" id="fotoSubmit" style="margin-top:14px;">Enviar Foto</button>
+            </div>
+
+            <!-- CHAVE DE IA -->
+            <div class="perfil-painel" id="perfilPainelChaveIA">
+                <span class="perfil-status-badge nao-configurada" id="chaveIABadge">Verificando...</span>
+                <p class="field-hint">Cole sua própria chave da API Gemini para usar sua cota pessoal em vez da compartilhada. <a href="https://ai.google.dev/" target="_blank" rel="noopener">Obter chave gratuita</a>.</p>
+                <div class="form-grid">
+                    <div class="fgroup">
+                        <label class="flabel" for="chaveIAInput">Chave Gemini</label>
+                        <input type="password" id="chaveIAInput" class="premium-input" placeholder="Cole sua chave aqui" autocomplete="off">
+                    </div>
+                </div>
+                <p class="access-modal-error" id="chaveIAErro" role="alert"></p>
+                <p class="access-modal-error" id="chaveIAInfo" role="status" style="color: var(--gold-dark);"></p>
+                <div class="access-modal-actions">
+                    <button type="button" class="btn-secondary" id="chaveIARemover">Remover chave</button>
+                    <button type="button" class="btn-epic" id="chaveIASalvar">Salvar Chave</button>
+                </div>
+            </div>
+
+            <!-- PRECOS -->
+            <div class="perfil-painel" id="perfilPainelPrecos">
+                <button type="button" class="btn-secondary btn-small" id="precosExportar" style="margin-bottom:14px;">📄 Exportar CSV</button>
+                <div id="precosLista" class="perfil-item-grid"></div>
+                <p class="perfil-vazio hidden" id="precosVazio">Nenhum preço cadastrado ainda.</p>
+                <h3 class="panel-title" style="font-size:1rem;">Adicionar preço</h3>
+                <div class="form-grid">
+                    <div class="fgroup">
+                        <label class="flabel" for="precoItem">Item</label>
+                        <input type="text" id="precoItem" class="premium-input" maxlength="120" placeholder="Ex: Tomate">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="precoUnidade">Unidade</label>
+                        <input type="text" id="precoUnidade" class="premium-input" maxlength="20" placeholder="Ex: kg, un, L">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="precoValor">Preço (R$)</label>
+                        <input type="number" id="precoValor" class="premium-input" min="0" step="0.01" placeholder="Ex: 8.50">
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="precoCategoria">Categoria</label>
+                        <select id="precoCategoria" class="premium-input">
+                            <option value="">Sem categoria</option>
+                        </select>
+                    </div>
+                    <div class="fgroup">
+                        <label class="flabel" for="precoFornecedor">Fornecedor</label>
+                        <select id="precoFornecedor" class="premium-input">
+                            <option value="">Sem fornecedor</option>
+                        </select>
+                    </div>
+                    <div class="fgroup" style="grid-column: 1 / -1;">
+                        <label class="flabel" for="precoObservacoes">Observações</label>
+                        <input type="text" id="precoObservacoes" class="premium-input" maxlength="500" placeholder="Opcional">
+                    </div>
+                </div>
+                <p class="access-modal-error" id="precoErro" role="alert"></p>
+                <button type="button" class="btn-epic" id="precoSubmit" style="margin-top:14px;">Adicionar Preço</button>
+            </div>
+
+            <button type="button" class="btn-secondary" id="perfilSair" style="margin-top:30px;">Sair da conta</button>
+        </section>
     </main>
 
    <!-- TAG: pitch-comercial | Apresentacao do produto -->

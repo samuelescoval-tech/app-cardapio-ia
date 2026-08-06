@@ -46,7 +46,9 @@ const precosService = criarPrecosService();
 // img-src/font-src/connect-src ficam restritos as origens realmente usadas.
 // connect-src inclui a URL do proprio projeto Supabase: o login social
 // (Google) usa o supabase-js direto no navegador, que fala com o Supabase
-// sem passar pelo nosso backend.
+// sem passar pelo nosso backend. img-src tambem inclui essa URL: as fotos
+// de prato do usuario (Plano 14, fase 4) sao exibidas via URL assinada do
+// Supabase Storage, que fica nesse mesmo dominio.
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -55,7 +57,7 @@ app.use(helmet({
             scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
-            imgSrc: ["'self'", "data:", "https://images.unsplash.com"],
+            imgSrc: ["'self'", "data:", "https://images.unsplash.com", ...(process.env.SUPABASE_URL ? [process.env.SUPABASE_URL] : [])],
             connectSrc: ["'self'", ...(process.env.SUPABASE_URL ? [process.env.SUPABASE_URL] : [])],
             objectSrc: ["'none'"],
             baseUri: ["'self'"],

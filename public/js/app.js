@@ -163,7 +163,7 @@ function atualizarBotaoConta() {
 function abrirModalConta() {
     const sessao = obterSessaoUsuario();
     if (sessao) {
-        if (confirm(`Sair da conta ${sessao.email}?`)) encerrarSessaoUsuario();
+        switchView('perfil');
         return;
     }
     authModoCadastro = false;
@@ -292,27 +292,25 @@ setInterval(() => {
     }
 }, 3500);
 
-/* TAG: navegacao-app-pitch */
+/* TAG: navegacao-app-pitch-perfil */
 function switchView(view) {
-    const app = document.getElementById('appSection');
-    const pitch = document.getElementById('pitchSection');
-    const btnApp = document.getElementById('btnApp');
-    const btnPitch = document.getElementById('btnPitch');
+    const secoes = { app: 'appSection', pitch: 'pitchSection', perfil: 'perfilSection' };
+    const botoes = { app: 'btnApp', pitch: 'btnPitch' };
 
-    if (view === 'app') {
-        app.classList.remove('hidden');
-        pitch.classList.add('hidden');
-        btnApp.classList.add('active');
-        btnPitch.classList.remove('active');
-        btnApp.setAttribute('aria-pressed', 'true');
-        btnPitch.setAttribute('aria-pressed', 'false');
-    } else {
-        app.classList.add('hidden');
-        pitch.classList.remove('hidden');
-        btnApp.classList.remove('active');
-        btnPitch.classList.add('active');
-        btnApp.setAttribute('aria-pressed', 'false');
-        btnPitch.setAttribute('aria-pressed', 'true');
+    for (const [nome, idSecao] of Object.entries(secoes)) {
+        const secao = document.getElementById(idSecao);
+        if (secao) secao.classList.toggle('hidden', nome !== view);
+    }
+    for (const [nome, idBotao] of Object.entries(botoes)) {
+        const botao = document.getElementById(idBotao);
+        if (!botao) continue;
+        const ativo = nome === view;
+        botao.classList.toggle('active', ativo);
+        botao.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+    }
+
+    if (view === 'perfil' && window.chefIAPerfil) {
+        window.chefIAPerfil.abrir();
     }
 }
 

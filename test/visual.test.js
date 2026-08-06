@@ -451,8 +451,8 @@ test('layout mobile reduz a primeira dobra e preserva alvos de toque', () => {
 test('navegacao atualiza estado acessivel', () => {
     const app = ler('public/js/app.js');
 
-    assert.match(app, /btnApp\.setAttribute\('aria-pressed', 'true'\)/);
-    assert.match(app, /btnPitch\.setAttribute\('aria-pressed', 'true'\)/);
+    assert.match(app, /const botoes = \{ app: 'btnApp', pitch: 'btnPitch' \}/);
+    assert.match(app, /botao\.setAttribute\('aria-pressed', ativo \? 'true' : 'false'\)/);
     assert.match(app, /button\?\.setAttribute\('aria-expanded', String\(!collapsed\)\)/);
 });
 
