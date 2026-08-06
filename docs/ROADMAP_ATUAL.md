@@ -13,14 +13,16 @@ corrigido em 2026-07-26). Plano 15 (auditoria geral, tres rodadas) e a
 remocao do `DEMO_ACCESS_KEY` das rotas de conta foram feitos em
 2026-07-27 — ver secao do Plano 15 para detalhes. Em 2026-07-28: item 2 do
 Plano 16 (chave Gemini propria por usuario) teve o backend concluido e
-testado com o Supabase real (falta so a interface); e o login social com
-Google foi implementado e testado ao vivo (ver handoff para os detalhes de
-configuracao do Google Cloud + Supabase). Em 2026-08-05: protecao de senha
-vazada avaliada (pago, nao ativavel no plano gratuito) e `rls_auto_enable()`
-corrigido (Security Advisor do Supabase limpo). Em 2026-08-06: item 6 do
-Plano 16 (precos proprios por usuario + exportacao CSV) teve o backend
-concluido e testado com o Supabase real. Os demais itens do Plano 16
-seguem sem inicio de implementacao.
+testado com o Supabase real; e o login social com Google foi implementado
+e testado ao vivo (ver handoff para os detalhes de configuracao do Google
+Cloud + Supabase). Em 2026-08-05: protecao de senha vazada avaliada (pago,
+nao ativavel no plano gratuito) e `rls_auto_enable()` corrigido (Security
+Advisor do Supabase limpo). Em 2026-08-06: item 6 do Plano 16 (precos
+proprios por usuario + exportacao CSV) concluido e testado com o Supabase
+real, **e a interface unificada de perfil** (fornecedores + fotos + chave
+de IA + precos numa tela so, dentro do app) implementada e testada ao
+vivo — ver handoff para detalhes. Os demais itens do Plano 16 seguem sem
+inicio de implementacao.
 
 **Nome novo decidido: "Karamu"** (2026-08-05, ver handoff para todo o
 processo de escolha). Substitui "Chef IA"/"Chef IA Studio" por conflito de
@@ -392,11 +394,9 @@ em texto puro no banco), rotas `GET/PUT/DELETE /api/perfil/chave-ia`, e
 `DEMO_ACCESS_KEY`) quando ela estiver configurada — cai de volta pra chave
 compartilhada automaticamente quando nao estiver. Testado ao vivo contra
 o Supabase real com um usuario de teste descartavel (geracao real de
-cardapio usando a chave propria, sem senha demo). Falta so a interface:
-hoje nao existe nenhuma tela onde o usuario cola a propria chave (mesma
-situacao de fornecedores/fotos, que tambem sao backend-only ainda) — a
-proxima etapa natural e uma tela de perfil que junte os tres (fornecedores,
-fotos, chave de IA) em vez de telas separadas.
+cardapio usando a chave propria, sem senha demo). **Interface concluida em
+2026-08-06**, junto com fornecedores/fotos/precos, numa tela de perfil so
+(ver handoff e item 6 abaixo).
 
 ### 3. Politicas para protecao legal e de dados (a implementar antes do lancamento real)
 
@@ -443,8 +443,16 @@ existe catalogo regional real de precos", item 4 de "Falhas e riscos
 abertos") de forma personalizada por usuario, em vez de um catalogo
 regional unico e centralizado. Testado ao vivo contra o Supabase real,
 incluindo a validacao de que um preco nao pode ser vinculado ao fornecedor
-de outro usuario (404 correto). Falta so a interface — mesma situacao de
-fornecedores/fotos/chave de IA, todos backend-only por enquanto.
+de outro usuario (404 correto).
+
+**Interface unificada concluida em 2026-08-06** — nova secao `#perfilSection`
+em `public/index.html` (`public/js/perfil.js`), com 4 abas (Fornecedores,
+Fotos, Chave de IA, Precos), acessivel pelo botao de conta no menu (nao
+muda a hierarquia da navegacao — isso continua no item 7). Todo o CRUD via
+fetch para as rotas ja existentes, upload de foto lendo o arquivo como
+data URL no navegador, exportacao do CSV de precos via `Blob`. Testado ao
+vivo (Chrome headless, usuario descartavel): os quatro paineis funcionam
+ponta a ponta, zero erros de console. Ver handoff para detalhes completos.
 
 ### 7. Reestruturar a navegacao: apresentacao -> login -> app — **CRITICO, nao e so estetica**
 

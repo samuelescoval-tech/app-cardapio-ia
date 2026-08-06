@@ -6,18 +6,20 @@ Atualizado em 2026-08-06.
 
 O Chef IA Studio esta em producao na Vercel, com contas de usuario reais
 (Supabase Auth, agora com login por e-mail/senha **e** login social com
-Google), fornecedores, fotos e precos proprios por usuario; os Planos 1 a
+Google) e uma tela de perfil unificada onde o usuario gerencia
+fornecedores, fotos, chave de IA propria e precos proprios; os Planos 1 a
 14 estao concluidos. O Plano 15 (auditoria geral, tres rodadas) e a
 remocao do `DEMO_ACCESS_KEY` das rotas de conta foram feitos em
 2026-07-27. Em 2026-07-28: item 2 do Plano 16 (chave Gemini propria por
-usuario, so backend) e login social com Google implementados e testados
-ao vivo. Em 2026-08-06: item 6 do Plano 16 (precos proprios por usuario +
-exportacao CSV, so backend) implementado e testado ao vivo (ver secoes
-abaixo). **Nome novo decidido em 2026-08-05: "Karamu"** (troca de "Chef
-IA" por conflito de marca/patente) — decisao registrada, execucao da
-troca no codigo/docs adiada de proposito para junto da reestruturacao de
-navegacao (Plano 16, item 7). Ate la, o projeto continua sendo chamado de
-"Chef IA Studio" no codigo e nestes documentos.
+usuario) e login social com Google implementados e testados ao vivo. Em
+2026-08-06: item 6 do Plano 16 (precos proprios por usuario + exportacao
+CSV) e a interface unificada de perfil (fornecedores/fotos/chave-ia/precos
+numa tela so) implementados e testados ao vivo (ver secoes abaixo).
+**Nome novo decidido em 2026-08-05: "Karamu"** (troca de "Chef IA" por
+conflito de marca/patente) — decisao registrada, execucao da troca no
+codigo/docs adiada de proposito para junto da reestruturacao de navegacao
+(Plano 16, item 7). Ate la, o projeto continua sendo chamado de "Chef IA
+Studio" no codigo e nestes documentos.
 
 ## Arquitetura atual
 
@@ -754,21 +756,59 @@ personalizacao: fornecedores/fotos/chave-ia).
 - Falta so a interface — mesma situacao das outras rotas de personalizacao
   (fornecedores/fotos/chave-ia), nenhuma tem tela ainda.
 
+### Interface unificada de perfil (2026-08-06)
+
+Construida a tela de perfil que faltava para fornecedores, fotos, chave de
+IA e precos — as quatro personalizacoes do Plano 14/16 que so tinham
+backend ate agora ganharam UI de uma vez so, em vez de quatro telas
+separadas (era a recomendacao ja registrada aqui mesmo).
+
+- **Onde fica**: nao mudou a hierarquia da navegacao (isso continua
+  reservado para o Plano 16 item 7, critico). O botao de conta (email do
+  usuario) agora abre essa tela em vez de perguntar login/logout na hora;
+  `switchView()` em `app.js` ganhou um terceiro estado ('perfil'), ao lado
+  de 'app'/'pitch'. O botao "Sair da conta" ficou dentro da propria tela.
+- **HTML**: nova secao `#perfilSection` em `public/index.html`, com 4 abas
+  (Fornecedores, Fotos, Chave de IA, Precos) usando as mesmas classes CSS
+  ja existentes (`glass-panel`, `form-grid`, `premium-input`, etc.) mais um
+  punhado de classes novas e pequenas em `form.css`
+  (`.perfil-tab`, `.perfil-item-card`, `.perfil-status-badge`).
+- **JS**: novo arquivo `public/js/perfil.js` (carregado depois de
+  `app.js`), com todo o CRUD via fetch para as rotas ja existentes
+  (`/api/fornecedores`, `/api/fotos`, `/api/perfil/chave-ia`,
+  `/api/precos`), incluindo upload de foto (le o arquivo como data URL no
+  navegador antes de enviar) e exportacao do CSV de precos (baixa via
+  `Blob`/`URL.createObjectURL`, sem precisar de link direto — a rota exige
+  token, entao nao daria pra usar um `<a href>` simples).
+- **CSP ajustada**: as miniaturas de foto vem de URL assinada do Supabase
+  Storage (mesmo dominio do projeto), e `img-src` so tinha `'self'`,
+  `data:` e o Unsplash — sem a URL do Supabase, as fotos ficariam
+  quebradas. Corrigido em `server.js` junto desta mudanca.
+- **Achado durante os testes**: um teste em `test/visual.test.js` fazia
+  checagem literal de texto-fonte (`btnApp.setAttribute('aria-pressed',
+  'true')`) que quebrou quando o `switchView()` foi reescrito de if/else
+  para um loop (mesmo comportamento, codigo diferente). Ajustado o teste
+  para checar o padrao novo em vez de reverter uma simplificacao razoavel.
+- Testado ao vivo (Chrome headless, usuario de teste descartavel):
+  criar fornecedor (aparece na lista e no select de fornecedor dos
+  precos), enviar foto (aparece com miniatura), salvar chave de IA (badge
+  muda para "configurada"), criar preco vinculado ao fornecedor (aparece
+  com valor formatado em R$), trocar de aba, remover a chave de IA (badge
+  volta), exportar CSV (conteudo conferido). Zero erros/avisos de console
+  em todo o fluxo. Suite completa (176/176) e E2E de galeria revalidados
+  sem regressao.
+
 ## Proxima acao curta
 
 1. antes de lancar para usuarios reais: publicar o app do Google em modo
    "Producao" (hoje esta em "Teste", so e-mails cadastrados como testadores
    conseguem logar com Google) — protecao de senha vazada e
    `rls_auto_enable()` ja resolvidos/registrados, ver secoes acima;
-2. interface de perfil unificada: fornecedores, fotos, chave de IA e agora
-   precos estao todos com backend pronto e testado, mas **nenhum tem
-   tela** — quando for construir a UI, vale fazer uma tela de perfil so,
-   nao quatro telas separadas;
-3. Plano 16, item 7 (**CRITICO**, nao so estetico — ver roadmap): reestruturar
+2. Plano 16, item 7 (**CRITICO**, nao so estetico — ver roadmap): reestruturar
    a navegacao (apresentacao -> login -> gerador) **e, junto, executar a
    troca de nome para "Karamu"** (ja decidido em 2026-08-05, so falta
    executar) — ainda sem decisao de quando comecar;
-4. antes de registrar a marca/comprar dominio de verdade: fazer a busca
+3. antes de registrar a marca/comprar dominio de verdade: fazer a busca
    formal do INPI por classe para "Karamu" (so foram feitas buscas pontuais
    ate agora);
-5. manter o estado somente neste handoff e no roadmap.
+4. manter o estado somente neste handoff e no roadmap.
