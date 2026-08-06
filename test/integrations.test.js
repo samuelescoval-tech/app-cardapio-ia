@@ -664,3 +664,143 @@ test("GET/PUT/DELETE /api/perfil/chave-ia exigem token de acesso", async () => {
   assert.equal(respDelete.statusCode, 401);
 });
 }
+
+// -----------------------------------------------------------------------------
+// Origem: Plano 16, item 6 - precos proprios por usuario (por fornecedor/item)
+// -----------------------------------------------------------------------------
+{
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { criarPrecosService, ErroPreco } = require("../src/services/personalizacao/precos.service");
+const { listarPrecosHandler, criarPrecoHandler, atualizarPrecoHandler, removerPrecoHandler, exportarPrecosHandler } = require("../server");
+
+function respostaFake() {
+  return {
+    statusCode: 200,
+    body: null,
+    headers: {},
+    setHeader(nome, valor) { this.headers[nome] = valor; return this; },
+    status(code) { this.statusCode = code; return this; },
+    json(body) { this.body = body; return this; },
+    send(body) { this.body = body; return this; }
+  };
+}
+
+function requisicaoFake(body, headers = {}, params = {}) {
+  return { body, params, get(nome) { return headers[nome.toLowerCase()]; } };
+}
+
+function builderFake(resultado) {
+  const builder = {
+    select() { return builder; },
+    insert() { return builder; },
+    update() { return builder; },
+    delete() { return builder; },
+    eq() { return builder; },
+    order() { return builder; },
+    single: async () => resultado,
+    maybeSingle: async () => resultado,
+    then(resolve, reject) { return Promise.resolve(resultado).then(resolve, reject); }
+  };
+  return builder;
+}
+
+function clienteFake(resultado, resultadoFornecedor) {
+  return {
+    from(tabela) {
+      if (tabela === "fornecedores") return builderFake(resultadoFornecedor ?? { data: { id: "f1" }, error: null });
+      return builderFake(resultado);
+    }
+  };
+}
+
+test("GET /api/precos exige token de acesso", async () => {
+  const response = respostaFake();
+  await listarPrecosHandler(requisicaoFake(null), response);
+  assert.equal(response.statusCode, 401);
+});
+
+test("precosService rejeita item vazio, unidade ausente e preco invalido", async () => {
+  const service = criarPrecosService({ criarClientePorToken: () => clienteFake({ data: {}, error: null }) });
+  await assert.rejects(() => service.criar("tok", "u1", { unidade: "kg", preco: 5 }), ErroPreco);
+  await assert.rejects(() => service.criar("tok", "u1", { item: "Tomate", preco: 5 }), ErroPreco);
+  await assert.rejects(() => service.criar("tok", "u1", { item: "Tomate", unidade: "kg", preco: -1 }), ErroPreco);
+  await assert.rejects(() => service.criar("tok", "u1", { item: "Tomate", unidade: "kg", preco: "abc" }), ErroPreco);
+});
+
+test("precosService rejeita categoria invalida", async () => {
+  const service = criarPrecosService({ criarClientePorToken: () => clienteFake({ data: {}, error: null }) });
+  await assert.rejects(
+    () => service.criar("tok", "u1", { item: "Tomate", unidade: "kg", preco: 5, categoria: "Eletronicos" }),
+    ErroPreco
+  );
+});
+
+test("precosService rejeita fornecedor_id que nao pertence ao usuario", async () => {
+  const service = criarPrecosService({
+    criarClientePorToken: () => clienteFake({ data: {}, error: null }, { data: null, error: null })
+  });
+  await assert.rejects(
+    () => service.criar("tok", "u1", { item: "Tomate", unidade: "kg", preco: 5, fornecedor_id: "de-outro-usuario" }),
+    ErroPreco
+  );
+});
+
+test("precosService cria, lista, atualiza e remove com sucesso", async () => {
+  const registro = { id: "p1", user_id: "u1", item: "Tomate", unidade: "kg", preco: 8.5, categoria: "Hortifruti" };
+
+  const servicoCriar = criarPrecosService({ criarClientePorToken: () => clienteFake({ data: registro, error: null }) });
+  const criado = await servicoCriar.criar("tok", "u1", { item: "Tomate", unidade: "kg", preco: 8.5, categoria: "Hortifruti" });
+  assert.equal(criado.id, "p1");
+
+  const servicoListar = criarPrecosService({ criarClientePorToken: () => clienteFake({ data: [registro], error: null }) });
+  const lista = await servicoListar.listar("tok");
+  assert.equal(lista.length, 1);
+
+  const servicoAtualizar = criarPrecosService({ criarClientePorToken: () => clienteFake({ data: { ...registro, preco: 9 }, error: null }) });
+  const atualizado = await servicoAtualizar.atualizar("tok", "p1", { preco: 9 });
+  assert.equal(atualizado.preco, 9);
+
+  const servicoRemover = criarPrecosService({ criarClientePorToken: () => clienteFake({ data: registro, error: null }) });
+  const removido = await servicoRemover.remover("tok", "p1");
+  assert.equal(removido.removido, true);
+});
+
+test("precosService retorna 404 ao atualizar/remover preco que nao existe (ou nao e do usuario)", async () => {
+  const service = criarPrecosService({ criarClientePorToken: () => clienteFake({ data: null, error: null }) });
+  await assert.rejects(() => service.atualizar("tok", "inexistente", { preco: 1 }), ErroPreco);
+  await assert.rejects(() => service.remover("tok", "inexistente"), ErroPreco);
+});
+
+test("precosService.exportarCSV gera cabecalho e linhas com separador ; e virgula decimal", () => {
+  const service = criarPrecosService({ criarClientePorToken: () => clienteFake({ data: {}, error: null }) });
+  const csv = service.exportarCSV([
+    { item: "Tomate", categoria: "Hortifruti", unidade: "kg", preco: 8.5, observacoes: null },
+    { item: 'Água "com gás"', categoria: null, unidade: "un", preco: 3, observacoes: "trazer gelada" }
+  ]);
+  const linhas = csv.split("\r\n");
+  assert.equal(linhas[0], '"Item";"Categoria";"Unidade";"Preco";"Observacoes"');
+  assert.match(linhas[1], /"Tomate".*"8,50"/);
+  assert.match(linhas[2], /""com gás""/);
+});
+
+test("POST/PUT/DELETE /api/precos exigem token de acesso", async () => {
+  const respPost = respostaFake();
+  await criarPrecoHandler(requisicaoFake({ item: "Tomate", unidade: "kg", preco: 5 }), respPost);
+  assert.equal(respPost.statusCode, 401);
+
+  const respPut = respostaFake();
+  await atualizarPrecoHandler(requisicaoFake({ preco: 6 }, {}, { id: "p1" }), respPut);
+  assert.equal(respPut.statusCode, 401);
+
+  const respDelete = respostaFake();
+  await removerPrecoHandler(requisicaoFake(null, {}, { id: "p1" }), respDelete);
+  assert.equal(respDelete.statusCode, 401);
+});
+
+test("GET /api/precos/exportar exige token de acesso", async () => {
+  const response = respostaFake();
+  await exportarPrecosHandler(requisicaoFake(null), response);
+  assert.equal(response.statusCode, 401);
+});
+}

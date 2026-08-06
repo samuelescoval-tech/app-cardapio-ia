@@ -23,6 +23,7 @@ const { criarSupabaseAuthService, ErroAutenticacao } = require('./src/services/a
 const { criarFornecedoresService, ErroFornecedor } = require('./src/services/personalizacao/fornecedores.service');
 const { criarFotosService, ErroFoto } = require('./src/services/personalizacao/fotos.service');
 const { criarChaveIAService, ErroChaveIA } = require('./src/services/personalizacao/chave-ia.service');
+const { criarPrecosService, ErroPreco } = require('./src/services/personalizacao/precos.service');
 
 const app = express();
 // Necessario para o express-rate-limit identificar o IP real do cliente
@@ -37,6 +38,7 @@ const supabaseAuthService = criarSupabaseAuthService();
 const fornecedoresService = criarFornecedoresService();
 const fotosService = criarFotosService();
 const chaveIAService = criarChaveIAService();
+const precosService = criarPrecosService();
 
 // Cabecalhos de seguranca (Plano 15, auditoria). O front-end usa onclick=""
 // e style="" inline em varios lugares, entao script-src/style-src precisam
@@ -195,7 +197,7 @@ function obterToken(req) {
 }
 
 function tratarErroPersonalizacao(error, res, mensagemPadrao) {
-    if (error instanceof ErroAutenticacao || error instanceof ErroFornecedor || error instanceof ErroFoto || error instanceof ErroChaveIA) {
+    if (error instanceof ErroAutenticacao || error instanceof ErroFornecedor || error instanceof ErroFoto || error instanceof ErroChaveIA || error instanceof ErroPreco) {
         return res.status(error.statusCode).json({ ok: false, error: error.message });
     }
     console.error("❌ Erro na personalizacao:", error.message);
@@ -324,6 +326,70 @@ async function removerChaveIAHandler(req, res) {
 app.get('/api/perfil/chave-ia', limitadorPersonalizacao, obterStatusChaveIAHandler);
 app.put('/api/perfil/chave-ia', limitadorPersonalizacao, salvarChaveIAHandler);
 app.delete('/api/perfil/chave-ia', limitadorPersonalizacao, removerChaveIAHandler);
+
+async function listarPrecosHandler(req, res) {
+    try {
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const precos = await precosService.listar(token);
+        res.json({ ok: true, precos });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel listar os precos.");
+    }
+}
+
+async function criarPrecoHandler(req, res) {
+    try {
+        const token = obterToken(req);
+        const usuario = await supabaseAuthService.obterUsuario(token);
+        const preco = await precosService.criar(token, usuario.usuario_id, req.body);
+        res.json({ ok: true, preco });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel criar o preco.");
+    }
+}
+
+async function atualizarPrecoHandler(req, res) {
+    try {
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const preco = await precosService.atualizar(token, req.params.id, req.body);
+        res.json({ ok: true, preco });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel atualizar o preco.");
+    }
+}
+
+async function removerPrecoHandler(req, res) {
+    try {
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const resultado = await precosService.remover(token, req.params.id);
+        res.json({ ok: true, ...resultado });
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel remover o preco.");
+    }
+}
+
+async function exportarPrecosHandler(req, res) {
+    try {
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const precos = await precosService.listar(token);
+        const csv = precosService.exportarCSV(precos);
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', 'attachment; filename="precos.csv"');
+        res.send('﻿' + csv);
+    } catch (error) {
+        tratarErroPersonalizacao(error, res, "Nao foi possivel exportar os precos.");
+    }
+}
+
+app.get('/api/precos', limitadorPersonalizacao, listarPrecosHandler);
+app.post('/api/precos', limitadorPersonalizacao, criarPrecoHandler);
+app.put('/api/precos/:id', limitadorPersonalizacao, atualizarPrecoHandler);
+app.delete('/api/precos/:id', limitadorPersonalizacao, removerPrecoHandler);
+app.get('/api/precos/exportar', limitadorPersonalizacao, exportarPrecosHandler);
 
 async function obterChaveIAUsuarioOuNulo(req) {
     const token = obterToken(req);
@@ -492,5 +558,6 @@ Object.assign(module.exports, {
     registrarHandler, loginHandler, perfilHandler,
     listarFornecedoresHandler, criarFornecedorHandler, atualizarFornecedorHandler, removerFornecedorHandler,
     listarFotosHandler, criarFotoHandler, removerFotoHandler,
-    obterStatusChaveIAHandler, salvarChaveIAHandler, removerChaveIAHandler
+    obterStatusChaveIAHandler, salvarChaveIAHandler, removerChaveIAHandler,
+    listarPrecosHandler, criarPrecoHandler, atualizarPrecoHandler, removerPrecoHandler, exportarPrecosHandler
 });
