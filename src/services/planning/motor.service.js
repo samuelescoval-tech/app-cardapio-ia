@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CHEF IA STUDIO | MOTOR LOCAL DE EVENTOS
+   KARAMU | MOTOR LOCAL DE EVENTOS
    TAG: motor-matematico, planejamento-local, calculos-operacionais
    --------------------------------------------------------------------------
    Responsabilidade: calcular numeros operacionais antes da IA.
@@ -76,7 +76,7 @@ function calcularMotorEvento(evento = {}, diretrizCulinaria = null) {
       tema: evento.tema || "Nao informado",
       orcamento_base: evento.orcamentoBase || "Nao informado",
       horario_inicio: evento.horarioInicio || "Nao informado",
-      formato_servico: evento.formatoServico || "A definir pelo Chef IA",
+      formato_servico: evento.formatoServico || "A definir pelo Karamu",
       faixa_etaria: evento.faixaEtaria || "Publico misto",
       infraestrutura: evento.infraestrutura || "A confirmar",
       prioridade: evento.prioridade || "Equilibrio geral"

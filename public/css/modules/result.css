@@ -1109,6 +1109,48 @@
     text-transform:capitalize;
 }
 
+.shopping-item-name small.shopping-item-price{
+    background:#fbf1d6;
+    color:var(--gold-dark);
+    text-transform:none;
+}
+
+.shopping-item-name small.shopping-item-price.aproximado{
+    background:transparent;
+    border:1px dashed var(--gold-dark);
+}
+
+.cost-estimate-panel{
+    background:#fbf1d6;
+    border:1px solid var(--gold);
+    border-radius:16px;
+    padding:18px 20px;
+}
+
+.cost-estimate-total{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+}
+
+.cost-estimate-total span{
+    font-weight:600;
+    color:var(--black);
+}
+
+.cost-estimate-total strong{
+    font-size:1.5rem;
+    color:var(--gold-dark);
+}
+
+.cost-estimate-note{
+    margin-top:10px;
+    font-size:.85rem;
+    color:#5a5040;
+    line-height:1.5;
+}
+
 .result-detail-group{
     margin:18px 0;
     border:1px solid #e8dfcf;

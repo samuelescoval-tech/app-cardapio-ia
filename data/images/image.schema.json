@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Chef IA image metadata",
+  "title": "Karamu image metadata",
   "type": "object",
   "required": ["id", "slot", "provider", "image_url", "thumbnail_url", "source_url", "license", "attribution", "fallback"],
   "properties": {
@@ -12,7 +12,7 @@
     "source_url": { "type": ["string", "null"] },
     "creator": { "type": ["string", "null"] },
     "creator_url": { "type": ["string", "null"] },
-    "license": { "type": "string", "enum": ["cc0", "by", "local-fallback", "chef-ia-original"] },
+    "license": { "type": "string", "enum": ["cc0", "by", "local-fallback", "karamu-original"] },
     "license_url": { "type": ["string", "null"] },
     "attribution": { "type": "string", "minLength": 1 },
     "alt": { "type": "string" },

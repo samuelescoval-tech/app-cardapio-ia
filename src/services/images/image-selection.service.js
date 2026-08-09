@@ -49,7 +49,7 @@ function criarImageSelectionService(opcoes = {}) {
       local_images: locaisTotal,
       external_images: imagens.length - locaisTotal,
       coverage: cobertura,
-      attribution_notice: "A biblioteca Chef IA e usada primeiro para familias conhecidas. Referencias externas exigem correspondencia minima; origem e tipo de imagem acompanham cada item."
+      attribution_notice: "A biblioteca Karamu e usada primeiro para familias conhecidas. Referencias externas exigem correspondencia minima; origem e tipo de imagem acompanham cada item."
     };
   }
   return { selecionarParaEvento };

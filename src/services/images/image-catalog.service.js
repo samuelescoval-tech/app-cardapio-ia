@@ -64,11 +64,11 @@ function criarImagemFallback(solicitacao) {
     image_url: solicitacao.fallback_url,
     thumbnail_url: solicitacao.fallback_url,
     source_url: null,
-    creator: "Chef IA Studio",
+    creator: "Karamu",
     creator_url: null,
     license: "local-fallback",
     license_url: null,
-    attribution: "Ilustracao de contingencia do Chef IA Studio.",
+    attribution: "Ilustracao de contingencia do Karamu.",
     alt: solicitacao.nome || "Ilustracao do evento",
     width: null,
     height: null,
@@ -97,7 +97,7 @@ function selecionarImagensLocais(solicitacao) {
         creator_url: null,
         license: localLibrary.license,
         license_url: null,
-        attribution: "Ilustracao original da biblioteca Chef IA Studio.",
+        attribution: "Ilustracao original da biblioteca Karamu.",
         alt: `${item.alt}. ${matchType === "category" ? "Imagem ilustrativa de categoria." : "Imagem ilustrativa da familia do prato."}`,
         width: 1200,
         height: 700,
@@ -115,7 +115,7 @@ function validarImagem(valor) {
   const slots = new Set(Object.keys(dictionary.slots));
   if (!slots.has(valor.slot)) throw new Error("Slot visual invalido.");
   if (!new Set(["openverse", "local"]).has(valor.provider)) throw new Error("Provider visual invalido.");
-  if (!new Set([...dictionary.allowed_licenses, "local-fallback", "chef-ia-original"]).has(valor.license)) throw new Error("Licenca visual nao permitida.");
+  if (!new Set([...dictionary.allowed_licenses, "local-fallback", "karamu-original"]).has(valor.license)) throw new Error("Licenca visual nao permitida.");
   if (!texto(valor.id) || !texto(valor.image_url) || !texto(valor.thumbnail_url) || !texto(valor.attribution)) {
     throw new Error("Metadados visuais incompletos.");
   }
@@ -173,7 +173,7 @@ function validarDicionario(valor) {
 
 function validarBibliotecaLocal(valor) {
   const erros = [];
-  if (!valor?.version || valor?.license !== "chef-ia-original") erros.push("cabecalho invalido");
+  if (!valor?.version || valor?.license !== "karamu-original") erros.push("cabecalho invalido");
   if (!Array.isArray(valor?.entries) || valor.entries.length < 6) return [...erros, "itens insuficientes"];
   const ids = new Set();
   valor.entries.forEach(item => {

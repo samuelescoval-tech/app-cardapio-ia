@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CHEF IA STUDIO | VISUAL FEEDBACK LOCAL
+   KARAMU | VISUAL FEEDBACK LOCAL
    TAG: preferencias-visuais, localStorage, privacidade
    --------------------------------------------------------------------------
    Persiste somente provider, id, slot e avaliacao. Nao salva URLs, evento,

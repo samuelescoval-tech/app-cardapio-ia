@@ -371,10 +371,22 @@
 }
 
 /* navegação */
-.mode-nav .nav-btn {
+.status-bar .nav-btn {
     color: rgba(255,255,255,0.75);
 }
 
-.mode-nav .nav-btn.active {
-    color: #111 !important;
+/* CTA de encerramento da apresentacao: entrar/criar conta ou testar sem
+   conta, preenchido dinamicamente por atualizarPitchCta() em app.js
+   (Plano 16, item 7 — apresentacao vira porta de entrada, nao aba solta). */
+.pitch-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+    .pitch-cta {
+        flex-direction: column;
+    }
 }

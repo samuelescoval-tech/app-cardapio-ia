@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CHEF IA STUDIO | PERFIL DO USUARIO
+   KARAMU | PERFIL DO USUARIO
    TAG: perfil-fornecedores, perfil-fotos, perfil-chave-ia, perfil-precos
    --------------------------------------------------------------------------
    Fornecedores, fotos, chave de IA propria e precos proprios do usuario
@@ -34,7 +34,6 @@ function perfilPreencherSelect(select, valorSelecionado = "") {
 const PERFIL_PAINEL_POR_ABA = {
     fornecedores: "perfilPainelFornecedores",
     fotos: "perfilPainelFotos",
-    "chave-ia": "perfilPainelChaveIA",
     precos: "perfilPainelPrecos"
 };
 
@@ -270,10 +269,8 @@ async function perfilRemoverChaveIA() {
 }
 
 /* ---------- PRECOS ---------- */
-
-function perfilFormatarPreco(valor) {
-    return Number(valor || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+// Formatacao de preco (formatarPrecoBRL) vem de render.js, carregado antes
+// deste arquivo em index.html — mesmo escopo global, sem precisar duplicar.
 
 async function perfilCarregarPrecos() {
     const lista = document.getElementById("precosLista");
@@ -288,7 +285,7 @@ async function perfilCarregarPrecos() {
             const fornecedor = perfilFornecedoresCache.find(f => f.id === p.fornecedor_id);
             return `
             <div class="perfil-item-card">
-                <strong>${escapeHTML(p.item)} — R$ ${perfilFormatarPreco(p.preco)} / ${escapeHTML(p.unidade)}</strong>
+                <strong>${escapeHTML(p.item)} — ${escapeHTML(formatarPrecoBRL(p.preco))} / ${escapeHTML(p.unidade)}</strong>
                 <small>${escapeHTML(p.categoria || "Sem categoria")}</small>
                 ${fornecedor ? `<small>🏪 ${escapeHTML(fornecedor.nome)}</small>` : ""}
                 ${p.observacoes ? `<small>${escapeHTML(p.observacoes)}</small>` : ""}

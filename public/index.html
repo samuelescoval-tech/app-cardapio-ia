@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chef IA — Master Studio</title>
+    <title>Karamu — Planejador de Eventos com IA</title>
     
     <!-- TAG: assets-externos | Bibliotecas visuais e fontes -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -27,7 +27,7 @@
         <div class="access-modal-card">
             <button type="button" class="access-modal-close" id="demoAccessClose" aria-label="Fechar">X</button>
             <span class="flabel">Acesso demo</span>
-            <h2 id="demoAccessTitle">Teste protegido do Chef IA Studio</h2>
+            <h2 id="demoAccessTitle">Teste protegido do Karamu</h2>
             <p>Informe a senha temporaria para gerar o planejamento. Ela fica salva apenas nesta sessao do navegador.</p>
 
             <label class="flabel" for="demoAccessInput">Senha temporaria</label>
@@ -67,11 +67,10 @@
         </div>
     </div>
 
-    <!-- TAG: navegacao-modo | Alterna app e apresentacao -->
-    <nav class="mode-nav" aria-label="Alternar área do Chef IA">
-        <button type="button" class="nav-btn active" id="btnApp" aria-pressed="true" onclick="switchView('app')">👨‍🍳 GERADOR IA</button>
-        <button type="button" class="nav-btn" id="btnPitch" aria-pressed="false" onclick="switchView('pitch')">📊 APRESENTAÇÃO</button>
-        <button type="button" class="nav-btn" id="btnConta" onclick="abrirModalConta()">👤 ENTRAR</button>
+    <!-- TAG: barra-status | Marca (volta a apresentacao) + status de conta, nao mais abas paralelas -->
+    <nav class="status-bar" aria-label="Marca e conta">
+        <button type="button" class="nav-btn brand-link" id="btnApresentacao" onclick="switchView('pitch')">🍽️ Karamu</button>
+        <button type="button" class="nav-btn account-status" id="btnConta" onclick="abrirModalConta()">👤 Entrar</button>
     </nav>
 
     <!-- TAG: hero-dinamico | Capa visual compactavel -->
@@ -82,14 +81,14 @@
             <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069')"></div>
         </div>
         <div class="hero-content">
-            <h1 class="hero-title">Chef <span>IA</span> Studio</h1>
+            <h1 class="hero-title">Kara<span>mu</span></h1>
             <p class="hero-sub">ARQUITETURA GASTRONÔMICA E LOGÍSTICA</p>
         </div>
         <button type="button" class="toggle-header" aria-controls="mainHero" aria-expanded="true" aria-label="Recolher capa" onclick="toggleHeader()">↕</button>
     </header>
 
     <!-- TAG: app-gerador | Formulario principal do evento -->
-    <main class="app-container" id="appSection">
+    <main class="app-container hidden" id="appSection">
         <section class="glass-panel" id="formCard">
             <h2 class="panel-title"><span>📝</span> Detalhes do Evento</h2>
             
@@ -181,7 +180,7 @@
                     <div class="fgroup">
                         <label class="flabel" for="formatoServico">Formato do serviço</label>
                         <select id="formatoServico" class="premium-input">
-                            <option value="A definir pelo Chef IA">A definir pelo Chef IA</option>
+                            <option value="A definir pelo Karamu">A definir pelo Karamu</option>
                             <option value="Buffet self-service">Buffet self-service</option>
                             <option value="Buffet com equipe servindo">Buffet com equipe servindo</option>
                             <option value="Empratado">Empratado</option>
@@ -238,7 +237,7 @@
                         <input type="text" id="orcamentoBase" class="premium-input" maxlength="80" placeholder="Ex: R$ 2.500 ou econômico">
                     </div>
                 </div>
-                <p class="advanced-note">Se não souber algum detalhe, mantenha a opção padrão. O Chef IA registrará a premissa sem inventar infraestrutura.</p>
+                <p class="advanced-note">Se não souber algum detalhe, mantenha a opção padrão. O Karamu registrará a premissa sem inventar infraestrutura.</p>
             </details>
 
             <!-- TAG: observacoes-ia | Contexto livre para o prompt -->
@@ -284,7 +283,6 @@
             <div class="perfil-tabs">
                 <button type="button" class="perfil-tab active" data-perfil-tab="fornecedores">Fornecedores</button>
                 <button type="button" class="perfil-tab" data-perfil-tab="fotos">Fotos</button>
-                <button type="button" class="perfil-tab" data-perfil-tab="chave-ia">Chave de IA</button>
                 <button type="button" class="perfil-tab" data-perfil-tab="precos">Preços</button>
             </div>
 
@@ -340,24 +338,6 @@
                 <button type="button" class="btn-epic" id="fotoSubmit" style="margin-top:14px;">Enviar Foto</button>
             </div>
 
-            <!-- CHAVE DE IA -->
-            <div class="perfil-painel" id="perfilPainelChaveIA">
-                <span class="perfil-status-badge nao-configurada" id="chaveIABadge">Verificando...</span>
-                <p class="field-hint">Cole sua própria chave da API Gemini para usar sua cota pessoal em vez da compartilhada. <a href="https://ai.google.dev/" target="_blank" rel="noopener">Obter chave gratuita</a>.</p>
-                <div class="form-grid">
-                    <div class="fgroup">
-                        <label class="flabel" for="chaveIAInput">Chave Gemini</label>
-                        <input type="password" id="chaveIAInput" class="premium-input" placeholder="Cole sua chave aqui" autocomplete="off">
-                    </div>
-                </div>
-                <p class="access-modal-error" id="chaveIAErro" role="alert"></p>
-                <p class="access-modal-error" id="chaveIAInfo" role="status" style="color: var(--gold-dark);"></p>
-                <div class="access-modal-actions">
-                    <button type="button" class="btn-secondary" id="chaveIARemover">Remover chave</button>
-                    <button type="button" class="btn-epic" id="chaveIASalvar">Salvar Chave</button>
-                </div>
-            </div>
-
             <!-- PRECOS -->
             <div class="perfil-painel" id="perfilPainelPrecos">
                 <button type="button" class="btn-secondary btn-small" id="precosExportar" style="margin-bottom:14px;">📄 Exportar CSV</button>
@@ -398,12 +378,32 @@
                 <button type="button" class="btn-epic" id="precoSubmit" style="margin-top:14px;">Adicionar Preço</button>
             </div>
 
+            <details class="perfil-avancado">
+                <summary>Configurações avançadas: usar minha própria chave de IA</summary>
+                <div id="perfilPainelChaveIA" class="perfil-avancado-conteudo">
+                    <span class="perfil-status-badge nao-configurada" id="chaveIABadge">Verificando...</span>
+                    <p class="field-hint">Recurso opcional para usuários avançados. Cole sua própria chave da API Gemini para usar sua cota pessoal em vez da compartilhada. <a href="https://ai.google.dev/" target="_blank" rel="noopener">Obter chave gratuita</a>.</p>
+                    <div class="form-grid">
+                        <div class="fgroup">
+                            <label class="flabel" for="chaveIAInput">Chave Gemini</label>
+                            <input type="password" id="chaveIAInput" class="premium-input" placeholder="Cole sua chave aqui" autocomplete="off">
+                        </div>
+                    </div>
+                    <p class="access-modal-error" id="chaveIAErro" role="alert"></p>
+                    <p class="access-modal-error" id="chaveIAInfo" role="status" style="color: var(--gold-dark);"></p>
+                    <div class="access-modal-actions">
+                        <button type="button" class="btn-secondary" id="chaveIARemover">Remover chave</button>
+                        <button type="button" class="btn-epic" id="chaveIASalvar">Salvar Chave</button>
+                    </div>
+                </div>
+            </details>
+
             <button type="button" class="btn-secondary" id="perfilSair" style="margin-top:30px;">Sair da conta</button>
         </section>
     </main>
 
    <!-- TAG: pitch-comercial | Apresentacao do produto -->
-<section id="pitchSection" class="hidden">
+<section id="pitchSection">
   <!-- Slide 1: Capa -->
   <section class="pitch-slide pitch-cover">
     <div class="pitch-grid">
@@ -703,9 +703,9 @@
           <span>Inteligência</span>
           <span>Escala</span>
         </div>
-        <button class="btn-epic" style="width:auto; padding: 18px 34px;" onclick="switchView('app')">
-          VOLTAR AO APP
-        </button>
+        <div class="pitch-cta" id="pitchCtaArea">
+          <!-- preenchido por atualizarPitchCta() em app.js, conforme sessao/modo demo -->
+        </div>
       </div>
       <div class="pitch-img-box">
         <img
@@ -721,7 +721,7 @@
 
     <!-- 5. RODAPÉ -->
     <footer class="footer">
-        <p>© 2026 Chef IA Studio. Todos os direitos reservados.</p>
+        <p>© 2026 Karamu. Todos os direitos reservados.</p>
         <div class="social-links">
             <a href="#" title="Instagram">📸</a>
             <a href="#" title="Facebook">📘</a>

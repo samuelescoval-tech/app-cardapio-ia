@@ -112,24 +112,24 @@ async function main() {
         id: 'local-library-entrada-ilustrada', target_id: 'entrada-1', slot: 'entrada',
         provider: 'local', image_url: '/images/library/appetizer.svg',
         thumbnail_url: '/images/library/appetizer.svg', source_url: null,
-        creator: 'Chef IA Studio', license: 'chef-ia-original',
-        attribution: 'Ilustracao original da biblioteca Chef IA Studio.',
+        creator: 'Karamu', license: 'karamu-original',
+        attribution: 'Ilustracao original da biblioteca Karamu.',
         alt: 'Entrada ilustrada', fallback: false, match_type: 'category'
       };
       imagensLocais[2] = {
         id: 'local-library-principal-peixe', target_id: 'principal-1', slot: 'principal',
         provider: 'local', image_url: '/images/library/main-fish.svg',
         thumbnail_url: '/images/library/main-fish.svg', source_url: null,
-        creator: 'Chef IA Studio', license: 'chef-ia-original',
-        attribution: 'Ilustracao original da biblioteca Chef IA Studio.',
+        creator: 'Karamu', license: 'karamu-original',
+        attribution: 'Ilustracao original da biblioteca Karamu.',
         alt: 'Peixe ilustrado', fallback: false, match_type: 'dish-family'
       };
       imagensLocais[3] = {
         id: 'local-library-sobremesa-ilustrada', target_id: 'doce-1', slot: 'sobremesa',
         provider: 'local', image_url: '/images/library/dessert.svg',
         thumbnail_url: '/images/library/dessert.svg', source_url: null,
-        creator: 'Chef IA Studio', license: 'chef-ia-original',
-        attribution: 'Ilustracao original da biblioteca Chef IA Studio.',
+        creator: 'Karamu', license: 'karamu-original',
+        attribution: 'Ilustracao original da biblioteca Karamu.',
         alt: 'Sobremesa ilustrada', fallback: false, match_type: 'category'
       };
       renderizarGaleriaEvento({

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CHEF IA STUDIO | UTILS
+   KARAMU | UTILS
    TAG: helpers, seguranca-html, calculos-fallback
    --------------------------------------------------------------------------
    Responsabilidade: helpers pequenos usados por prompt/render/app.

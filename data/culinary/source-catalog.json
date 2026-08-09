@@ -113,7 +113,7 @@
       "roles": ["modelagem_receita", "ingredientes", "etapas", "utensilios", "busca", "duplicidade"],
       "evidence": "O trabalho modela receitas, ingredientes, etapas, utensilios/eletrodomesticos, tempo e rendimento; tambem descreve busca por ingredientes/utensilios e alerta de receita repetida.",
       "usage": "Inspirar requisitos e relacionamentos futuros, especialmente taxonomia, deteccao de repeticao e vinculo entre receita e recursos disponiveis.",
-      "limitations": "Projeto academico de software no-code, nao autoridade culinaria. Nenhuma receita, texto, tela ou codigo do trabalho deve ser copiado ou incorporado ao Chef IA.",
+      "limitations": "Projeto academico de software no-code, nao autoridade culinaria. Nenhuma receita, texto, tela ou codigo do trabalho deve ser copiado ou incorporado ao Karamu.",
       "runtime_use": false
     },
     {
@@ -126,7 +126,7 @@
       "roles": ["descoberta_receitas", "busca_ingredientes", "busca_equipamentos", "dietas", "instrucoes"],
       "evidence": "A API oferece busca complexa por ingredientes, equipamentos, dieta, intolerancias e tipo de refeicao, alem de informacoes e instrucoes quando disponiveis.",
       "usage": "Candidato futuro para descoberta transitoria de referencias com atribuicao da fonte original; nao usar como base persistente do plano atual.",
-      "limitations": "Plano gratuito possui quota diaria e limite de requisicoes. Os termos exigem credito a fonte original e proibem copiar ou armazenar ingredientes, instrucoes, nutricao ou dados derivados; somente id, titulo e URL da imagem podem ser mantidos indefinidamente. O Chef IA salva historico e PDF, portanto o runtime permanece desativado ate existir fluxo transitorio ou permissao/licenca compativel.",
+      "limitations": "Plano gratuito possui quota diaria e limite de requisicoes. Os termos exigem credito a fonte original e proibem copiar ou armazenar ingredientes, instrucoes, nutricao ou dados derivados; somente id, titulo e URL da imagem podem ser mantidos indefinidamente. O Karamu salva historico e PDF, portanto o runtime permanece desativado ate existir fluxo transitorio ou permissao/licenca compativel.",
       "runtime_use": false
     }
   ],

@@ -195,7 +195,7 @@ function normalizarTermos(valor) {
 
 function construirContextoOperacional(evento) {
   const horario = evento.horarioInicio || "";
-  const formato = evento.formatoServico || "A definir pelo Chef IA";
+  const formato = evento.formatoServico || "A definir pelo Karamu";
   const faixaEtaria = evento.faixaEtaria || "Publico misto";
   const infraestrutura = evento.infraestrutura || "A confirmar";
   const prioridade = evento.prioridade || "Equilibrio geral";

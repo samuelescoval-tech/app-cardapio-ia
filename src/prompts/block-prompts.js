@@ -26,7 +26,7 @@ CONTRATO JSON:
 
 function montarPromptReceitas(evento, cardapio) {
   const preparos = cardapio.filter(item => item.tipo_execucao !== "pronto");
-  return `Voce e o bloco de producao culinaria do Chef IA.
+  return `Voce e o bloco de producao culinaria do Karamu.
 EVENTO: ${JSON.stringify(resumirEvento(evento))}
 PREPARACOES: ${JSON.stringify(preparos)}
 
@@ -43,7 +43,7 @@ CONTRATO JSON:
 }
 
 function montarPromptExperiencia(evento, motor, cardapio) {
-  return `Voce e o bloco de experiencia e operacao visivel do Chef IA.
+  return `Voce e o bloco de experiencia e operacao visivel do Karamu.
 EVENTO: ${JSON.stringify(resumirEvento(evento))}
 DADOS OPERACIONAIS: ${JSON.stringify({ duracao: motor.duracao, espaco: motor.espaco, perfil: motor.perfil })}
 CARDAPIO RESUMIDO: ${JSON.stringify(cardapio.map(item => ({ id: item.id, nome: item.nome, categoria: item.categoria })))}
@@ -69,7 +69,7 @@ CONTRATO JSON:
 }
 
 function contextoBase(evento, motor, diretriz) {
-  return `Voce e o bloco criativo do Chef IA Studio.
+  return `Voce e o bloco criativo do Karamu.
 EVENTO: ${JSON.stringify(resumirEvento(evento))}
 DADOS OPERACIONAIS: ${JSON.stringify({ alimentacao: motor.alimentacao, bebidas: motor.bebidas })}
 DIRETRIZ CULINARIA: ${JSON.stringify({

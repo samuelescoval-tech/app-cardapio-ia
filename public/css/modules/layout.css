@@ -1,6 +1,6 @@
 /* ───────── NAV ───────── */
 
-.mode-nav{
+.status-bar{
     position:fixed;
 
     top:20px;
@@ -53,6 +53,26 @@
 
 .nav-btn:hover{
     color:#fff;
+}
+
+/* Marca (volta a apresentacao) e status de conta: mesmo alvo de toque do
+   .nav-btn, mas visualmente mais discretos que os antigos botoes de aba
+   paralela — a conta e um indicador de status, nao uma acao de mesmo peso
+   que o gerador (Plano 16, item 7). */
+.nav-btn.brand-link{
+    font-size:.85rem;
+    letter-spacing:.5px;
+    padding:10px 16px;
+}
+
+.nav-btn.account-status{
+    background:rgba(255,255,255,.08);
+    font-size:.62rem;
+    padding:10px 16px;
+}
+
+.nav-btn.account-status:hover{
+    background:rgba(255,255,255,.14);
 }
 
 .nav-btn.active{
@@ -213,7 +233,7 @@
 }
 
 @media (max-width:768px){
-    .mode-nav{
+    .status-bar{
         top:max(10px,env(safe-area-inset-top));
         width:calc(100% - 24px);
         max-width:390px;
@@ -288,7 +308,7 @@
 }
 
 @media (max-width:480px){
-    .mode-nav{
+    .status-bar{
         top:max(8px,env(safe-area-inset-top));
         width:calc(100% - 16px);
     }

@@ -24,6 +24,7 @@ const { criarFornecedoresService, ErroFornecedor } = require('./src/services/per
 const { criarFotosService, ErroFoto } = require('./src/services/personalizacao/fotos.service');
 const { criarChaveIAService, ErroChaveIA } = require('./src/services/personalizacao/chave-ia.service');
 const { criarPrecosService, ErroPreco } = require('./src/services/personalizacao/precos.service');
+const { calcularEstimativaCusto } = require('./src/services/planning/custo-estimado.service');
 
 const app = express();
 // Necessario para o express-rate-limit identificar o IP real do cliente
@@ -192,7 +193,7 @@ async function perfilHandler(req, res) {
 
 app.post('/api/auth/registrar', limitadorAuth, registrarHandler);
 app.post('/api/auth/login', limitadorAuth, loginHandler);
-app.get('/api/auth/perfil', perfilHandler);
+app.get('/api/auth/perfil', limitadorPersonalizacao, perfilHandler);
 
 function obterToken(req) {
     return (req.get("authorization") || "").replace(/^Bearer\s+/i, "").trim();
@@ -393,13 +394,62 @@ app.put('/api/precos/:id', limitadorPersonalizacao, atualizarPrecoHandler);
 app.delete('/api/precos/:id', limitadorPersonalizacao, removerPrecoHandler);
 app.get('/api/precos/exportar', limitadorPersonalizacao, exportarPrecosHandler);
 
-async function obterChaveIAUsuarioOuNulo(req) {
+// Verifica o token uma unica vez e devolve-o para os lookups seguintes
+// reaproveitarem. Antes, chave-ia e catalogo faziam essa verificacao cada
+// um por conta propria, dobrando as chamadas ao Supabase Auth por geracao.
+async function obterTokenAutenticadoOuNulo(req) {
     const token = obterToken(req);
     if (!token) return null;
     try {
         await supabaseAuthService.obterUsuario(token);
-        return await chaveIAService.obterChaveDecifrada(token);
+        return token;
     } catch {
+        return null;
+    }
+}
+
+async function obterChaveIAUsuarioOuNulo(token) {
+    if (!token) return null;
+    try {
+        return await chaveIAService.obterChaveDecifrada(token);
+    } catch (error) {
+        // Token ja foi validado por obterTokenAutenticadoOuNulo antes de
+        // chegar aqui, entao uma falha aqui nao e token invalido: e algo
+        // real (Supabase fora do ar, chave cifrada corrompida etc.) que
+        // vale registrar, mesmo caindo de volta pra chave compartilhada.
+        console.error("⚠️ Falha ao obter chave de IA do usuario:", error.message);
+        return null;
+    }
+}
+
+// Plano 16, item 6/7: fornecedores e precos cadastrados pelo usuario viram
+// contexto real para o gerador (catalogo regional), em vez de cadastros
+// isolados sem relacao com o cardapio gerado.
+async function obterCatalogoUsuarioOuNulo(token) {
+    if (!token) return null;
+    try {
+        const [precos, fornecedores] = await Promise.all([
+            precosService.listar(token),
+            fornecedoresService.listar(token)
+        ]);
+        if (!precos?.length) return null;
+        const fornecedoresPorId = new Map((fornecedores || []).map(f => [f.id, f.nome]));
+        const catalogo = precos.slice(0, 60).map(preco => ({
+            item: preco.item,
+            unidade: preco.unidade,
+            preco: preco.preco,
+            categoria: preco.categoria || null,
+            fornecedor: preco.fornecedor_id ? (fornecedoresPorId.get(preco.fornecedor_id) || null) : null
+        }));
+        // precos.length > 60 significa que o catalogo foi cortado (ordem
+        // alfabetica, ver precosService.listar); exposto em meta para nao
+        // ficar um limite silencioso quando o cardapio for gerado.
+        catalogo.truncado = precos.length > catalogo.length;
+        return catalogo;
+    } catch (error) {
+        // Mesmo raciocinio de obterChaveIAUsuarioOuNulo: token ja validado,
+        // entao a falha aqui e real e vale registrar antes de gerar sem catalogo.
+        console.error("⚠️ Falha ao obter catalogo do usuario:", error.message);
         return null;
     }
 }
@@ -408,7 +458,13 @@ async function gerarCardapioHandler(req, res) {
     try {
         // Usuario com a propria chave Gemini configurada (Plano 16, item 2) nao
         // consome a cota compartilhada, entao a senha demo nao se aplica a ele.
-        const chaveIAUsuario = await obterChaveIAUsuarioOuNulo(req);
+        // Token verificado uma unica vez; chave-ia e catalogo sao buscados em
+        // paralelo a partir dele (antes eram 2 chamadas serializadas ao Supabase Auth).
+        const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
+        const [chaveIAUsuario, catalogoUsuario] = await Promise.all([
+            obterChaveIAUsuarioOuNulo(tokenAutenticado),
+            obterCatalogoUsuarioOuNulo(tokenAutenticado)
+        ]);
         if (!chaveIAUsuario && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
             return res.status(401).json({
                 ok: false,
@@ -425,7 +481,7 @@ async function gerarCardapioHandler(req, res) {
         const contextoVariedade = criarContextoVariedade(evento, diretrizCulinaria, historicoCulinario);
         console.log('⚙️ Motor: Calculado');
 
-        const prompt = montarPromptPlanejamento(evento, motor, diretrizCulinaria, contextoVariedade);
+        const prompt = montarPromptPlanejamento(evento, motor, diretrizCulinaria, contextoVariedade, catalogoUsuario);
         console.log('📝 Prompt:', `${prompt.length} chars`);
 
         const gerarPlanoComChave = chaveIAUsuario
@@ -460,6 +516,20 @@ async function gerarCardapioHandler(req, res) {
                 status_avaliacao_evento: resposta.plano.avaliacao_evento?.status || "nao_avaliado",
                 rendimento_alimentar_status: resposta.plano.rendimento_alimentar?.status || "nao_avaliado"
             };
+        }
+
+        if (catalogoUsuario?.length && resposta.plano?.lista_compras) {
+            try {
+                resposta.plano.estimativa_custo = calcularEstimativaCusto(resposta.plano.lista_compras, catalogoUsuario);
+                resposta.meta = {
+                    ...(resposta.meta || {}),
+                    catalogo_usuario_aplicado: true,
+                    catalogo_usuario_truncado: Boolean(catalogoUsuario.truncado),
+                    custo_estimado_total: resposta.plano.estimativa_custo.total_estimado
+                };
+            } catch (erroEstimativa) {
+                console.error('⚠️ Falha ao calcular estimativa de custo:', erroEstimativa.message);
+            }
         }
 
         res.json(resposta);
@@ -547,7 +617,7 @@ app.get('/', (req, res) => {
 });
 
 if (require.main === module) {
-    app.listen(process.env.PORT || 3000, () => console.log(`✅ Chef IA Rodando! Acesse: http://localhost:${process.env.PORT || 3000}`));
+    app.listen(process.env.PORT || 3000, () => console.log(`✅ Karamu Rodando! Acesse: http://localhost:${process.env.PORT || 3000}`));
 }
 
 // A exportacao padrao precisa ser a propria funcao Express (nao um objeto),

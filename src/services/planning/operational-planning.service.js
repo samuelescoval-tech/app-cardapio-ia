@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CHEF IA STUDIO | PLANEJAMENTO OPERACIONAL DETERMINISTICO
+   KARAMU | PLANEJAMENTO OPERACIONAL DETERMINISTICO
    TAG: plano-9, complexidade, equipe, producao, cronograma
    --------------------------------------------------------------------------
    Responsabilidade: transformar o contexto confirmado do evento em uma
@@ -7,7 +7,7 @@
    ========================================================================== */
 
 const FORMATOS = {
-  "A definir pelo Chef IA": { pontos: 1, atendimento: 22, cozinha: 35, rotulo: "servico ainda a confirmar" },
+  "A definir pelo Karamu": { pontos: 1, atendimento: 22, cozinha: 35, rotulo: "servico ainda a confirmar" },
   "Buffet self-service": { pontos: 1, atendimento: 45, cozinha: 40, rotulo: "buffet self-service" },
   "Buffet com equipe servindo": { pontos: 2, atendimento: 18, cozinha: 35, rotulo: "buffet assistido" },
   "Empratado": { pontos: 4, atendimento: 10, cozinha: 25, rotulo: "servico empratado" },
@@ -27,7 +27,7 @@ const INFRAESTRUTURAS = {
 function calcularPlanejamentoOperacional(evento = {}, contexto = {}, diretriz = {}) {
   const pessoas = numeroSeguro(contexto.pessoas || evento.pessoas) || 1;
   const duracao = numeroSeguro(contexto.duracao || evento.duracao) || 4;
-  const formatoNome = FORMATOS[evento.formatoServico] ? evento.formatoServico : "A definir pelo Chef IA";
+  const formatoNome = FORMATOS[evento.formatoServico] ? evento.formatoServico : "A definir pelo Karamu";
   const infraestruturaNome = INFRAESTRUTURAS[evento.infraestrutura] ? evento.infraestrutura : "A confirmar";
   const formato = FORMATOS[formatoNome];
   const infraestrutura = INFRAESTRUTURAS[infraestruturaNome];
@@ -40,7 +40,7 @@ function calcularPlanejamentoOperacional(evento = {}, contexto = {}, diretriz = 
     : momentosPadrao(evento);
 
   return {
-    status: infraestruturaNome === "A confirmar" || formatoNome === "A definir pelo Chef IA"
+    status: infraestruturaNome === "A confirmar" || formatoNome === "A definir pelo Karamu"
       ? "condicionado_a_confirmacao"
       : "dimensionado",
     complexidade,
@@ -186,7 +186,7 @@ function calcularFluxoProducao(evento, infraestrutura, formato) {
     "Compartilhado a mesa": "Montar travessas por mesa e rota de entrega, evitando cruzamento com retornos.",
     "Buffet com equipe servindo": "Montar linha assistida com porcionadores padronizados e acesso de reposicao traseiro.",
     "Buffet self-service": "Montar fluxo de entrada e saida, identificacao e acesso de reposicao sem cruzar convidados.",
-    "A definir pelo Chef IA": "Manter layout modular e confirmar o formato antes de fechar louca, equipamentos e escala."
+    "A definir pelo Karamu": "Manter layout modular e confirmar o formato antes de fechar louca, equipamentos e escala."
   }[formato];
 
   return [
@@ -245,7 +245,7 @@ function equipamentosServico(formato, pessoas, pontos) {
     "Coquetel circulante": [`${Math.max(3, Math.ceil(pessoas / 15))} bandejas antiderrapantes`, "prateleira de bandejas prontas", "ponto separado para retorno de louca"],
     "Estacoes ou ilhas": [`${pontos} bancadas ou ilhas`, "um jogo de utensilios por ponto", "identificacao de pratos e restricoes", "estoque de retaguarda por estacao"],
     "Compartilhado a mesa": [`${Math.max(2, Math.ceil(pessoas / 8))} travessas por rodada`, "utensilios de servir por mesa", "carros ou bandejas de distribuicao"],
-    "A definir pelo Chef IA": ["bancadas modulares", "utensilios de servico reservados", "equipamentos finais condicionados a confirmacao do formato"]
+    "A definir pelo Karamu": ["bancadas modulares", "utensilios de servico reservados", "equipamentos finais condicionados a confirmacao do formato"]
   };
   return mapa[formato];
 }
@@ -311,7 +311,7 @@ function formatarDeslocamento(minutos) {
 
 function criarConfirmacoesPendentes(formato, infraestrutura) {
   const pendencias = [];
-  if (formato === "A definir pelo Chef IA") pendencias.push("Confirmar formato de servico antes de fechar equipe, louca e layout.");
+  if (formato === "A definir pelo Karamu") pendencias.push("Confirmar formato de servico antes de fechar equipe, louca e layout.");
   if (infraestrutura === "A confirmar") pendencias.push("Vistoriar energia, agua, refrigeracao, exaustao, bancadas e acesso de carga.");
   return pendencias;
 }
@@ -330,7 +330,7 @@ function rotuloEstacaoServico(formato) {
     "Compartilhado a mesa": "Montagem de travessas e distribuicao",
     "Buffet com equipe servindo": "Buffet assistido",
     "Buffet self-service": "Buffet self-service",
-    "A definir pelo Chef IA": "Servico modular provisório"
+    "A definir pelo Karamu": "Servico modular provisório"
   }[formato];
 }
 

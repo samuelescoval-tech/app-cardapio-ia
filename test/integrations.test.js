@@ -804,3 +804,121 @@ test("GET /api/precos/exportar exige token de acesso", async () => {
   assert.equal(response.statusCode, 401);
 });
 }
+
+{
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { calcularEstimativaCusto, extrairQuantidade, normalizarUnidade } = require("../src/services/planning/custo-estimado.service");
+const { montarPromptPlanejamento } = require("../src/prompts/event.prompt");
+
+const CATALOGO = [
+  { item: "Tomate", unidade: "kg", preco: 8.5, fornecedor: "Hortifruti Central" },
+  { item: "Refrigerante Cola", unidade: "L", preco: 6, fornecedor: "Bebidas Silva" }
+];
+
+test("extrairQuantidade le numero e unidade de textos livres, com virgula ou ponto", () => {
+  assert.deepEqual(extrairQuantidade("3 kg"), { valor: 3, unidade: { familia: "peso", fator: 1000 } });
+  assert.deepEqual(extrairQuantidade("2,5 L"), { valor: 2.5, unidade: { familia: "volume", fator: 1000 } });
+  assert.equal(extrairQuantidade("a gosto"), null);
+  assert.equal(extrairQuantidade(""), null);
+});
+
+test("normalizarUnidade reconhece sinonimos e ignora acentos/maiusculas", () => {
+  assert.deepEqual(normalizarUnidade("Kg"), { familia: "peso", fator: 1000 });
+  assert.deepEqual(normalizarUnidade("litro"), { familia: "volume", fator: 1000 });
+  assert.equal(normalizarUnidade("caminhao"), null);
+});
+
+test("calcularEstimativaCusto casa item exato por nome, converte unidades compativeis e soma no total principal", () => {
+  const compras = [
+    { item: "Tomate", quantidade: "3 kg" },
+    { item: "Refrigerante Cola", quantidade: "2000 ml" }
+  ];
+  const estimativa = calcularEstimativaCusto(compras, CATALOGO);
+  assert.equal(estimativa.itens_com_preco, 2);
+  assert.equal(estimativa.total_itens, 2);
+  assert.equal(estimativa.total_estimado, 37.5);
+  assert.equal(estimativa.itens[0].correspondencia_exata, true);
+  assert.equal(estimativa.itens[0].fornecedor, "Hortifruti Central");
+});
+
+test("calcularEstimativaCusto separa correspondencia aproximada (substring) do total principal", () => {
+  // "Tomate cereja" so bate por substring com o catalogo "Tomate" - produto
+  // diferente na pratica, entao nao deve ser somado como se fosse exato.
+  const estimativa = calcularEstimativaCusto([{ item: "Tomate cereja", quantidade: "500 g" }], CATALOGO);
+  assert.equal(estimativa.itens[0].correspondido, true);
+  assert.equal(estimativa.itens[0].correspondencia_exata, false);
+  assert.equal(estimativa.itens[0].subtotal, 4.25);
+  assert.equal(estimativa.itens_com_preco, 0);
+  assert.equal(estimativa.itens_aproximados, 1);
+  assert.equal(estimativa.total_estimado, 0);
+  assert.equal(estimativa.total_aproximado, 4.25);
+});
+
+test("calcularEstimativaCusto prefere o termo aproximado mais especifico (mais longo), nao o primeiro encontrado", () => {
+  // Regressao: "Frango" e "Frango a Passarinho" sao produtos/precos
+  // diferentes; uma compra "Frango a Passarinho Temperado" deve casar com
+  // o termo mais longo/especifico do catalogo, nao com "Frango" so porque
+  // veio primeiro na lista.
+  const catalogoComDoisFrangos = [
+    { item: "Frango", unidade: "kg", preco: 18, fornecedor: "Acougue A" },
+    { item: "Frango a Passarinho", unidade: "kg", preco: 32, fornecedor: "Acougue B" }
+  ];
+  const estimativa = calcularEstimativaCusto(
+    [{ item: "Frango a Passarinho Temperado", quantidade: "2 kg" }],
+    catalogoComDoisFrangos
+  );
+  assert.equal(estimativa.itens[0].preco_unitario, 32);
+  assert.equal(estimativa.itens[0].fornecedor, "Acougue B");
+  assert.equal(estimativa.itens[0].subtotal, 64);
+});
+
+test("calcularEstimativaCusto produz um item de saida por entrada de compras, na mesma ordem (alinhamento por indice)", () => {
+  // Regressao: duas linhas com o mesmo nome ("Tomate") precisam continuar
+  // separadas na saida, para o front-end conseguir parear por indice em vez
+  // de por nome (evita mostrar o preco errado numa das duas linhas).
+  const compras = [
+    { item: "Tomate", quantidade: "1 kg" },
+    { item: "Tomate", quantidade: "3 kg" }
+  ];
+  const estimativa = calcularEstimativaCusto(compras, CATALOGO);
+  assert.equal(estimativa.itens.length, 2);
+  assert.equal(estimativa.itens[0].subtotal, 8.5);
+  assert.equal(estimativa.itens[1].subtotal, 25.5);
+});
+
+test("calcularEstimativaCusto marca item sem correspondencia e nao soma no total", () => {
+  const estimativa = calcularEstimativaCusto([{ item: "Queijo parmesao", quantidade: "1 kg" }], CATALOGO);
+  assert.equal(estimativa.itens_com_preco, 0);
+  assert.equal(estimativa.total_estimado, 0);
+  assert.equal(estimativa.itens[0].correspondido, false);
+});
+
+test("calcularEstimativaCusto marca item correspondido mas com unidade incompativel, sem subtotal", () => {
+  const estimativa = calcularEstimativaCusto([{ item: "Tomate", quantidade: "5 un" }], CATALOGO);
+  assert.equal(estimativa.itens[0].correspondido, true);
+  assert.equal(estimativa.itens[0].subtotal, null);
+  assert.equal(estimativa.itens_com_preco, 0);
+});
+
+test("calcularEstimativaCusto ignora entradas sem lista de compras ou catalogo", () => {
+  assert.equal(calcularEstimativaCusto([], CATALOGO).total_itens, 0);
+  assert.equal(calcularEstimativaCusto([{ item: "Tomate", quantidade: "1 kg" }], []).itens[0].correspondido, false);
+  assert.equal(calcularEstimativaCusto(null, null).total_itens, 0);
+});
+
+test("montarPromptPlanejamento inclui CATALOGO REGIONAL DO USUARIO somente quando ha itens", () => {
+  const evento = { tipo: "Aniversario", pessoas: 20 };
+  const motor = {};
+  const diretriz = { quantidade_total_minima: 5 };
+
+  const semCatalogo = montarPromptPlanejamento(evento, motor, diretriz, null, null);
+  assert.doesNotMatch(semCatalogo, /CATALOGO REGIONAL DO USUARIO\n\[/);
+  assert.doesNotMatch(semCatalogo, /Hortifruti Central/);
+
+  const comCatalogo = montarPromptPlanejamento(evento, motor, diretriz, null, CATALOGO);
+  assert.match(comCatalogo, /CATALOGO REGIONAL DO USUARIO\n\[/);
+  assert.match(comCatalogo, /Hortifruti Central/);
+  assert.match(comCatalogo, /nunca para copiar nos campos de saida/);
+});
+}

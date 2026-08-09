@@ -1,10 +1,12 @@
-# Handoff - Chef IA Studio
+# Handoff - Karamu
 
 Atualizado em 2026-08-06.
 
 ## Estado em uma frase
 
-O Chef IA Studio esta em producao na Vercel, com contas de usuario reais
+O Karamu (renomeado de "Chef IA Studio" em 2026-08-06 — ver secao
+dedicada abaixo; nome decidido em 2026-08-05 por conflito de marca/
+patente) esta em producao na Vercel, com contas de usuario reais
 (Supabase Auth, agora com login por e-mail/senha **e** login social com
 Google) e uma tela de perfil unificada onde o usuario gerencia
 fornecedores, fotos, chave de IA propria e precos proprios; os Planos 1 a
@@ -14,12 +16,14 @@ remocao do `DEMO_ACCESS_KEY` das rotas de conta foram feitos em
 usuario) e login social com Google implementados e testados ao vivo. Em
 2026-08-06: item 6 do Plano 16 (precos proprios por usuario + exportacao
 CSV) e a interface unificada de perfil (fornecedores/fotos/chave-ia/precos
-numa tela so) implementados e testados ao vivo (ver secoes abaixo).
-**Nome novo decidido em 2026-08-05: "Karamu"** (troca de "Chef IA" por
-conflito de marca/patente) — decisao registrada, execucao da troca no
-codigo/docs adiada de proposito para junto da reestruturacao de navegacao
-(Plano 16, item 7). Ate la, o projeto continua sendo chamado de "Chef IA
-Studio" no codigo e nestes documentos.
+numa tela so) implementados e testados ao vivo; no mesmo dia, apos
+feedback do usuario, fornecedores/precos passaram a alimentar de verdade
+o `/gerar-cardapio` (catalogo regional no prompt + estimativa de custo
+local), a chave de IA (BYOK) saiu das abas principais para um painel
+"avancado" recolhido, revisao de codigo (`/code-review`) corrigiu 4
+problemas reais nessa entrega, e **o item 7 do Plano 16 (reestruturacao
+de navegacao, marcado CRITICO) foi executado junto com a troca de nome
+para Karamu** — ver secao dedicada abaixo.
 
 ## Arquitetura atual
 
@@ -798,17 +802,271 @@ separadas (era a recomendacao ja registrada aqui mesmo).
   em todo o fluxo. Suite completa (176/176) e E2E de galeria revalidados
   sem regressao.
 
+### Fornecedores/precos passam a "conversar" com o gerador; chave de IA sai das abas principais (2026-08-06)
+
+Feedback do usuario ao ver a interface de perfil pronta: fornecedores e
+precos eram cadastros isolados, sem nenhuma ligacao com `/gerar-cardapio` —
+o usuario podia cadastrar um fornecedor e um preco e isso nao mudava em
+nada o cardapio gerado. E a aba "Chave de IA" (BYOK) ficava lado a lado com
+fornecedores/fotos/precos como se fosse um recurso comum, quando na
+pratica reduz conversao (a maioria dos usuarios nao tem chave Gemini
+propria) e amplia a superficie de seguranca (chave de terceiro
+armazenada, ainda que cifrada).
+
+- **Catalogo regional no prompt + estimativa de custo local**: nova funcao
+  `obterCatalogoUsuarioOuNulo()` em `server.js` busca fornecedores+precos
+  do usuario autenticado (quando existem) e passa como
+  `catalogoUsuario` para `montarPromptPlanejamento()`
+  (`src/prompts/event.prompt.js`), numa secao nova "CATALOGO REGIONAL DO
+  USUARIO". A IA continua proibida de gerar precos/custos nos campos de
+  saida (regra ja existia), mas agora e instruida a preferir, quando fizer
+  sentido, os mesmos nomes de item do catalogo do usuario — isso permite
+  o cruzamento automatico depois.
+- Novo servico puro `src/services/planning/custo-estimado.service.js`
+  (`calcularEstimativaCusto`) cruza `lista_compras` do plano gerado com o
+  catalogo do usuario por nome (normalizado, sem acento) e unidade
+  (converte kg/g, L/ml automaticamente quando compativel), somando um
+  `total_estimado`. Roda depois da geracao, sem custo de mais uma chamada
+  a IA; falha silenciosa (nunca derruba a geracao) se der erro.
+  `gerarCardapioHandler` anexa o resultado em `plano.estimativa_custo` e
+  em `meta.catalogo_usuario_aplicado`/`meta.custo_estimado_total`.
+- **Frontend**: `render.js` ganhou `renderEstimativaCusto()` (secao "Custo
+  Estimado com Seus Fornecedores", com o total e quantos itens foram
+  encontrados) e a lista de compras (`renderCompras`) agora mostra uma
+  etiqueta de preco/fornecedor ao lado de cada item que bateu no catalogo.
+- **Chave de IA saiu das abas principais**: em `public/index.html`, o
+  painel `#perfilPainelChaveIA` deixou de ser uma 5a aba e virou um
+  `<details>` recolhido ("Configuracoes avancadas: usar minha propria
+  chave de IA") logo acima do botao "Sair da conta". `perfil.js` perdeu a
+  entrada `"chave-ia"` do mapa `PERFIL_PAINEL_POR_ABA`; o backend e o
+  restante do fluxo (salvar/remover chave, badge de status) nao mudaram.
+  As abas visiveis agora sao so Fornecedores, Fotos e Precos.
+- Testado ao vivo (usuario descartavel + Chrome headless): fornecedor +
+  preco cadastrados via API, `/gerar-cardapio` chamado de verdade — a IA
+  usou o nome exato "Tomate" do catalogo, o backend casou e calculou
+  `R$ 12,75` (1,5 kg a R$ 8,50/kg) e devolveu tudo em
+  `meta.catalogo_usuario_aplicado`/`plano.estimativa_custo`. Renderizacao
+  da secao de custo e das etiquetas de preco na lista de compras
+  conferida em Chrome headless (sem erros de console). Fluxo completo de
+  perfil (fornecedores/fotos/chave-ia via `<details>`/precos) reexecutado
+  sem regressao. Suite completa: 183/183.
+
+### Revisao de codigo do catalogo/estimativa de custo e 4 correcoes (2026-08-06)
+
+`/code-review` (7 subagentes em paralelo) sobre o trabalho acima encontrou 4
+problemas reais, todos corrigidos no mesmo dia (mais um 5o achado que foi
+checado ao vivo contra o Supabase real e **descartado** por nao reproduzir:
+a suspeita de que `preco.preco.toFixed(2)` em `exportarCSV` quebraria porque
+PostgREST devolveria `numeric` como string — testado com insert/select reais
+e confirmado que este projeto devolve `number`, sem bug):
+
+- **Correspondencia por substring podia pegar o preco de um produto errado**
+  (`custo-estimado.service.js`): catalogo "Frango" (kg) casava por substring
+  com uma compra "Frango a Passarinho" (kg) e usava o preco do frango
+  inteiro para um produto diferente, sem nenhum aviso. Corrigido separando
+  correspondencia exata de aproximada (`correspondencia_exata`): so a exata
+  entra no `total_estimado` principal; a aproximada vai para
+  `total_aproximado`/`itens_aproximados`, mostrada a parte na tela com "~"
+  e um aviso explicito de que pode nao ser o mesmo produto.
+- **Nomes duplicados na lista de compras mostravam o preco errado**
+  (`render.js`, `renderCompras`): a etiqueta de preco era casada por nome
+  num `Map`, entao duas linhas com o mesmo item (ex.: "Tomate" usado em dois
+  pratos, quantidades diferentes) faziam a segunda sobrescrever a primeira e
+  as duas mostravam o subtotal da ultima. Corrigido: `calcularEstimativaCusto`
+  agora garante 1 item de saida por linha de `lista_compras`, na mesma
+  ordem (nunca mais usa `continue` sem empurrar um item, mesmo em nomes
+  vazios), e `renderCompras` pareia por indice em vez de por nome — nao
+  precisa mais de normalizacao de texto nesse ponto.
+- **Duas chamadas serializadas ao Supabase Auth por geracao de cardapio**
+  (`server.js`): `obterChaveIAUsuarioOuNulo` e `obterCatalogoUsuarioOuNulo`
+  cada um verificava o token por conta propria. Corrigido com
+  `obterTokenAutenticadoOuNulo` (verifica uma vez) + os dois lookups de
+  dados rodando em paralelo via `Promise.all`.
+- **`normalizarTexto` duplicado**: o arquivo novo repetia a mesma funcao de
+  remover acento/normalizar caixa que ja existia em `render.js`
+  (`normalizarTextoComparacao`, removida — deixou de ser necessaria depois
+  do fix de indice acima) e, no backend, em pelo menos 12 outros arquivos em
+  `src/` (pre-existentes, nao criados nesta sessao). Extraido
+  `src/utils/text-normalize.js` e `custo-estimado.service.js` passou a
+  importar de la. **Nao mexido**: os ~12 outros arquivos do backend que já
+  tinham sua propria copia antes desta sessao — consolida-los é um
+  refactor maior, fora do escopo deste fix pontual; registrado como
+  proxima acao abaixo.
+- Todas as correcoes reverificadas: suite completa 185/185, `/gerar-cardapio`
+  chamado de verdade de novo (fornecedor+preco reais, geracao real,
+  `correspondencia_exata: true` no resultado), e um teste de renderizacao
+  em Chrome headless simulando duas linhas duplicadas + uma correspondencia
+  aproximada confirmando que cada linha mostra seu proprio subtotal correto
+  e a aproximada aparece marcada com "~"/"(aprox.)".
+
+### Plano 16, item 7: reestruturacao de navegacao + execucao do rename para "Karamu" (2026-08-06)
+
+Item marcado **CRITICO** pelo proprio usuario ("nao pode ser esquecido pois
+isso resulta na falha do projeto"), executado junto com a troca de nome
+combinada desde a decisao de 2026-08-05. Duas decisoes de produto foram
+tomadas antes de mexer no codigo (perguntadas diretamente ao usuario, ja
+que o roadmap registrava isso como questao em aberto):
+
+- **Acesso demo continua existindo**, mas so depois da apresentacao — nao
+  mais como atalho direto pro gerador. Visitante ve a apresentacao
+  primeiro e la escolhe "Criar conta / Entrar" OU "Testar com senha demo"
+  (sem criar conta).
+- **A apresentacao so aparece para quem ainda nao tem sessao nem escolheu
+  o modo demo.** Quem ja passou por um dos dois (sessao real ou flag de
+  modo demo, ambos em `sessionStorage`) cai direto no gerador nos proximos
+  carregamentos da pagina, sem repetir o gate.
+
+**O que mudou:**
+
+- **Nav de 3 abas paralelas removida.** `<nav class="mode-nav">` com
+  "GERADOR IA" / "APRESENTACAO" / "ENTRAR" lado a lado (mesmo peso visual,
+  dava pra pular direto pro gerador) virou `<nav class="status-bar">` com
+  so 2 botoes: a marca ("🍽️ Karamu", volta pra apresentacao — nao mais um
+  botao de aba) e o status de conta (`#btnConta`, visualmente mais
+  discreto que antes — `.account-status` em `layout.css` — porque agora e
+  um indicador de status, nao uma acao de mesmo peso que o gerador).
+- **Fluxo sequencial**: `public/index.html` inverteu os `class="hidden"`
+  padrao (`appSection` comeca escondido, `pitchSection` comeca visivel) pra
+  evitar flash da tela errada antes do JS rodar; `switchView()` em
+  `app.js` perdeu a logica de sincronizar `aria-pressed`/`.active` dos
+  antigos botoes (nao existem mais) e ganhou a chamada a
+  `atualizarPitchCta()` sempre que mostra a apresentacao.
+- Novo CTA no fim da apresentacao (`#pitchCtaArea`, dentro do ultimo slide
+  do pitch deck), preenchido dinamicamente por `atualizarPitchCta()`:
+  mostra "Criar conta / Entrar" + "Testar com senha demo" para quem
+  chega pela primeira vez, ou um unico "Ir para o gerador →" para quem ja
+  tem sessao ou ja escolheu o modo demo.
+- Novo estado `chef_ia_modo_demo_ativo` em `sessionStorage` (funcao
+  `modoDemoAtivo()`/`entrarModoDemo()`), no mesmo padrao ja usado por
+  `chef_ia_sessao_usuario`. Login/cadastro por e-mail, login social
+  (Google) e o clique em "Testar com senha demo" agora levam direto pro
+  gerador (`switchView('app')`) em vez de deixar o usuario parado na
+  apresentacao depois de entrar.
+- `atualizarBotaoConta()` ganhou um terceiro estado: sem sessao mostra
+  "Entrar"; sem sessao mas com modo demo ativo mostra "Modo demo · Criar
+  conta" (convite a conversao); com sessao mostra o e-mail (como ja era).
+- **Achado durante o teste ao vivo**: `entrarModoDemo()` inicialmente nao
+  chamava `atualizarBotaoConta()`, entao o status de conta ficava
+  "Entrar" por mais um ciclo depois de ativar o modo demo (so corrigia no
+  proximo reload). Corrigido antes de fechar a tarefa.
+
+**Execucao do rename "Chef IA"/"Chef IA Studio" -> "Karamu"** (decidido em
+2026-08-05, adiado de proposito ate aqui):
+
+- Cobertura: titulo da pagina, hero (`Kara<span>mu</span>`), todos os
+  comentarios de cabecalho `CHEF IA STUDIO | ...` em `public/js/*.js`,
+  `public/css/*.css` e `src/**/*.js`, textos de UI (modais, rodape,
+  mensagens de loading), o prompt do Gemini (`"Voce e o Karamu..."` em
+  `event.prompt.js` e `block-prompts.js`), atribuicoes de imagem
+  (`creator`/`attribution` em `image-catalog.service.js`,
+  `local-library.json`, `scripts/validate-gallery-ui.js`), textos em
+  `data/culinary/source-catalog.json`, `data/pricing/catalog.schema.json`,
+  `data/images/image.schema.json`, o SVG de fallback de capa de evento, o
+  nome do arquivo PDF baixado (`karamu-{slug}.pdf`, atualizado tambem no
+  script `scripts/validate-plan5-e2e.js` que confere esse nome), `.env.example`
+  e `README.md`.
+- **Dois valores funcionais** (nao so cosmeticos) tambem tiveram que ser
+  renomeados com cuidado, por serem comparados/usados como chave em varios
+  pontos do backend: o sentinela `"A definir pelo Chef IA"` (formato de
+  servico padrao, usado como chave de dicionario e valor de comparacao em
+  `validate-event.js`, `operational-planning.service.js`,
+  `motor.service.js`, `culinary-matrix.service.js`, `app.js`, `render.js`
+  e no `<option>` do HTML) virou `"A definir pelo Karamu"`, e a licenca
+  `"chef-ia-original"` (comparada em `image-catalog.service.js`, presente
+  no enum de `image.schema.json` e em `local-library.json`, e exibida ao
+  usuario em maiusculas como legenda de imagem) virou
+  `"karamu-original"`. Ambos renomeados de forma consistente em todos os
+  pontos e revalidados pela suite de testes.
+- **Deixado de fora de proposito** (nao e branding, e risco real de perda
+  de dado ou fora de escopo): as chaves de `sessionStorage`/`localStorage`
+  (`chef_ia_sessao_usuario`, `chef_ia_demo_access_key`, `chef_ia_historico`,
+  `chef_ia_visual_feedback_v1`) continuam com o nome antigo — renomear
+  faria qualquer usuario com dado salvo no navegador (historico de eventos,
+  por exemplo) "perder" esse dado silenciosamente no proximo acesso, ja
+  que o app passaria a procurar uma chave diferente. Tambem deixados de
+  fora: os globais internos `window.chefIA*` (nunca aparecem pro usuario),
+  os prefixos de arquivo temporario dos scripts de validacao em
+  `/tmp/chef-ia-*` (uso interno de dev, nao branding), e o `$id` do schema
+  `data/pricing/catalog.schema.json` (identificador estavel de um arquivo
+  ja confirmado como nao carregado por nenhum codigo — ver roadmap).
+- Testado ao vivo em Chrome headless, ponta a ponta, com usuario de teste
+  descartavel: visitante novo cai na apresentacao (gerador escondido);
+  clicar em "testar com senha demo" mostra o gerador e atualiza o status
+  de conta; reload com modo demo ativo continua no gerador (nao volta pra
+  apresentacao); voltar pra apresentacao pelo clique na marca mostra o CTA
+  correto ("ir pro gerador", ja que ha modo demo ativo); login real leva
+  direto ao gerador e mostra o e-mail no status de conta; clicar no status
+  de conta logado abre o perfil; reload com sessao ativa continua no
+  gerador. Zero erros/avisos de console em toda a sequencia. Suite
+  completa revalidada: 185/185.
+
+### Segunda revisao de codigo (`/code-review`, 8 subagentes) sobre a reestruturacao de navegacao + rename (2026-08-06)
+
+Achados confirmados e corrigidos:
+
+- **Historico legado quebrado pelo rename**: eventos salvos no `localStorage`
+  antes da troca de nome tinham `evento.formatoServico === "A definir pelo
+  Chef IA"`; ao restaurar, o `<select>` ficava sem opcao selecionada (valor
+  nao existe mais) e o acordeao "opcoes avancadas" abria sozinho (tratava o
+  padrao antigo como customizado). Corrigido normalizando o sentinela
+  legado no inicio de `carregarDoHistorico()` (`public/js/app.js`).
+- **`GET /api/auth/perfil` sem rate limit**: unica rota de conta sem
+  nenhum limitador, apesar de chamar o Supabase Auth a cada requisicao —
+  permitia sondagem ilimitada de tokens. Adicionado `limitadorPersonalizacao`.
+- **Erros reais engolidos sem log**: `obterChaveIAUsuarioOuNulo` e
+  `obterCatalogoUsuarioOuNulo` (`server.js`) tinham `catch { return null }`
+  silencioso mesmo apos o token ja validado — uma falha real do Supabase
+  desaparecia sem rastro. Adicionado `console.error` nos dois.
+- **Match aproximado pegava o item errado do catalogo**:
+  `encontrarCorrespondencia` (`custo-estimado.service.js`) usava o primeiro
+  item que desse substring match (ordem alfabetica), nao o mais especifico
+  — "Frango a Passarinho" podia ser precificado com o valor de "Frango".
+  Corrigido para priorizar o termo mais longo/especifico entre os
+  candidatos aproximados.
+- **Formatacao de preco BRL duplicada**: `perfil.js` tinha sua propria
+  `perfilFormatarPreco` + prefixo "R$" manual, duplicando `formatarPrecoBRL`
+  ja existente em `render.js` (mesmo escopo global, carregado antes).
+  Consolidado — `perfil.js` agora reusa `formatarPrecoBRL`.
+- **Reexport morto** de `normalizarTexto` em `custo-estimado.service.js`
+  (ninguem importava por ali) — removido.
+- **Catalogo de precos cortado em 60 itens sem sinalizacao**: usuario com
+  mais de 60 precos cadastrados perdia silenciosamente os itens depois do
+  corte alfabetico, sem indicacao. Adicionado `meta.catalogo_usuario_truncado`
+  quando isso acontece (ainda sem indicacao na UI — so no `meta` por
+  enquanto).
+- Todas as correcoes verificadas contra o Supabase real (nao so leitura de
+  codigo): `/api/auth/perfil` chamado de verdade com usuario descartavel
+  (retorna `ok:true` e o cabecalho `RateLimit-Limit: 30`); 65 precos reais
+  inseridos para confirmar `meta.catalogo_usuario_truncado: true` disparando
+  de verdade em `/gerar-cardapio`; restauracao de historico legado e
+  formatacao de preco no perfil conferidas em Chrome headless. Suite
+  completa: 187/187 (2 testes novos cobrindo o sentinela legado e o
+  tie-break do match aproximado).
+
 ## Proxima acao curta
 
 1. antes de lancar para usuarios reais: publicar o app do Google em modo
    "Producao" (hoje esta em "Teste", so e-mails cadastrados como testadores
    conseguem logar com Google) — protecao de senha vazada e
    `rls_auto_enable()` ja resolvidos/registrados, ver secoes acima;
-2. Plano 16, item 7 (**CRITICO**, nao so estetico — ver roadmap): reestruturar
-   a navegacao (apresentacao -> login -> gerador) **e, junto, executar a
-   troca de nome para "Karamu"** (ja decidido em 2026-08-05, so falta
-   executar) — ainda sem decisao de quando comecar;
-3. antes de registrar a marca/comprar dominio de verdade: fazer a busca
+2. antes de registrar a marca/comprar dominio de verdade: fazer a busca
    formal do INPI por classe para "Karamu" (so foram feitas buscas pontuais
    ate agora);
-4. manter o estado somente neste handoff e no roadmap.
+3. limpeza tecnica de baixa prioridade, sem pressa: consolidar as ~12 copias
+   pre-existentes de `normalizarTexto` (remover acento/normalizar caixa)
+   espalhadas em `src/` (`validate-plan.js`, `motor.service.js`,
+   `event-coherence.service.js`, `culinary-variety.service.js`,
+   `culinary-matrix.service.js`, `event-quality.service.js`,
+   `food-yield.service.js`, `beverage-variety.service.js`,
+   `image-selection.service.js`, `image-catalog.service.js`, entre outras)
+   para importar de `src/utils/text-normalize.js` (criado em 2026-08-06,
+   ver secao acima) — nenhuma delas foi tocada ainda, e sao pre-existentes
+   ao trabalho desta sessao, entao nao entraram no fix pontual;
+4. baixa prioridade: mostrar na UI quando `meta.catalogo_usuario_truncado`
+   vier `true` (hoje so fica no `meta`, sem aviso visual pro usuario com
+   mais de 60 precos cadastrados);
+5. commit pendente: ~38 arquivos alterados desde o ultimo commit
+   (interface de perfil, integracao catalogo/custo, reestruturacao de
+   navegacao + rename Karamu, e a rodada de correcoes de code review) —
+   ainda nao commitado nem enviado, aguardando confirmacao do usuario;
+6. manter o estado somente neste handoff e no roadmap.

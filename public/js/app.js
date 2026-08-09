@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CHEF IA STUDIO | APP ENTRYPOINT
+   KARAMU | APP ENTRYPOINT
    TAG: bootstrap, navegacao, fetch-backend
    --------------------------------------------------------------------------
    Responsabilidade: estado da tela, navegacao e chamada POST /gerar-cardapio.
@@ -44,6 +44,7 @@ function inicializarLoginSocial(supabaseUrl, supabaseAnonKey) {
             modal.classList.add('hidden');
             document.body.classList.remove('modal-open');
         }
+        switchView('app');
     });
 }
 
@@ -153,11 +154,46 @@ function encerrarSessaoUsuario() {
     atualizarBotaoConta();
 }
 
+// Visitante que escolhe testar sem criar conta (senha demo compartilhada,
+// ver obterDemoAccessKey). Nao e uma sessao de verdade, mas conta como
+// "ja passou da apresentacao" para nao repetir o gate a cada reload.
+function modoDemoAtivo() {
+    return sessionStorage.getItem('chef_ia_modo_demo_ativo') === 'true';
+}
+
+function entrarModoDemo() {
+    sessionStorage.setItem('chef_ia_modo_demo_ativo', 'true');
+    atualizarBotaoConta();
+    switchView('app');
+}
+
 function atualizarBotaoConta() {
     const botao = document.getElementById('btnConta');
     if (!botao) return;
     const sessao = obterSessaoUsuario();
-    botao.textContent = sessao ? `👤 ${sessao.email}` : '👤 ENTRAR';
+    if (sessao) {
+        botao.textContent = `👤 ${sessao.email}`;
+    } else if (modoDemoAtivo()) {
+        botao.textContent = '👤 Modo demo · Criar conta';
+    } else {
+        botao.textContent = '👤 Entrar';
+    }
+}
+
+// Preenche o CTA no fim da apresentacao: quem ja tem sessao ou ja escolheu
+// o modo demo vai direto pro gerador; quem esta chegando agora escolhe
+// entre criar conta/entrar ou testar sem conta.
+function atualizarPitchCta() {
+    const area = document.getElementById('pitchCtaArea');
+    if (!area) return;
+    if (obterSessaoUsuario() || modoDemoAtivo()) {
+        area.innerHTML = `<button type="button" class="btn-epic" style="width:auto; padding: 18px 34px;" onclick="switchView('app')">IR PARA O GERADOR →</button>`;
+    } else {
+        area.innerHTML = `
+            <button type="button" class="btn-epic" style="width:auto; padding: 18px 34px;" onclick="abrirModalConta()">CRIAR CONTA / ENTRAR</button>
+            <button type="button" class="btn-secondary" style="width:auto; padding: 18px 34px;" onclick="entrarModoDemo()">TESTAR COM SENHA DEMO</button>
+        `;
+    }
 }
 
 function abrirModalConta() {
@@ -213,11 +249,13 @@ function abrirModalConta() {
                 }
                 salvarSessaoUsuario({ email: dados.email, accessToken: dados.access_token });
                 fechar();
+                switchView('app');
                 return;
             }
 
             salvarSessaoUsuario({ email: dados.email, accessToken: dados.access_token });
             fechar();
+            switchView('app');
         } catch (error) {
             erro.textContent = "Erro de conexao. Tente novamente.";
         }
@@ -292,23 +330,20 @@ setInterval(() => {
     }
 }, 3500);
 
-/* TAG: navegacao-app-pitch-perfil */
+// Fluxo sequencial (apresentacao -> login/demo -> gerador; conta como status,
+// nao aba paralela). 'pitch' e a porta de entrada para quem ainda nao tem
+// sessao nem escolheu o modo demo (ver determinarViewInicial); depois disso
+// o app vira a tela principal e a apresentacao/perfil ficam a um clique na
+// barra de status, sem concorrer visualmente com o gerador.
 function switchView(view) {
     const secoes = { app: 'appSection', pitch: 'pitchSection', perfil: 'perfilSection' };
-    const botoes = { app: 'btnApp', pitch: 'btnPitch' };
 
     for (const [nome, idSecao] of Object.entries(secoes)) {
         const secao = document.getElementById(idSecao);
         if (secao) secao.classList.toggle('hidden', nome !== view);
     }
-    for (const [nome, idBotao] of Object.entries(botoes)) {
-        const botao = document.getElementById(idBotao);
-        if (!botao) continue;
-        const ativo = nome === view;
-        botao.classList.toggle('active', ativo);
-        botao.setAttribute('aria-pressed', ativo ? 'true' : 'false');
-    }
 
+    if (view === 'pitch') atualizarPitchCta();
     if (view === 'perfil' && window.chefIAPerfil) {
         window.chefIAPerfil.abrir();
     }
@@ -343,7 +378,7 @@ async function gerarTudo() {
     const alcool = document.getElementById('alcool')?.value || "Nao informado";
     const orcamentoBase = document.getElementById('orcamentoBase')?.value || "Nao informado";
     const horarioInicio = document.getElementById('horarioInicio')?.value || "";
-    const formatoServico = document.getElementById('formatoServico')?.value || "A definir pelo Chef IA";
+    const formatoServico = document.getElementById('formatoServico')?.value || "A definir pelo Karamu";
     const faixaEtaria = document.getElementById('faixaEtaria')?.value || "Publico misto";
     const infraestrutura = document.getElementById('infraestrutura')?.value || "A confirmar";
     const prioridade = document.getElementById('prioridade')?.value || "Equilibrio geral";
@@ -399,7 +434,7 @@ async function gerarTudo() {
         resultadoArea.innerHTML = `
             <div class="glass-panel" style="text-align:center; border-top: 4px solid var(--gold);">
                 <span class="gallery-loading-visual" aria-hidden="true" style="display:inline-block; margin-bottom:12px;"></span>
-                <p><strong>O Chef IA está arquitetando seu evento...</strong></p>
+                <p><strong>O Karamu está arquitetando seu evento...</strong></p>
                 <p style="font-size:0.8rem; opacity:0.7;">Calculando logística para ${pessoas} convidados (${estilo}). Pode levar de 15 a 40 segundos.</p>
             </div>
         `;
@@ -654,6 +689,12 @@ function carregarDoHistorico(id) {
 
     // Preencher formulário
     const evento = entrada.evento;
+    // Historico salvo antes do rename para "Karamu" pode ter o sentinela
+    // antigo ("A definir pelo Chef IA"); normaliza aqui para nao cair fora
+    // das opcoes do <select> nem ser tratado como formato customizado.
+    if (evento.formatoServico === 'A definir pelo Chef IA') {
+        evento.formatoServico = 'A definir pelo Karamu';
+    }
     definirValorCampo('tipo', evento.tipo);
     definirValorCampo('pessoas', evento.pessoas);
     definirValorCampo('criancas', evento.criancas);
@@ -669,7 +710,7 @@ function carregarDoHistorico(id) {
     definirValorCampo('orcamentoBase', evento.orcamentoBase);
     definirValorCampo('alcool', evento.alcool);
     definirValorCampo('horarioInicio', evento.horarioInicio);
-    definirValorCampo('formatoServico', evento.formatoServico || 'A definir pelo Chef IA');
+    definirValorCampo('formatoServico', evento.formatoServico || 'A definir pelo Karamu');
     definirValorCampo('faixaEtaria', evento.faixaEtaria || 'Publico misto');
     definirValorCampo('infraestrutura', evento.infraestrutura || 'A confirmar');
     definirValorCampo('prioridade', evento.prioridade || 'Equilibrio geral');
@@ -678,7 +719,7 @@ function carregarDoHistorico(id) {
     if (opcoesAvancadas) {
         opcoesAvancadas.open = Boolean(
             evento.horarioInicio ||
-            (evento.formatoServico && evento.formatoServico !== 'A definir pelo Chef IA') ||
+            (evento.formatoServico && evento.formatoServico !== 'A definir pelo Karamu') ||
             (evento.faixaEtaria && evento.faixaEtaria !== 'Publico misto') ||
             (evento.infraestrutura && evento.infraestrutura !== 'A confirmar') ||
             (evento.prioridade && evento.prioridade !== 'Equilibrio geral')
@@ -750,6 +791,9 @@ function limparHistoricoUI() {
 document.addEventListener('DOMContentLoaded', function() {
     inicializarAcessoDemo();
     atualizarBotaoConta();
+    // Quem ja tem sessao ou ja escolheu o modo demo cai direto no gerador;
+    // visitante novo ve a apresentacao primeiro (Plano 16, item 7).
+    switchView(obterSessaoUsuario() || modoDemoAtivo() ? 'app' : 'pitch');
 
     // Renderizar histórico ao carregar
     setTimeout(() => {

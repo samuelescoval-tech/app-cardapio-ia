@@ -1,4 +1,4 @@
-# Roadmap atual - Chef IA Studio
+# Roadmap atual - Karamu
 
 Atualizado em 2026-08-06.
 
@@ -21,16 +21,23 @@ Advisor do Supabase limpo). Em 2026-08-06: item 6 do Plano 16 (precos
 proprios por usuario + exportacao CSV) concluido e testado com o Supabase
 real, **e a interface unificada de perfil** (fornecedores + fotos + chave
 de IA + precos numa tela so, dentro do app) implementada e testada ao
-vivo — ver handoff para detalhes. Os demais itens do Plano 16 seguem sem
-inicio de implementacao.
+vivo. No mesmo dia, apos feedback do usuario de que os cadastros estavam
+isolados do gerador, fornecedores/precos passaram a alimentar de verdade
+o `/gerar-cardapio` (catalogo regional no prompt + estimativa de custo
+local calculada no backend) e a Chave de IA (BYOK) saiu das abas
+principais para um painel avancado recolhido — ver handoff para detalhes.
+No mesmo dia, **o item 7 do Plano 16 (reestruturacao de navegacao,
+CRITICO) foi executado junto com a troca de nome para "Karamu"** (decidida
+em 2026-08-05) — ver secao do item 7 abaixo e o handoff para os detalhes
+completos. Os demais itens do Plano 16 (3 e 4) seguem sem inicio de
+implementacao.
 
-**Nome novo decidido: "Karamu"** (2026-08-05, ver handoff para todo o
-processo de escolha). Substitui "Chef IA"/"Chef IA Studio" por conflito de
-marca/patente. Execucao da troca no codigo/docs foi adiada de proposito
-pelo usuario para acontecer junto com a reestruturacao de navegacao (item 7
-abaixo) — ate la o projeto continua se chamando "Chef IA Studio" em todo
-lugar. Falta tambem busca formal do INPI por classe antes de registrar a
-marca de verdade.
+**Nome trocado: "Karamu"** (decidido em 2026-08-05, executado em
+2026-08-06 — ver handoff para o processo de escolha e a lista completa do
+que foi renomeado). Substituiu "Chef IA"/"Chef IA Studio" em todo o
+codigo, UI e docs por conflito de marca/patente. Falta so a busca formal
+do INPI por classe antes de registrar a marca de verdade (item 3 do
+proxima-acao no handoff).
 
 | Plano | Resultado | Estado |
 |---|---|---|
@@ -413,11 +420,31 @@ cardapio usando a chave propria, sem senha demo). **Interface concluida em
 - ~~revogar execute publico de `rls_auto_enable()`~~ — **feito em
   2026-07-28** (migracao 005), testado ao vivo sem regressao.
 
-### 4. Ajustes visuais no app (a definir)
+### 4. Ajustes visuais no app (exemplos concretos recebidos em 2026-08-06)
 
-Mencionado como necessario, ainda sem lista concreta do que precisa mudar.
-Quando o usuario tiver exemplos especificos (telas, prints, comportamentos),
-detalhar aqui antes de qualquer implementacao.
+Primeiros exemplos concretos, a partir de um print real da tela de
+resultado (evento de Reveillon gerado com sucesso). Ainda nao
+implementado — registrar aqui antes de qualquer mudanca:
+
+- **Lista de Compras por Setor muito larga/espalhada**: com muitos itens
+  (76 no exemplo), os 4 cartoes de setor lado a lado (`.sector-grid` em
+  `result.css`) ficam com scroll vertical grande e dificeis de escanear.
+  Usuario quer uma visualizacao melhor, sugerindo algo que expande/recolhe
+  (ex.: acordeao por setor) em vez de tudo aberto ao mesmo tempo.
+- **Vies das imagens dos pratos**: usuario notou que as fotos/ilustracoes
+  associadas aos pratos gerados "nao estao comuns" — precisa investigar
+  com exemplos mais especificos do que esperado vs. o que aparece (qual
+  prato, qual imagem veio) antes de mexer em `image-selection.service.js`.
+- **Perfil do usuario pouco obvio + perde o evento atual ao clicar**: o
+  acesso ao perfil (clique no status de conta) nao e intuitivo, e hoje
+  navega para `perfilSection` trocando a tela inteira — o formulario/
+  resultado do evento em andamento fica escondido (ainda salvo em
+  memoria/DOM, mas a navegacao "perde o contexto" visualmente). Usuario
+  queria algo mais parecido com um menu de conta do Google ou de rede
+  social (dropdown/painel sobreposto que nao troca de tela) do que uma
+  navegacao para pagina separada.
+- Usuario deixou explicito que **isso fica para depois** — nao e para
+  implementar agora, so para nao perder de vista.
 
 ### 5. Revisao de seguranca de dados e do site/privacidade
 
@@ -446,39 +473,79 @@ incluindo a validacao de que um preco nao pode ser vinculado ao fornecedor
 de outro usuario (404 correto).
 
 **Interface unificada concluida em 2026-08-06** — nova secao `#perfilSection`
-em `public/index.html` (`public/js/perfil.js`), com 4 abas (Fornecedores,
-Fotos, Chave de IA, Precos), acessivel pelo botao de conta no menu (nao
-muda a hierarquia da navegacao — isso continua no item 7). Todo o CRUD via
-fetch para as rotas ja existentes, upload de foto lendo o arquivo como
-data URL no navegador, exportacao do CSV de precos via `Blob`. Testado ao
-vivo (Chrome headless, usuario descartavel): os quatro paineis funcionam
-ponta a ponta, zero erros de console. Ver handoff para detalhes completos.
+em `public/index.html` (`public/js/perfil.js`), acessivel pelo botao de
+conta no menu (nao muda a hierarquia da navegacao — isso continua no item
+7). Todo o CRUD via fetch para as rotas ja existentes, upload de foto
+lendo o arquivo como data URL no navegador, exportacao do CSV de precos
+via `Blob`. Testado ao vivo (Chrome headless, usuario descartavel): os
+paineis funcionam ponta a ponta, zero erros de console. Ver handoff para
+detalhes completos.
 
-### 7. Reestruturar a navegacao: apresentacao -> login -> app — **CRITICO, nao e so estetica**
+**Integracao com o gerador, no mesmo dia** — feedback do usuario ao ver a
+tela pronta: fornecedores/precos eram cadastros isolados, sem nenhuma
+ligacao real com `/gerar-cardapio`. Corrigido: o backend monta um
+"catalogo regional do usuario" (fornecedores + precos) e passa como
+contexto no prompt (`src/prompts/event.prompt.js`), e depois cruza a
+`lista_compras` gerada com esse catalogo para calcular uma estimativa de
+custo local (`src/services/planning/custo-estimado.service.js`), sem
+pedir a IA para gerar precos. Resultado aparece em
+`plano.estimativa_custo` e na tela (nova secao "Custo Estimado" + etiqueta
+de preco por item da lista de compras). Testado ao vivo de ponta a ponta
+(fornecedor + preco reais, geracao real de cardapio, IA usando o nome do
+item do catalogo, backend calculando o subtotal certo). **Abas visiveis
+agora sao so Fornecedores/Fotos/Precos** — Chave de IA (BYOK) saiu das
+abas principais e virou um painel "avancado" recolhido (`<details>`),
+porque como estava (aba igual as demais) reduzia conversao e ampliava
+superficie de seguranca sem beneficio claro pra maioria dos usuarios; o
+backend/criptografia nao mudaram, so a exposicao na UI. Ver handoff para
+detalhes completos.
+
+**Revisao de codigo e correcoes, no mesmo dia** — `/code-review` encontrou
+4 problemas reais nessa integracao (casamento por substring podia atribuir
+preco de produto errado; nomes duplicados na lista de compras mostravam
+preco da linha errada; duas chamadas serializadas ao Supabase Auth por
+geracao; `normalizarTexto` duplicado). Todos corrigidos e reverificados
+(suite 185/185 + testes ao vivo). Consolidar as ~12 copias *pre-existentes*
+de `normalizarTexto` espalhadas pelo resto do backend ficou de fora
+(fora do escopo do fix pontual) e esta registrado como proxima acao no
+handoff. Ver handoff para a lista completa dos achados e como cada um foi
+corrigido.
+
+### 7. Reestruturar a navegacao: apresentacao -> login -> app — **CRITICO, nao e so estetica** — RESOLVIDO em 2026-08-06
 
 O usuario classificou este item como algo que "nao pode ser esquecido pois
-isso resulta na falha do projeto" (2026-07-28). Nao tratar como polimento
-cosmetico de baixa prioridade — e um problema de arquitetura de produto na
-visao do usuario.
+isso resulta na falha do projeto" (2026-07-28). Nao tratado como polimento
+cosmetico de baixa prioridade — era um problema de arquitetura de produto
+na visao do usuario, e foi tratado como tal.
 
-Hoje (`public/index.html`) a navegacao mostra tres botoes lado a lado com o
-mesmo peso: "GERADOR IA" (abre direto, e a tela inicial padrao), "APRESENTACAO"
-e "ENTRAR" — o usuario pode pular a apresentacao e o login e ir direto pro
-gerador. A ideia registrada e inverter isso: o visitante ve a apresentacao
-primeiro, depois faz login/cadastro, e so entao cai na tela do Chef IA
-(gerador). Isso muda o fluxo de "abas paralelas" para um fluxo sequencial
-com o login como porta de entrada. Ainda sem decisao de como tratar visitantes
-que querem so espiar sem conta (ex.: modo demonstracao antes do login, ou
-login obrigatorio para tudo) — decidir quando esse item for priorizado.
+**Como estava**: a navegacao mostrava tres botoes lado a lado com o mesmo
+peso: "GERADOR IA" (abre direto, era a tela inicial padrao), "APRESENTACAO"
+e "ENTRAR" — dava pra pular a apresentacao e o login e ir direto pro
+gerador. Reforcado pelo usuario em 2026-07-28, testando o login com Google
+pela primeira vez: com a conta logada, o e-mail do usuario passou a ocupar
+um terceiro botao no mesmo nivel visual dos outros dois, confirmando ao
+vivo o problema de hierarquia.
 
-**Reforcado pelo usuario em 2026-07-28**, testando o login com Google pela
-primeira vez: com a conta logada, o e-mail do usuario passou a ocupar um
-terceiro botao no mesmo nivel visual de "GERADOR IA"/"APRESENTACAO",
-confirmando ao vivo o problema de hierarquia ja descrito acima.
+**Como ficou**: fluxo sequencial — visitante sem sessao e sem modo demo
+ativo cai na apresentacao primeiro; de la escolhe "Criar conta / Entrar"
+ou "Testar com senha demo" (decisao tomada com o usuario: manter o acesso
+demo, mas so depois da apresentacao, nao mais como atalho direto). Quem ja
+tem sessao real ou ja escolheu o modo demo cai direto no gerador nos
+proximos carregamentos (segunda decisao tomada com o usuario: a
+apresentacao so repete o gate para quem ainda nao passou por nenhum dos
+dois). A navegacao virou uma barra de status com 2 elementos — a marca
+(volta a apresentacao) e o status de conta, esse ultimo visualmente mais
+discreto que antes, porque agora e um indicador, nao uma aba de mesmo
+peso que o gerador.
 
-**Combinado com a troca de nome**: quando esse item comecar, a execucao da
-troca de "Chef IA"/"Chef IA Studio" para "Karamu" (decidido em 2026-08-05,
-ver handoff) acontece junto — nao sao dois trabalhos separados.
+**Combinado com a troca de nome**, como planejado: a execucao da troca de
+"Chef IA"/"Chef IA Studio" para "Karamu" (decidido em 2026-08-05) aconteceu
+junto, no mesmo dia. Ver handoff (secao "Plano 16, item 7") para a lista
+completa do que mudou em `public/index.html`/`app.js`/CSS, o escopo
+completo do rename (incluindo os dois valores funcionais que precisaram de
+cuidado extra: o sentinela de formato de servico e a licenca de imagem
+local) e os testes ao vivo em Chrome headless que validaram o fluxo
+inteiro.
 
 ## Depois do Plano 13
 

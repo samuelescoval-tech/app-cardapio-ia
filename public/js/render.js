@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CHEF IA STUDIO | RENDER
+   KARAMU | RENDER
    TAG: ui-render, resultado, componentes-visuais
    --------------------------------------------------------------------------
    Responsabilidade: transformar o JSON normalizado da IA em HTML.
@@ -43,7 +43,8 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
             ${renderServicoMesa(servicoMesa)}
             ${renderCardapio(cardapio)}
             ${renderGaleriaEventoPendente()}
-            ${renderCompras(compras)}
+            ${renderEstimativaCusto(dados.estimativa_custo)}
+            ${renderCompras(compras, dados.estimativa_custo)}
             ${renderLocais(locais)}
             ${renderSecao("Layout", layout.length ? renderListaCards(layout, "layout-card") : renderConteudoAusente("Layout não informado."))}
             ${renderDecoracao(dados.decoracao || {})}
@@ -234,9 +235,9 @@ function imagensLocaisGaleria() {
         image_url: imageUrl,
         thumbnail_url: imageUrl,
         source_url: null,
-        creator: "Chef IA Studio",
+        creator: "Karamu",
         license: "local-fallback",
-        attribution: "Ilustracao de contingencia do Chef IA Studio.",
+        attribution: "Ilustracao de contingencia do Karamu.",
         alt,
         fallback: true
     }));
@@ -258,7 +259,7 @@ function normalizarImagemEvento(imagem) {
         provider,
         image_url: imageUrl,
         source_url: sourceUrl,
-        creator: String(imagem.creator || (provider === "local" ? "Chef IA Studio" : "Autor nao informado")).slice(0, 160),
+        creator: String(imagem.creator || (provider === "local" ? "Karamu" : "Autor nao informado")).slice(0, 160),
         license: String(imagem.license || "licenca nao informada").toUpperCase().slice(0, 40),
         attribution: String(imagem.attribution || "Credito nao informado").slice(0, 500),
         alt: String(imagem.alt || "Referencia visual do evento").slice(0, 220),
@@ -668,7 +669,7 @@ function renderContextoInformado(evento = {}, premissas = {}) {
     };
     const itens = [
         valores.horario && valores.horario !== "Nao informado" ? `Inicio: ${valores.horario}` : "",
-        valores.formato && valores.formato !== "A definir pelo Chef IA" ? `Servico: ${valores.formato}` : "",
+        valores.formato && valores.formato !== "A definir pelo Karamu" ? `Servico: ${valores.formato}` : "",
         valores.faixa && valores.faixa !== "Publico misto" ? `Publico: ${valores.faixa}` : "",
         valores.infraestrutura && valores.infraestrutura !== "A confirmar" ? `Infraestrutura: ${valores.infraestrutura}` : "",
         valores.prioridade && valores.prioridade !== "Equilibrio geral" ? `Prioridade: ${valores.prioridade}` : ""
@@ -764,7 +765,7 @@ function baixarRelatorioPDF() {
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(16);
-        doc.text("Chef IA Studio", pagina.margem, 12);
+        doc.text("Karamu", pagina.margem, 12);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8.5);
         doc.text(normalizarTextoPDF(titulo), pagina.margem, 20);
@@ -945,7 +946,7 @@ function baixarRelatorioPDF() {
 
     const nomeEvento = evento?.tipo || premissas.tipo || "evento";
     rodape();
-    doc.save(`chef-ia-${slugPDF(nomeEvento)}.pdf`);
+    doc.save(`karamu-${slugPDF(nomeEvento)}.pdf`);
 }
 
 function textoPDFItem(item) {
@@ -1322,12 +1323,21 @@ function rolarCardapio(direcao) {
     });
 }
 
-function renderCompras(compras) {
+function formatarPrecoBRL(valor) {
+    return Number(valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function renderCompras(compras, estimativaCusto = null) {
     if (!compras.length) return "";
-    const porSetor = compras.reduce((acc, item) => {
-        const setor = item.setor || "Outros";
+    // Pareado por indice (nao por nome): estimativaCusto.itens tem sempre um
+    // item por entrada de compras, na mesma ordem, entao dois itens da lista
+    // com o mesmo nome (ex.: "Tomate" em dois pratos) nao se confundem mais.
+    const itensPreco = estimativaCusto?.itens || [];
+    const comprasComPreco = compras.map((item, indice) => ({ item, precoInfo: itensPreco[indice] || null }));
+    const porSetor = comprasComPreco.reduce((acc, entrada) => {
+        const setor = entrada.item.setor || "Outros";
         if (!acc[setor]) acc[setor] = [];
-        acc[setor].push(item);
+        acc[setor].push(entrada);
         return acc;
     }, {});
 
@@ -1338,20 +1348,45 @@ function renderCompras(compras) {
                 <span>${compras.length} itens</span>
             </div>
             <div class="sector-grid">
-                ${Object.entries(porSetor).map(([setor, itens]) => `
+                ${Object.entries(porSetor).map(([setor, entradas]) => `
                     <div class="sector-card">
                         <h4>${escapeHTML(setor)}</h4>
-                        ${itens.map(item => `
+                        ${entradas.map(({ item, precoInfo }) => {
+                            const temSubtotal = precoInfo && precoInfo.subtotal !== null && precoInfo.subtotal !== undefined;
+                            const rotuloPreco = temSubtotal
+                                ? `${precoInfo.correspondencia_exata ? "" : "~ "}${formatarPrecoBRL(precoInfo.subtotal)} · ${precoInfo.fornecedor || "seu fornecedor"}${precoInfo.correspondencia_exata ? "" : " (aprox.)"}`
+                                : "";
+                            return `
                             <div class="shopping-item">
-                                <span class="shopping-item-name"><span>${escapeHTML(item.item || "Item")}</span>${item.natureza ? `<small>${escapeHTML(item.natureza)}</small>` : ""}</span>
+                                <span class="shopping-item-name"><span>${escapeHTML(item.item || "Item")}</span>${item.natureza ? `<small>${escapeHTML(item.natureza)}</small>` : ""}${temSubtotal ? `<small class="shopping-item-price${precoInfo.correspondencia_exata ? "" : " aproximado"}">${escapeHTML(rotuloPreco)}</small>` : ""}</span>
                                 <strong>${escapeHTML(item.quantidade || "")}</strong>
                             </div>
-                        `).join("")}
+                        `;
+                        }).join("")}
                     </div>
                 `).join("")}
             </div>
         </section>
     `;
+}
+
+function renderEstimativaCusto(estimativa) {
+    if (!estimativa || !estimativa.total_itens) return "";
+    return renderSecao("Custo Estimado com Seus Fornecedores", `
+        <div class="cost-estimate-panel">
+            <div class="cost-estimate-total">
+                <span>Total estimado</span>
+                <strong>${escapeHTML(formatarPrecoBRL(estimativa.total_estimado))}</strong>
+            </div>
+            ${estimativa.itens_aproximados ? `
+            <p class="cost-estimate-note">
+                + ${escapeHTML(formatarPrecoBRL(estimativa.total_aproximado))} em ${estimativa.itens_aproximados} ${estimativa.itens_aproximados === 1 ? "item" : "itens"} com correspondência aproximada no seu catálogo (pode não ser exatamente o mesmo produto/preço) — somados à parte, não incluídos no total acima.
+            </p>` : ""}
+            <p class="cost-estimate-note">
+                ${estimativa.itens_com_preco} de ${estimativa.total_itens} itens da lista de compras foram encontrados no seu cadastro de preços e fornecedores. Estimativa local, sem cotação externa; os demais itens seguem sem preço até você cadastrá-los em "Meu Perfil".
+            </p>
+        </div>
+    `);
 }
 
 function renderLocais(locais) {

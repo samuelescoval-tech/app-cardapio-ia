@@ -1051,7 +1051,7 @@ test("normaliza um evento valido e aplica valores padrao", () => {
   assert.equal(evento.estilo, "Simples");
   assert.equal(evento.restricoes, "Nenhuma");
   assert.equal(evento.horarioInicio, "");
-  assert.equal(evento.formatoServico, "A definir pelo Chef IA");
+  assert.equal(evento.formatoServico, "A definir pelo Karamu");
   assert.equal(evento.faixaEtaria, "Publico misto");
   assert.equal(evento.infraestrutura, "A confirmar");
   assert.equal(evento.prioridade, "Equilibrio geral");

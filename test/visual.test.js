@@ -428,8 +428,8 @@ test('formulario principal associa rotulos aos campos e anuncia resultados', () 
         assert.match(html, new RegExp(`<label[^>]+for="${id}"`), `rotulo ausente para ${id}`);
     }
 
-    assert.match(html, /<nav class="mode-nav" aria-label=/);
-    assert.match(html, /id="btnApp" aria-pressed="true"/);
+    assert.match(html, /<nav class="status-bar" aria-label=/);
+    assert.match(html, /id="btnConta" onclick="abrirModalConta\(\)"/);
     assert.match(html, /id="resultadoArea" class="hidden" aria-live="polite"/);
     assert.match(html, /class="style-grid" role="radiogroup"/);
 });
@@ -448,12 +448,25 @@ test('layout mobile reduz a primeira dobra e preserva alvos de toque', () => {
     assert.match(resultado, /grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\) 44px 44px;/);
 });
 
-test('navegacao atualiza estado acessivel', () => {
+test('navegacao sequencial (apresentacao -> login/demo -> gerador) atualiza secoes e CTA', () => {
     const app = ler('public/js/app.js');
 
-    assert.match(app, /const botoes = \{ app: 'btnApp', pitch: 'btnPitch' \}/);
-    assert.match(app, /botao\.setAttribute\('aria-pressed', ativo \? 'true' : 'false'\)/);
+    assert.match(app, /const secoes = \{ app: 'appSection', pitch: 'pitchSection', perfil: 'perfilSection' \}/);
+    assert.match(app, /secao\.classList\.toggle\('hidden', nome !== view\)/);
+    assert.match(app, /switchView\(obterSessaoUsuario\(\) \|\| modoDemoAtivo\(\) \? 'app' : 'pitch'\)/);
+    assert.match(app, /function atualizarPitchCta/);
+    assert.match(app, /function modoDemoAtivo/);
     assert.match(app, /button\?\.setAttribute\('aria-expanded', String\(!collapsed\)\)/);
+});
+
+test('restauracao de historico normaliza o sentinela antigo de formatoServico apos o rename para Karamu', () => {
+    const app = ler('public/js/app.js');
+    // Regressao: historico salvo no localStorage antes do rename (2026-08-06)
+    // pode ter evento.formatoServico === 'A definir pelo Chef IA', que nao
+    // bate com nenhuma <option> do select nem com o novo sentinela usado nas
+    // comparacoes de "opcoes avancadas customizadas".
+    assert.match(app, /evento\.formatoServico === 'A definir pelo Chef IA'/);
+    assert.match(app, /evento\.formatoServico = 'A definir pelo Karamu'/);
 });
 
 test('E2E preserva evidencia mobile mesmo quando uma porta culinaria falha', () => {

@@ -17,7 +17,7 @@ const LIMITES_TEXTO = {
 };
 
 const OPCOES_EVENTO = {
-  formatoServico: ["A definir pelo Chef IA", "Buffet self-service", "Buffet com equipe servindo", "Empratado", "Coquetel circulante", "Estacoes ou ilhas", "Compartilhado a mesa"],
+  formatoServico: ["A definir pelo Karamu", "Buffet self-service", "Buffet com equipe servindo", "Empratado", "Coquetel circulante", "Estacoes ou ilhas", "Compartilhado a mesa"],
   faixaEtaria: ["Publico misto", "Predominantemente adultos", "Predominantemente infantil", "Adolescentes e jovens", "Adultos e idosos"],
   infraestrutura: ["A confirmar", "Cozinha completa no local", "Cozinha de apoio limitada", "Sem cozinha no local", "Producao externa com finalizacao"],
   prioridade: ["Equilibrio geral", "Variedade culinaria", "Praticidade de servico", "Apresentacao", "Conforto dos convidados", "Economia operacional"]
@@ -58,7 +58,7 @@ function validarEvento(valor) {
     alcool: textoOpcional(valor.alcool, "alcool", "Nao informado"),
     orcamentoBase: textoOpcional(valor.orcamentoBase, "orcamentoBase", "Nao informado"),
     horarioInicio: horarioOpcional(valor.horarioInicio),
-    formatoServico: opcaoPermitida(valor.formatoServico, "formatoServico", "A definir pelo Chef IA"),
+    formatoServico: opcaoPermitida(valor.formatoServico, "formatoServico", "A definir pelo Karamu"),
     faixaEtaria: opcaoPermitida(valor.faixaEtaria, "faixaEtaria", "Publico misto"),
     infraestrutura: opcaoPermitida(valor.infraestrutura, "infraestrutura", "A confirmar"),
     prioridade: opcaoPermitida(valor.prioridade, "prioridade", "Equilibrio geral"),

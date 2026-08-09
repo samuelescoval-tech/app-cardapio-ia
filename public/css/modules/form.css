@@ -785,3 +785,26 @@ body.modal-open{
     font-size:.88rem;
     margin-bottom:16px;
 }
+
+.perfil-avancado{
+    margin-top:24px;
+    border-top:1px solid rgba(0,0,0,.08);
+    padding-top:16px;
+}
+
+.perfil-avancado summary{
+    cursor:pointer;
+    font-size:.85rem;
+    font-weight:600;
+    color:rgba(0,0,0,.55);
+    list-style:revert;
+}
+
+.perfil-avancado[open] summary{
+    color:var(--black);
+    margin-bottom:14px;
+}
+
+.perfil-avancado-conteudo{
+    padding-top:6px;
+}

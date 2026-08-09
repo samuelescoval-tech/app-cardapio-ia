@@ -1,4 +1,4 @@
-# Chef IA Studio
+# Karamu
 
 App para planejar eventos com cardapio, receitas, compras, quantidades,
 equipe, operacao e PDF, com contas de usuario (fornecedores e fotos proprias)

@@ -489,7 +489,7 @@ async function gerarScenario(cdp, scenario) {
       set('cidade', 'Campinas');
       set('userChat', s.obs);
       set('horarioInicio', s.horarioInicio || '');
-      set('formatoServico', s.formatoServico || 'A definir pelo Chef IA');
+      set('formatoServico', s.formatoServico || 'A definir pelo Karamu');
       set('faixaEtaria', s.faixaEtaria || 'Publico misto');
       set('infraestrutura', s.infraestrutura || 'A confirmar');
       set('prioridade', s.prioridade || 'Equilibrio geral');
@@ -572,7 +572,7 @@ async function gerarScenario(cdp, scenario) {
         shoppingItems: document.querySelectorAll('.shopping-item').length,
         historyCount: window.storageService.carregarHistorico().length,
         desktopOverflow: document.documentElement.scrollWidth > window.innerWidth + 1,
-        pdfFile: 'chef-ia-' + slug + '.pdf'
+        pdfFile: 'karamu-' + slug + '.pdf'
       };
     })()`, 180000);
     if (result.ok) return result;

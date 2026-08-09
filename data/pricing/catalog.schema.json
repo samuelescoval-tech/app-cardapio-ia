@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://chef-ia.local/schemas/simple-pricing-catalog.schema.json",
-  "title": "Chef IA simple regional pricing catalog",
+  "title": "Karamu simple regional pricing catalog",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "catalog_id", "status", "updated_at", "market", "policy", "sources", "items"],
