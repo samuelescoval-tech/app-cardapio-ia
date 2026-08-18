@@ -214,7 +214,7 @@
     gap:10px;
 }
 
-.btn-util{
+.btn-icon{
     width:50px;
 
     border:none;
@@ -226,6 +226,25 @@
     cursor:pointer;
 
     font-size:1.2rem;
+}
+
+/* Modificador p/ botao icone circular (ex.: fechar modal) — combina com
+   .btn-icon, mesmo padrao de sufixo bare ja usado por .btn-small. */
+.btn-round{
+    position:absolute;
+    top:16px;
+    right:16px;
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    background:#f2f2f2;
+    color:#333;
+    font-weight:900;
+    font-size:1rem;
+}
+
+.btn-round:hover{
+    background:#e6e6e6;
 }
 
 /* ───────── BOTÃO ───────── */
@@ -269,6 +288,20 @@
         0 20px 45px rgba(184,134,11,.45);
 }
 
+/* Modificadores bare (mesmo padrao de .btn-small): combinam com .btn-epic
+   (ou .btn-secondary, no caso de --wide) em vez de duplicar a receita. */
+.btn-compact{
+    width:auto;
+    padding:12px 18px;
+    border-radius:12px;
+    letter-spacing:1px;
+}
+
+.btn-wide{
+    width:auto;
+    padding:18px 34px;
+}
+
 /* ───────── ACESSO DEMO ───────── */
 
 body.modal-open{
@@ -308,24 +341,6 @@ body.modal-open{
 .access-modal-card p{
     color:#5f5b54;
     margin-bottom:22px;
-}
-
-.access-modal-close{
-    position:absolute;
-    top:16px;
-    right:16px;
-    width:34px;
-    height:34px;
-    border:none;
-    border-radius:50%;
-    background:#f2f2f2;
-    color:#333;
-    cursor:pointer;
-    font-weight:900;
-}
-
-.access-modal-close:hover{
-    background:#e6e6e6;
 }
 
 .access-modal-error{
@@ -373,77 +388,6 @@ body.modal-open{
     }
 }
 
-/* ───────── RESULTADOS ───────── */
-
-.dish-card{
-    overflow:hidden;
-
-    border-radius:22px;
-
-    background:white;
-
-    text-align:center;
-
-    cursor:pointer;
-
-    border:3px solid transparent;
-
-    transition:var(--transition);
-
-    box-shadow:
-        0 10px 30px rgba(0,0,0,.05);
-}
-
-.dish-card:hover{
-    transform:translateY(-5px);
-}
-
-.dish-card.sel{
-    border-color:var(--gold);
-
-    background:#fffdf6;
-}
-
-.card-top{
-    height:140px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    font-size:3.5rem;
-
-    background:#fafafa;
-}
-
-/* ───────── CHECKLIST ───────── */
-
-.live-item{
-    display:flex;
-    align-items:center;
-    gap:15px;
-
-    padding:15px;
-
-    margin-bottom:10px;
-
-    border-radius:14px;
-
-    cursor:pointer;
-
-    background:#f0fdf4;
-
-    border:1px solid #bbf7d0;
-}
-
-.live-item.checked{
-    opacity:.5;
-
-    background:#f8f8f8;
-
-    text-decoration:line-through;
-}
-
 /* ───────── HISTÓRICO ───────── */
 /* TAG: historico-styles | FASE 1 */
 
@@ -463,9 +407,9 @@ body.modal-open{
 }
 
 .btn-secondary{
-    background:#f0f0f0;
-    color:#333;
-    border:2px solid #ddd;
+    background:var(--cream-border);
+    color:var(--ink);
+    border:2px solid var(--sand);
     padding:12px 20px;
     border-radius:12px;
     cursor:pointer;
@@ -475,8 +419,8 @@ body.modal-open{
 }
 
 .btn-secondary:hover{
-    background:#e0e0e0;
-    border-color:#999;
+    background:var(--sand);
+    border-color:var(--ink-faint);
 }
 
 .btn-small{
@@ -657,7 +601,7 @@ body.modal-open{
         gap:8px;
     }
 
-    .btn-util{
+    .btn-icon{
         width:48px;
         min-height:48px;
     }

@@ -9,9 +9,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 
-    <!-- TAG: libs-suporte | PDF e login social (Supabase Auth no navegador) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <!-- TAG: favicon | monograma "K" derivado do wordmark -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    <!-- TAG: libs-suporte | PDF e login social (Supabase Auth no navegador).
+         Versao fixada (nao "@2" flutuante) + integrity (SRI): se o CDN for
+         comprometido ou servir outro arquivo, o navegador recusa carregar
+         em vez de rodar o script trocado (auditoria de seguranca, 2026-08). -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"
+        integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"
+        integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"
+        crossorigin="anonymous"></script>
     <!-- TAG: chef-modulos | ordem obrigatoria: storage -> feedback visual -> utils -> render -> app -->
     <script defer src="js/storage.service.js"></script>
     <script defer src="js/visual-feedback.service.js"></script>
@@ -22,10 +35,25 @@
 </head>
 <body>
 
+    <!-- TAG: sprite-svg | simbolos reutilizaveis via <use href="#id">; comeca com a marca, Fase 4 do plano de identidade visual adiciona os demais icones aqui -->
+    <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+        <!-- Acento "chapeu de chef": so o chapeu, sem o K desenhado a mao —
+             o K de verdade vem da fonte (texto real "KARAMU"), garantindo
+             proporcao identica as outras letras. O chapeu fica posicionado
+             por cima do K via CSS (.chef-hat-accent), como um acento/
+             diacritico flutuando acima da letra. -->
+        <symbol id="chef-hat-accent" viewBox="13 11 20 20">
+            <rect x="16" y="24" width="14" height="6" rx="2" fill="currentColor"/>
+            <circle cx="18" cy="19" r="4.5" fill="currentColor"/>
+            <circle cx="23" cy="16.5" r="5" fill="currentColor"/>
+            <circle cx="28" cy="19" r="4.5" fill="currentColor"/>
+        </symbol>
+    </svg>
+
     <!-- TAG: acesso-demo-modal | Senha temporaria para teste controlado -->
     <div class="access-modal hidden" id="demoAccessModal" role="dialog" aria-modal="true" aria-labelledby="demoAccessTitle">
         <div class="access-modal-card">
-            <button type="button" class="access-modal-close" id="demoAccessClose" aria-label="Fechar">X</button>
+            <button type="button" class="btn-icon btn-round" id="demoAccessClose" aria-label="Fechar">X</button>
             <span class="flabel">Acesso demo</span>
             <h2 id="demoAccessTitle">Teste protegido do Karamu</h2>
             <p>Informe a senha temporaria para gerar o planejamento. Ela fica salva apenas nesta sessao do navegador.</p>
@@ -44,7 +72,7 @@
     <!-- TAG: auth-modal | Cadastro e login via Supabase -->
     <div class="access-modal hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
         <div class="access-modal-card">
-            <button type="button" class="access-modal-close" id="authModalClose" aria-label="Fechar">X</button>
+            <button type="button" class="btn-icon btn-round" id="authModalClose" aria-label="Fechar">X</button>
             <span class="flabel" id="authModalTag">Entrar</span>
             <h2 id="authModalTitle">Acesse sua conta</h2>
             <p id="authModalDescricao">Entre com seu e-mail e senha.</p>
@@ -69,7 +97,7 @@
 
     <!-- TAG: barra-status | Marca (volta a apresentacao) + status de conta, nao mais abas paralelas -->
     <nav class="status-bar" aria-label="Marca e conta">
-        <button type="button" class="nav-btn brand-link" id="btnApresentacao" onclick="switchView('pitch')">🍽️ Karamu</button>
+        <button type="button" class="nav-btn brand-link wordmark" id="btnApresentacao" onclick="switchView('pitch')"><span class="wordmark-mark"><svg class="chef-hat-accent" aria-hidden="true"><use href="#chef-hat-accent"></use></svg>KARAMU</span></button>
         <button type="button" class="nav-btn account-status" id="btnConta" onclick="abrirModalConta()">👤 Entrar</button>
     </nav>
 
@@ -81,7 +109,7 @@
             <div class="slide" style="background-image: url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069')"></div>
         </div>
         <div class="hero-content">
-            <h1 class="hero-title">Kara<span>mu</span></h1>
+            <h1 class="hero-title wordmark"><span class="wordmark-mark"><svg class="chef-hat-accent" aria-hidden="true"><use href="#chef-hat-accent"></use></svg>KARAMU</span><span class="hero-rule"></span></h1>
             <p class="hero-sub">ARQUITETURA GASTRONÔMICA E LOGÍSTICA</p>
         </div>
         <button type="button" class="toggle-header" aria-controls="mainHero" aria-expanded="true" aria-label="Recolher capa" onclick="toggleHeader()">↕</button>
@@ -249,7 +277,7 @@
                 <div class="chat-input-wrap">
                     <input type="text" id="userChat" class="premium-input" maxlength="1000" placeholder="Fale com o Chef...">
                     <input type="file" id="importChef" accept=".chef" class="hidden" onchange="importarProjeto(event)">
-                    <button type="button" class="btn-util" aria-label="Importar projeto Chef" title="Importar projeto Chef" onclick="document.getElementById('importChef').click()">📂</button>
+                    <button type="button" class="btn-icon" aria-label="Importar projeto Chef" title="Importar projeto Chef" onclick="document.getElementById('importChef').click()">📂</button>
                 </div>
             </div>
 
@@ -721,6 +749,7 @@
 
     <!-- 5. RODAPÉ -->
     <footer class="footer">
+        <p class="wordmark footer-wordmark"><span class="wordmark-mark"><svg class="chef-hat-accent" aria-hidden="true"><use href="#chef-hat-accent"></use></svg>KARAMU</span></p>
         <p>© 2026 Karamu. Todos os direitos reservados.</p>
         <div class="social-links">
             <a href="#" title="Instagram">📸</a>

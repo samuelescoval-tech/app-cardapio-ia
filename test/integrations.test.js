@@ -546,6 +546,23 @@ test("fotosService rejeita imagem acima de 5MB", async () => {
   await assert.rejects(() => service.criar("tok", "u1", { tipo: "image/png", arquivo: grande }), ErroFoto);
 });
 
+test("fotosService rejeita quando o conteudo real do arquivo nao bate com o tipo declarado (auditoria 2026-08)", async () => {
+  const service = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: {}, error: null } }) });
+  const naoEhImagem = Buffer.from("isso nao e uma imagem de verdade, so texto qualquer").toString("base64");
+  await assert.rejects(() => service.criar("tok", "u1", { tipo: "image/png", arquivo: naoEhImagem }), ErroFoto);
+  await assert.rejects(() => service.criar("tok", "u1", { tipo: "image/webp", arquivo: PNG_1X1_BASE64 }), ErroFoto);
+});
+
+test("fotosService aceita PNG/JPEG/WEBP reais (assinatura de bytes bate)", async () => {
+  const registro = { id: "f1", user_id: "u1", storage_path: "u1/x.png" };
+  const service = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: registro, error: null } }) });
+  const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]).toString("base64");
+  const webp = Buffer.concat([Buffer.from("RIFF"), Buffer.alloc(4), Buffer.from("WEBP")]).toString("base64");
+  await service.criar("tok", "u1", { tipo: "image/png", arquivo: PNG_1X1_BASE64 });
+  await service.criar("tok", "u1", { tipo: "image/jpeg", arquivo: jpeg });
+  await service.criar("tok", "u1", { tipo: "image/webp", arquivo: webp });
+});
+
 test("fotosService envia, lista com url assinada e remove com sucesso", async () => {
   const registro = { id: "p1", user_id: "u1", nome_prato: "Bolo de cenoura", storage_path: "u1/abc.png" };
 

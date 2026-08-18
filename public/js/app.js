@@ -187,11 +187,11 @@ function atualizarPitchCta() {
     const area = document.getElementById('pitchCtaArea');
     if (!area) return;
     if (obterSessaoUsuario() || modoDemoAtivo()) {
-        area.innerHTML = `<button type="button" class="btn-epic" style="width:auto; padding: 18px 34px;" onclick="switchView('app')">IR PARA O GERADOR →</button>`;
+        area.innerHTML = `<button type="button" class="btn-epic btn-wide" onclick="switchView('app')">IR PARA O GERADOR →</button>`;
     } else {
         area.innerHTML = `
-            <button type="button" class="btn-epic" style="width:auto; padding: 18px 34px;" onclick="abrirModalConta()">CRIAR CONTA / ENTRAR</button>
-            <button type="button" class="btn-secondary" style="width:auto; padding: 18px 34px;" onclick="entrarModoDemo()">TESTAR COM SENHA DEMO</button>
+            <button type="button" class="btn-epic btn-wide" onclick="abrirModalConta()">CRIAR CONTA / ENTRAR</button>
+            <button type="button" class="btn-secondary btn-wide" onclick="entrarModoDemo()">TESTAR COM SENHA DEMO</button>
         `;
     }
 }

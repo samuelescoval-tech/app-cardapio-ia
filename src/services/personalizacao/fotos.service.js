@@ -18,6 +18,26 @@ class ErroFoto extends Error {
   }
 }
 
+// Confere a assinatura real (magic bytes) do arquivo, em vez de confiar so
+// no Content-Type que o cliente declarou — auditoria de seguranca, 2026-08.
+// Sem isso, um usuario mal-intencionado podia mandar "tipo: image/png" com
+// bytes de qualquer outra coisa dentro do base64.
+function assinaturaBate(buffer, mimeType) {
+  if (mimeType === "image/png") {
+    const assinatura = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+    return buffer.length >= assinatura.length && assinatura.every((byte, i) => buffer[i] === byte);
+  }
+  if (mimeType === "image/jpeg") {
+    return buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+  }
+  if (mimeType === "image/webp") {
+    return buffer.length >= 12
+      && buffer.toString("ascii", 0, 4) === "RIFF"
+      && buffer.toString("ascii", 8, 12) === "WEBP";
+  }
+  return false;
+}
+
 function criarFotosService(opcoes = {}) {
   const url = Object.prototype.hasOwnProperty.call(opcoes, "url") ? opcoes.url : process.env.SUPABASE_URL;
   const anonKey = Object.prototype.hasOwnProperty.call(opcoes, "anonKey") ? opcoes.anonKey : process.env.SUPABASE_ANON_KEY;
@@ -48,6 +68,9 @@ function criarFotosService(opcoes = {}) {
     if (!buffer.length) throw new ErroFoto("Arquivo da imagem invalido.", 400);
     if (buffer.length > TAMANHO_MAXIMO_BYTES) {
       throw new ErroFoto("Imagem acima do limite de 5MB.", 400);
+    }
+    if (!assinaturaBate(buffer, mimeType)) {
+      throw new ErroFoto("O conteudo do arquivo nao corresponde ao tipo de imagem informado.", 400);
     }
 
     const nomePrato = body?.nome_prato !== undefined

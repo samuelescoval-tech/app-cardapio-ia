@@ -1,6 +1,6 @@
 # Handoff - Karamu
 
-Atualizado em 2026-08-06.
+Atualizado em 2026-08-17.
 
 ## Estado em uma frase
 
@@ -23,7 +23,17 @@ local), a chave de IA (BYOK) saiu das abas principais para um painel
 "avancado" recolhido, revisao de codigo (`/code-review`) corrigiu 4
 problemas reais nessa entrega, e **o item 7 do Plano 16 (reestruturacao
 de navegacao, marcado CRITICO) foi executado junto com a troca de nome
-para Karamu** — ver secao dedicada abaixo.
+para Karamu** — ver secao dedicada abaixo. Em 2026-08-17: Fases 1 e 2 da
+identidade visual "Karamu Editorial" concluidas (tokens, wordmark com
+acento de chapeu de chef, favicon; e consolidacao de todas as familias
+de botao duplicadas/divergentes numa taxonomia so) e uma auditoria de
+seguranca completa (prompt padrao do usuario) resultou em 3 correcoes
+aplicadas e testadas (rate limit em duas rotas sem limitador, validacao
+de imagem por conteudo real em vez de so o `Content-Type` declarado, SRI
+nos scripts de CDN) e 2 itens registrados sem acao imediata (CSP
+`unsafe-inline` adiado como debito tecnico mapeado; checagem manual do
+redirect URL do Google no Supabase, pendente do usuario) — ver secoes
+dedicadas abaixo.
 
 ## Arquitetura atual
 
@@ -1043,6 +1053,225 @@ Achados confirmados e corrigidos:
   completa: 187/187 (2 testes novos cobrindo o sentinela legado e o
   tie-break do match aproximado).
 
+### Identidade visual "Karamu Editorial", Fase 2 (botoes) (2026-08-17)
+
+Plano completo em `~/.claude/plans/elegant-skipping-planet.md` (Fase 1 —
+tokens/wordmark/favicon — concluida antes, ver roadmap). Fase 2 consolida
+as familias de botao fragmentadas que o catalogo original do sistema
+visual (feito antes de escrever o plano) tinha identificado: varias
+receitas quase-duplicadas sem taxonomia comum. Cada merge foi conferido
+contra o codigo real (uso em HTML/JS, se a selecao em JS era por classe
+ou por atributo `data-*`, se algum teste fixava o nome da classe) antes
+de mexer, nao só copiado do plano original.
+
+- **`.btn-print` → `.btn-epic.btn-compact`**: em vez de uma receita CSS
+  paralela (so usada no botao "Baixar PDF" do resultado), virou um
+  modificador do `.btn-epic` ja existente (`form.css`), ganhando de
+  brinde o efeito de hover (lift) que o `.btn-print` nunca tinha.
+- **3 CTAs com `style="width:auto;padding:18px 34px"` inline
+  (`app.js`, funcao `atualizarPitchCta`) → `.btn-wide`**: modificador
+  novo, mesmo padrao "bare" (sem `--`) que `.btn-small` ja usava
+  combinado com `.btn-secondary` — por isso `.btn-compact`/`.btn-wide`
+  seguiram esse nome em vez do `.btn-epic--compact` sugerido no rascunho
+  original do plano, pra nao introduzir uma segunda convencao de
+  nomenclatura ao lado da que ja existe no codebase.
+- **`.btn-util` (botao de importar projeto) + `.access-modal-close`
+  (fechar modal) → `.btn-icon` (base) + `.btn-round` (modificador do
+  botao circular)**: preservado o visual exato de cada um (checado que
+  nao havia nenhum `font-size` cascateando pro "X" do modal antes de
+  fundir, pra nao mudar o tamanho do glifo sem querer).
+- **`.menu-view-btn`/`.menu-nav-btn` (cardapio) e
+  `.gallery-view-btn`/`.gallery-nav-btn` (galeria) → `.carousel-toggle`/
+  `.carousel-nav` compartilhados**: esse par era o caso mais divergente
+  (formatos, cores e tamanhos diferentes pros dois contextos, sem
+  motivo). Confirmado antes de mexer que `render.js` sempre seleciona
+  esses botoes por atributo (`document.querySelectorAll("[data-menu-view]")`
+  etc.), nunca por classe, e que nenhum teste fixa esses nomes de classe
+  — a fusao era segura. Design final: formato pilula (ja o padrao
+  dominante no resto do app — 14+ usos de `border-radius:999px` so em
+  `result.css`, contra o retangulo de cantos leves que so a galeria
+  usava) com estado ativo em fundo `--ink-strong` + texto `--gold`
+  (adotando o tratamento que a galeria ja tinha, mais alinhado a regra
+  "dourado como unico destaque decorativo" da Fase 1). O anel de foco
+  customizado que so a galeria tinha (`outline:2px solid
+  rgba(213,165,20,.24)`, diferente do `button:focus-visible` global
+  definido em `base.css` na Fase 1) foi removido a favor do global, em
+  vez de mantido como uma segunda regra de foco conflitante.
+- **`.btn-secondary` retintado**: as 4 cores cinza hardcoded
+  (`#f0f0f0`/`#ddd`/`#999`/`#333`, usado em ~7 pontos — cancelar,
+  limpar historico, exportar CSV, remover fornecedor/foto/preco) viraram
+  os tokens da Fase 1 (`--cream-border`/`--sand`/`--ink`/`--ink-faint`),
+  saindo do cinza neutro pro tom creme quente da identidade.
+- **Codigo morto removido**: `.dish-card`/`.card-top` (ja apontado como
+  morto no catalogo original do plano) e, achado nesta fase com a mesma
+  verificacao (zero referencia em HTML/JS), `.live-item`/
+  `.live-item.checked` — o comentario "CHECKLIST" que só introduzia essas
+  duas regras tambem foi removido (a renderizacao real de checklist usa
+  markup generico de secao, nunca usou essa classe).
+- **Achado durante a limpeza**: uma segunda ocorrencia de `.btn-util`
+  dentro do media query mobile de `form.css` (linha ~604, uma regra
+  responsiva separada da definicao principal) nao apareceu na primeira
+  varredura e só foi pega numa segunda busca ampla por qualquer
+  referencia remanescente ao nome antigo — corrigida antes de considerar
+  a fase concluida.
+- Verificado: `npm test` (189/189, sem nenhum teste fixando os nomes de
+  classe antigos), `node --check` em `render.js`/`app.js`, contagem de
+  chaves `{`/`}` balanceada nos dois CSS tocados, e verificacao visual
+  real em Chrome headless (1440px desktop + 390px mobile) nos 6 pontos
+  afetados: CTA da apresentacao, modal de senha demo (botao fechar),
+  botao de importar no formulario, e os grupos de alternar
+  carrossel/lista + navegar do cardapio e da galeria (markup identico ao
+  que `render.js` gera de verdade, injetado na pagina real pra testar
+  contra o CSS real). Zero erro de console, nenhuma regressao visual.
+
+### Auditoria de seguranca (prompt padrao do usuario) e correcoes, ponto a ponto (2026-08-17)
+
+Usuario enviou um prompt-template proprio, reutilizavel entre projetos,
+de "Auditoria de Seguranca de Aplicacao Web" (contexto preenchido:
+Node/Express + Supabase + Gemini, hospedado na Vercel, com autenticacao
+real). Apos confirmacao do contexto, a auditoria cobriu autenticacao/
+sessao, controle de acesso (RLS), validacao de entrada, dependencias
+(`npm audit` — limpo), cabecalhos HTTP/CSP, upload de arquivos e
+integridade de recursos externos. Achados organizados por risco; usuario
+pediu correcao "ponto por ponto", na ordem abaixo.
+
+**Confirmado como correto, sem acao** (defesa ja existente, verificada
+contra o codigo real): RLS por dono (`auth.uid() = user_id`) em todas as
+tabelas de personalizacao, sempre via client escopado por token do
+usuario (nunca `service_role`) — o mesmo padrao usado desde o Plano 14 e
+ja reconferido nas duas rodadas de `/code-review` anteriores; chave de IA
+do usuario cifrada em repouso (AES-256-GCM, IV aleatorio + tag verificada
+por operacao, `src/utils/crypto-chave-ia.js`).
+
+1. **Duas rotas sem nenhum rate limiter** — `/api/referencias-receitas` e
+   `/api/imagens-evento` (`server.js`) dependiam so da senha demo
+   compartilhada e de um contador diario *global* (Openverse/Spoonacular),
+   sem nenhum limite por IP — diferente de todas as outras rotas
+   sensiveis do app, que ja tem algum limitador. Corrigido aplicando
+   `limitadorPersonalizacao` (30 req/min/IP, o mesmo ja usado em
+   fornecedores/fotos/precos) nas duas.
+2. **Tipo de imagem validado so pelo `Content-Type` declarado pelo
+   cliente** — `fotos.service.js` confiava no campo `tipo` do corpo da
+   requisicao sem checar o conteudo real do arquivo; um usuario podia
+   mandar `image/png` com qualquer outro conteudo dentro do base64.
+   Corrigido com `assinaturaBate()`: confere os magic bytes reais (PNG
+   `89 50 4E 47 0D 0A 1A 0A`, JPEG `FF D8 FF`, WEBP `RIFF....WEBP`) logo
+   apos o limite de tamanho, antes de aceitar o upload. 2 testes novos
+   (`test/integrations.test.js`): rejeita conteudo que nao bate com o
+   tipo declarado, aceita os 3 formatos reais.
+3. **Scripts de CDN sem Subresource Integrity (SRI)** — `jspdf` e
+   `supabase-js` (`public/index.html`) eram carregados de CDN externo sem
+   `integrity`/`crossorigin`; se o CDN fosse comprometido ou servisse
+   outro arquivo, o navegador executaria o script trocado sem aviso. Alem
+   disso, `supabase-js@2` usava uma faixa de versao flutuante,
+   incompativel com SRI (o hash quebraria a cada build novo servido sob a
+   mesma URL). Corrigido: versao fixada no exato build hoje resolvido
+   (`@2.112.3`, consultado via API de resolucao do jsdelivr) + hash
+   SHA-384 calculado sobre o arquivo real de cada CDN, com
+   `crossorigin="anonymous"` nos dois `<script>`. Verificado ao vivo
+   (Chrome headless via CDP): ambos os scripts carregam e executam sem
+   erro de integridade (`window.jspdf`/`window.supabase` presentes, sem
+   mensagem de "Failed to find a valid digest" no console).
+4. **CSP com `'unsafe-inline'` em `scriptSrc`/`scriptSrcAttr`** — reduz o
+   valor do CSP como mitigacao de XSS (um script injetado inline ainda
+   executaria). Escopo real mapeado antes de perguntar ao usuario: ~26
+   atributos `onclick`/`onchange` inline em 3 arquivos (14 em
+   `render.js`, 6 em `index.html`, 5 em `app.js`), a maioria dentro de
+   template strings que geram cards dinamicamente — exigiria delegacao de
+   evento, nao so trocar 1 por 1 por `addEventListener`. **Usuario optou
+   por documentar e adiar** (nao e uma vulnerabilidade ativa exploravel
+   hoje, e um refactor real). Fica registrado como debito tecnico em
+   "Proxima acao curta" abaixo, com o escopo ja mapeado para quando for
+   priorizado.
+5. **Allowlist de redirect URL do OAuth do Google** — nao e algo
+   corrigivel por codigo; exige checagem manual no painel do Supabase
+   (Authentication → URL Configuration → Redirect URLs) para confirmar
+   que nao ha wildcard aberto alem do `http://localhost:3000/**` ja
+   registrado (ver secao "Login social com Google" acima). **Acao
+   pendente do usuario**, nao verificavel por mim.
+
+Suite completa revalidada apos os pontos 1-3: 189/189 (2 testes novos).
+Pontos 4 e 5 nao alteram esse numero (adiado / acao manual).
+
+## Skills locais disponiveis (adicionadas pelo usuario, fora do repo)
+
+Usuario baixou 8 zips de skills de terceiros em 2026-08-10, extraidos numa
+pasta local (`skills anttropic/`, na raiz do projeto, **fora do controle de
+versao** — ja adicionada ao `.gitignore`; sao so instrucoes de referencia
+pra mim seguir em cenarios especificos, nao fazem parte do app). Catalogo
+do que cada uma cobre e quando usar, priorizado pelo que realmente se
+aplica a esse projeto (Node/Express + JS/CSS puro sem framework, deploy na
+Vercel, sem React/Next.js):
+
+**Diretamente uteis para este projeto:**
+- `theme-factory` (Anthropic) — toolkit pra estilizar com temas prontos ou
+  gerar um novo; relevante agora, na reforma de identidade visual
+  "Karamu Editorial" (Fases 2-5 do plano de identidade).
+- `frontend-design` (Anthropic) — construir interfaces com qualidade
+  visual alta, evitando "cara de IA generica"; mesmo uso.
+- `web-design-guidelines` (Vercel) — revisao de UI contra guidelines de
+  interface web; bom pra usar como checklist ao final de cada fase da
+  reforma visual.
+- `webapp-testing` (Anthropic) — toolkit de teste de app web local via
+  Playwright (screenshot, log do navegador, verificacao de UI). **Nota
+  importante**: esse projeto ja tem um jeito equivalente, so que feito na
+  mao com Chrome headless + CDP direto (usado a sessao inteira pra
+  verificar as mudancas visuais) — vale considerar trocar pelo Playwright
+  formal dessa skill num momento de folga, reduziria os scripts
+  descartaveis que hoje sao escritos do zero a cada verificacao.
+- `deploy-to-vercel` / `vercel-cli-with-tokens` (Vercel) — o app ja e
+  hospedado na Vercel; uteis quando chegar a hora de publicar de verdade
+  (ainda nao formalizado nesta sessao).
+- `accesslint` / skill `audit` (AccessLint) — auditoria e correcao de
+  acessibilidade (WCAG 2.2); esse codebase ja se preocupa com
+  aria-label/foco visivel em varios lugares, boa skill pra rodar antes de
+  um lancamento real.
+- `design-audit`, `typography` (`ui-typography`), `bencium-controlled-ux-designer`
+  (bencium) — auditoria de UI existente e regras tipograficas; podem
+  complementar a reforma visual em andamento, mas se sobrepõem parcialmente
+  com `frontend-design`/`web-design-guidelines` acima — nao rodar todas ao
+  mesmo tempo, escolher uma por etapa pra nao duplicar esforco.
+- `ui-ux-pro-max-skill` (terceiro, nao-Anthropic/Vercel) — ferramenta a
+  parte (CLI + banco de 67 estilos de UI, 161 paletas, 57 pares de fonte,
+  99 diretrizes de UX). Pode ajudar a validar as decisoes de paleta/
+  tipografia da identidade visual, mas parece exigir instalacao propria
+  (CLI via npm, `uipro-cli`) — **nao instalar sem perguntar antes**,
+  conforme combinado.
+
+**Disponiveis mas nao se aplicam a este projeto agora** (stack
+React/Next.js/React Native — Karamu e JS puro sem framework):
+`composition-patterns`, `react-best-practices`, `react-native-skills`,
+`react-view-transitions`, `vercel-optimize`.
+
+**Genericas do Anthropic, fora do escopo deste projeto** (utilitarios de
+documento/produtividade, nao logica de app):
+`docx`, `pdf`, `pptx`, `xlsx`, `slack-gif-creator`, `internal-comms`,
+`doc-coauthoring`, `mcp-builder`, `claude-api`, `skill-creator`,
+`algorithmic-art`, `canvas-design`, `web-artifacts-builder`,
+`brand-guidelines` (aplica a marca do Anthropic especificamente, nao a do
+Karamu).
+
+**Bencium (marketplace de um autor terceiro), avaliar com cautela**:
+varias skills desse pacote sao filosofia/metodologia de design ou
+variantes de outras ja listadas acima (`bencium-impact-designer`/
+`bencium-innovative-ux-designer` sao baseadas na `frontend-design` do
+Anthropic; `human-architect-mindset`, `negentropy-lens`,
+`renaissance-architecture`, `vanity-engineering-review`, `relationship-design`,
+`adaptive-communication` sao lentes de raciocinio/revisao, nao ferramentas
+de execucao — podem ser uteis pontualmente mas nao sao prioridade agora).
+`bencium-code-conventions` e explicitamente pessoal do autor original
+("quando escrever codigo... para o Bence") — **nao aplicavel a este
+projeto**, ignorar. `bencium-aeo`/`organic-first-campaign` sao
+marketing/SEO, fora de escopo enquanto o app nao tem usuarios reais.
+
+**Duplicatas encontradas**: 4 dos 8 zips (`agent-skills-main.zip`,
+`Vercel Composition Patterns-agent-skills-main.zip`,
+`vercel-labs-agent-skills-agent-skills-main (1).zip`,
+`Vercel-React-Best_Practicesagent-skills-main.zip`) sao o mesmo repositorio
+da Vercel Labs baixado 4 vezes; o `(1)` tem uma skill a mais
+(`vercel-optimize`) que os outros nao tem — se for limpar a pasta local,
+esse e o unico dos 4 que vale manter.
+
 ## Proxima acao curta
 
 1. antes de lancar para usuarios reais: publicar o app do Google em modo
@@ -1065,8 +1294,32 @@ Achados confirmados e corrigidos:
 4. baixa prioridade: mostrar na UI quando `meta.catalogo_usuario_truncado`
    vier `true` (hoje so fica no `meta`, sem aviso visual pro usuario com
    mais de 60 precos cadastrados);
-5. commit pendente: ~38 arquivos alterados desde o ultimo commit
-   (interface de perfil, integracao catalogo/custo, reestruturacao de
-   navegacao + rename Karamu, e a rodada de correcoes de code review) —
-   ainda nao commitado nem enviado, aguardando confirmacao do usuario;
-6. manter o estado somente neste handoff e no roadmap.
+5. **acao manual pendente do usuario** (auditoria de seguranca,
+   2026-08-17, ponto 5): conferir no painel do Supabase (Authentication →
+   URL Configuration → Redirect URLs) que nao ha wildcard aberto alem do
+   `http://localhost:3000/**` ja registrado — nao verificavel por codigo;
+6. **debito tecnico documentado, sem data** (auditoria de seguranca,
+   2026-08-17, ponto 4): remover `'unsafe-inline'` de `scriptSrc`/
+   `scriptSrcAttr` no CSP (`server.js`) exige antes converter ~26
+   atributos `onclick`/`onchange` inline para `addEventListener` (14 em
+   `render.js`, 6 em `index.html`, 5 em `app.js`; a maioria em
+   `render.js` esta dentro de template strings de cards gerados
+   dinamicamente, entao precisa de delegacao de evento, nao troca 1 por
+   1). Usuario optou explicitamente por adiar (nao e vulnerabilidade
+   ativa hoje) — retomar quando houver folga para o refactor;
+7. commit pendente: interface de perfil, integracao catalogo/custo,
+   reestruturacao de navegacao e rename Karamu **ja foram commitados**
+   (`f32a5fb`, 2026-08-09). O que resta pendente agora (19 itens no
+   `git status`: 14 modificados + 5 novos) e so o trabalho depois desse
+   commit — identidade visual "Karamu Editorial" Fase 1 (tokens,
+   wordmark, favicon: `base.css`, `layout.css`, `pitch.css`, `index.html`,
+   os 4 arquivos de favicon novos) e Fase 2 (botoes: `form.css`,
+   `result.css`, `render.js`, `app.js`, mais os mesmos `index.html`/
+   `layout.css`/`pitch.css` da Fase 1), e as 3 correcoes da auditoria de
+   seguranca de 2026-08-17 (`server.js`, `fotos.service.js`,
+   `test/integrations.test.js`, `.gitignore`, e estes dois documentos) —
+   ainda nao commitado nem enviado, aguardando confirmacao do usuario.
+   Ha tambem uma pasta `.vscode/` nao rastreada, de origem nao confirmada
+   (configuracao de editor) — conferir o conteudo antes de incluir num
+   commit;
+8. manter o estado somente neste handoff e no roadmap.

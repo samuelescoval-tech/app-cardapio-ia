@@ -48,18 +48,6 @@
     overflow-wrap:anywhere;
 }
 
-.btn-print{
-    border:none;
-    border-radius:12px;
-    padding:12px 18px;
-    cursor:pointer;
-    background:linear-gradient(135deg,var(--gold),var(--gold-dark));
-    color:#111;
-    font-weight:900;
-    letter-spacing:1px;
-    box-shadow:var(--shadow-gold);
-}
-
 .quality-panel{
     display:grid;
     grid-template-columns:minmax(220px,.8fr) minmax(260px,1.2fr);
@@ -667,32 +655,42 @@
     flex-shrink:0;
 }
 
-.menu-view-btn,
-.menu-nav-btn{
-    min-height:32px;
-    border:1px solid #ded5c5;
-    border-radius:999px;
+/* Botoes compartilhados de alternar carrossel/lista + navegar (antes
+   duplicados como par menu-view-btn/menu-nav-btn e par
+   gallery-view-btn/gallery-nav-btn, com formas e cores diferentes sem
+   motivo — unificados numa familia so, usados no cardapio e na galeria
+   de imagens). Foco visivel usa a regra global de button:focus-visible
+   (base.css) em vez de um outline proprio. */
+.carousel-toggle,
+.carousel-nav{
+    min-height:36px;
+    border:1px solid var(--cream-border);
+    border-radius:var(--radius-pill);
     background:#fff;
-    color:#51483e;
-    padding:6px 11px;
+    color:var(--ink);
+    padding:7px 14px;
     cursor:pointer;
     font:inherit;
-    font-size:.72rem;
+    font-size:.74rem;
     font-weight:800;
     transition:background .2s ease,border-color .2s ease,color .2s ease;
 }
 
-.menu-view-btn:hover,
-.menu-view-btn.active,
-.menu-nav-btn:hover{
+.carousel-toggle:hover,
+.carousel-nav:hover{
     border-color:var(--gold-dark);
-    background:#17171f;
-    color:#fff;
 }
 
-.menu-nav-btn{
-    width:32px;
+.carousel-toggle.active{
+    background:var(--ink-strong);
+    border-color:var(--ink-strong);
+    color:var(--gold);
+}
+
+.carousel-nav{
+    width:36px;
     padding:0;
+    font-size:1rem;
 }
 
 .dish-grid{
@@ -1592,7 +1590,7 @@
         flex-direction:column;
     }
 
-    .btn-print{
+    .btn-compact{
         width:100%;
     }
 
@@ -1690,12 +1688,12 @@
         justify-self:start;
     }
 
-    .menu-view-btn,
-    .menu-nav-btn{
+    .carousel-toggle,
+    .carousel-nav{
         min-height:44px;
     }
 
-    .menu-nav-btn{
+    .carousel-nav{
         width:44px;
     }
 
@@ -1847,45 +1845,6 @@
     font-size:.72rem;
     font-weight:900;
     white-space:nowrap;
-}
-
-.gallery-view-btn,
-.gallery-nav-btn{
-    min-height:38px;
-    border:1px solid #ded4bd;
-    border-radius:10px;
-    background:#fff;
-    color:#332d24;
-    font:inherit;
-    font-size:.76rem;
-    font-weight:900;
-    cursor:pointer;
-    transition:border-color .2s ease,background .2s ease,color .2s ease,transform .2s ease;
-}
-
-.gallery-view-btn{
-    padding:7px 11px;
-}
-
-.gallery-nav-btn{
-    width:38px;
-    padding:0;
-    font-size:1rem;
-}
-
-.gallery-view-btn:hover,
-.gallery-nav-btn:hover,
-.gallery-view-btn:focus-visible,
-.gallery-nav-btn:focus-visible{
-    border-color:#c99b10;
-    outline:2px solid rgba(213,165,20,.24);
-    outline-offset:2px;
-}
-
-.gallery-view-btn.active{
-    border-color:#17150f;
-    background:#17150f;
-    color:#f1c433;
 }
 
 .event-gallery-loading,
@@ -2321,15 +2280,15 @@
         justify-self:start;
     }
 
-    .gallery-view-btn,
-    .gallery-nav-btn,
+    .carousel-toggle,
+    .carousel-nav,
     .gallery-action-btn,
     .gallery-feedback-btn,
     .gallery-feedback-clear{
         min-height:44px;
     }
 
-    .gallery-nav-btn{
+    .carousel-nav{
         width:44px;
     }
 
@@ -2397,8 +2356,8 @@
     }
 
     .gallery-image-frame img,
-    .gallery-view-btn,
-    .gallery-nav-btn{
+    .carousel-toggle,
+    .carousel-nav{
         transition:none;
     }
 }

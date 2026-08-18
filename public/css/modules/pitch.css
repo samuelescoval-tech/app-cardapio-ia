@@ -276,6 +276,13 @@
     color:rgba(255,255,255,.65);
 }
 
+.footer-wordmark{
+    font-size:1.1rem;
+    letter-spacing:0;
+    color:#f7df95;
+    margin-bottom:6px;
+}
+
 .social-links{
     margin-top:14px;
 

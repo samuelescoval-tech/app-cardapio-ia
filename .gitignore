@@ -36,3 +36,6 @@ temp/
 *.tmp
 .firecrawl/
 .aider*
+
+# Skills de referencia do usuario (nao fazem parte do app, so instrucoes locais)
+skills anttropic/

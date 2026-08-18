@@ -446,6 +446,182 @@ implementado — registrar aqui antes de qualquer mudanca:
 - Usuario deixou explicito que **isso fica para depois** — nao e para
   implementar agora, so para nao perder de vista.
 
+**Escopo ampliado em 2026-08-09**: usuario vai buscar referencias visuais e
+trouxe um pedido mais amplo de identidade visual, nao so os ajustes
+pontuais acima. Nada disso foi implementado ainda; registrar antes de
+comecar:
+
+- **Criar um logo** para o Karamu (hoje o app so tem o nome em texto no
+  hero/nav, sem nenhum simbolo/marca grafica).
+- **Nome**: ja decidido ("Karamu", ver secao do rename acima) — o pedido
+  aqui e sobre a identidade visual em torno do nome (logo, tipografia),
+  nao escolher outro nome de novo.
+- **Aperfeicoar a experiencia de usuario/perfil**, retomando o ponto ja
+  registrado acima (perfil pouco obvio, perde contexto do evento ao
+  clicar) — mesmo pedido, nao e algo novo.
+- **Embelezar botoes** e **ajustar cores** — sem exemplos especificos
+  ainda de quais botoes/cores incomodam; pedir print/exemplo concreto
+  quando for priorizado, como foi feito com a lista de compras acima.
+- **Criar identidade visual** como um todo (paleta, tipografia, tom),
+  coerente com o nome "Karamu" (banquete/festa em suaili) e com o
+  publico do app (planejamento de eventos gastronomicos no Brasil).
+- **Sites de referencia trazidos pelo usuario** (para inspiracao de
+  estilo/interacao, nao para copiar):
+  - https://resn.co.nz/#!/work/ — estudio criativo, animacoes/transicoes
+    fortes e experimentais.
+  - https://staratlas.com/ — jogo/produto sci-fi, visual escuro e
+    cinematografico.
+  - https://ryazbek.com.br/ — portfolio/agencia brasileira.
+  - https://demo.templatemonster.com/pt-br/demo/51689.html — template
+    comercial pronto.
+  - https://demo.templatemonster.com/pt-br/demo/53136.html — template
+    comercial pronto.
+- Ainda sem nenhuma decisao de direcao visual a partir dessas referencias
+  — usuario disse que vai olhar as referencias e retomar depois ("por
+  hoje e so"). Quando retomar, vale perguntar o que especificamente em
+  cada referencia chamou atencao (estilo, cor, animacao, layout) antes de
+  implementar, em vez de assumir.
+
+**Reforma "Karamu Editorial" em andamento (2026-08-10)**: usuario escolheu
+a direcao entre 3 opcoes propostas (base clara, cards com foto+degrade,
+dourado como unico destaque, wordmark tipografico) e aprovou trocar todos
+os emoji por icones SVG proprios. Plano completo em 5 fases (ver
+`docs/HANDOFF_PROXIMA_ATUALIZACAO.md` para o link do arquivo de plano e o
+detalhamento). Fase 1 (tokens novos em `base.css`, wordmark aplicado em
+nav/hero/rodape, favicon SVG+PNG gerado do zero — o app nao tinha nenhum
+antes) concluida e testada (187/187, verificacao visual em Chrome
+headless). Fases 2-5 (botoes, cards, icones, polimento) ainda pendentes.
+
+**Fase 2 (botoes) concluida em 2026-08-17**: consolidados os pares de
+botao duplicados identificados no catalogo original do sistema visual.
+`.btn-print` virou modificador `.btn-compact` de `.btn-epic` (em vez de
+receita propria repetida); os 3 CTAs da apresentacao/rodape que usavam
+`style="width:auto;padding:18px 34px"` inline viraram o modificador
+`.btn-wide`; `.btn-util` (botao de importar projeto) e `.access-modal-close`
+(fechar modal) fundiram em `.btn-icon`/`.btn-round`. Os dois pares mais
+divergentes — `.menu-view-btn`/`.menu-nav-btn` (cardapio, formato pilula) e
+`.gallery-view-btn`/`.gallery-nav-btn` (galeria de imagens, formato
+retangular com cantos leves, cor de foco diferente) — viraram uma familia
+so, `.carousel-toggle`/`.carousel-nav`: padronizado no formato pilula (ja
+o padrao dominante no resto do app, 14+ usos) com estado ativo em fundo
+escuro (`--ink-strong`) + texto dourado (`--gold`), e o anel de foco
+customizado (que divergia do `button:focus-visible` global ja definido na
+Fase 1) removido a favor do global. `.btn-secondary` (usado em ~7 pontos)
+teve as 4 cores cinza hardcoded (`#f0f0f0`/`#ddd`/`#999`/`#333`) retintadas
+para os tokens `--cream-border`/`--sand`/`--ink`/`--ink-faint` da Fase 1,
+saindo do cinza neutro para o tom creme quente da identidade. `.dish-card`/
+`.card-top` (o par que o catalogo original ja apontava como codigo morto)
+e mais `.live-item`/`.live-item.checked` (achado nesta fase, mesma
+verificacao de zero uso em HTML/JS) foram removidos. Testado: 189/189,
+`node --check` nos JS tocados, e verificacao visual real em Chrome
+headless (desktop 1440px e mobile 390px) cobrindo os 6 estados afetados —
+CTA da apresentacao, modal de senha demo, botao de importar no formulario,
+e os grupos de carrossel/navegacao do cardapio e da galeria — confirmando
+zero erro de console e nenhuma regressao visual. Ver handoff para a lista
+completa arquivo por arquivo.
+
+**Nota adicional do usuario (2026-08-10)**: a secao de apresentacao
+dentro do app (`#pitchSection`, hoje so 1 slide de capa + poucos slides
+genericos) esta "muito simples" — falta publico-alvo/personas ("atores"),
+explicacao das ferramentas/tecnologias usadas, status do projeto (o que
+foi feito, o que falta), e objetivos/tecnicas do app. Confirmado
+visualmente durante a Fase 1 (screenshot do primeiro slide mostra so
+titulo + 1 paragrafo + 3 badges + 1 foto). Registrado como pendente de
+revisao de conteudo — nao implementado ainda, escopo e prioridade a
+combinar com o usuario.
+
+**Correcao ao plano original**: a direcao "Karamu Editorial" tinha decidido
+por wordmark tipografico *sem* icone/simbolo. Ao ver o resultado ao vivo,
+o usuario pediu um icone mesmo assim — logo virou um monograma "K" com
+chapeu de chef (toque) integrado, testado em 3 variacoes visuais (chapeu
+separado sobre o K, chapeu integrado ao talo, K classico + chapeu pequeno
+de badge) e o usuario escolheu a segunda (chapeu integrado ao talo do K).
+Implementado em `public/favicon.svg` (+ PNGs 16/32/180px regenerados) e
+como `<symbol id="logo-mark">` reutilizavel via `<use>` em
+`public/index.html`.
+
+**Tres rodadas de ajuste apos ver ao vivo**: (1) usuario pediu pra marca
+*substituir* o K de KARAMU em vez de ficar do lado; (2) mesmo alinhado, a
+caixa dourada com gradiente do icone destoava visualmente das letras
+planas (cor OK, mas a caixa em si nao combinava); (3) mesmo sem caixa,
+usuario apontou que a *proporcao* continuava errada — o K desenhado a mao
+nunca batia exatamente com a altura/peso das outras letras (Montserrat
+800), e ficou mais evidente sem a caixa escondendo o problema.
+
+**Solucao final**: abandonar de vez o K desenhado a mao. O texto agora e
+"KARAMU" de verdade (fonte real, garantindo proporcao identica as outras
+letras — impossivel destoar, e literalmente a mesma fonte). Só o chapeu de
+chef (sem o K) virou um simbolo separado, `<symbol id="chef-hat-accent">`,
+posicionado como um acento/diacritico via `position:absolute` por cima do
+K de verdade. Posicionamento calibrado por medicao real no navegador (nao
+no olho): script via CDP mediu com `canvas.measureText()` a altura exata
+do topo do "K" (`actualBoundingBoxAscent`, ~0.70em) e seu centro
+horizontal (~0.365em) nos 3 contextos (nav/hero/rodape, tamanhos de fonte
+bem diferentes), garantindo que o chapeu sente exatamente em cima da
+letra em qualquer tamanho. Wrapper novo `.wordmark-mark` (`inline-block`)
+precisou existir porque o `<h1>`/`<p>` do hero/rodape sao centralizados e
+de largura total — sem esse wrapper, a posicao do "K" dentro deles varia
+com a largura da tela, e um `position:absolute` fixo desalinha. Simbolo
+`#logo-mark` (com caixa/gradiente) continua existindo so pro favicon,
+onde faz sentido ter uma marca solida.
+
+**Quarta rodada**: centro-de-massa do glifo inteiro (usado na calibragem
+acima) nao e o mesmo que o centro do *talo vertical* do K — o "K" tem duas
+diagonais que puxam o centro do glifo pra direita, entao o chapeu ficava
+meio deslocado do talo (a "perna" que sozinha parece um "I"). Usuario
+pediu pra centralizar especificamente no talo, e mais destaque visual (o
+acento pequeno com `currentColor` ficou "minimalista" demais). Recalibrado
+com varredura de pixel real (nao estimativa): `canvas.fillText` numa
+resolucao alta (400px), depois conta, coluna por coluna, quantos pixels
+tem tinta — colunas com cobertura ≥85% da altura do glifo sao o talo
+solido (as diagonais só tem tinta em faixas parciais de altura, entao tem
+cobertura bem menor). Centro do talo achado assim: ~0.1675em (contra
+~0.365em do glifo inteiro, quase o dobro mais a esquerda). Chapeu tambem
+aumentado (`.34em`→`.4em`) e trocado de `currentColor` pra `var(--gold)`
+(destaque de verdade, coerente com "dourado como unico acento decorativo"
+da direcao "Karamu Editorial").
+
+Testado ao vivo apos cada rodada (4 no total): 187/187, zero erro de
+console, screenshot conferido nos 3 pontos (nav/hero/rodape) a cada
+ajuste.
+
+**Ideia nova do usuario (2026-08-10)**: animacao de abertura (splash) —
+logo aparece, depois o nome, depois abre pro site, inspirado no loading
+do resn.co.nz (uma das referencias enviadas antes). **Isso e a mesma ideia
+ja registrada antes como "splash screen animado"** (ver
+`project_future_splash_screen` na memoria — intro animado ramificando pra
+cadastro/app, adiado, usando modal simples por enquanto). Ainda nao
+implementado, nao decidido se entra nesta rodada de identidade visual ou
+fica pra depois — perguntar ao usuario antes de comecar.
+
+**Nota adicional do usuario (2026-08-10)**: reforcou o problema ja
+registrado de navegacao do perfil (clicar no status de conta troca de
+tela inteira e "perde" o evento em andamento) e sugeriu uma solucao
+concreta — um botao proprio de "voltar" dentro da tela de perfil, que so
+volta pro gerador sem deslogar (hoje so existe "Sair da conta", que
+desloga). Correcao pequena e bem definida, boa candidata a implementar
+logo.
+
+**Nota adicional do usuario (2026-08-10)**: notou uma "descontinuidade
+causada por duas scroll" no app — parece haver 2 barras de rolagem
+verticais visiveis simultaneamente (uma parcial perto do topo, sobre o
+`.hero`, e a barra normal da pagina abaixo dela). Usuario marcou como
+"ajustar no futuro", nao urgente. Precisa investigar se e um elemento com
+`overflow` proprio criando um scroll aninhado (candidato mais provavel:
+`.hero{overflow:hidden}` em `layout.css` interagindo com algum filho, ou
+o `<nav class="status-bar">` fixo sobrepondo a barra de rolagem nativa)
+antes de decidir a correcao.
+
+**Skills locais adicionadas pelo usuario (2026-08-10)**: 8 pacotes de
+skills de terceiros (Anthropic, Vercel, AccessLint, bencium, e uma
+ferramenta independente de UI/UX) baixados numa pasta fora do repositorio
+(`skills anttropic/`, no `.gitignore`). Catalogo completo — o que cada uma
+faz, quais se aplicam a este projeto e quais nao, duplicatas encontradas —
+esta no handoff, secao "Skills locais disponiveis". Resumo: as mais uteis
+pra fase atual sao `theme-factory`/`frontend-design`/`web-design-guidelines`
+(identidade visual em andamento) e `webapp-testing` (poderia substituir os
+scripts manuais de Chrome headless/CDP usados hoje pra verificacao visual).
+
 ### 5. Revisao de seguranca de dados e do site/privacidade
 
 **Concluido em 2026-07-27** dentro da terceira rodada do Plano 15 (ver
@@ -456,6 +632,21 @@ auth/geracao, 2 vulnerabilidades de dependencias corrigidas via
 politica de privacidade tecnica (o que e armazenado e por quanto tempo) em
 formato de documento publicavel para os usuarios — isso fica com o item 3
 abaixo (politicas legais), que ainda nao foi iniciado.
+
+**Segunda rodada em 2026-08-17**, usando um prompt-template proprio do
+usuario para auditoria de seguranca de aplicacao web (autenticacao/sessao,
+RLS, validacao de entrada, dependencias, cabecalhos HTTP/CSP, upload,
+integridade de recursos externos). 3 correcoes aplicadas e testadas
+(rate limit em `/api/referencias-receitas` e `/api/imagens-evento`,
+validacao de imagem por assinatura de bytes real em vez de so o
+`Content-Type` declarado, SRI + versao fixada nos scripts de CDN
+`jspdf`/`supabase-js`); RLS e criptografia da chave de IA reconferidas
+como corretas, sem acao. 2 itens registrados sem correcao nesta rodada:
+CSP `'unsafe-inline'` em `scriptSrc` fica como debito tecnico documentado
+(usuario optou por adiar, escopo de ~26 handlers inline ja mapeado) e a
+allowlist de redirect URL do Google no painel do Supabase precisa de
+checagem manual do usuario. Ver handoff para a lista completa dos 5
+achados e como cada um foi tratado.
 
 ### 6. Precos proprios por usuario (perfil) e documento de precos
 

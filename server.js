@@ -583,7 +583,7 @@ async function buscarReferenciasHandler(req, res) {
     }
 }
 
-app.post('/api/referencias-receitas', buscarReferenciasHandler);
+app.post('/api/referencias-receitas', limitadorPersonalizacao, buscarReferenciasHandler);
 
 async function buscarImagensEventoHandler(req, res) {
     try {
@@ -609,7 +609,7 @@ async function buscarImagensEventoHandler(req, res) {
     }
 }
 
-app.post('/api/imagens-evento', buscarImagensEventoHandler);
+app.post('/api/imagens-evento', limitadorPersonalizacao, buscarImagensEventoHandler);
 
 // Força a abertura do index.html na rota principal
 app.get('/', (req, res) => {

@@ -27,7 +27,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
                     <h2>Planejamento para ${escapeHTML(pessoas)} pessoas</h2>
                     <p>Cardapio, logistica, compras, equipe, roteiro e contexto de precificacao em um unico plano.</p>
                 </div>
-                <button class="btn-print" onclick="baixarRelatorioPDF()">Baixar PDF</button>
+                <button class="btn-epic btn-compact" onclick="baixarRelatorioPDF()">Baixar PDF</button>
             </div>
 
             ${renderResumoExecutivo(dados, pessoas, cardapio, compras)}
@@ -76,10 +76,10 @@ function renderGaleriaEventoPendente() {
                 <summary id="eventGallerySummary">Preparando fontes visuais...</summary>
                 <div class="gallery-controls" id="eventGalleryControls" aria-label="Visualizacao das referencias visuais" hidden>
                     <span id="eventGalleryCount">Preparando</span>
-                    <button type="button" class="gallery-view-btn active" data-gallery-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoGaleria('carousel')">Carrossel</button>
-                    <button type="button" class="gallery-view-btn" data-gallery-view="list" aria-pressed="false" onclick="alternarVisualizacaoGaleria('list')">Lista</button>
-                    <button type="button" class="gallery-nav-btn" data-gallery-nav="prev" aria-label="Imagens anteriores" onclick="rolarGaleria(-1)">←</button>
-                    <button type="button" class="gallery-nav-btn" data-gallery-nav="next" aria-label="Proximas imagens" onclick="rolarGaleria(1)">→</button>
+                    <button type="button" class="carousel-toggle active" data-gallery-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoGaleria('carousel')">Carrossel</button>
+                    <button type="button" class="carousel-toggle" data-gallery-view="list" aria-pressed="false" onclick="alternarVisualizacaoGaleria('list')">Lista</button>
+                    <button type="button" class="carousel-nav" data-gallery-nav="prev" aria-label="Imagens anteriores" onclick="rolarGaleria(-1)">←</button>
+                    <button type="button" class="carousel-nav" data-gallery-nav="next" aria-label="Proximas imagens" onclick="rolarGaleria(1)">→</button>
                 </div>
                 <div id="eventGalleryContent" class="event-gallery-loading">
                     <span class="gallery-loading-visual" aria-hidden="true"></span>
@@ -1254,10 +1254,10 @@ function renderCardapio(cardapio) {
                 </div>
                 <div class="menu-controls" aria-label="Visualizacao do cardapio">
                     <span>${cardapio.length} itens individuais</span>
-                    <button type="button" class="menu-view-btn active" data-menu-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoCardapio('carousel')">Carrossel</button>
-                    <button type="button" class="menu-view-btn" data-menu-view="list" aria-pressed="false" onclick="alternarVisualizacaoCardapio('list')">Lista</button>
-                    <button type="button" class="menu-nav-btn" data-menu-nav="prev" aria-label="Pratos anteriores" onclick="rolarCardapio(-1)">←</button>
-                    <button type="button" class="menu-nav-btn" data-menu-nav="next" aria-label="Proximos pratos" onclick="rolarCardapio(1)">→</button>
+                    <button type="button" class="carousel-toggle active" data-menu-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoCardapio('carousel')">Carrossel</button>
+                    <button type="button" class="carousel-toggle" data-menu-view="list" aria-pressed="false" onclick="alternarVisualizacaoCardapio('list')">Lista</button>
+                    <button type="button" class="carousel-nav" data-menu-nav="prev" aria-label="Pratos anteriores" onclick="rolarCardapio(-1)">←</button>
+                    <button type="button" class="carousel-nav" data-menu-nav="next" aria-label="Proximos pratos" onclick="rolarCardapio(1)">→</button>
                 </div>
             </div>
             <div class="dish-grid dish-carousel" id="cardapioVisualizacao">

@@ -27,6 +27,37 @@
 
     --transition:
         all .45s cubic-bezier(.4,0,.2,1);
+
+    /* Identidade "Karamu Editorial" — hierarquia de texto neutro-quente */
+    --ink-strong:#241f18;
+    --ink:#3d3428;
+    --ink-soft:#6f665c;
+    --ink-faint:#8a8174;
+
+    /* Escala de superficie creme (tokeniza a familia de card ja dominante) */
+    --cream:#fdfaf3;
+    --cream-border:#f0ebe0;
+    --sand:#e9dfc7;
+
+    /* Escala de raio (valores ja usados hoje, so nao tokenizados) */
+    --radius-sm:10px;
+    --radius-md:14px;
+    --radius-lg:20px;
+    --radius-xl:28px;
+    --radius-pill:999px;
+
+    /* Cores semanticas de status (uso restrito a significado real, nunca decorativo) */
+    --status-good:#1e8449;
+    --status-good-bg:#eaf6ee;
+    --status-good-border:#bfe3cc;
+
+    --status-caution:#a3591c;
+    --status-caution-bg:#fdf1e6;
+    --status-caution-border:#f0d3ac;
+
+    --status-attention:#b42318;
+    --status-attention-bg:#fdecea;
+    --status-attention-border:#f3c3bd;
 }
 
 /* ───────── RESET ───────── */
@@ -55,6 +86,54 @@ body{
 
 .hidden{
     display:none !important;
+}
+
+.wordmark{
+    font-family:'Montserrat',sans-serif;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:-.02em;
+    line-height:1;
+}
+
+/* Envolve so o texto "KARAMU" (nao o container inteiro, que pode ser mais
+   largo e centralizado — um <h1> de largura total, por exemplo). Precisa
+   ser inline-block pra encolher exatamente no tamanho do texto, senao a
+   posicao do "K" fica imprevisivel e o acento do chapeu desalinha. */
+.wordmark-mark{
+    position:relative;
+    display:inline-block;
+}
+
+/* Acento de chapeu de chef sobre o K de KARAMU. O K em si e texto real
+   (mesma fonte/peso das outras letras — garante proporcao identica, sem
+   tentar desenhar um K a mao que nunca bate certinho); o chapeu fica
+   posicionado por cima via position:absolute, como um acento/diacritico. */
+.chef-hat-accent{
+    position:absolute;
+    width:.4em;
+    height:.4em;
+    top:-.24em;
+    left:-.03em;
+    color:var(--gold);
+    /* contorno escuro sutil — sem isso o dourado some contra fundos com
+       tons quentes parecidos (ex.: foto do hero), variando por tela */
+    filter:
+        drop-shadow(0 0 1.5px rgba(0,0,0,.85))
+        drop-shadow(0 1px 3px rgba(0,0,0,.5));
+}
+
+.icon{
+    width:1em;
+    height:1em;
+    display:inline-block;
+    vertical-align:-.15em;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:1.75;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    flex-shrink:0;
 }
 
 button:focus-visible,
