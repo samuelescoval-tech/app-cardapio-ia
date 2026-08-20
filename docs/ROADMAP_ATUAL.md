@@ -520,6 +520,39 @@ e os grupos de carrossel/navegacao do cardapio e da galeria — confirmando
 zero erro de console e nenhuma regressao visual. Ver handoff para a lista
 completa arquivo por arquivo.
 
+**Fase 3 (cards) concluida em 2026-08-17** — fase de maior risco do
+plano, mexe em `renderCardapio()`/`renderImagemEvento()` preservando os
+seletores que `aplicarImagensAoCardapio()` usa pra popular foto de
+forma assincrona. Removido o fundo arco-iris `g${i % 6}` (6 classes sem
+significado); categoria+nome do prato viraram um overlay `.dish-scrim`
+sobre a foto (reaproveitado tambem no card de galeria, corrigindo de
+quebra o outlier `Georgia,serif` que so existia la). No modo lista do
+cardapio (miniatura 120px, overlay ilegivel), o mesmo texto e renderizado
+duas vezes no HTML (uma no overlay, uma como cabecalho simples) e CSS
+alterna qual aparece — sem duplicar visualmente. **Bug real achado na
+propria verificacao visual**: o overlay nao tinha logica de mostrar/
+esconder ligada a existencia de foto, entao duplicava com o placeholder
+quando o prato ainda nao tinha imagem; corrigido amarrando a mesma
+condicao que ja controla o placeholder. Consolidacao das "climas" de
+card: familia creme tokenizada (`var(--cream)`/`var(--cream-border)`,
+9 pontos incluindo achados novos); `.perfil-item-card` (bug real — vidro
+translucido preto sobre fundo branco, quase invisivel) juntou a familia
+creme; `.operation-panel` (clima azul-marinho nao documentado) dissolvido
+pro neutro, com os estados realmente semanticos (badge de complexidade,
+painel de pendencias) indo pros tokens `--status-*`; `.shopping-head`
+perdeu o gradiente verde sem significado a favor de `--ink-strong`;
+feedback visual adequada/generica/inadequada e `.place-card .ok/.warn`
+tokenizados. `.metric-card`/`.pdf-card` conferidos e mantidos sem
+alteracao (ja corretos). Testado com chamada real das funcoes de render
+(nao so inspecao de CSS) via CDP, confirmando por propriedades do DOM
+que a populacao de imagem continua funcionando antes de printar tela;
+fixture isolado servido pelo proprio Express pra conferir
+`.perfil-item-card`/botoes de feedback (carregar CSS de `localhost` a
+partir de `file://` e bloqueado por origem no Chrome). Screenshots
+desktop/mobile, carrossel/lista, com e sem foto. Suite completa: 189/189.
+Fases 4-5 (icones SVG, polimento cruzado) ainda pendentes. Ver handoff
+para a lista completa arquivo por arquivo.
+
 **Nota adicional do usuario (2026-08-10)**: a secao de apresentacao
 dentro do app (`#pitchSection`, hoje so 1 slide de capa + poucos slides
 genericos) esta "muito simples" — falta publico-alvo/personas ("atores"),

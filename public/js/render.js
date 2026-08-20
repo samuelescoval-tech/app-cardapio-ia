@@ -295,9 +295,11 @@ function renderImagemEvento(imagem, possuiAlternativas = false, historico = fals
             <div class="gallery-image-frame">
                 <img src="${escapeHTML(imagem.image_url)}" data-gallery-fallback="${escapeHTML(fallbackUrl)}" alt="${escapeHTML(imagem.alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
                 <span>${escapeHTML(rotuloSlotGaleria(imagem.slot))}</span>
+                <div class="dish-scrim">
+                    <h4 class="dish-title">${escapeHTML(imagem.alt)}</h4>
+                </div>
             </div>
             <figcaption>
-                <strong>${escapeHTML(imagem.alt)}</strong>
                 <small>${escapeHTML(imagem.attribution)}</small>
                 <div class="gallery-credit-line">
                     <span>${escapeHTML(imagem.creator)} · ${escapeHTML(imagem.license)}</span>
@@ -449,6 +451,7 @@ function aplicarImagensAoCardapio(estado) {
         const elemento = cartao.querySelector("img[data-dish-image]");
         const placeholder = cartao.querySelector(".dish-placeholder");
         const selo = cartao.querySelector(".dish-image-label");
+        const scrim = cartao.querySelector(".dish-scrim");
         const credito = cartao.querySelector(".dish-image-credit span");
         const fonte = cartao.querySelector(".dish-image-credit a");
         if (!elemento) return;
@@ -456,6 +459,10 @@ function aplicarImagensAoCardapio(estado) {
         elemento.hidden = !imagem;
         if (placeholder) placeholder.hidden = Boolean(imagem);
         if (selo) selo.hidden = !imagem;
+        // A faixa com categoria/nome sobre a foto so aparece quando ha foto de
+        // verdade — sem isso, duplicava o mesmo texto que o placeholder ja
+        // mostra (achado na verificacao visual da Fase 3).
+        if (scrim) scrim.hidden = !imagem;
         if (imagem) {
             elemento.src = imagem.image_url;
             elemento.alt = imagem.provider === "local"
@@ -496,6 +503,8 @@ function ativarFallbackImagensCardapio() {
             if (placeholder) placeholder.hidden = false;
             const selo = cartao?.querySelector(".dish-image-label");
             if (selo) selo.hidden = true;
+            const scrim = cartao?.querySelector(".dish-scrim");
+            if (scrim) scrim.hidden = true;
             const credito = cartao?.querySelector(".dish-image-credit span");
             if (credito) credito.textContent = "Sem fotografia confiável — identificação neutra";
         });
@@ -1265,17 +1274,23 @@ function renderCardapio(cardapio) {
                     const slot = slotGaleriaPrato(item);
                     return `
                         <article class="dish-card-rich menu-item-card" data-dish-id="${escapeHTML(item.id || `prato-${i + 1}`)}" data-dish-slot="${escapeHTML(slot)}" data-dish-name="${escapeHTML(item.nome || "Item do cardápio")}">
-                            <div class="dish-visual g${i % 6}">
+                            <div class="dish-visual">
                                 <img data-dish-image alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" hidden>
                                 <div class="dish-placeholder">
                                     <span>${escapeHTML(rotuloSlotGaleria(slot))}</span>
                                     <b>${escapeHTML(item.nome || "Item do cardápio")}</b>
                                 </div>
                                 <span class="dish-image-label" hidden>Referência conferida</span>
+                                <div class="dish-scrim" hidden>
+                                    <span class="dish-eyebrow">${escapeHTML(item.categoria || "Cardápio")}</span>
+                                    <h4 class="dish-title">${escapeHTML(item.nome || "Item do cardápio")}</h4>
+                                </div>
                             </div>
                             <div class="dish-body">
-                                <span>${escapeHTML(item.categoria || "Cardápio")}</span>
-                                <h4>${escapeHTML(item.nome || "Item do cardápio")}</h4>
+                                <div class="dish-heading">
+                                    <span class="dish-eyebrow">${escapeHTML(item.categoria || "Cardápio")}</span>
+                                    <h4 class="dish-title">${escapeHTML(item.nome || "Item do cardápio")}</h4>
+                                </div>
                                 <p>${escapeHTML(item.descricao || "Preparação selecionada para este evento.")}</p>
                                 ${item.quantidade ? `<strong>${escapeHTML(item.quantidade)}</strong>` : ""}
                                 <small class="dish-image-credit"><span>Buscando fotografia relacionada...</span><a target="_blank" rel="noopener noreferrer" hidden>Fonte</a></small>

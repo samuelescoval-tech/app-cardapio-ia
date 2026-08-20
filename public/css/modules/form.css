@@ -673,10 +673,10 @@ body.modal-open{
     margin-bottom:20px;
 }
 
+/* Fundo/borda vem da familia creme compartilhada (.sector-card e outros,
+   ver result.css) — antes tinha um verniz translucido preto proprio, que
+   so faz sentido sobre fundo escuro; aqui o painel de perfil e branco. */
 .perfil-item-card{
-    background:rgba(0,0,0,.03);
-    border:1px solid rgba(0,0,0,.08);
-    border-radius:14px;
     padding:16px;
     display:flex;
     flex-direction:column;
@@ -688,7 +688,7 @@ body.modal-open{
 }
 
 .perfil-item-card small{
-    color:rgba(0,0,0,.6);
+    color:var(--ink-soft);
 }
 
 .perfil-item-actions{

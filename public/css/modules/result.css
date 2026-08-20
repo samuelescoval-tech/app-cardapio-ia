@@ -494,18 +494,18 @@
 }
 
 .operation-panel{
-    border-color:rgba(33,72,94,.18);
-    background:linear-gradient(180deg,#fff,#f7fbfc);
+    border-color:var(--cream-border);
+    background:linear-gradient(180deg,#fff,var(--cream));
 }
 
 .operation-panel .section-head span{
     color:#fff;
-    background:#476574;
+    background:var(--ink-soft);
 }
 
-.operation-panel .section-head span.complexity-baixa{ background:#2f7d57; }
-.operation-panel .section-head span.complexity-media{ background:#a06b13; }
-.operation-panel .section-head span.complexity-alta{ background:#a84432; }
+.operation-panel .section-head span.complexity-baixa{ background:var(--status-good); }
+.operation-panel .section-head span.complexity-media{ background:var(--status-caution); }
+.operation-panel .section-head span.complexity-alta{ background:var(--status-attention); }
 
 .operation-summary,
 .operation-grid{
@@ -516,7 +516,7 @@
 
 .operation-summary article,
 .operation-card-list article{
-    border:1px solid #e5ecef;
+    border:1px solid var(--cream-border);
     border-radius:13px;
     background:#fff;
     padding:14px;
@@ -525,7 +525,7 @@
 .operation-summary small,
 .operation-card-list small,
 .operation-timeline small{
-    color:#647681;
+    color:var(--ink-soft);
     font-size:.74rem;
 }
 
@@ -533,26 +533,26 @@
 .operation-card-list strong{
     display:block;
     margin:4px 0;
-    color:#203b49;
+    color:var(--ink-strong);
 }
 
 .operation-summary p,
 .operation-card-list p{
-    color:#60717a;
+    color:var(--ink-soft);
     font-size:.8rem;
     line-height:1.5;
 }
 
 .operation-factors{
     margin:14px 0;
-    border:1px dashed #cbd8de;
+    border:1px dashed var(--sand);
     border-radius:12px;
     padding:10px 12px;
 }
 
 .operation-factors summary{
     cursor:pointer;
-    color:#365464;
+    color:var(--ink);
     font-size:.8rem;
     font-weight:800;
 }
@@ -568,7 +568,7 @@
 .operation-grid > div > h4,
 .operation-timeline > h4{
     margin-bottom:10px;
-    color:#203b49;
+    color:var(--ink-strong);
     font-family:'Playfair Display',serif;
 }
 
@@ -584,15 +584,15 @@
 .operation-pending{
     margin-top:12px;
     padding:14px;
-    border:1px solid rgba(168,68,50,.25);
+    border:1px solid var(--status-attention-border);
     border-radius:13px;
-    background:#fff7f4;
+    background:var(--status-attention-bg);
 }
 
 .operation-pending > strong{
     display:block;
     margin-bottom:9px;
-    color:#8f392c;
+    color:var(--status-attention);
 }
 
 @media (max-width:760px){
@@ -605,7 +605,7 @@
 .result-section,
 .shopping-panel{
     background:#fff;
-    border:1px solid #f0ebe0;
+    border:1px solid var(--cream-border);
     border-radius:18px;
     padding:20px;
     margin-bottom:14px;
@@ -714,7 +714,7 @@
     flex-direction:column;
     overflow:hidden;
     border-radius:16px;
-    border:1px solid #f0ebe0;
+    border:1px solid var(--cream-border);
     background:#fff;
     box-shadow:0 8px 22px rgba(0,0,0,.06);
     scroll-snap-align:start;
@@ -727,8 +727,47 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    background:#eee8dc;
+    background:linear-gradient(160deg,var(--sand),var(--cream-border));
 }
+
+/* Faixa escura com degrade + texto por cima da foto/ilustracao (categoria +
+   nome do prato). Reaproveitada tambem em .gallery-image-frame (galeria de
+   imagens do evento) para o mesmo tratamento visual. */
+.dish-scrim{
+    position:absolute;
+    inset:auto 0 0 0;
+    padding:26px 14px 12px;
+    background:linear-gradient(to top,rgba(15,12,8,.86),rgba(15,12,8,.4) 60%,transparent);
+}
+
+.dish-eyebrow{
+    display:block;
+    font-size:.62rem;
+    font-weight:900;
+    letter-spacing:1px;
+    text-transform:uppercase;
+}
+
+.dish-title{
+    margin:3px 0 0;
+    font-family:'Playfair Display',serif;
+    font-size:1rem;
+    line-height:1.25;
+}
+
+.dish-scrim .dish-eyebrow{ color:var(--gold); }
+.dish-scrim .dish-title{ color:#fff; }
+
+/* Alternativa em texto simples sobre fundo claro, usada no modo lista do
+   cardapio (miniatura de 120px — o texto sobreposto na imagem nao fica
+   legivel nesse tamanho) e escondida por padrao no carrossel/grade. */
+.dish-heading{
+    display:none;
+    margin-bottom:8px;
+}
+
+.dish-heading .dish-eyebrow{ color:var(--gold-dark); }
+.dish-heading .dish-title{ color:var(--ink-strong); }
 
 .dish-visual img{
     display:block;
@@ -753,6 +792,7 @@
 
 .dish-placeholder[hidden],
 .dish-image-label[hidden],
+.dish-scrim[hidden],
 .dish-visual img[hidden]{
     display:none;
 }
@@ -790,21 +830,6 @@
     flex:1;
     flex-direction:column;
     padding:14px;
-}
-
-.dish-body span{
-    color:var(--gold-dark);
-    font-size:.64rem;
-    font-weight:900;
-    letter-spacing:1px;
-    text-transform:uppercase;
-}
-
-.dish-body h4{
-    font-family:'Playfair Display',serif;
-    margin:4px 0;
-    font-size:1rem;
-    line-height:1.25;
 }
 
 .dish-body p,
@@ -908,25 +933,34 @@
     aspect-ratio:auto;
 }
 
+.dish-list .dish-scrim{
+    display:none;
+}
+
+.dish-list .dish-heading{
+    display:block;
+}
+
 .dish-list .dish-body small{
     display:block;
     overflow:visible;
 }
 
+/* Cabecalho da Lista de Compras: antes usava verde, sem nenhum significado
+   real (nao e um status "ok/atencao") — dourado e o unico destaque
+   decorativo da identidade, entao vira o mesmo tom escuro/neutro usado em
+   outros cabecalhos de destaque do resultado. */
 .shopping-head{
     color:#fff;
     border-bottom:none;
     margin:0;
+    padding:16px 20px;
+    background:var(--ink-strong);
 }
 
 .shopping-panel{
     padding:0;
     overflow:hidden;
-}
-
-.shopping-head{
-    padding:16px 20px;
-    background:linear-gradient(135deg,#1a5c35,#27ae60);
 }
 
 .sector-grid{
@@ -939,9 +973,10 @@
 .check-col,
 .decor-card,
 .layout-card,
-.note-card{
-    background:#fdfaf3;
-    border:1px solid #f0ebe0;
+.note-card,
+.perfil-item-card{
+    background:var(--cream);
+    border:1px solid var(--cream-border);
     border-radius:14px;
     padding:14px;
 }
@@ -1006,7 +1041,7 @@
     border:1px dashed #d8d0c1;
     border-radius:12px;
     color:#817768;
-    background:#fdfaf3;
+    background:var(--cream);
     font-size:.84rem;
 }
 
@@ -1014,7 +1049,7 @@
     padding:16px;
     border:1px solid #e6dfd2;
     border-radius:14px;
-    background:#fdfaf3;
+    background:var(--cream);
 }
 
 .reference-search-panel > p,
@@ -1294,11 +1329,11 @@
 }
 
 .place-card .ok{
-    color:#1e8449;
+    color:var(--status-good);
 }
 
 .place-card .warn{
-    color:#c0392b;
+    color:var(--status-attention);
 }
 
 .place-card strong{
@@ -1368,7 +1403,7 @@
 .budget-card{
     overflow:hidden;
     border-radius:16px;
-    border:1px solid #f0ebe0;
+    border:1px solid var(--cream-border);
     background:#fff;
 }
 
@@ -1414,13 +1449,6 @@
     color:#222;
     text-align:right;
 }
-
-.g0{background:linear-gradient(135deg,#f6d365,#fda085)}
-.g1{background:linear-gradient(135deg,#a18cd1,#fbc2eb)}
-.g2{background:linear-gradient(135deg,#84fab0,#8fd3f4)}
-.g3{background:linear-gradient(135deg,#fccb90,#d57eeb)}
-.g4{background:linear-gradient(135deg,#f093fb,#f5576c)}
-.g5{background:linear-gradient(135deg,#4facfe,#00f2fe)}
 
 .exec-dashboard{
     display:grid;
@@ -1469,8 +1497,8 @@
 }
 
 .service-group{
-    background:#fdfaf3;
-    border:1px solid #f0ebe0;
+    background:var(--cream);
+    border:1px solid var(--cream-border);
     border-radius:14px;
     overflow:hidden;
 }
@@ -1531,7 +1559,7 @@
 }
 
 .utensil-table{
-    border:1px solid #f0ebe0;
+    border:1px solid var(--cream-border);
     border-radius:14px;
     overflow:hidden;
 }
@@ -1556,12 +1584,12 @@
 
 .utensil-row{
     padding:11px 14px;
-    border-bottom:1px solid #f0ebe0;
+    border-bottom:1px solid var(--cream-border);
     background:#fff;
 }
 
 .utensil-row:nth-child(odd){
-    background:#fdfaf3;
+    background:var(--cream);
 }
 
 .utensil-row:last-child{
@@ -1961,13 +1989,6 @@
     gap:8px;
 }
 
-.event-gallery-card figcaption > strong{
-    color:#242019;
-    font-family:Georgia,serif;
-    font-size:.82rem;
-    line-height:1.32;
-}
-
 .event-gallery-card figcaption > small{
     display:-webkit-box;
     overflow:hidden;
@@ -2078,21 +2099,21 @@
 }
 
 .gallery-feedback-btn[data-gallery-rating="adequada"].active{
-    border-color:#2f7753;
-    background:#e8f5ed;
-    color:#20553b;
+    border-color:var(--status-good);
+    background:var(--status-good-bg);
+    color:var(--status-good);
 }
 
 .gallery-feedback-btn[data-gallery-rating="generica"].active{
-    border-color:#9d7722;
-    background:#fff4d5;
-    color:#6f5012;
+    border-color:var(--status-caution);
+    background:var(--status-caution-bg);
+    color:var(--status-caution);
 }
 
 .gallery-feedback-btn[data-gallery-rating="inadequada"].active{
-    border-color:#a6423d;
-    background:#fff0ee;
-    color:#7c2e2a;
+    border-color:var(--status-attention);
+    background:var(--status-attention-bg);
+    color:var(--status-attention);
 }
 
 .gallery-card-rejected{

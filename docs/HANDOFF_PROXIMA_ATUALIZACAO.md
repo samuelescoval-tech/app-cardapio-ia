@@ -23,11 +23,13 @@ local), a chave de IA (BYOK) saiu das abas principais para um painel
 "avancado" recolhido, revisao de codigo (`/code-review`) corrigiu 4
 problemas reais nessa entrega, e **o item 7 do Plano 16 (reestruturacao
 de navegacao, marcado CRITICO) foi executado junto com a troca de nome
-para Karamu** — ver secao dedicada abaixo. Em 2026-08-17: Fases 1 e 2 da
+para Karamu** — ver secao dedicada abaixo. Em 2026-08-17: Fases 1, 2 e 3 da
 identidade visual "Karamu Editorial" concluidas (tokens, wordmark com
-acento de chapeu de chef, favicon; e consolidacao de todas as familias
-de botao duplicadas/divergentes numa taxonomia so) e uma auditoria de
-seguranca completa (prompt padrao do usuario) resultou em 3 correcoes
+acento de chapeu de chef, favicon; consolidacao de todas as familias de
+botao duplicadas/divergentes numa taxonomia so; e redesenho dos cards —
+overlay de foto no cardapio/galeria, remocao do fundo arco-iris, fim do
+clima azul-marinho nao documentado e do bug de contraste no card de
+perfil) e uma auditoria de seguranca completa (prompt padrao do usuario) resultou em 3 correcoes
 aplicadas e testadas (rate limit em duas rotas sem limitador, validacao
 de imagem por conteudo real em vez de so o `Content-Type` declarado, SRI
 nos scripts de CDN) e 2 itens registrados sem acao imediata (CSP
@@ -150,6 +152,24 @@ POST /api/referencias-receitas.
 
 Erros iniciais: conferir porta, .env, GEMINI_API_KEY, DEMO_ACCESS_KEY e a
 resposta de /api/status.
+
+**`git push` travando por SSH (achado em 2026-08-18)**: nessa rede/
+maquina, `git push origin main` (remote SSH, `git@github.com:...`) e
+mesmo `ssh -T git@github.com` travam indefinidamente logo apos o
+GitHub aceitar a chave (confirmado tambem pela porta 443 alternativa do
+GitHub pra SSH, `ssh.github.com:443` — trava igual, entao nao e so a
+porta 22 bloqueada). Causa raiz nao totalmente identificada (nao e
+VPN/proxy do sistema — conferido, nenhum configurado), mas contornado
+instalando o GitHub CLI (`gh`, via apt, repositorio oficial) e rodando
+`gh auth login` (GitHub.com → HTTPS → autenticar Git → login pelo
+navegador). Isso tambem esbarrou no bloqueador de anuncios/VPN
+embutido do navegador Opera, que travava a URL longa do fluxo OAuth com
+erro de regex (`re2.cc: invalid repetition size`) — resolvido
+desativando os dois no Opera so pra essa etapa de login. Depois de
+autenticado, `git remote set-url origin https://github.com/samuelescoval-tech/app-cardapio-ia.git`
++ `git push origin main` funcionou normalmente (HTTPS, nao usa SSH).
+Origin deste repositorio ficou em HTTPS desde entao; se travar de novo
+no futuro, essa e a sequencia que ja funcionou uma vez.
 
 ## Baseline de validacao
 
@@ -1124,6 +1144,120 @@ de mexer, nao só copiado do plano original.
   que `render.js` gera de verdade, injetado na pagina real pra testar
   contra o CSS real). Zero erro de console, nenhuma regressao visual.
 
+### Identidade visual "Karamu Editorial", Fase 3 (cards) (2026-08-17)
+
+Fase de maior risco do plano — mexe em `renderCardapio()` e
+`renderImagemEvento()` (`render.js`), preservando exatamente os
+seletores que `aplicarImagensAoCardapio()` usa pra popular a foto de
+forma assincrona (`img[data-dish-image]`, `.dish-placeholder`,
+`.dish-image-label`, `.dish-image-credit`, e a classe `.dish-card-rich`
+usada num `.closest()`) — nenhuma dessas funcoes foi alterada, so o
+HTML ao redor delas.
+
+**Card de prato editorial**: removido o fundo arco-iris `g${i % 6}` (6
+classes `.g0`-`.g5` com gradientes aleatorios sem nenhum significado,
+violacao mais visivel da regra "dourado e o unico destaque decorativo"
+— confirmado por grep que eram usadas so nesse unico lugar antes de
+apagar). Categoria+nome do prato viraram um overlay `.dish-scrim`
+(degrade escuro de baixo pra cima + texto branco/dourado) sobre a foto,
+reaproveitado tambem em `.gallery-image-frame` (galeria de imagens do
+evento) pro mesmo tratamento — o que tambem corrigiu de quebra o
+outlier `Georgia,serif` que so existia no titulo da galeria (o elemento
+que usava essa fonte foi removido dali, nao so a regra CSS). Fundo
+substituto do arco-iris: `linear-gradient(160deg,var(--sand),var(--cream-border))`.
+
+**Modo lista do cardapio** (miniatura de 120px, onde o overlay nao fica
+legivel): em vez de tentar mover o mesmo elemento DOM visualmente pra
+fora de `.dish-visual` via CSS (inviavel — `.dish-scrim` fica aninhado
+dentro de `.dish-visual`, que e sibling de `.dish-body` num flex
+column, sem como "escapar" pra dentro do outro sibling so com CSS),
+categoria+nome sao renderizados **duas vezes** no HTML: uma vez dentro
+do overlay (`.dish-scrim`, mostrado por padrao) e uma vez como texto
+simples no topo do corpo do card (`.dish-heading`, escondido por
+padrao). `.dish-list .dish-scrim{display:none}` +
+`.dish-list .dish-heading{display:block}` alternam qual das duas
+aparece, sem duplicar visualmente em nenhum dos dois modos.
+
+**Bug real encontrado na propria verificacao visual desta fase**: o
+overlay `.dish-scrim` nao tinha nenhuma logica de show/hide amarrada a
+existencia de foto — ficava sempre visivel, entao quando um prato ainda
+nao tinha foto (placeholder mostrando categoria+nome do jeito que
+sempre mostrou), o texto aparecia **duplicado**: uma vez no
+`.dish-placeholder` (existente, mostra nome como fallback visual) e de
+novo no `.dish-scrim` por cima. Corrigido dando `hidden` por padrao ao
+`.dish-scrim` no HTML inicial e amarrando sua visibilidade ao mesmo
+`Boolean(imagem)` que ja controla `elemento.hidden`/`placeholder.hidden`
+em `aplicarImagensAoCardapio()` (e no handler de erro de carregamento
+de imagem, `ativarFallbackImagensCardapio()`, pro mesmo caso quando uma
+foto falha depois de carregada). So foi pego porque a verificacao desta
+fase testou as duas funcoes de verdade contra o markup novo (nao so
+inspecao visual da CSS) — ver metodologia de teste abaixo.
+
+**Consolidacao das "climas" de card**:
+- Familia creme (`.sector-card`/`.place-card`/`.recipe-card`/
+  `.check-col`/`.decor-card`/`.layout-card`/`.note-card`) e mais 5
+  outros usos isolados da mesma cor exata (`.empty-section`,
+  `.reference-search-panel`, `.service-group`, `.utensil-row:nth-child(odd)`)
+  passaram a usar `var(--cream)`/`var(--cream-border)` em vez do hex
+  literal `#fdfaf3`/`#f0ebe0` repetido em varios lugares — substituicao
+  de valor identico, zero mudanca visual, so tokenizacao.
+- **Bug real corrigido**: `.perfil-item-card` usava um verniz
+  translucido preto (`rgba(0,0,0,.03)`) sobre o fundo branco do
+  `.glass-panel` que envolve a tela de perfil — tratamento de "vidro"
+  que so faz sentido sobre fundo escuro, aqui so deixava o card quase
+  invisivel. Removida a regra isolada, `.perfil-item-card` entrou na
+  lista compartilhada da familia creme (mesmo fundo/borda que
+  `.sector-card` etc.), texto secundario tambem tokenizado
+  (`rgba(0,0,0,.6)` → `var(--ink-soft)`). Confirmado visualmente antes/
+  depois via fixture isolado (ver metodologia).
+- `.operation-panel` (clima azul-marinho nao documentado, `#203b49`/
+  `#476574`/`#647681`/etc., sem nenhuma relacao com a marca) dissolvido
+  pro tratamento creme/neutro: fundo/borda para `var(--cream)`/
+  `var(--cream-border)`, textos para `var(--ink)`/`var(--ink-strong)`/
+  `var(--ink-soft)`, borda tracejada para `var(--sand)`. O badge de
+  complexidade (`complexity-badge complexity-baixa/media/alta`) e o
+  painel de pendencias (`.operation-pending`) **sao** estados
+  semanticos de verdade (nao decoracao), entao viraram os tokens
+  `--status-good`/`--status-caution`/`--status-attention` (+ variantes
+  `-bg`/`-border`) em vez de neutro.
+- `.shopping-head` (cabecalho "Lista de Compras"): tinha um gradiente
+  verde (`#1a5c35`→`#27ae60`) sem nenhum significado real (nao e um
+  status "ok"), unico ponto verde do app fora da paleta. Virou
+  `var(--ink-strong)` solido — mesma logica de "so dourado como
+  destaque decorativo" ja aplicada no resto da reforma. Aproveitado
+  pra unificar duas regras `.shopping-head` que estavam
+  desnecessariamente separadas no arquivo (mesmo seletor, sem
+  sobreposicao de propriedades, sem risco no merge).
+- `.place-card .ok`/`.warn` (cores ja essencialmente identicas aos
+  tokens, `#1e8449`≈`--status-good`) e os 3 estados de feedback visual
+  `adequada`/`generica`/`inadequada`
+  (`.gallery-feedback-btn[data-gallery-rating].active`) tokenizados
+  para `--status-good`/`--status-caution`/`--status-attention`.
+- `.metric-card`/`.pdf-card` (vidro de verdade, sobre fundo escuro em
+  `pitch.css`) conferidos e **sem alteracao** — ja estavam corretos,
+  fora do escopo desta consolidacao.
+
+**Metodologia de teste** (mais rigorosa que a Fase 2, por causa do
+risco maior): em vez de so injetar markup estatico pra checar CSS,
+chamadas reais de `renderCardapio()`/`aplicarImagensAoCardapio()`/
+`renderImagemEvento()`/`renderOperacaoDeterministica()` (as funcoes de
+verdade, carregadas na pagina real) com dados fabricados, via Chrome
+headless/CDP, confirmando por `JSON.stringify` de propriedades do DOM
+(nao so aparencia) que `aplicarImagensAoCardapio` populava corretamente
+o markup novo (`img.src`, `hidden` de cada peca, texto do scrim vs. do
+heading) antes mesmo de tirar screenshot — foi essa checagem que expos
+o bug da duplicacao antes descrito. `.perfil-item-card` e os botoes de
+feedback foram verificados num fixture HTML isolado servido pelo
+proprio Express (`public/_verify-fixture.html`, criado e apagado na
+mesma sessao — carregar CSS de `http://localhost:3000` a partir de uma
+pagina `file://` é bloqueado pelo Chrome por origem, entao precisou ser
+same-origin). Screenshots desktop (1440px) e mobile (390px), carrossel
+e lista, cobrindo card de prato com/sem foto, card de galeria, os 3
+niveis de complexidade do painel de operacao, cabecalho da lista de
+compras, cards de perfil e os 3 estados de feedback. Suite completa:
+189/189 (sem teste automatizado quebrado — nenhum fixa os nomes das
+classes trocadas). Zero erro de console em toda a verificacao.
+
 ### Auditoria de seguranca (prompt padrao do usuario) e correcoes, ponto a ponto (2026-08-17)
 
 Usuario enviou um prompt-template proprio, reutilizavel entre projetos,
@@ -1308,18 +1442,15 @@ esse e o unico dos 4 que vale manter.
    1). Usuario optou explicitamente por adiar (nao e vulnerabilidade
    ativa hoje) — retomar quando houver folga para o refactor;
 7. commit pendente: interface de perfil, integracao catalogo/custo,
-   reestruturacao de navegacao e rename Karamu **ja foram commitados**
-   (`f32a5fb`, 2026-08-09). O que resta pendente agora (19 itens no
-   `git status`: 14 modificados + 5 novos) e so o trabalho depois desse
-   commit — identidade visual "Karamu Editorial" Fase 1 (tokens,
-   wordmark, favicon: `base.css`, `layout.css`, `pitch.css`, `index.html`,
-   os 4 arquivos de favicon novos) e Fase 2 (botoes: `form.css`,
-   `result.css`, `render.js`, `app.js`, mais os mesmos `index.html`/
-   `layout.css`/`pitch.css` da Fase 1), e as 3 correcoes da auditoria de
-   seguranca de 2026-08-17 (`server.js`, `fotos.service.js`,
-   `test/integrations.test.js`, `.gitignore`, e estes dois documentos) —
-   ainda nao commitado nem enviado, aguardando confirmacao do usuario.
-   Ha tambem uma pasta `.vscode/` nao rastreada, de origem nao confirmada
-   (configuracao de editor) — conferir o conteudo antes de incluir num
-   commit;
+   reestruturacao de navegacao e rename Karamu foram commitados em
+   `f32a5fb` (2026-08-09); identidade visual "Karamu Editorial" Fases 1-2
+   (tokens/wordmark/favicon/botoes) e as 3 correcoes da auditoria de
+   seguranca de 2026-08-17 foram commitados e **enviados ao GitHub** em
+   `c243180` (mesmo dia — `gh auth login` usado pra contornar SSH
+   travando nessa rede, ver nota abaixo). O que resta pendente agora e
+   so o trabalho depois desse push — Fase 3 (cards: `form.css`,
+   `result.css`, `render.js`) — ainda nao commitado nem enviado,
+   aguardando confirmacao do usuario. Ha tambem uma pasta `.vscode/` nao
+   rastreada, de origem nao confirmada (configuracao de editor) —
+   conferir o conteudo antes de incluir num commit;
 8. manter o estado somente neste handoff e no roadmap.
