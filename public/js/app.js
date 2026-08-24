@@ -172,11 +172,11 @@ function atualizarBotaoConta() {
     if (!botao) return;
     const sessao = obterSessaoUsuario();
     if (sessao) {
-        botao.textContent = `👤 ${sessao.email}`;
+        botao.innerHTML = `${icon("account")} ${escapeHTML(sessao.email)}`;
     } else if (modoDemoAtivo()) {
-        botao.textContent = '👤 Modo demo · Criar conta';
+        botao.innerHTML = `${icon("account")} Modo demo · Criar conta`;
     } else {
-        botao.textContent = '👤 Entrar';
+        botao.innerHTML = `${icon("account")} Entrar`;
     }
 }
 
@@ -426,7 +426,7 @@ async function gerarTudo() {
 
         // Feedback visual
         btn.disabled = true;
-        btn.innerText = "⚙️ CALCULANDO LOGISTICA + IA...";
+        btn.innerHTML = `${icon("generate")} CALCULANDO LOGISTICA + IA...`;
         document.getElementById('mainHero').classList.add('collapsed');
 
         resultadoArea.classList.remove('hidden');
@@ -501,7 +501,7 @@ async function gerarTudo() {
         exibirErroResultado(resultadoArea, `Detalhes: ${error.message}`, resultadoAnterior);
     } finally {
         btn.disabled = false;
-        btn.innerText = "⚙️ CALCULAR + GERAR PLANEJAMENTO COMPLETO";
+        btn.innerHTML = `${icon("generate")} CALCULAR + GERAR PLANEJAMENTO COMPLETO`;
     }
 }
 
@@ -651,8 +651,8 @@ function renderizarHistorico() {
                 <div class="historico-card-title">${escapeHTML(entrada.tipo)}</div>
             </div>
             <div class="historico-card-meta">
-                <span>👥 ${entrada.pessoas} pessoas</span>
-                <span>⏰ ${window.storageService.formatarDataBR(entrada.data_criacao)}</span>
+                <span>${icon("users")} ${entrada.pessoas} pessoas</span>
+                <span>${icon("clock")} ${window.storageService.formatarDataBR(entrada.data_criacao)}</span>
             </div>
             <div class="historico-card-resumo">
                 ${escapeHTML(entrada.resumo)}
@@ -660,10 +660,10 @@ function renderizarHistorico() {
             </div>
             <div class="historico-card-acoes">
                 <button type="button" class="historico-btn-carregar" ${entrada.plano_valido ? `onclick="carregarDoHistorico('${entrada.id}')"` : 'disabled'}>
-                    ${entrada.plano_valido ? '📂 Carregar' : '⚠️ Incompleto'}
+                    ${entrada.plano_valido ? `${icon("folder")} Carregar` : `${icon("warning")} Incompleto`}
                 </button>
                 <button type="button" class="historico-btn-deletar" onclick="deletarDoHistorico('${entrada.id}')">
-                    🗑️ Deletar
+                    ${icon("trash")} Deletar
                 </button>
             </div>
         </div>

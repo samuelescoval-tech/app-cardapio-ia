@@ -64,8 +64,8 @@ async function perfilCarregarFornecedores() {
             <div class="perfil-item-card">
                 <strong>${escapeHTML(f.nome)}</strong>
                 <small>${escapeHTML(f.categoria || "Sem categoria")}</small>
-                ${f.telefone ? `<small>📞 ${escapeHTML(f.telefone)}</small>` : ""}
-                ${f.endereco ? `<small>📍 ${escapeHTML(f.endereco)}</small>` : ""}
+                ${f.telefone ? `<small>${icon("phone")} ${escapeHTML(f.telefone)}</small>` : ""}
+                ${f.endereco ? `<small>${icon("map-pin")} ${escapeHTML(f.endereco)}</small>` : ""}
                 ${f.observacoes ? `<small>${escapeHTML(f.observacoes)}</small>` : ""}
                 <div class="perfil-item-actions">
                     <button type="button" class="btn-secondary btn-small" data-remover-fornecedor="${f.id}">Remover</button>
@@ -216,7 +216,7 @@ async function perfilCarregarChaveIA() {
         const response = await fetch("/api/perfil/chave-ia", { headers: perfilHeaders(false) });
         const dados = await response.json();
         const configurada = Boolean(dados.configurada);
-        badge.textContent = configurada ? "✅ Chave configurada" : "Nenhuma chave configurada";
+        badge.innerHTML = configurada ? `${icon("check")} Chave configurada` : "Nenhuma chave configurada";
         badge.classList.toggle("configurada", configurada);
         badge.classList.toggle("nao-configurada", !configurada);
         removerBtn.classList.toggle("hidden", !configurada);
@@ -287,7 +287,7 @@ async function perfilCarregarPrecos() {
             <div class="perfil-item-card">
                 <strong>${escapeHTML(p.item)} — ${escapeHTML(formatarPrecoBRL(p.preco))} / ${escapeHTML(p.unidade)}</strong>
                 <small>${escapeHTML(p.categoria || "Sem categoria")}</small>
-                ${fornecedor ? `<small>🏪 ${escapeHTML(fornecedor.nome)}</small>` : ""}
+                ${fornecedor ? `<small>${icon("store")} ${escapeHTML(fornecedor.nome)}</small>` : ""}
                 ${p.observacoes ? `<small>${escapeHTML(p.observacoes)}</small>` : ""}
                 <div class="perfil-item-actions">
                     <button type="button" class="btn-secondary btn-small" data-remover-preco="${p.id}">Remover</button>

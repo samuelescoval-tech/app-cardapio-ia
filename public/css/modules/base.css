@@ -136,6 +136,13 @@ body{
     flex-shrink:0;
 }
 
+/* Marcas de rede social (Instagram/Facebook/LinkedIn) sao logotipos solidos,
+   nao icones de traco — precisam de fill em vez de stroke. */
+.icon--solid{
+    fill:currentColor;
+    stroke:none;
+}
+
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,

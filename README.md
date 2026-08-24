@@ -5,6 +5,35 @@ equipe, operacao e PDF, com contas de usuario (fornecedores e fotos proprias)
 e deploy na Vercel. O motor local calcula as partes deterministicas e o
 Gemini gera o conteudo editorial pelo backend.
 
+## O que o Karamu faz
+
+- gera um cardapio completo (pratos, bebidas e receitas com ingredientes e
+  modo de preparo) a partir do tipo de evento, numero de convidados,
+  restricoes alimentares e estilo de servico;
+- calcula lista de compras, quantidade de utensilios/equipe e cronograma
+  operacional de forma deterministica, sem depender da IA pra matematica;
+- exporta um relatorio em PDF pesquisavel, pronto pra salvar ou enviar;
+- ilustra os pratos com uma biblioteca visual local, complementada por
+  busca no Openverse quando preciso — sempre com identificacao honesta,
+  nunca apresentando uma imagem generica como se fosse exata;
+- contas de usuario reais (e-mail/senha ou login com Google), onde cada
+  usuario cadastra seus proprios fornecedores, fotos de prato e precos
+  regionais, que alimentam o gerador com uma estimativa de custo real sem
+  a IA inventar valores;
+- opcional: usar a propria chave de IA (Gemini) em vez da compartilhada,
+  cifrada em repouso antes de gravar no banco.
+
+## Stack
+
+- Frontend: HTML/CSS/JS puro, sem framework, identidade visual propria
+  ("Karamu Editorial");
+- Backend: Node.js + Express;
+- IA: Google Gemini (`@google/generative-ai`);
+- Banco, autenticacao e storage de fotos: Supabase (Postgres + Auth +
+  Storage), com RLS por usuario em toda tabela de dado pessoal;
+- Hospedagem: Vercel;
+- PDF: jsPDF.
+
 ## Documentacao viva
 
 O projeto possui apenas duas fontes de estado:

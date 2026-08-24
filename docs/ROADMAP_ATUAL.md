@@ -553,6 +553,24 @@ desktop/mobile, carrossel/lista, com e sem foto. Suite completa: 189/189.
 Fases 4-5 (icones SVG, polimento cruzado) ainda pendentes. Ver handoff
 para a lista completa arquivo por arquivo.
 
+**Fase 4 (icones SVG) concluida em 2026-08-18** — os ~38 usos de emoji
+(34 conceitos reais, levantados do zero por script em vez de confiar na
+estimativa do plano original) viraram um sprite SVG proprio: 32 icones
+de traco baixados do sprite oficial do Lucide (ISC) e 3 marcas sociais
+reais (Instagram/Facebook/LinkedIn) via Simple Icons (CC0) — dado tecnico
+exato, nunca "desenhado de memoria", pra nao arriscar um path SVG
+fabricado renderizando errado. Helper `icon(nome, classeExtra)` novo em
+`utils.js`; 3 pontos que setavam texto via `.textContent`/`.innerText`
+precisaram virar `.innerHTML` (o e-mail do usuario logado, que entra
+nesse HTML, ganhou `escapeHTML()` explicito pra nao reabrir um vetor de
+XSS que o `.textContent` anterior ja fechava por natureza). Verificado
+em duas camadas: auditoria programatica de toda referencia `<use>`
+montada no DOM (45 refs, zero faltando) + screenshot individual de cada
+uma das 10 telas da apresentacao mais formulario/historico/perfil.
+Suite completa: 189/189, zero erro de console. Falta so a Fase 5
+(polimento cruzado + regressao final) pra fechar o plano inteiro. Ver
+handoff para a lista completa arquivo por arquivo.
+
 **Nota adicional do usuario (2026-08-10)**: a secao de apresentacao
 dentro do app (`#pitchSection`, hoje so 1 slide de capa + poucos slides
 genericos) esta "muito simples" — falta publico-alvo/personas ("atores"),

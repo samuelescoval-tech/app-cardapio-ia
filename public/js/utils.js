@@ -70,6 +70,11 @@ function textoItem(item) {
     return item.nome || item.item || item.atividade || item.descricao || JSON.stringify(item);
 }
 
+function icon(nome, classeExtra = "") {
+    const classes = classeExtra ? `icon ${classeExtra}` : "icon";
+    return `<svg class="${classes}" aria-hidden="true"><use href="#icon-${nome}"></use></svg>`;
+}
+
 function escapeHTML(value) {
     return String(value ?? "")
         .replace(/&/g, "&amp;")

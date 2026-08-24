@@ -1,6 +1,6 @@
 # Handoff - Karamu
 
-Atualizado em 2026-08-17.
+Atualizado em 2026-08-18.
 
 ## Estado em uma frase
 
@@ -35,7 +35,13 @@ de imagem por conteudo real em vez de so o `Content-Type` declarado, SRI
 nos scripts de CDN) e 2 itens registrados sem acao imediata (CSP
 `unsafe-inline` adiado como debito tecnico mapeado; checagem manual do
 redirect URL do Google no Supabase, pendente do usuario) — ver secoes
-dedicadas abaixo.
+dedicadas abaixo. Em 2026-08-18: Fase 4 da identidade visual concluida —
+os ~38 usos de emoji (34 conceitos reais) viraram um sprite SVG proprio
+(Lucide + marcas reais de Instagram/Facebook/LinkedIn via Simple Icons),
+com verificacao em duas camadas (auditoria programatica de toda
+referencia `<use>` no DOM + screenshot de cada uma das 10 telas
+afetadas) — ver secao dedicada abaixo. Falta so a Fase 5 (polimento
+cruzado) pra fechar o plano "Karamu Editorial".
 
 ## Arquitetura atual
 
@@ -1258,6 +1264,80 @@ compras, cards de perfil e os 3 estados de feedback. Suite completa:
 189/189 (sem teste automatizado quebrado — nenhum fixa os nomes das
 classes trocadas). Zero erro de console em toda a verificacao.
 
+### Identidade visual "Karamu Editorial", Fase 4 (icones SVG) (2026-08-18)
+
+Trocados os ~38 usos de emoji por um sprite SVG proprio, seguindo o
+mecanismo ja planejado: `<symbol>` por icone, inline no inicio do
+`<body>` de `index.html`, escondido (`aria-hidden`); classe `.icon` em
+`base.css` (ja preparada na Fase 1) controla tamanho/traco via
+`currentColor`; helper `icon(nome, classeExtra)` em `public/js/utils.js`
+(primeiro no encadeamento de scripts) devolve o `<svg><use></use></svg>`
+pronto pra template strings.
+
+**Fonte dos icones**: dados reais baixados via `curl` do sprite oficial
+do Lucide (`unpkg.com/lucide-static/sprite.svg`, ISC) e de path data
+oficial do Simple Icons (`cdn.jsdelivr.net/npm/simple-icons`, CC0) —
+nunca "desenhados de memoria". SVG e dado tecnico exato; um path
+fabricado por adivinhação podia renderizar errado ou quebrado sem
+nenhum aviso. 32 icones de traco (Lucide) + 3 marcas sociais solidas
+(Instagram/Facebook/LinkedIn, Simple Icons, recoloridas por
+`currentColor` via novo modificador `.icon--solid` em vez da cor real
+da marca, pra casar com a paleta do app).
+
+**Inventario levantado do zero** (nao confiado na estimativa do plano
+original, que já estava desatualizada pelas Fases 2-3): script Python
+com varredura Unicode ampla nos 4 arquivos relevantes achou 34 conceitos
+de icone reais (2 a mais que o plano original — `⏳`/hourglass e
+`⏰`/clock, achados so numa segunda varredura mais ampla depois que a
+primeira rodada de edicoes já tinha sido feita em `index.html`; corrigido
+antes de fechar a fase). Setas de navegacao (`←`/`→` nos botoes
+`.carousel-nav`, ja tratadas como elemento funcional na Fase 2) e o
+`↕` do botao de recolher a capa ficaram de fora de proposito — nao sao
+"emoji decorativo", sao glifos funcionais de UI ja existentes.
+
+**Mantidos como estao, por serem becos sem saida tecnicos** (dialogos
+nativos do navegador e log de debug nao renderizam SVG):
+`app.js` — `alert()`, `confirm()`, 2 `console.log`; `storage.service.js`
+— todos os `console.log/warn/error`.
+
+**Achado durante a integracao**: 3 pontos que definem o mesmo texto via
+`.textContent`/`.innerText` (estado do botao de conta em
+`atualizarBotaoConta()`, e o botao "Gerar" em dois estados) precisaram
+virar `.innerHTML` pra aceitar a tag `<svg>` — nenhuma mudanca de
+comportamento alem disso, exceto um ponto que exigia cuidado real: o
+e-mail do usuario logado (`sessao.email`) entra nesse `innerHTML`, entao
+precisou de `escapeHTML()` explicito (o `.textContent` anterior já era
+seguro contra isso por natureza; trocar pra `.innerHTML` sem escapar
+teria reaberto um vetor de XSS ali).
+
+**Verificacao, em duas camadas** (a primeira é a que realmente pega
+sprite/id errado — uma screenshot sozinha nao pegaria um `<use>`
+apontando pra um id que nao existe, so mostraria um espaco vazio sem
+erro nenhum):
+1. Auditoria programatica via CDP: todo `<use href="#...">` atualmente
+   montado no DOM (formulario, historico com 2 entradas fake, perfil com
+   fornecedor/preco fake, apresentacao completa) resolvido contra
+   `document.getElementById` — **45 refs conferidas, zero faltando**, em
+   dois pontos diferentes da sessao de teste.
+2. Screenshot de cada uma das 10 telas/estados afetados individualmente
+   (nao um scroll generico — script busca `.pitch-slide` no DOM e
+   screenshot cada uma), cobrindo os 3 estados do botao de conta (sem
+   sessao / modo demo / logado com e-mail real escapado), botao de
+   importar, botao "Gerar" nos 2 estados de texto, cards de historico
+   (valido e invalido), cards de fornecedor/preco no perfil, e as 10
+   telas da apresentacao.
+- Achado nesse processo (nao um bug, uma limitacao do proprio script de
+  teste): elementos injetados via `document.body.appendChild` pra
+  simular dados ficam fora do fluxo normal de `switchView()` e
+  continuam visiveis mesmo trocando de tela — nao afeta o app real, so
+  fez uma screenshot de verificacao mostrar conteudo residual junto do
+  rodape; nao alterou a conclusao (a mesma injecao confirmou os icones
+  de telefone/endereco/fornecedor renderizando certo).
+
+Suite completa: 189/189. Zero erro de console em toda a verificacao.
+Fase 5 (polimento cruzado + regressao completa, screenshot final
+desktop/mobile, atualizar o roadmap) fica como ultima etapa do plano.
+
 ### Auditoria de seguranca (prompt padrao do usuario) e correcoes, ponto a ponto (2026-08-17)
 
 Usuario enviou um prompt-template proprio, reutilizavel entre projetos,
@@ -1444,13 +1524,13 @@ esse e o unico dos 4 que vale manter.
 7. commit pendente: interface de perfil, integracao catalogo/custo,
    reestruturacao de navegacao e rename Karamu foram commitados em
    `f32a5fb` (2026-08-09); identidade visual "Karamu Editorial" Fases 1-2
-   (tokens/wordmark/favicon/botoes) e as 3 correcoes da auditoria de
-   seguranca de 2026-08-17 foram commitados e **enviados ao GitHub** em
-   `c243180` (mesmo dia — `gh auth login` usado pra contornar SSH
-   travando nessa rede, ver nota abaixo). O que resta pendente agora e
-   so o trabalho depois desse push — Fase 3 (cards: `form.css`,
-   `result.css`, `render.js`) — ainda nao commitado nem enviado,
-   aguardando confirmacao do usuario. Ha tambem uma pasta `.vscode/` nao
-   rastreada, de origem nao confirmada (configuracao de editor) —
-   conferir o conteudo antes de incluir num commit;
+   e as 3 correcoes da auditoria de seguranca de 2026-08-17 foram
+   commitados e enviados em `c243180`; Fase 3 (cards) foi commitada e
+   enviada separadamente em `09a9c93` (2026-08-18, HTTPS via `gh` — ver
+   nota abaixo sobre o SSH travando nessa rede). O que resta pendente
+   agora e so a Fase 4 (icones SVG: `base.css`, `index.html`, `app.js`,
+   `perfil.js`, `utils.js`) — ainda nao commitada nem enviada, aguardando
+   confirmacao do usuario. Ha tambem uma pasta `.vscode/` nao rastreada,
+   de origem nao confirmada (configuracao de editor) — conferir o
+   conteudo antes de incluir num commit;
 8. manter o estado somente neste handoff e no roadmap.
