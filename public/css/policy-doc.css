@@ -1,0 +1,107 @@
+/* ==========================================================================
+   KARAMU | PAGINAS DE DOCUMENTO (politica de privacidade, termos de uso)
+   TAG: policy-doc | compartilhado entre privacidade.html e termos.html
+   ========================================================================== */
+
+body{
+    background:var(--bg);
+}
+
+.policy-header{
+    padding:32px 20px 0;
+    max-width:760px;
+    margin:0 auto;
+}
+
+.policy-back{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'Montserrat',sans-serif;
+    font-weight:800;
+    font-size:.95rem;
+    letter-spacing:.5px;
+    color:var(--ink-strong);
+    text-decoration:none;
+}
+
+.policy-back:hover{
+    color:var(--gold-dark);
+}
+
+.policy-doc{
+    max-width:760px;
+    margin:20px auto 80px;
+    padding:0 20px;
+}
+
+.policy-doc .glass-panel{
+    padding:42px;
+}
+
+.policy-doc h1{
+    font-family:'Playfair Display',serif;
+    font-size:2.2rem;
+    color:var(--ink-strong);
+    margin-bottom:6px;
+}
+
+.policy-doc .policy-updated{
+    color:var(--ink-faint);
+    font-size:.85rem;
+    margin-bottom:28px;
+}
+
+.policy-doc h2{
+    font-family:'Playfair Display',serif;
+    font-size:1.35rem;
+    color:var(--ink-strong);
+    margin:34px 0 12px;
+    padding-top:20px;
+    border-top:1px solid var(--cream-border);
+}
+
+.policy-doc h2:first-of-type{
+    border-top:none;
+    padding-top:0;
+}
+
+.policy-doc p{
+    color:var(--ink);
+    margin-bottom:14px;
+    line-height:1.75;
+}
+
+.policy-doc ul{
+    margin:0 0 14px 22px;
+    color:var(--ink);
+    line-height:1.75;
+}
+
+.policy-doc li{
+    margin-bottom:6px;
+}
+
+.policy-doc strong{
+    color:var(--ink-strong);
+}
+
+.policy-doc a{
+    color:var(--gold-dark);
+}
+
+.policy-cross-link{
+    display:inline-block;
+    margin-top:8px;
+    font-size:.9rem;
+}
+
+@media (max-width:600px){
+    .policy-doc .glass-panel{
+        padding:26px 20px;
+    }
+
+    .policy-doc h1{
+        font-size:1.7rem;
+    }
+}

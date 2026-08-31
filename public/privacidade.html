@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade — Karamu</title>
+    <meta name="description" content="Como o Karamu coleta, usa e protege os dados de quem usa o planejador de eventos com IA.">
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Montserrat:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/policy-doc.css">
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+</head>
+<body>
+
+    <header class="policy-header">
+        <a class="policy-back" href="/">← Karamu</a>
+    </header>
+
+    <main class="policy-doc">
+        <section class="glass-panel">
+            <h1>Política de Privacidade</h1>
+            <p class="policy-updated">Última atualização: 31 de agosto de 2026</p>
+
+            <p>
+                Esta política explica quais dados o Karamu coleta, para que servem,
+                com quem são compartilhados e quais direitos você tem sobre eles,
+                conforme a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018).
+            </p>
+
+            <h2>1. Quem é o responsável pelos seus dados</h2>
+            <p>
+                O Karamu é operado por <strong>Samuel Escoval</strong>, pessoa física,
+                como projeto individual (ainda sem CNPJ formal). Para qualquer
+                solicitação relacionada aos seus dados, o contato é
+                <a href="mailto:karamuoff@gmail.com">karamuoff@gmail.com</a>.
+            </p>
+
+            <h2>2. Quais dados coletamos</h2>
+            <p>Dependendo de como você usa o Karamu, podemos coletar:</p>
+            <ul>
+                <li><strong>Dados de cadastro e login</strong>: e-mail e senha (se você criar conta por e-mail), ou nome, e-mail e foto de perfil fornecidos pelo Google (se você entrar com login social).</li>
+                <li><strong>Dados de personalização, salvos na sua conta</strong>: fornecedores que você cadastra (nome, categoria, telefone, endereço, observações), fotos de pratos que você envia, preços próprios que você cadastra, e sua chave de API do Gemini caso opte por usar uma própria em vez da compartilhada pelo app (guardada de forma cifrada, nunca em texto puro).</li>
+                <li><strong>Dados dos eventos que você planeja</strong>: as informações que você preenche no formulário (tipo de evento, número de convidados, restrições alimentares, orçamento, observações) são enviadas para gerar o planejamento com inteligência artificial.</li>
+                <li><strong>Dados técnicos armazenados só no seu navegador</strong>: um token de sessão temporário (apagado ao fechar a aba) e o histórico dos eventos que você já gerou (guardado localmente no seu dispositivo, não enviado aos nossos servidores).</li>
+            </ul>
+            <p>
+                O Karamu não usa cookies de rastreamento nem ferramentas de
+                publicidade ou analytics de terceiros.
+            </p>
+
+            <h2>3. Como usamos seus dados</h2>
+            <ul>
+                <li>Autenticar você e manter sua conta segura;</li>
+                <li>Gerar o planejamento do seu evento (cardápio, lista de compras, custos estimados), usando também os fornecedores e preços que você cadastrou, quando aplicável;</li>
+                <li>Buscar imagens de referência para os pratos sugeridos em bancos de imagens públicos;</li>
+                <li>Corrigir problemas técnicos e melhorar o funcionamento do app.</li>
+            </ul>
+            <p>Não usamos seus dados para enviar publicidade nem os vendemos a terceiros.</p>
+
+            <h2>4. Com quem compartilhamos dados</h2>
+            <p>Para o Karamu funcionar, alguns dados passam por prestadores de serviço técnico:</p>
+            <ul>
+                <li><strong>Supabase</strong> — banco de dados, autenticação e armazenamento de arquivos (fotos);</li>
+                <li><strong>Google</strong> — login social (se você optar por entrar com Google) e a API Gemini, usada para gerar o planejamento do seu evento a partir das informações que você preenche;</li>
+                <li><strong>Vercel</strong> — hospedagem do site;</li>
+                <li><strong>Bancos de imagens públicos</strong> (como Openverse, Wikimedia Commons e Unsplash) — recebem apenas termos de busca (ex: "salmão grelhado"), nunca dados pessoais seus.</li>
+            </ul>
+            <p>Nenhum desses serviços recebe autorização para usar seus dados além do necessário para prestar o serviço ao Karamu.</p>
+
+            <h2>5. Como protegemos seus dados</h2>
+            <ul>
+                <li>Senhas são gerenciadas pelo Supabase Auth e nunca ficam salvas em texto puro;</li>
+                <li>Sua chave própria de IA (quando cadastrada) é cifrada em repouso (AES-256-GCM) antes de ser salva;</li>
+                <li>O banco de dados usa controle de acesso por linha (Row Level Security): cada conta só consegue ler ou alterar os próprios dados, nunca os de outro usuário;</li>
+                <li>Toda comunicação entre seu navegador e o Karamu é feita por HTTPS.</li>
+            </ul>
+
+            <h2>6. Seus direitos</h2>
+            <p>Como titular dos dados, você pode a qualquer momento:</p>
+            <ul>
+                <li>Confirmar se tratamos algum dado seu e acessar esses dados;</li>
+                <li>Corrigir dados incompletos, inexatos ou desatualizados;</li>
+                <li>Pedir a exclusão de fornecedores, fotos, preços ou da sua chave de IA — isso já pode ser feito diretamente na tela "Meu Perfil" do app;</li>
+                <li>Pedir a exclusão completa da sua conta e de todos os dados associados;</li>
+                <li>Pedir a portabilidade dos seus dados para outro serviço;</li>
+                <li>Revogar o consentimento dado anteriormente.</li>
+            </ul>
+            <p>
+                Para exercer qualquer um desses direitos, escreva para
+                <a href="mailto:karamuoff@gmail.com">karamuoff@gmail.com</a>.
+                Respondemos em até 15 dias.
+            </p>
+
+            <h2>7. Por quanto tempo guardamos seus dados</h2>
+            <p>
+                Mantemos seus dados enquanto sua conta existir. Se você excluir um
+                item (fornecedor, foto, preço, chave de IA) ou a conta inteira, os
+                dados correspondentes são removidos dos nossos sistemas.
+            </p>
+
+            <h2>8. Menores de idade</h2>
+            <p>
+                O Karamu não é direcionado a menores de 18 anos. Não coletamos
+                intencionalmente dados de crianças ou adolescentes.
+            </p>
+
+            <h2>9. Mudanças nesta política</h2>
+            <p>
+                Podemos atualizar esta política conforme o Karamu evolui. A data no
+                topo desta página sempre mostra a versão mais recente.
+            </p>
+
+            <h2>10. Contato</h2>
+            <p>
+                Dúvidas sobre privacidade ou seus dados:
+                <a href="mailto:karamuoff@gmail.com">karamuoff@gmail.com</a>.
+            </p>
+            <a class="policy-cross-link" href="/termos.html">Ver também os Termos de Uso →</a>
+        </section>
+    </main>
+
+</body>
+</html>

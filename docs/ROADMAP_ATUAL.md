@@ -415,11 +415,23 @@ cardapio usando a chave propria, sem senha demo). **Interface concluida em
 
 ### 3. Politicas para protecao legal e de dados (a implementar antes do lancamento real)
 
-- Politica de Privacidade e Termos de Uso publicados no site, cobrindo o que
-  e coletado (e-mail, fornecedores, fotos de prato) e como e usado;
+- ~~Politica de Privacidade e Termos de Uso publicados no site, cobrindo o
+  que e coletado (e-mail, fornecedores, fotos de prato) e como e usado~~ —
+  **primeira versao criada em 2026-08-31** (`public/privacidade.html`,
+  `public/termos.html`, linkados no rodape do site), motivada por um
+  bloqueio pratico: o Google exige URL de Politica de Privacidade pra
+  publicar o app OAuth em modo "Producao" (ver item 7 abaixo). Cobre o que
+  e coletado (cadastro/login, fornecedores, fotos, precos, chave de IA
+  propria cifrada, dados do evento enviados ao Gemini), com quem e
+  compartilhado (Supabase, Google, Vercel, bancos de imagem publicos) e os
+  direitos do titular (LGPD, Art. 18). **Ainda e uma versao basica,
+  registrada como pendente de revisao juridica formal** antes de tratar
+  como documento juridico definitivo — usuario pediu explicitamente pra
+  registrar isso;
 - adequacao a LGPD (o app e brasileiro, tem usuarios reais com e-mail e
   fotos pessoais no Supabase): direito de exclusao de conta e dos dados,
-  base legal para o tratamento, retencao de dados;
+  base legal para o tratamento, retencao de dados — coberto na primeira
+  versao acima, mas sem revisao juridica formal ainda;
 - ~~revisar se `DEMO_ACCESS_KEY` deve sair das rotas de auth~~ — **feito em
   2026-07-27**, removido de auth/fornecedores/fotos (ver handoff);
 - ~~ativar protecao contra senha vazada no Supabase Auth~~ — **avaliado em

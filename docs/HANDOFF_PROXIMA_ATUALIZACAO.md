@@ -1489,6 +1489,74 @@ inline (no backdrop e no botao X) engordam um pouco o escopo do item 6
 ("CSP `unsafe-inline`", ja adiado abaixo) — nao muda a decisao, so o
 numero de atributos a converter quando isso for priorizado.
 
+### Tentativa de publicar o login do Google em modo "Producao" (2026-08-31)
+
+Usuario tentou publicar o app OAuth do Google (hoje em "Testando", limite
+de 100 usuarios de teste) seguindo o item 1 da "Proxima acao curta".
+Trabalho feito ao vivo, guiando o usuario pelo Google Cloud Console (novo
+nome da interface: "Google Auth Platform") e pelo Supabase, com varios
+achados reais no caminho:
+
+1. **Checagem de seguranca do item 5 da auditoria de 2026-08-17,
+   finalmente resolvida**: usuario conferiu `Authentication → URL
+   Configuration` no Supabase ao vivo — confirmado seguro, so
+   `http://localhost:3000/**` registrado, sem coringa aberto. Aproveitado
+   pra adicionar a URL de producao (`https://app-cardapio-ia.vercel.app/**`)
+   aos Redirect URLs (sem isso o login com Google so funcionaria
+   localmente) e corrigir o campo Site URL (usuario tinha colado a URL de
+   producao com `/**`, que esse campo especifico nao aceita — Supabase
+   avisa isso na propria UI).
+2. **Nome do app desatualizado no Google Cloud**: o campo "Nome do app"
+   no Branding ainda mostrava "App Cardápio IA" (nome pre-rename) —
+   precisa ser trocado pra "Karamu" antes de publicar.
+3. **Campo de e-mail de suporte e um dropdown, nao texto livre**: so
+   lista e-mails que ja sao membros do projeto no Google Cloud (IAM).
+   Usuario queria usar `karamuoff@gmail.com` (e-mail dedicado que criou
+   pro app) em vez do e-mail pessoal, mas ele nao aparecia na lista.
+   Encaminhado: adicionar `karamuoff@gmail.com` como membro (papel
+   Leitor/Viewer) em `IAM e administracao → IAM` — **pendente de
+   confirmacao**, Gmail comum pode exigir aceitar um convite antes de
+   aparecer no dropdown.
+4. **Achado importante sobre o logotipo**: a propria tela do Google avisa
+   que fazer upload de um logotipo customizado forca o app a entrar em
+   fila de verificacao do Google (revisao que pode levar dias, exige
+   prova de posse do dominio via Search Console) — **a menos que o app
+   continue em status "Teste"**. Ou seja, subir o logo e publicar em
+   producao ao mesmo tempo tem esse custo. Logo do app (180×180, o mesmo
+   usado no favicon/apple-touch-icon) ja foi entregue ao usuario pronto
+   pra upload quando ele decidir enfrentar a verificacao — decisao **ainda
+   em aberto**, adiada pelo usuario por enquanto (estava esperando o
+   e-mail de suporte resolver primeiro).
+5. **Bloqueio real: faltava Politica de Privacidade publicada** — o botao
+   "Publicar app" so fica habilitado com nome do app, e-mail de suporte,
+   URL da pagina inicial **e** URL da Politica de Privacidade preenchidos.
+   O Karamu nao tinha nenhuma pagina assim. Resolvido criando
+   `public/privacidade.html` (LGPD: controlador, dados coletados,
+   compartilhamento com terceiros — Supabase/Google/Vercel/bancos de
+   imagem publicos —, seguranca, direitos do titular) e, a pedido do
+   usuario ("ja que estamos aqui, vamos fazer os pontos em aberto, os
+   termos de servico"), tambem `public/termos.html` (uso aceitavel,
+   aviso explicito sobre conteudo gerado por IA nao substituir revisao
+   humana — sobretudo restricoes alimentares/alergias —, responsabilidade
+   pelo BYOK, lei brasileira aplicavel). CSS compartilhado extraido pra
+   `public/css/policy-doc.css` (reusa os tokens de `base.css`, mesma
+   identidade "Karamu Editorial"). Link pras duas paginas adicionado no
+   rodape do site. **Marcado explicitamente pelo usuario como versao
+   inicial, pendente de revisao juridica formal depois** — nao tratar como
+   documento juridico definitivo.
+6. **Erro adicional visto na tela, ainda nao resolvido**: aviso vermelho
+   "Domínio ausente: app-cardapio-ia.vercel.app" na secao "Dominios
+   autorizados" do Branding (so tinha o dominio do Supabase registrado).
+   Provavelmente precisa adicionar `app-cardapio-ia.vercel.app` ali e
+   verificar posse via Google Search Console — **nao resolvido ainda,
+   retomar na proxima sessao antes de tentar publicar de fato**.
+
+Commitado localmente (nao enviado ao GitHub ainda, aguardando usuario):
+`public/privacidade.html`, `public/termos.html`,
+`public/css/policy-doc.css`, link no rodape em `public/index.html`. Essas
+URLs so vao resolver de verdade na Vercel depois do push — usuario optou
+por enviar depois.
+
 ### Auditoria de seguranca (prompt padrao do usuario) e correcoes, ponto a ponto (2026-08-17)
 
 Usuario enviou um prompt-template proprio, reutilizavel entre projetos,
@@ -1639,10 +1707,22 @@ esse e o unico dos 4 que vale manter.
 
 ## Proxima acao curta
 
-1. antes de lancar para usuarios reais: publicar o app do Google em modo
-   "Producao" (hoje esta em "Teste", so e-mails cadastrados como testadores
-   conseguem logar com Google) — protecao de senha vazada e
-   `rls_auto_enable()` ja resolvidos/registrados, ver secoes acima;
+1. **em andamento** (ver secao dedicada "Tentativa de publicar o login do
+   Google" acima, 2026-08-31): publicar o app do Google em modo "Producao"
+   (hoje esta em "Teste", so e-mails cadastrados como testadores conseguem
+   logar com Google) — protecao de senha vazada e `rls_auto_enable()` ja
+   resolvidos/registrados, ver secoes acima. Falta, na ordem:
+   (a) confirmar se `karamuoff@gmail.com` apareceu no dropdown de e-mail
+   de suporte depois de adicionado como membro IAM;
+   (b) trocar o nome do app de "App Cardápio IA" pra "Karamu" no Branding;
+   (c) resolver o aviso "Domínio ausente: app-cardapio-ia.vercel.app" em
+   Dominios autorizados (provavelmente exige verificar posse via Google
+   Search Console);
+   (d) decidir se sobe o logo agora (forca fila de verificacao do Google)
+   ou publica sem logo por enquanto;
+   (e) enviar (`git push`) `privacidade.html`/`termos.html` pro GitHub
+   antes de tentar validar essas URLs no Google — commitado localmente,
+   push pendente de confirmacao do usuario;
 2. antes de registrar a marca/comprar dominio de verdade: fazer a busca
    formal do INPI por classe para "Karamu" (so foram feitas buscas pontuais
    ate agora);
@@ -1659,10 +1739,20 @@ esse e o unico dos 4 que vale manter.
 4. baixa prioridade: mostrar na UI quando `meta.catalogo_usuario_truncado`
    vier `true` (hoje so fica no `meta`, sem aviso visual pro usuario com
    mais de 60 precos cadastrados);
-5. **acao manual pendente do usuario** (auditoria de seguranca,
-   2026-08-17, ponto 5): conferir no painel do Supabase (Authentication →
-   URL Configuration → Redirect URLs) que nao ha wildcard aberto alem do
-   `http://localhost:3000/**` ja registrado — nao verificavel por codigo;
+5. ~~acao manual pendente do usuario (auditoria de seguranca, 2026-08-17,
+   ponto 5): conferir Redirect URLs no Supabase~~ — **RESOLVIDO em
+   2026-08-31**: usuario conferiu ao vivo (`Authentication → URL
+   Configuration`), confirmado seguro (so `http://localhost:3000/**`, sem
+   coringa aberto). Aproveitado pra tambem adicionar a URL de producao
+   (`https://app-cardapio-ia.vercel.app/**`) aos Redirect URLs — antes
+   disso o login com Google so funcionava localmente, nao no site
+   publicado. Corrigido tambem o campo Site URL (usuario tinha colado a
+   URL de producao com `/**`, que esse campo especifico nao aceita —
+   Supabase avisa isso na propria UI). **Nota pra quando o dominio trocar
+   pra algo com "karamu"**: repetir esse processo (Redirect URLs + Site
+   URL aqui no Supabase) **e** atualizar "Authorized redirect URIs" nas
+   credenciais OAuth do Google Cloud Console, senao o login com Google
+   quebra no dominio novo;
 6. **debito tecnico documentado, sem data** (auditoria de seguranca,
    2026-08-17, ponto 4): remover `'unsafe-inline'` de `scriptSrc`/
    `scriptSrcAttr` no CSP (`server.js`) exige antes converter ~26
