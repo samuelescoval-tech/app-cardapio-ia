@@ -58,7 +58,7 @@
     border-radius:16px;
     border:1px solid rgba(180,137,62,.35);
     background:#fffaf0;
-    color:#3d3428;
+    color:var(--ink);
 }
 
 .quality-panel strong{
@@ -991,7 +991,7 @@
 
 .recipe-card h5{
     margin:12px 0 6px;
-    color:#3d3428;
+    color:var(--ink);
     font-size:.78rem;
     text-transform:uppercase;
     letter-spacing:.7px;
@@ -1227,7 +1227,7 @@
 }
 
 .result-detail-group > summary small{
-    color:#6f665c;
+    color:var(--ink-soft);
 }
 
 .result-detail-content{

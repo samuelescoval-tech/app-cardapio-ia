@@ -36,6 +36,16 @@ test("servico de preferencias visuais carrega antes do renderizador", () => {
   assert.ok(render > feedback);
 });
 
+test("identidade visual Karamu Editorial: sem emoji solto, wordmark e sprite de icones presentes", () => {
+  const html = ler("public/index.html");
+
+  // Emoji real (fora dos symbols do sprite, que sao SVG, nao emoji) nao deve
+  // sobrar em index.html apos a Fase 4 (icones SVG substituindo emoji).
+  assert.doesNotMatch(html, /[\u{1F300}-\u{1FAFF}]/u);
+  assert.match(html, /class="nav-btn brand-link wordmark"/);
+  assert.match(html, /<symbol id="icon-account"/);
+});
+
 test("historico usa referencias locais e nao repete consulta externa", () => {
   const app = ler("public/js/app.js");
   const inicio = app.indexOf("function carregarDoHistorico");

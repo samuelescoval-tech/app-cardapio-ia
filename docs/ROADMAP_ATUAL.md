@@ -1,6 +1,6 @@
 # Roadmap atual - Karamu
 
-Atualizado em 2026-08-06.
+Atualizado em 2026-08-24.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
@@ -567,9 +567,23 @@ XSS que o `.textContent` anterior ja fechava por natureza). Verificado
 em duas camadas: auditoria programatica de toda referencia `<use>`
 montada no DOM (45 refs, zero faltando) + screenshot individual de cada
 uma das 10 telas da apresentacao mais formulario/historico/perfil.
-Suite completa: 189/189, zero erro de console. Falta so a Fase 5
-(polimento cruzado + regressao final) pra fechar o plano inteiro. Ver
-handoff para a lista completa arquivo por arquivo.
+Suite completa: 189/189, zero erro de console. Ver handoff para a lista
+completa arquivo por arquivo.
+
+**Fase 5 (polimento cruzado + regressao final) concluida em
+2026-08-24 — plano "Karamu Editorial" (Fases 1-5) RESOLVIDO.** Varredura
+final por hex literal identico a algum token ja definido (so
+correspondencia exata, 5 pontos corrigidos em `form.css`/`result.css`);
+adicionada trava de regressao em `test/visual.test.js` confirmando
+ausencia de emoji solto + presenca do wordmark/sprite de icones (suite:
+190/190). Regressao ponta a ponta com **geracao real via Gemini** (nao
+fixture fabricado) cobrindo apresentacao → modo demo → formulario →
+cardapio (carrossel e lista, com nomes de prato reais e longos) →
+galeria → operacao → qualidade/coerencia (confirmando os tokens de
+status em uso real) → compras → perfil, desktop e mobile: 41 referencias
+`<use>` auditadas, zero faltando, zero erro de console. Ver handoff
+para o resumo completo do que mudou nas 5 fases desde o inicio do
+plano.
 
 **Nota adicional do usuario (2026-08-10)**: a secao de apresentacao
 dentro do app (`#pitchSection`, hoje so 1 slide de capa + poucos slides

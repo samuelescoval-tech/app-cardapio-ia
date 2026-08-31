@@ -59,7 +59,7 @@
 .field-hint{
     display:block;
     margin-top:6px;
-    color:#6f665c;
+    color:var(--ink-soft);
     font-size:.78rem;
     line-height:1.35;
 }
@@ -79,7 +79,7 @@
     gap:18px;
     padding:18px 20px;
     cursor:pointer;
-    color:#3d3428;
+    color:var(--ink);
     font-weight:800;
     list-style:none;
 }
@@ -189,7 +189,7 @@
 }
 
 .chat-history{
-    height:120px;
+    max-height:120px;
 
     overflow-y:auto;
 

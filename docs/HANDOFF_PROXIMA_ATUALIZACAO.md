@@ -1,6 +1,6 @@
 # Handoff - Karamu
 
-Atualizado em 2026-08-18.
+Atualizado em 2026-08-24.
 
 ## Estado em uma frase
 
@@ -40,8 +40,11 @@ os ~38 usos de emoji (34 conceitos reais) viraram um sprite SVG proprio
 (Lucide + marcas reais de Instagram/Facebook/LinkedIn via Simple Icons),
 com verificacao em duas camadas (auditoria programatica de toda
 referencia `<use>` no DOM + screenshot de cada uma das 10 telas
-afetadas) — ver secao dedicada abaixo. Falta so a Fase 5 (polimento
-cruzado) pra fechar o plano "Karamu Editorial".
+afetadas). Em 2026-08-24: **Fase 5 concluida, fechando o plano
+"Karamu Editorial" (Fases 1-5) por completo** — polimento cruzado dos
+tokens que sobraram e regressao final ponta a ponta com geracao real
+via Gemini (nao dado fabricado), 190/190 testes, zero erro de console.
+Ver secoes dedicadas abaixo.
 
 ## Arquitetura atual
 
@@ -1338,6 +1341,91 @@ Suite completa: 189/189. Zero erro de console em toda a verificacao.
 Fase 5 (polimento cruzado + regressao completa, screenshot final
 desktop/mobile, atualizar o roadmap) fica como ultima etapa do plano.
 
+### Identidade visual "Karamu Editorial", Fase 5 (polimento cruzado + regressao final) — plano CONCLUIDO (2026-08-24)
+
+Ultima fase do plano de 5 fases iniciado na Fase 1. Duas partes:
+
+**Polimento cruzado**: varredura em todos os arquivos CSS por hex
+literal identico a algum token ja definido (nao substitutos "parecidos"
+— so correspondencia exata, pra nao tomar uma decisao de design nova
+disfarcada de limpeza). Achados e corrigidos: `color:#3d3428` →
+`var(--ink)` (3 pontos, `form.css`/`result.css`) e `color:#6f665c` →
+`var(--ink-soft)` (2 pontos). Cores proximas mas nao identicas
+(`#fffaf0`, `#655d52`, `#6e5e50`, `#655c50`) foram deixadas como estao —
+unifica-las seria uma decisao de design nova, nao uma correcao do que
+ficou pra tras nas Fases 2-3.
+
+**Trava de regressao**: adicionado a `test/visual.test.js` o teste
+sugerido no plano original — confirma que `index.html` nao tem nenhum
+emoji real solto (`\u{1F300}-\u{1FAFF}`), que o wordmark
+(`class="nav-btn brand-link wordmark"`) e o sprite de icones
+(`<symbol id="icon-account"`) estao presentes. Suite completa: 190/190
+(189 + esse teste novo).
+
+**Regressao final, ponta a ponta com dado real** (nao fabricado): fluxo
+completo via Chrome headless — apresentacao, modo demo, formulario
+preenchido, **geracao real via Gemini** (nao simulada) de um evento de
+20 pessoas estilo Elegante, cobrindo cardapio (carrossel e lista, com
+nomes de prato reais e longos — "Canapê de Salmão Defumado com Cream
+Cheese e Ervas" — testando o wrap do modo lista com conteudo de verdade,
+nao só fixture curto), galeria de imagens, painel de operacao, painel de
+qualidade/coerencia (confirmando os tokens de status em uso real: badge
+"REVISAR" em `--status-caution`), lista de compras, e perfil — desktop e
+mobile. Auditoria final de toda referencia `<use>` no DOM apos a geracao
+real: **41 refs, zero faltando**. Zero erro de console em todo o fluxo.
+A chave de acesso demo foi lida do `.env` e usada só em memoria/arquivo
+temporario apagado ao final do teste — nunca impressa em nenhum output.
+
+**Plano "Karamu Editorial" (Fases 1-5) esta concluido.** Resumo do que
+mudou desde o inicio: tokens de cor/raio novos, wordmark tipografico com
+acento de chapeu de chef, favicon proprio, taxonomia unica de botoes
+(fim de ~6 familias divergentes), cards com overlay de foto substituindo
+o fundo arco-iris, fim dos climas de cor nao documentados
+(azul-marinho, verde, verniz preto sobre fundo claro), e ~38 emoji
+substituidos por um sprite SVG proprio com marcas sociais reais. Ver
+`docs/ROADMAP_ATUAL.md`, secao "4. Ajustes visuais", pra o resumo
+encadeado das 5 fases.
+
+### Achados testando ao vivo depois da Fase 5 (2026-08-24)
+
+Com o servidor local no ar pro usuario testar por conta propria, 3
+ajustes pontuais, todos fora do escopo literal das 5 fases (nao eram
+emoji nem token de cor esquecido) mas claramente inconsistencias reais:
+
+- **3 cards da apresentacao sem icone**: no Slide 6 ("Base de consumo
+  por pessoa e lista organizada"), os cards "Alimentos"/"Bebidas"/
+  "Utensilios e apoio" nunca tiveram emoji — por isso ficaram de fora
+  da troca da Fase 4 (que so substituiu emoji existente). Comparado
+  contra as outras 20 ocorrencias de `.pdf-card` na apresentacao: essas
+  3 eram as unicas sem icone. Corrigido com 2 icones novos buscados no
+  mesmo sprite oficial do Lucide (`basket` pra Alimentos, `cup-soda`
+  pra Bebidas) e reaproveitando `icon-utensils` ja existente pra
+  "Utensilios e apoio" (encaixe semantico direto). Sprite: 39 simbolos
+  agora.
+- **Espaco vazio esquisito perto de "Observacoes Adicionais para a
+  IA"**: investigado a pedido do usuario ("um espaco separado do chef,
+  da uma quebra estranha"). Achado: `.chat-history` reservava
+  `height:120px` fixos, mas o conteudo real (uma unica bolha de
+  instrucao estatica) nunca preenche isso — confirmado no `app.js` que
+  esse campo nunca recebe uma segunda mensagem, e a interface de "chat"
+  e so uma metafora visual pra um campo de observacao unico, lido uma
+  vez junto com o resto do formulario. Corrigido trocando `height` fixo
+  por `max-height` (a caixa encolhe pro tamanho do conteudo real).
+- **Sugestao do usuario, implementada**: um brilho sutil passando pela
+  marca "KARAMU" do rodape, a cada ~5s. Primeira tentativa tinha um bug
+  real: usar `background-position` acima de 100% contando com o
+  comportamento padrao de repeticao do CSS fazia o brilho aparecer o
+  tempo todo, nao so na passada — so foi pego testando com
+  `getComputedStyle` ao vivo (poll do valor real de `background-position-x`
+  a cada 200ms por um ciclo inteiro), nao so por inspecao visual da
+  tela. Corrigido com `background-repeat:no-repeat` e posicoes dentro
+  de uma faixa segura (matematica de `background-size`/`background-position`
+  conferida contra o resultado real antes de aceitar como correto).
+  Respeita `prefers-reduced-motion`.
+
+Suite completa apos os 3 ajustes: 190/190 (sem teste novo, so correcao
+de CSS/markup existente).
+
 ### Auditoria de seguranca (prompt padrao do usuario) e correcoes, ponto a ponto (2026-08-17)
 
 Usuario enviou um prompt-template proprio, reutilizavel entre projetos,
@@ -1524,12 +1612,13 @@ esse e o unico dos 4 que vale manter.
 7. commit pendente: interface de perfil, integracao catalogo/custo,
    reestruturacao de navegacao e rename Karamu foram commitados em
    `f32a5fb` (2026-08-09); identidade visual "Karamu Editorial" Fases 1-2
-   e as 3 correcoes da auditoria de seguranca de 2026-08-17 foram
-   commitados e enviados em `c243180`; Fase 3 (cards) foi commitada e
-   enviada separadamente em `09a9c93` (2026-08-18, HTTPS via `gh` — ver
-   nota abaixo sobre o SSH travando nessa rede). O que resta pendente
-   agora e so a Fase 4 (icones SVG: `base.css`, `index.html`, `app.js`,
-   `perfil.js`, `utils.js`) — ainda nao commitada nem enviada, aguardando
+   e as 3 correcoes da auditoria de seguranca de 2026-08-17 em `c243180`;
+   Fase 3 (cards) em `09a9c93` (2026-08-18); Fase 4 (icones SVG) + README
+   completo em `b23f871`, mergeado com o workflow de CodeQL commitado
+   direto pelo usuario no GitHub (`5adf1c1`) e enviado como `8353e6a`. As
+   Fases 1-4 estao publicadas no GitHub. **O que resta pendente agora e
+   so a Fase 5** (polimento de tokens + o teste novo de regressao em
+   `test/visual.test.js`) — ainda nao commitada nem enviada, aguardando
    confirmacao do usuario. Ha tambem uma pasta `.vscode/` nao rastreada,
    de origem nao confirmada (configuracao de editor) — conferir o
    conteudo antes de incluir num commit;
