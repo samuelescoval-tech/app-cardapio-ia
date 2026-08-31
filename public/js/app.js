@@ -199,7 +199,12 @@ function atualizarPitchCta() {
 function abrirModalConta() {
     const sessao = obterSessaoUsuario();
     if (sessao) {
-        switchView('perfil');
+        const painel = document.getElementById('perfilSection');
+        if (painel && !painel.classList.contains('hidden')) {
+            fecharPainelPerfil();
+        } else {
+            abrirPainelPerfil();
+        }
         return;
     }
     authModoCadastro = false;
@@ -333,10 +338,12 @@ setInterval(() => {
 // Fluxo sequencial (apresentacao -> login/demo -> gerador; conta como status,
 // nao aba paralela). 'pitch' e a porta de entrada para quem ainda nao tem
 // sessao nem escolheu o modo demo (ver determinarViewInicial); depois disso
-// o app vira a tela principal e a apresentacao/perfil ficam a um clique na
-// barra de status, sem concorrer visualmente com o gerador.
+// o app vira a tela principal e a apresentacao fica a um clique na barra de
+// status, sem concorrer visualmente com o gerador. O perfil NAO faz parte
+// dessa troca de secoes: e um painel sobreposto (ver abrirPainelPerfil),
+// entao trocar de view so precisa fechar o painel se estiver aberto.
 function switchView(view) {
-    const secoes = { app: 'appSection', pitch: 'pitchSection', perfil: 'perfilSection' };
+    const secoes = { app: 'appSection', pitch: 'pitchSection' };
 
     for (const [nome, idSecao] of Object.entries(secoes)) {
         const secao = document.getElementById(idSecao);
@@ -344,9 +351,63 @@ function switchView(view) {
     }
 
     if (view === 'pitch') atualizarPitchCta();
-    if (view === 'perfil' && window.chefIAPerfil) {
-        window.chefIAPerfil.abrir();
+    fecharPainelPerfil();
+}
+
+/* TAG: perfil-painel-sobreposto | Dropdown de conta estilo Google/rede
+   social: abre por cima da tela atual (nao troca de secao), entao o
+   formulario ou resultado em andamento continua visivel e intacto atras
+   do painel. */
+function posicionarPainelPerfil() {
+    const painel = document.getElementById('perfilSection');
+    const botao = document.getElementById('btnConta');
+    if (!painel || !botao) return;
+
+    if (window.innerWidth <= 768) {
+        painel.style.top = '';
+        painel.style.right = '';
+        painel.style.left = '';
+        return;
     }
+
+    const rect = botao.getBoundingClientRect();
+    const largura = painel.offsetWidth || 440;
+    const margem = 12;
+    let direita = window.innerWidth - rect.right;
+    direita = Math.max(margem, Math.min(direita, window.innerWidth - largura - margem));
+
+    painel.style.left = '';
+    painel.style.right = `${direita}px`;
+    painel.style.top = `${rect.bottom + margem}px`;
+}
+
+function handlePerfilKeydown(event) {
+    if (event.key === 'Escape') fecharPainelPerfil();
+}
+
+function abrirPainelPerfil() {
+    const painel = document.getElementById('perfilSection');
+    const fundo = document.getElementById('perfilBackdrop');
+    if (!painel) return;
+
+    painel.classList.remove('hidden');
+    if (fundo) fundo.classList.remove('hidden');
+    posicionarPainelPerfil();
+
+    if (window.chefIAPerfil) window.chefIAPerfil.abrir();
+
+    document.addEventListener('keydown', handlePerfilKeydown);
+    window.addEventListener('resize', posicionarPainelPerfil);
+}
+
+function fecharPainelPerfil() {
+    const painel = document.getElementById('perfilSection');
+    const fundo = document.getElementById('perfilBackdrop');
+    if (painel) painel.classList.add('hidden');
+    if (fundo) fundo.classList.add('hidden');
+
+    document.removeEventListener('keydown', handlePerfilKeydown);
+    window.removeEventListener('resize', posicionarPainelPerfil);
 }
 
 function toggleHeader() {

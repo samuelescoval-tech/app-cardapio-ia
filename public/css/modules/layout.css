@@ -239,6 +239,90 @@
     font-size:2rem;
 }
 
+/* ───────── PERFIL: PAINEL SOBREPOSTO ─────────
+   Dropdown de conta (estilo Google/rede social): fica sobre a tela atual
+   em vez de trocar de secao, entao o formulario/resultado em andamento
+   continua visivel e intacto atras do painel (Plano 16 / feedback do
+   usuario sobre "perder o evento" ao entrar no perfil). */
+
+.perfil-backdrop{
+    position:fixed;
+    inset:0;
+
+    z-index:99998;
+
+    background:transparent;
+}
+
+.perfil-panel{
+    position:fixed;
+
+    top:78px;
+    right:20px;
+
+    z-index:99999;
+
+    width:min(94vw,440px);
+    max-height:min(82vh,660px);
+
+    overflow-y:auto;
+
+    animation:perfil-panel-in .16s ease-out;
+}
+
+.perfil-panel .glass-panel{
+    position:relative;
+
+    padding:36px 32px;
+}
+
+@keyframes perfil-panel-in{
+    from{
+        opacity:0;
+        transform:translateY(-10px) scale(.98);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion:reduce){
+    .perfil-panel{
+        animation:none;
+    }
+}
+
+@media (max-width:768px){
+    .perfil-panel{
+        top:auto;
+        right:0;
+        bottom:0;
+        left:0;
+
+        width:100%;
+        max-height:88vh;
+
+        animation:perfil-panel-in-mobile .18s ease-out;
+    }
+
+    .perfil-panel .glass-panel{
+        padding:28px 20px 24px;
+        border-radius:24px 24px 0 0;
+    }
+
+    @keyframes perfil-panel-in-mobile{
+        from{
+            opacity:0;
+            transform:translateY(24px);
+        }
+        to{
+            opacity:1;
+            transform:translateY(0);
+        }
+    }
+}
+
 @media (max-width:768px){
     .status-bar{
         top:max(10px,env(safe-area-inset-top));

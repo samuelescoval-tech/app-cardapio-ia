@@ -461,7 +461,7 @@ test('layout mobile reduz a primeira dobra e preserva alvos de toque', () => {
 test('navegacao sequencial (apresentacao -> login/demo -> gerador) atualiza secoes e CTA', () => {
     const app = ler('public/js/app.js');
 
-    assert.match(app, /const secoes = \{ app: 'appSection', pitch: 'pitchSection', perfil: 'perfilSection' \}/);
+    assert.match(app, /const secoes = \{ app: 'appSection', pitch: 'pitchSection' \}/);
     assert.match(app, /secao\.classList\.toggle\('hidden', nome !== view\)/);
     assert.match(app, /switchView\(obterSessaoUsuario\(\) \|\| modoDemoAtivo\(\) \? 'app' : 'pitch'\)/);
     assert.match(app, /function atualizarPitchCta/);

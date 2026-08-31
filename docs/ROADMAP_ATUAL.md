@@ -1,6 +1,6 @@
 # Roadmap atual - Karamu
 
-Atualizado em 2026-08-24.
+Atualizado em 2026-08-31.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
@@ -31,6 +31,14 @@ CRITICO) foi executado junto com a troca de nome para "Karamu"** (decidida
 em 2026-08-05) — ver secao do item 7 abaixo e o handoff para os detalhes
 completos. Os demais itens do Plano 16 (3 e 4) seguem sem inicio de
 implementacao.
+
+Em 2026-08-24, a reforma de identidade visual "Karamu Editorial" (item 4
+abaixo) foi concluida por completo (Fases 1-5: tokens/wordmark/favicon,
+botoes, cards, icones SVG, polimento final) e publicada no GitHub. Em
+2026-08-31, o problema de navegacao do perfil ja registrado no item 4
+("perde o evento" ao clicar no status de conta) foi resolvido: o perfil
+virou um painel sobreposto (estilo Google/rede social) em vez de trocar
+de tela — ver secao dedicada no item 4 abaixo.
 
 **Nome trocado: "Karamu"** (decidido em 2026-08-05, executado em
 2026-08-06 — ver handoff para o processo de escolha e a lista completa do
@@ -435,14 +443,16 @@ implementado — registrar aqui antes de qualquer mudanca:
   associadas aos pratos gerados "nao estao comuns" — precisa investigar
   com exemplos mais especificos do que esperado vs. o que aparece (qual
   prato, qual imagem veio) antes de mexer em `image-selection.service.js`.
-- **Perfil do usuario pouco obvio + perde o evento atual ao clicar**: o
-  acesso ao perfil (clique no status de conta) nao e intuitivo, e hoje
-  navega para `perfilSection` trocando a tela inteira — o formulario/
-  resultado do evento em andamento fica escondido (ainda salvo em
-  memoria/DOM, mas a navegacao "perde o contexto" visualmente). Usuario
-  queria algo mais parecido com um menu de conta do Google ou de rede
-  social (dropdown/painel sobreposto que nao troca de tela) do que uma
-  navegacao para pagina separada.
+- **Perfil do usuario pouco obvio + perde o evento atual ao clicar**
+  (**RESOLVIDO em 2026-08-31**, ver linha ~662 abaixo para o
+  detalhamento): o acesso ao perfil (clique no status de conta) nao era
+  intuitivo, e navegava para `perfilSection` trocando a tela inteira — o
+  formulario/resultado do evento em andamento ficava escondido (ainda
+  salvo em memoria/DOM, mas a navegacao "perdia o contexto"
+  visualmente). Usuario queria algo mais parecido com um menu de conta
+  do Google ou de rede social (dropdown/painel sobreposto que nao troca
+  de tela) do que uma navegacao para pagina separada — foi exatamente o
+  que se implementou.
 - Usuario deixou explicito que **isso fica para depois** — nao e para
   implementar agora, so para nao perder de vista.
 
@@ -666,6 +676,18 @@ concreta — um botao proprio de "voltar" dentro da tela de perfil, que so
 volta pro gerador sem deslogar (hoje so existe "Sair da conta", que
 desloga). Correcao pequena e bem definida, boa candidata a implementar
 logo.
+
+**RESOLVIDO em 2026-08-31** — na hora de implementar, o usuario recebeu
+as duas opcoes lado a lado (o botao "voltar" simples sugerido acima vs.
+o painel sobreposto estilo Google/rede social ja registrado antes, linha
+443) e escolheu explicitamente o painel sobreposto, a reforma maior.
+Perfil deixou de ser uma secao (`switchView('perfil')`) e virou um
+`<aside>` fixo, ancorado perto do botao de conta no desktop e como
+bottom-sheet no mobile, fechando por clique fora, `Escape` ou um botao
+"X" — ver detalhamento tecnico completo em
+`docs/HANDOFF_PROXIMA_ATUALIZACAO.md`. Verificado ao vivo que o
+formulario/resultado atras do painel continua visivel e intacto.
+190/190 testes.
 
 **Nota adicional do usuario (2026-08-10)**: notou uma "descontinuidade
 causada por duas scroll" no app — parece haver 2 barras de rolagem

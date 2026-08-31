@@ -516,8 +516,11 @@
     </main>
 
     <!-- TAG: perfil-usuario | Fornecedores, fotos, chave de IA e precos proprios -->
-    <main class="app-container hidden" id="perfilSection">
+    <!-- TAG: perfil-painel | Painel sobreposto de conta (estilo dropdown de conta Google) -->
+    <div class="perfil-backdrop hidden" id="perfilBackdrop" onclick="fecharPainelPerfil()"></div>
+    <aside class="perfil-panel hidden" id="perfilSection" role="dialog" aria-modal="false" aria-label="Meu perfil">
         <section class="glass-panel">
+            <button type="button" class="btn-icon btn-round" id="perfilFechar" aria-label="Fechar" onclick="fecharPainelPerfil()">X</button>
             <h2 class="panel-title"><span><svg class="icon" aria-hidden="true"><use href="#icon-account"></use></svg></span> Meu Perfil</h2>
             <p class="field-hint" id="perfilEmailLabel"></p>
 
@@ -641,7 +644,7 @@
 
             <button type="button" class="btn-secondary" id="perfilSair" style="margin-top:30px;">Sair da conta</button>
         </section>
-    </main>
+    </aside>
 
    <!-- TAG: pitch-comercial | Apresentacao do produto -->
 <section id="pitchSection">

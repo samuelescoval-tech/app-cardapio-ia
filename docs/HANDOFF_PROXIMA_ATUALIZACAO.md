@@ -1,6 +1,6 @@
 # Handoff - Karamu
 
-Atualizado em 2026-08-24.
+Atualizado em 2026-08-31.
 
 ## Estado em uma frase
 
@@ -43,8 +43,13 @@ referencia `<use>` no DOM + screenshot de cada uma das 10 telas
 afetadas). Em 2026-08-24: **Fase 5 concluida, fechando o plano
 "Karamu Editorial" (Fases 1-5) por completo** — polimento cruzado dos
 tokens que sobraram e regressao final ponta a ponta com geracao real
-via Gemini (nao dado fabricado), 190/190 testes, zero erro de console.
-Ver secoes dedicadas abaixo.
+via Gemini (nao dado fabricado), 190/190 testes, zero erro de console
+(commitado em `be76ecb`, enviado ao GitHub). Em 2026-08-31: o perfil do
+usuario deixou de ser uma secao de tela cheia (`switchView('perfil')`) e
+virou um painel sobreposto (dropdown estilo conta Google/rede social),
+que abre sobre o formulario/resultado atual sem escondê-lo — atendendo a
+um pedido antigo do usuario e ao feedback de que "parece que perde o
+evento" ao entrar no perfil. Ver secao dedicada abaixo.
 
 ## Arquitetura atual
 
@@ -1426,6 +1431,64 @@ emoji nem token de cor esquecido) mas claramente inconsistencias reais:
 Suite completa apos os 3 ajustes: 190/190 (sem teste novo, so correcao
 de CSS/markup existente).
 
+### Perfil vira painel sobreposto em vez de secao de tela cheia (2026-08-31)
+
+Usuario ja tinha registrado, bem no inicio do projeto, a ideia de um
+menu de conta "estilo Google ou rede social" (dropdown/painel sobre a
+tela atual, sem trocar de tela). Confirmado explicitamente via pergunta
+("Painel sobreposto (estilo Google/rede social)") em vez da alternativa
+mais simples (so um botao "voltar").
+
+**Achado que baseou a decisao**: `switchView()` (`app.js`) so alternava
+uma classe `hidden` entre `appSection`/`pitchSection`/`perfilSection` —
+nunca limpava ou resetava o DOM. Ou seja, o formulario/resultado em
+andamento **ja era preservado tecnicamente**; o problema era so a
+percepcao de "sair do app" causada pela troca de tela cheia. Isso foi
+verificado ao vivo (nao so por leitura de codigo): sessao falsa
+injetada via `sessionStorage`, `#appSection` confirmado com
+`classList.contains('hidden') === false` com o painel de perfil aberto
+por cima.
+
+**Mudancas**:
+- `#perfilSection` deixou de ter a classe `app-container` (que o fazia
+  ocupar o fluxo normal da pagina) e virou `<aside class="perfil-panel">`
+  com `position:fixed`, `role="dialog"` e `aria-modal="false"` (nao e
+  modal — o resto da pagina continua interativo por baixo).
+- Novo `<div class="perfil-backdrop">` antes do painel: camada
+  transparente (sem escurecer a tela, diferente do `.access-modal` de
+  login) que so serve pra fechar o painel com um clique fora dele.
+- Posicionamento no desktop calculado em JS (`posicionarPainelPerfil()`
+  em `app.js`), ancorado embaixo do botao de conta via
+  `getBoundingClientRect()` — necessario porque `.status-bar`
+  (`layout.css`) e centralizada na tela (`left:50%`), entao a posicao do
+  botao de conta varia com o texto (`Entrar` / e-mail / "Modo demo").
+  Recalculado tambem no `resize` enquanto o painel esta aberto.
+- No mobile (`<=768px`) o painel vira uma folha inferior (bottom sheet)
+  fixa, com cantos arredondados so em cima — um dropdown ancorado no
+  botao nao caberia bem numa tela estreita.
+- Fecha de 3 formas: clique no backdrop, tecla `Escape`
+  (`handlePerfilKeydown`), ou um botao "X" novo dentro do painel (mesmo
+  padrao visual `.btn-icon.btn-round` ja usado nos modais de login/demo).
+- `switchView(view)` perdeu a entrada `perfil` do mapa de secoes (so
+  restam `app`/`pitch`) e agora sempre chama `fecharPainelPerfil()` —
+  garante que trocar de tela (ex: logout, ir pra apresentacao) fecha o
+  painel se estiver aberto, sem precisar de logica duplicada.
+- `abrirModalConta()` com sessao ativa agora alterna abrir/fechar o
+  painel (clicar de novo no botao de conta fecha), em vez de so abrir.
+
+**Verificado ao vivo** (Chrome headless via CDP, clique real disparado
+no botao, nao so chamada direta da funcao): painel abre ancorado perto
+do botao de conta, `#appSection` continua visivel por baixo, fecha por
+clique no backdrop / Escape / botao X, e o layout de bottom-sheet mobile
+confirmado em 390×844. `npm test`: 190/190 (1 teste ajustado —
+`test/visual.test.js` verificava o objeto `secoes` antigo com
+`perfil: 'perfilSection'`, atualizado pra so `app`/`pitch`).
+
+**Debito tecnico pequeno gerado**: os 2 novos `onclick="fecharPainelPerfil()"`
+inline (no backdrop e no botao X) engordam um pouco o escopo do item 6
+("CSP `unsafe-inline`", ja adiado abaixo) — nao muda a decisao, so o
+numero de atributos a converter quando isso for priorizado.
+
 ### Auditoria de seguranca (prompt padrao do usuario) e correcoes, ponto a ponto (2026-08-17)
 
 Usuario enviou um prompt-template proprio, reutilizavel entre projetos,
@@ -1609,17 +1672,18 @@ esse e o unico dos 4 que vale manter.
    dinamicamente, entao precisa de delegacao de evento, nao troca 1 por
    1). Usuario optou explicitamente por adiar (nao e vulnerabilidade
    ativa hoje) — retomar quando houver folga para o refactor;
-7. commit pendente: interface de perfil, integracao catalogo/custo,
-   reestruturacao de navegacao e rename Karamu foram commitados em
-   `f32a5fb` (2026-08-09); identidade visual "Karamu Editorial" Fases 1-2
-   e as 3 correcoes da auditoria de seguranca de 2026-08-17 em `c243180`;
-   Fase 3 (cards) em `09a9c93` (2026-08-18); Fase 4 (icones SVG) + README
-   completo em `b23f871`, mergeado com o workflow de CodeQL commitado
-   direto pelo usuario no GitHub (`5adf1c1`) e enviado como `8353e6a`. As
-   Fases 1-4 estao publicadas no GitHub. **O que resta pendente agora e
-   so a Fase 5** (polimento de tokens + o teste novo de regressao em
-   `test/visual.test.js`) — ainda nao commitada nem enviada, aguardando
-   confirmacao do usuario. Ha tambem uma pasta `.vscode/` nao rastreada,
-   de origem nao confirmada (configuracao de editor) — conferir o
-   conteudo antes de incluir num commit;
+7. historico de commits da identidade visual: interface de perfil,
+   integracao catalogo/custo, reestruturacao de navegacao e rename
+   Karamu em `f32a5fb` (2026-08-09); Fases 1-2 + as 3 correcoes da
+   auditoria de seguranca de 2026-08-17 em `c243180`; Fase 3 (cards) em
+   `09a9c93` (2026-08-18); Fase 4 (icones SVG) + README completo em
+   `b23f871`, mergeado com o workflow de CodeQL commitado direto pelo
+   usuario no GitHub (`5adf1c1`) e enviado como `8353e6a`; Fase 5
+   (polimento final + regressao) e os 3 ajustes pos-teste ao vivo em
+   `be76ecb` (2026-08-24) — **plano "Karamu Editorial" completo e
+   publicado no GitHub**. **Commit pendente agora**: o painel sobreposto
+   de perfil (2026-08-31, ver secao dedicada acima) — aguardando
+   confirmacao do usuario antes de commitar/enviar. Ha tambem uma pasta
+   `.vscode/` nao rastreada, de origem nao confirmada (configuracao de
+   editor) — conferir o conteudo antes de incluir num commit;
 8. manter o estado somente neste handoff e no roadmap.

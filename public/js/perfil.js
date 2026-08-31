@@ -3,7 +3,7 @@
    TAG: perfil-fornecedores, perfil-fotos, perfil-chave-ia, perfil-precos
    --------------------------------------------------------------------------
    Fornecedores, fotos, chave de IA propria e precos proprios do usuario
-   logado. So chamado quando ha sessao (ver switchView('perfil') em app.js).
+   logado. So chamado quando ha sessao (ver abrirPainelPerfil() em app.js).
    ========================================================================== */
 
 const CATEGORIAS_PERFIL = ["Hortifruti", "Acougue", "Bebidas", "Mercearia", "Frios", "Padaria", "Descartaveis", "Limpeza", "Outros"];
