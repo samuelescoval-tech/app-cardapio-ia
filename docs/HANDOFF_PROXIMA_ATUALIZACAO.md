@@ -1489,7 +1489,7 @@ inline (no backdrop e no botao X) engordam um pouco o escopo do item 6
 ("CSP `unsafe-inline`", ja adiado abaixo) — nao muda a decisao, so o
 numero de atributos a converter quando isso for priorizado.
 
-### Tentativa de publicar o login do Google em modo "Producao" (2026-08-31)
+### Login do Google publicado em modo "Producao" (2026-08-31) — RESOLVIDO
 
 Usuario tentou publicar o app OAuth do Google (hoje em "Testando", limite
 de 100 usuarios de teste) seguindo o item 1 da "Proxima acao curta".
@@ -1556,6 +1556,21 @@ Commitado localmente (nao enviado ao GitHub ainda, aguardando usuario):
 `public/css/policy-doc.css`, link no rodape em `public/index.html`. Essas
 URLs so vao resolver de verdade na Vercel depois do push — usuario optou
 por enviar depois.
+
+**Desfecho**: usuario resolveu os pontos (a)-(d) da lista de pendencias
+acima — nome do app trocado pra "Karamu" no Branding, dominio
+`app-cardapio-ia.vercel.app` adicionado aos Dominios autorizados
+(resolveu o aviso "Domínio ausente"), `karamuoff@gmail.com` confirmado
+como contato do projeto, **logo deixado de fora por enquanto** (decisao
+final: nao subir agora, evita a fila de verificacao do Google). Com
+Branding salvo, foi em `Público-alvo` e clicou "Publicar app": status
+mudou de "Testando" pra **"Em produção"**, tipo de usuário "Externo" —
+qualquer conta Google agora consegue logar no Karamu, nao so os ate 100
+testadores cadastrados antes. Item 1 da "Proxima acao curta" resolvido.
+Falta so o item (e): enviar (`git push`) as paginas de privacidade/termos
+pro GitHub, pra essas URLs realmente resolverem em producao (hoje so
+existem no commit local `d94cf2e`) — **pendente de confirmacao do
+usuario**, que optou por adiar o push.
 
 ### Auditoria de seguranca (prompt padrao do usuario) e correcoes, ponto a ponto (2026-08-17)
 
@@ -1707,22 +1722,17 @@ esse e o unico dos 4 que vale manter.
 
 ## Proxima acao curta
 
-1. **em andamento** (ver secao dedicada "Tentativa de publicar o login do
-   Google" acima, 2026-08-31): publicar o app do Google em modo "Producao"
-   (hoje esta em "Teste", so e-mails cadastrados como testadores conseguem
-   logar com Google) — protecao de senha vazada e `rls_auto_enable()` ja
-   resolvidos/registrados, ver secoes acima. Falta, na ordem:
-   (a) confirmar se `karamuoff@gmail.com` apareceu no dropdown de e-mail
-   de suporte depois de adicionado como membro IAM;
-   (b) trocar o nome do app de "App Cardápio IA" pra "Karamu" no Branding;
-   (c) resolver o aviso "Domínio ausente: app-cardapio-ia.vercel.app" em
-   Dominios autorizados (provavelmente exige verificar posse via Google
-   Search Console);
-   (d) decidir se sobe o logo agora (forca fila de verificacao do Google)
-   ou publica sem logo por enquanto;
-   (e) enviar (`git push`) `privacidade.html`/`termos.html` pro GitHub
-   antes de tentar validar essas URLs no Google — commitado localmente,
-   push pendente de confirmacao do usuario;
+1. ~~publicar o app do Google em modo "Producao"~~ — **RESOLVIDO em
+   2026-08-31** (ver secao dedicada "Login do Google publicado em modo
+   'Producao'" acima): status mudou de "Testando" pra "Em produção",
+   qualquer conta Google ja consegue logar, nao so testadores. Logo
+   deixado de fora por decisao do usuario (evita fila de verificacao do
+   Google) — pode ser retomado depois se quiser um icone proprio na tela
+   de login do Google. **Unico passo que ainda falta**: enviar
+   (`git push`) `privacidade.html`/`termos.html` pro GitHub — commitado
+   localmente (`d94cf2e`), push pendente de confirmacao do usuario. Sem
+   isso, as URLs de Privacidade/Termos que o Google agora aponta ainda
+   nao existem de verdade em producao;
 2. antes de registrar a marca/comprar dominio de verdade: fazer a busca
    formal do INPI por classe para "Karamu" (so foram feitas buscas pontuais
    ate agora);
