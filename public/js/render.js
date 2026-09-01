@@ -1364,21 +1364,26 @@ function renderCompras(compras, estimativaCusto = null) {
             </div>
             <div class="sector-grid">
                 ${Object.entries(porSetor).map(([setor, entradas]) => `
-                    <div class="sector-card">
-                        <h4>${escapeHTML(setor)}</h4>
-                        ${entradas.map(({ item, precoInfo }) => {
-                            const temSubtotal = precoInfo && precoInfo.subtotal !== null && precoInfo.subtotal !== undefined;
-                            const rotuloPreco = temSubtotal
-                                ? `${precoInfo.correspondencia_exata ? "" : "~ "}${formatarPrecoBRL(precoInfo.subtotal)} · ${precoInfo.fornecedor || "seu fornecedor"}${precoInfo.correspondencia_exata ? "" : " (aprox.)"}`
-                                : "";
-                            return `
-                            <div class="shopping-item">
-                                <span class="shopping-item-name"><span>${escapeHTML(item.item || "Item")}</span>${item.natureza ? `<small>${escapeHTML(item.natureza)}</small>` : ""}${temSubtotal ? `<small class="shopping-item-price${precoInfo.correspondencia_exata ? "" : " aproximado"}">${escapeHTML(rotuloPreco)}</small>` : ""}</span>
-                                <strong>${escapeHTML(item.quantidade || "")}</strong>
-                            </div>
-                        `;
-                        }).join("")}
-                    </div>
+                    <details class="sector-card">
+                        <summary>
+                            <span class="sector-card-nome">${escapeHTML(setor)}</span>
+                            <span class="sector-card-contagem">${entradas.length} ${entradas.length === 1 ? "item" : "itens"}</span>
+                        </summary>
+                        <div class="sector-card-itens">
+                            ${entradas.map(({ item, precoInfo }) => {
+                                const temSubtotal = precoInfo && precoInfo.subtotal !== null && precoInfo.subtotal !== undefined;
+                                const rotuloPreco = temSubtotal
+                                    ? `${precoInfo.correspondencia_exata ? "" : "~ "}${formatarPrecoBRL(precoInfo.subtotal)} · ${precoInfo.fornecedor || "seu fornecedor"}${precoInfo.correspondencia_exata ? "" : " (aprox.)"}`
+                                    : "";
+                                return `
+                                <div class="shopping-item">
+                                    <span class="shopping-item-name"><span>${escapeHTML(item.item || "Item")}</span>${item.natureza ? `<small>${escapeHTML(item.natureza)}</small>` : ""}${temSubtotal ? `<small class="shopping-item-price${precoInfo.correspondencia_exata ? "" : " aproximado"}">${escapeHTML(rotuloPreco)}</small>` : ""}</span>
+                                    <strong>${escapeHTML(item.quantidade || "")}</strong>
+                                </div>
+                            `;
+                            }).join("")}
+                        </div>
+                    </details>
                 `).join("")}
             </div>
         </section>

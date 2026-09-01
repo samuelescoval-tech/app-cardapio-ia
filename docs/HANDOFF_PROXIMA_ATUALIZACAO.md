@@ -26,10 +26,12 @@ listadas abaixo):
    completo de cada um dos 5 itens (incluindo um sexto achado real, nao
    previsto no escopo original: a causa raiz do bug da scroll dupla,
    investigada E corrigida na mesma sprint por decisao do usuario).
-2. **Polimento de UX represado** — acordeao na lista de compras por
-   setor; investigar vies de imagem de prato. Bloqueado ate o usuario
-   mandar 2-3 exemplos concretos (prato esperado × imagem que veio).
-   **Sprint ativa agora.**
+2. **Polimento de UX represado** — em andamento. ~~Acordeao na lista de
+   compras por setor~~ **FEITO em 2026-08-31** (ver secao dedicada
+   "Sprint 2 — Polimento de UX represado (em andamento)" abaixo). Falta
+   so o segundo item: investigar vies de imagem de prato — **bloqueado**
+   ate o usuario mandar 2-3 exemplos concretos (prato esperado × imagem
+   que veio). **Sprint ativa agora.**
 3. **Fechamento legal** — revisao juridica formal de privacidade/termos,
    busca formal INPI (Classe 42+43, variacoes foneticas), decisao sobre
    logo do Google. ~85% decisao do usuario, eu so acompanho.
@@ -129,6 +131,39 @@ sprint, zero regressao.
    extensao do editor), nada sensivel. O `.gitignore` ja tinha uma regra
    especifica pra ignorar so `.vscode/settings.json`, entao a intencao
    sempre foi rastrear esse arquivo — vai entrar no proximo commit.
+
+### Sprint 2 — Polimento de UX represado (em andamento)
+
+**Item 1, concluido em 2026-08-31: acordeao na lista de compras por
+setor.** Causa raiz confirmada no codigo antes de mexer: `renderCompras`
+(`render.js`) agrupa a lista de compras por setor num `.sector-grid`
+(grade lado a lado); com muitos itens (76 no relato original do
+usuario), um setor com bem mais itens que os outros fazia o grid
+esticar os cartoes vizinhos pra mesma altura (comportamento padrao de
+CSS grid), deixando a secao inteira gigante e dificil de escanear.
+
+Corrigido convertendo cada `.sector-card` de `<div>` pra `<details>`
+(mesmo padrao ja usado em `.perfil-avancado` e
+`.gallery-sources-details` neste projeto — sem JS novo, sem passo extra
+de CSP), com `<summary>` mostrando nome do setor + contagem de itens
+(ex: "Hortifruti · 22 itens"), tudo fechado por padrao. `.sector-grid`
+deixou de ser grade lado a lado e virou lista empilhada (`flex-direction
+column`) — evita o problema de uma coluna expandida gerar buraco vazio
+na coluna vizinha fechada; no mobile ja era essencialmente assim antes
+(virava 1 coluna via media query), entao o comportamento fica
+consistente entre desktop e mobile agora.
+
+Verificado ao vivo com um fixture reproduzindo o cenario exato do
+relato original (76 itens, 6 setores): fechado mostra so 6 linhas de
+cabecalho; clicar em um setor expande so ele (os outros continuam
+fechados, confirmado programaticamente); reabrir mostra a contagem e os
+itens corretos. 190/190 testes (nenhuma asercao de teste referenciava
+esse markup).
+
+**Item 2, ainda bloqueado**: investigar vies nas imagens dos pratos
+sugeridos. Precisa que o usuario mande 2-3 exemplos concretos (prato
+esperado × imagem que veio) antes de mexer em
+`image-selection.service.js` — sem isso seria so suposicao.
 
 ## Estado em uma frase
 
@@ -1876,7 +1911,27 @@ esse e o unico dos 4 que vale manter.
    `src/utils/text-normalize.js` agora;
 4. ~~baixa prioridade: mostrar na UI quando `meta.catalogo_usuario_truncado`
    vier `true`~~ — **RESOLVIDO em 2026-08-31**, Sprint 1 (ver secao
-   dedicada acima);
+   dedicada acima). **Pendencia nova, aberta no mesmo dia** ao explicar
+   esse aviso pro usuario: hoje `catalogoUsuario` (`server.js`,
+   `obterCatalogoUsuarioOuNulo`, corte de 60 itens em ordem alfabetica)
+   e usado tanto pra montar o prompt da IA (`montarPromptPlanejamento`,
+   `src/prompts/event.prompt.js` — esse uso justifica um limite, custa
+   token/dinheiro por geracao) quanto pro calculo de custo
+   (`calcularEstimativaCusto`, matematica local, nao devia ter limite
+   nenhum). Usuario apontou corretamente que isso "pode atrapalhar o
+   objetivo do site" pra quem tem catalogo grande (>60 precos): um item
+   que a IA sugere pode ficar sem preco na estimativa so por estar na
+   "segunda metade" alfabetica do catalogo, mesmo o usuario tendo
+   cadastrado. **Correcao proposta** (nao e so aumentar o numero fixo):
+   (a) desacoplar os dois usos — calculo de custo passa a usar o
+   catalogo inteiro, sem limite; so o bloco enviado pra IA continua
+   limitado; (b) usuario sugeriu tambem dar controle manual sobre esse
+   segundo limite em vez de um numero fixo escolhido por mim: um seletor
+   na tela de perfil com opcoes "Automatico" (padrao, comportamento
+   atual) e valores manuais (30/90/120), com uma explicacao curta ao
+   passar o mouse sobre o custo em tokens de aumentar esse numero.
+   Usuario decidiu **registrar como pendencia futura em vez de
+   implementar agora** (nao entrou em nenhuma sprint ainda);
 5. ~~acao manual pendente do usuario (auditoria de seguranca, 2026-08-17,
    ponto 5): conferir Redirect URLs no Supabase~~ — **RESOLVIDO em
    2026-08-31**: usuario conferiu ao vivo (`Authentication → URL

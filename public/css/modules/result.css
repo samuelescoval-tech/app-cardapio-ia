@@ -397,7 +397,6 @@
 }
 
 .metric-grid,
-.sector-grid,
 .place-grid,
 .info-grid,
 .recipe-grid,
@@ -406,6 +405,17 @@
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     gap:12px;
+}
+
+/* Lista de compras: empilhada (nao grade lado a lado) — cada setor vira
+   um acordeao (<details>), entao precisa ficar sozinho por linha, senao
+   um setor aberto ao lado de um fechado gera buracos vazios na grade
+   (Sprint 2 - Polimento de UX represado, 2026-08-31, pedido do usuario
+   pra lista com muitos itens ficar escaneavel). */
+.sector-grid{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
 }
 
 .metric-grid{
@@ -981,12 +991,69 @@
     padding:14px;
 }
 
-.sector-card h4,
 .place-card h4,
 .recipe-card h4,
 .check-col h4{
     margin-bottom:8px;
     font-family:'Playfair Display',serif;
+}
+
+/* .sector-card virou <details> (acordeao por setor, Sprint 2 - Polimento
+   de UX represado, 2026-08-31): fecha padrao, mostra so nome + contagem
+   ate o usuario clicar — resolve a lista de compras ficando gigante e
+   dificil de escanear com muitos itens (76 no relato original). Mesmo
+   padrao de <details> ja usado em .perfil-avancado e
+   .gallery-sources-details neste projeto. */
+.sector-card{
+    padding:0;
+    overflow:hidden;
+}
+
+.sector-card summary{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:14px;
+    cursor:pointer;
+    list-style:none;
+}
+
+.sector-card summary::-webkit-details-marker{
+    display:none;
+}
+
+.sector-card-nome{
+    font-family:'Playfair Display',serif;
+    font-size:1.05rem;
+    color:var(--ink-strong);
+}
+
+.sector-card-nome::before{
+    content:"+";
+    display:inline-block;
+    width:14px;
+    margin-right:8px;
+    font-family:'Montserrat',sans-serif;
+    font-weight:800;
+    color:var(--gold-dark);
+}
+
+.sector-card[open] .sector-card-nome::before{
+    content:"−";
+}
+
+.sector-card-contagem{
+    font-size:.72rem;
+    font-weight:700;
+    color:var(--ink-faint);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    white-space:nowrap;
+}
+
+.sector-card-itens{
+    padding:0 14px 14px;
 }
 
 .recipe-card h5{
@@ -1644,7 +1711,6 @@
     }
 
     .metric-grid,
-    .sector-grid,
     .place-grid,
     .info-grid,
     .recipe-grid,

@@ -446,11 +446,13 @@ Primeiros exemplos concretos, a partir de um print real da tela de
 resultado (evento de Reveillon gerado com sucesso). Ainda nao
 implementado — registrar aqui antes de qualquer mudanca:
 
-- **Lista de Compras por Setor muito larga/espalhada**: com muitos itens
-  (76 no exemplo), os 4 cartoes de setor lado a lado (`.sector-grid` em
-  `result.css`) ficam com scroll vertical grande e dificeis de escanear.
-  Usuario quer uma visualizacao melhor, sugerindo algo que expande/recolhe
-  (ex.: acordeao por setor) em vez de tudo aberto ao mesmo tempo.
+- **Lista de Compras por Setor muito larga/espalhada** (**RESOLVIDO em
+  2026-08-31**, Sprint 2, ver handoff pro detalhamento): com muitos itens
+  (76 no exemplo), os cartoes de setor lado a lado (`.sector-grid` em
+  `result.css`) ficavam com scroll vertical grande e dificeis de
+  escanear. Usuario sugeriu acordeao por setor — implementado exatamente
+  assim: cada setor vira `<details>`/`<summary>`, fechado por padrao,
+  mostrando so nome + contagem de itens.
 - **Vies das imagens dos pratos**: usuario notou que as fotos/ilustracoes
   associadas aos pratos gerados "nao estao comuns" — precisa investigar
   com exemplos mais especificos do que esperado vs. o que aparece (qual
