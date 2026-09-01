@@ -41,9 +41,12 @@ const fotosService = criarFotosService();
 const chaveIAService = criarChaveIAService();
 const precosService = criarPrecosService();
 
-// Cabecalhos de seguranca (Plano 15, auditoria). O front-end usa onclick=""
-// e style="" inline em varios lugares, entao script-src/style-src precisam
-// de 'unsafe-inline'; ainda assim, frame-ancestors bloqueia clickjacking e
+// Cabecalhos de seguranca (Plano 15, auditoria). style="" inline ainda e
+// usado em varios lugares, entao style-src precisa de 'unsafe-inline';
+// script-src/script-src-attr NAO precisam mais (Sprint "Saude tecnica",
+// 2026-08-31): todo onclick=""/onchange="" inline foi convertido pra
+// addEventListener/delegacao de evento (ver TAG: delegacao-* em
+// render.js/app.js). frame-ancestors bloqueia clickjacking e
 // img-src/font-src/connect-src ficam restritos as origens realmente usadas.
 // connect-src inclui a URL do proprio projeto Supabase: o login social
 // (Google) usa o supabase-js direto no navegador, que fala com o Supabase
@@ -54,8 +57,7 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
-            scriptSrcAttr: ["'unsafe-inline'"],
+            scriptSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
             fontSrc: ["'self'", "https://fonts.gstatic.com"],
             imgSrc: ["'self'", "data:", "https://images.unsplash.com", ...(process.env.SUPABASE_URL ? [process.env.SUPABASE_URL] : [])],

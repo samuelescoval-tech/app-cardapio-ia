@@ -1,3 +1,5 @@
+const { normalizarTexto } = require("../../utils/text-normalize");
+
 function calcularMinimoVariedadeBebidas(pessoas) {
   const convidados = numeroPositivo(pessoas);
   if (!convidados) return 0;
@@ -106,7 +108,7 @@ function assinatura(valor) {
 }
 
 function normalizar(valor) {
-  return String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return normalizarTexto(valor);
 }
 
 function numeroPositivo(valor) {

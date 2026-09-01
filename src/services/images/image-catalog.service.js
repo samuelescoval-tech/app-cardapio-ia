@@ -1,5 +1,6 @@
 const dictionary = require("../../../data/images/visual-dictionary.json");
 const localLibrary = require("../../../data/images/local-library.json");
+const { normalizarTexto } = require("../../utils/text-normalize");
 
 const erros = validarDicionario(dictionary);
 if (erros.length) throw new Error(`Dicionario visual invalido: ${erros.join("; ")}`);
@@ -190,7 +191,7 @@ function validarBibliotecaLocal(valor) {
 function limparTermo(valor, limite) {
   return String(valor || "").replace(/[^\p{L}\p{N}\s-]/gu, " ").replace(/\s+/g, " ").trim().slice(0, limite);
 }
-function normalizar(valor) { return limparTermo(valor, 500).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+function normalizar(valor) { return normalizarTexto(limparTermo(valor, 500)); }
 function texto(valor) { return typeof valor === "string" ? valor.trim() : ""; }
 function urlHttps(valor) { try { const url = new URL(valor); return url.protocol === "https:" ? url.toString() : null; } catch { return null; } }
 function urlLocal(valor) { return typeof valor === "string" && /^\/images\/(?:fallback|library)\/[a-z0-9-]+\.svg$/i.test(valor) ? valor : null; }

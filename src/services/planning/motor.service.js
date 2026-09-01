@@ -6,6 +6,8 @@
    A IA deve complementar criatividade, mas nao contradizer estes valores.
    ========================================================================== */
 
+const { normalizarTexto } = require("../../utils/text-normalize");
+
 const PERFIS_EVENTO = {
   casamento: { horas: 6, m2: 2.5, staff: 12 },
   aniversario: { horas: 4, m2: 1.2, staff: 22 },
@@ -190,12 +192,7 @@ function ehCompraDiretaBebida(compra) {
 }
 
 function chaveTexto(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+  return normalizarTexto(valor).replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 function registrarAjusteBebida(relatorio, mensagem) {
@@ -226,10 +223,7 @@ function litrosDaQuantidade(valor) {
 }
 
 function ehBebidaAlcoolica(item) {
-  const texto = String([item?.nome, item?.descricao].filter(Boolean).join(" "))
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+  const texto = normalizarTexto([item?.nome, item?.descricao].filter(Boolean).join(" "));
   if (/sem alcool|nao alcool/.test(texto)) return false;
   return /cerveja|vinho|espumante|caipirinha|cachaca|gin|vodka|whisky|uisque|drink alcool|coquetel alcool/.test(texto);
 }

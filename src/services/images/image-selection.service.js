@@ -1,4 +1,5 @@
 const { construirSolicitacoesImagem, selecionarImagensLocais } = require("./image-catalog.service");
+const { normalizarTexto } = require("../../utils/text-normalize");
 
 function criarImageSelectionService(opcoes = {}) {
   const openverseService = opcoes.openverseService;
@@ -110,7 +111,7 @@ function temAncoraVisual(imagem, solicitacao) {
 }
 
 function normalizar(valor) {
-  return String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return normalizarTexto(valor);
 }
 
 function chaveImagem(imagem) {

@@ -187,14 +187,27 @@ function atualizarPitchCta() {
     const area = document.getElementById('pitchCtaArea');
     if (!area) return;
     if (obterSessaoUsuario() || modoDemoAtivo()) {
-        area.innerHTML = `<button type="button" class="btn-epic btn-wide" onclick="switchView('app')">IR PARA O GERADOR →</button>`;
+        area.innerHTML = `<button type="button" class="btn-epic btn-wide" data-action="switch-app">IR PARA O GERADOR →</button>`;
     } else {
         area.innerHTML = `
-            <button type="button" class="btn-epic btn-wide" onclick="abrirModalConta()">CRIAR CONTA / ENTRAR</button>
-            <button type="button" class="btn-secondary btn-wide" onclick="entrarModoDemo()">TESTAR COM SENHA DEMO</button>
+            <button type="button" class="btn-epic btn-wide" data-action="abrir-conta">CRIAR CONTA / ENTRAR</button>
+            <button type="button" class="btn-secondary btn-wide" data-action="modo-demo">TESTAR COM SENHA DEMO</button>
         `;
     }
 }
+
+/* TAG: delegacao-pitch-cta | CSP sem 'unsafe-inline' (mesmo raciocinio
+   da delegacao em render.js): #pitchCtaArea e estatico, so o innerHTML
+   muda a cada chamada de atualizarPitchCta(). */
+document.getElementById("pitchCtaArea")?.addEventListener("click", event => {
+    const alvo = event.target.closest("[data-action]");
+    if (!alvo) return;
+    switch (alvo.dataset.action) {
+        case "switch-app": switchView("app"); break;
+        case "abrir-conta": abrirModalConta(); break;
+        case "modo-demo": entrarModoDemo(); break;
+    }
+});
 
 function abrirModalConta() {
     const sessao = obterSessaoUsuario();
@@ -349,6 +362,21 @@ function switchView(view) {
         const secao = document.getElementById(idSecao);
         if (secao) secao.classList.toggle('hidden', nome !== view);
     }
+
+    // TAG: fix-scroll-duplo | #pitchSection e 100vh com scroll proprio
+    // (carrossel de slides), mas fica dentro do fluxo normal da pagina,
+    // logo depois do .hero — que nunca era escondido pelo switchView.
+    // hero + pitchSection juntos passavam da altura da tela, entao a
+    // pagina externa TAMBEM precisava rolar, gerando duas areas de scroll
+    // simultaneas (achado real, confirmado via scrollHeight/clientHeight
+    // ao vivo, Sprint 1 - Saude tecnica, 2026-08-31). Escondendo o hero
+    // (redundante durante a apresentacao, que ja tem sua propria abertura)
+    // e travando o scroll externo (reaproveita body.modal-open, mesmo
+    // mecanismo ja usado nos modais de login/demo), pitchSection passa a
+    // ocupar exatamente a tela, sem disputa de scroll.
+    const hero = document.getElementById('mainHero');
+    if (hero) hero.classList.toggle('hidden', view === 'pitch');
+    document.body.classList.toggle('modal-open', view === 'pitch');
 
     if (view === 'pitch') atualizarPitchCta();
     fecharPainelPerfil();
@@ -540,6 +568,20 @@ async function gerarTudo() {
         exibirResultadoLuxo(dadosIA, pessoas, evento);
         resultadoArea.dataset.planoValido = "true";
 
+        // TAG: aviso-catalogo-truncado | server.js corta o catalogo de
+        // precos do usuario em 60 itens (ordem alfabetica); antes isso so
+        // ficava em meta, sem aviso visual pra quem tem mais de 60 precos
+        // cadastrados (item de baixa prioridade da Sprint 1, 2026-08-31).
+        if (resposta.meta?.catalogo_usuario_truncado) {
+            const painelCusto = resultadoArea.querySelector('.cost-estimate-panel');
+            if (painelCusto) {
+                const aviso = document.createElement('p');
+                aviso.className = 'cost-estimate-note cost-estimate-note--aviso';
+                aviso.textContent = 'Seu catálogo de preços tem mais de 60 itens cadastrados — só os 60 primeiros (ordem alfabética) entraram nesta estimativa. Os demais não foram considerados no cálculo.';
+                painelCusto.appendChild(aviso);
+            }
+        }
+
         // TAG: integracao-historico | FASE 1
         // Salvar evento + plano no histórico
         if (window.storageService) {
@@ -720,10 +762,10 @@ function renderizarHistorico() {
                 ${entrada.plano_valido ? '' : '<br><strong>Geração incompleta — mantida apenas para diagnóstico.</strong>'}
             </div>
             <div class="historico-card-acoes">
-                <button type="button" class="historico-btn-carregar" ${entrada.plano_valido ? `onclick="carregarDoHistorico('${entrada.id}')"` : 'disabled'}>
+                <button type="button" class="historico-btn-carregar" ${entrada.plano_valido ? `data-action="carregar-historico" data-id="${escapeHTML(entrada.id)}"` : 'disabled'}>
                     ${entrada.plano_valido ? `${icon("folder")} Carregar` : `${icon("warning")} Incompleto`}
                 </button>
-                <button type="button" class="historico-btn-deletar" onclick="deletarDoHistorico('${entrada.id}')">
+                <button type="button" class="historico-btn-deletar" data-action="deletar-historico" data-id="${escapeHTML(entrada.id)}">
                     ${icon("trash")} Deletar
                 </button>
             </div>
@@ -848,8 +890,47 @@ function limparHistoricoUI() {
     }
 }
 
+/* TAG: delegacao-historico | mesmo raciocinio das outras delegacoes:
+   #historico-container e estatico, so o innerHTML muda a cada
+   renderizarHistorico(). */
+document.getElementById('historico-container')?.addEventListener('click', event => {
+    const alvo = event.target.closest('[data-action]');
+    if (!alvo) return;
+    const id = alvo.dataset.id;
+    if (alvo.dataset.action === 'carregar-historico') carregarDoHistorico(id);
+    if (alvo.dataset.action === 'deletar-historico') deletarDoHistorico(id);
+});
+
+/* TAG: ligacao-botoes-estaticos | CSP sem 'unsafe-inline': botoes que ja
+   existem no HTML no carregamento da pagina (nao gerados por template
+   string) sao ligados aqui uma unica vez, em vez de onclick="" inline. */
+function ligarBotoesEstaticos() {
+    document.getElementById('btnApresentacao')?.addEventListener('click', () => switchView('pitch'));
+    document.getElementById('btnConta')?.addEventListener('click', abrirModalConta);
+    document.getElementById('btnToggleHeader')?.addEventListener('click', toggleHeader);
+    document.getElementById('btnGerar')?.addEventListener('click', gerarTudo);
+    document.getElementById('limpar-historico-btn')?.addEventListener('click', limparHistoricoUI);
+    document.getElementById('perfilBackdrop')?.addEventListener('click', fecharPainelPerfil);
+    document.getElementById('perfilFechar')?.addEventListener('click', fecharPainelPerfil);
+
+    document.getElementById('btnImportarProjeto')?.addEventListener('click', () => {
+        document.getElementById('importChef')?.click();
+    });
+    // TAG: bug-preexistente-importarProjeto | importarProjeto() nunca foi
+    // implementada em nenhum arquivo (achado durante a remocao do
+    // 'unsafe-inline', 2026-08-31) — o botao de importar projeto Chef
+    // nunca funcionou. Guarda defensiva preserva o comportamento atual
+    // (nada acontece de util) sem lancar erro nao tratado; decisao de
+    // implementar de verdade ou remover o botao fica para o usuario.
+    document.getElementById('importChef')?.addEventListener('change', event => {
+        if (typeof importarProjeto === 'function') importarProjeto(event);
+        else console.warn('⚠️ importarProjeto() nao implementada — botao de importar projeto Chef nao funciona.');
+    });
+}
+
 /* TAG: init-historico | Chamar ao carregar página */
 document.addEventListener('DOMContentLoaded', function() {
+    ligarBotoesEstaticos();
     inicializarAcessoDemo();
     atualizarBotaoConta();
     // Quem ja tem sessao ou ja escolheu o modo demo cai direto no gerador;

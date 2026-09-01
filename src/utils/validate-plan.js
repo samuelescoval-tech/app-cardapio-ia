@@ -1,3 +1,5 @@
+const { normalizarTexto } = require("./text-normalize");
+
 const CAMPOS_ARRAY_TEXTO = [
   "layout",
   "equipe_obs",
@@ -585,10 +587,7 @@ function validarCompletudeEvento(plano, relatorio) {
 }
 
 function chaveCulinaria(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
+  return normalizarTexto(valor)
     .replace(/[^a-z0-9]+/g, " ")
     .split(" ")
     .map(palavra => palavra.length > 3 && palavra.endsWith("s") ? palavra.slice(0, -1) : palavra)
@@ -890,10 +889,7 @@ function ehBebidaAlcoolica(texto) {
 }
 
 function normalizarTextoBusca(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+  return normalizarTexto(valor);
 }
 
 function normalizarTermosBusca(valor) {

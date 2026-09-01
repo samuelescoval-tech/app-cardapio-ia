@@ -1,4 +1,5 @@
 const catalogoContextos = require("../../../data/culinary/event-contexts.json");
+const { normalizarTexto } = require("../../utils/text-normalize");
 
 const errosCatalogo = validarCatalogoContextos(catalogoContextos);
 if (errosCatalogo.length) {
@@ -223,10 +224,7 @@ function combinar(itens) {
 }
 
 function normalizar(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+  return normalizarTexto(valor);
 }
 
 function slug(valor) {

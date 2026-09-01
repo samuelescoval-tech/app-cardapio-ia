@@ -439,7 +439,10 @@ test('formulario principal associa rotulos aos campos e anuncia resultados', () 
     }
 
     assert.match(html, /<nav class="status-bar" aria-label=/);
-    assert.match(html, /id="btnConta" onclick="abrirModalConta\(\)"/);
+    assert.match(html, /class="nav-btn account-status" id="btnConta"/);
+    assert.doesNotMatch(html, /id="btnConta"[^>]*onclick=/);
+    const app = ler('public/js/app.js');
+    assert.match(app, /getElementById\('btnConta'\)\?\.addEventListener\('click', abrirModalConta\)/);
     assert.match(html, /id="resultadoArea" class="hidden" aria-live="polite"/);
     assert.match(html, /class="style-grid" role="radiogroup"/);
 });

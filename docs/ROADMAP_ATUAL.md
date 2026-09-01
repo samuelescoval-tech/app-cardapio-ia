@@ -705,11 +705,19 @@ formulario/resultado atras do painel continua visivel e intacto.
 causada por duas scroll" no app — parece haver 2 barras de rolagem
 verticais visiveis simultaneamente (uma parcial perto do topo, sobre o
 `.hero`, e a barra normal da pagina abaixo dela). Usuario marcou como
-"ajustar no futuro", nao urgente. Precisa investigar se e um elemento com
-`overflow` proprio criando um scroll aninhado (candidato mais provavel:
-`.hero{overflow:hidden}` em `layout.css` interagindo com algum filho, ou
-o `<nav class="status-bar">` fixo sobrepondo a barra de rolagem nativa)
-antes de decidir a correcao.
+"ajustar no futuro", nao urgente.
+
+**RESOLVIDO em 2026-08-31** (Sprint 1 - Saude tecnica, ver handoff pro
+detalhamento completo): causa raiz confirmada ao vivo via
+`scrollHeight`/`clientHeight` (nenhum dos 2 candidatos suspeitos
+originais) — `#pitchSection` e `height:100vh` com scroll proprio
+(carrossel de slides), mas fica no fluxo normal da pagina logo depois do
+`.hero` (nunca escondido pelo `switchView`); juntos passavam da altura
+da tela, entao a pagina externa tambem precisava rolar. Corrigido
+escondendo o `.hero` e travando o scroll externo
+(`body.classList.toggle('modal-open', ...)`) sempre que a apresentacao
+esta ativa. Verificado ao vivo nos dois sentidos (pitch↔app), 190/190
+testes.
 
 **Skills locais adicionadas pelo usuario (2026-08-10)**: 8 pacotes de
 skills de terceiros (Anthropic, Vercel, AccessLint, bencium, e uma
@@ -795,11 +803,11 @@ detalhes completos.
 preco de produto errado; nomes duplicados na lista de compras mostravam
 preco da linha errada; duas chamadas serializadas ao Supabase Auth por
 geracao; `normalizarTexto` duplicado). Todos corrigidos e reverificados
-(suite 185/185 + testes ao vivo). Consolidar as ~12 copias *pre-existentes*
+(suite 185/185 + testes ao vivo). Consolidar as copias *pre-existentes*
 de `normalizarTexto` espalhadas pelo resto do backend ficou de fora
-(fora do escopo do fix pontual) e esta registrado como proxima acao no
-handoff. Ver handoff para a lista completa dos achados e como cada um foi
-corrigido.
+(fora do escopo do fix pontual) na epoca — **feito em 2026-08-31, Sprint
+1 "Saude tecnica", ver handoff**. Ver handoff para a lista completa dos
+achados e como cada um foi corrigido.
 
 ### 7. Reestruturar a navegacao: apresentacao -> login -> app — **CRITICO, nao e so estetica** — RESOLVIDO em 2026-08-06
 

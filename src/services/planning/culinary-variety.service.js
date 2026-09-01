@@ -1,4 +1,5 @@
 const { obterDiretrizCulinaria } = require("./culinary-matrix.service");
+const { normalizarTexto } = require("../../utils/text-normalize");
 
 const MAX_EVITAR = 20;
 const QUALIFICADORES_DESCARTAVEIS = new Set([
@@ -88,10 +89,7 @@ function avaliarVariedadePlano(plano, contexto) {
 }
 
 function normalizarAssinaturaPrato(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
+  return normalizarTexto(valor)
     .replace(/\bda casa\b/g, " ")
     .replace(/[^a-z0-9]+/g, " ")
     .split(" ")

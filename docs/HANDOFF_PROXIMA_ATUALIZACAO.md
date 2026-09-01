@@ -2,6 +2,134 @@
 
 Atualizado em 2026-08-31.
 
+## Metodo de sprints (estabelecido em 2026-08-31)
+
+Os 5 pendentes de lancamento fecharam nesta data (ver "Proxima acao
+curta" abaixo, que agora e so backlog de baixa prioridade). Usuario
+pediu explicitamente pra parar de escolher o proximo item por conversa
+solta ("vamos continuar" + pergunta pontual) e organizar em sprints.
+Artefato visual publicado com o metodo completo e a fila priorizada:
+https://claude.ai/code/artifact/7edc6710-596d-400e-b051-8715006c4489
+
+**Regras do metodo** (as 4 valem pra qualquer sprint futura, nao so as
+listadas abaixo):
+1. Sprint fecha por escopo, nao por calendario.
+2. Uma sprint ativa por vez — item novo que surgir no meio vira backlog.
+3. Toda sprint declara objetivo, escopo, criterio de saida, e quem faz
+   (codigo, por mim / decisao ou painel externo, pelo usuario).
+4. Ao fechar, handoff e roadmap sao atualizados no mesmo dia.
+
+**Fila priorizada (confirmada pelo usuario, ordem de execucao)**:
+
+1. ~~**Saude tecnica**~~ — **CONCLUIDA em 2026-08-31**, ver secao dedicada
+   "Sprint 1 — Saude tecnica (concluida)" abaixo pro detalhamento
+   completo de cada um dos 5 itens (incluindo um sexto achado real, nao
+   previsto no escopo original: a causa raiz do bug da scroll dupla,
+   investigada E corrigida na mesma sprint por decisao do usuario).
+2. **Polimento de UX represado** — acordeao na lista de compras por
+   setor; investigar vies de imagem de prato. Bloqueado ate o usuario
+   mandar 2-3 exemplos concretos (prato esperado × imagem que veio).
+   **Sprint ativa agora.**
+3. **Fechamento legal** — revisao juridica formal de privacidade/termos,
+   busca formal INPI (Classe 42+43, variacoes foneticas), decisao sobre
+   logo do Google. ~85% decisao do usuario, eu so acompanho.
+4. **Conteudo da apresentacao** — reescrever `#pitchSection` (personas,
+   stack, status, objetivos). Precisa de um brainstorm curto do usuario
+   sobre publico-alvo antes de eu escrever.
+
+**Fora da fila de sprints** (nao agendados):
+- Decisoes de produto em aberto: expandir repertorio regional, catalogo
+  de precos piloto (1 cidade), modelo de cobranca (Mercado Pago) —
+  travam ate o usuario decidir direcao, nao viram sprint sem isso.
+- Gatilhos de monitoramento (sem acao agora, so observados): capacidade
+  do plano gratuito quando uso real crescer, CAPTCHA se aparecer spam de
+  contas, upgrade do Supabase se o free tier nao bastar mais.
+
+### Sprint 1 — Saude tecnica (concluida em 2026-08-31)
+
+Todos os 5 itens do escopo original fechados, mais 1 achado extra
+corrigido na mesma sprint (o bug da scroll dupla, que era so
+"investigar" no escopo, virou tambem "corrigir" por decisao do usuario
+ao ver a causa raiz confirmada). 190/190 testes ao longo de toda a
+sprint, zero regressao.
+
+1. **CSP sem `'unsafe-inline'`** — contagem real (nao a estimativa
+   antiga): 8 `onclick` + 1 `onchange` em `index.html`, 14 `onclick` em
+   `render.js`, 5 em `app.js` = 28 pontos. Todos convertidos:
+   - Botoes estaticos (existem no HTML desde o carregamento): ligados
+     uma vez em `ligarBotoesEstaticos()` (`app.js`), chamada no
+     `DOMContentLoaded` existente.
+   - Botoes gerados dinamicamente (template strings de `render.js` —
+     cardapio, galeria, PDF — e `app.js` — CTA da apresentacao,
+     historico): viraram atributos `data-action`/`data-alvo` (ou
+     reaproveitaram `data-gallery-view`/`data-menu-nav` etc. que ja
+     existiam), lidos por **delegacao de evento**: um listener por
+     container estavel (`#resultadoArea`, `#pitchCtaArea`,
+     `#historico-container` — cada um so tem o `innerHTML` trocado, o
+     elemento em si nunca e recriado, entao um listener so cobre
+     qualquer re-renderizacao futura sem precisar reamarrar).
+   - `server.js`: `scriptSrc` perdeu `'unsafe-inline'`, `scriptSrcAttr`
+     removido (helmet aplica `'none'` por padrao — mais estrito que
+     antes). `styleSrc` mantido com `'unsafe-inline'` (fora de escopo,
+     `style=""` inline e usado em varios lugares, refactor separado).
+   - **Achado lateral, nao relacionado ao CSP**: o botao de "Importar
+     projeto Chef" chama `importarProjeto(event)`, funcao que **nunca
+     existiu** em nenhum arquivo — sempre deu erro no console se
+     clicado, desde antes desta sessao. Nao era escopo da sprint
+     consertar, entao so preservei o comportamento atual (nada
+     acontece de util) com uma guarda defensiva (`typeof
+     importarProjeto === 'function'`) em vez de deixar o erro
+     acontecer sem tratamento. **Decisao pendente do usuario**:
+     implementar a funcao de verdade ou remover o botao.
+   - Verificado ao vivo (Chrome headless via CDP): header
+     `Content-Security-Policy` confirmado sem `unsafe-inline` em
+     script; 21 interacoes reais testadas (nav, painel de perfil,
+     historico, CTA da apresentacao, e as 14 acoes de
+     cardapio/galeria/PDF via spies nas funcoes reais) — zero violacao
+     de CSP, zero erro de console.
+2. **Consolidacao de `normalizarTexto`** — a contagem real era maior que
+   a estimativa do backlog: 13 ocorrencias (nao ~12) em 11 arquivos
+   (`validate-plan.js` tinha 2 — `normalizarTextoBusca` e
+   `chaveCulinaria` —, e `motor.service.js` tinha 2 tambem —
+   `chaveTexto` e uma normalizacao inline dentro de
+   `ehBebidaAlcoolica`). Analisadas uma a uma antes de mexer: 7 eram
+   copias puras (so importaram e passaram a delegar pra
+   `normalizarTexto` de `text-normalize.js`), 4 tinham um passo extra
+   proprio (`model-benchmark.service.js`, `motor.service.js`,
+   `culinary-variety.service.js`, `image-catalog.service.js` — mantido
+   o passo extra de cada uma, so a base NFD+lowercase virou chamada
+   compartilhada, pra nao mudar comportamento). 190/190 testes depois —
+   inclusive os que cobrem matriz culinaria/variedade/rendimento, entao
+   a equivalencia comportamental foi validada de verdade, nao so por
+   leitura de codigo.
+3. **Indicador visual de `catalogo_usuario_truncado`** — quando o
+   usuario tem mais de 60 precos cadastrados (limite do catalogo
+   enviado pro backend, `server.js`), aparece um aviso visual (tom de
+   atencao, reaproveitando os tokens `--status-caution-*` ja existentes)
+   dentro do painel de custo estimado, explicando que so os 60 primeiros
+   (ordem alfabetica) entraram na conta. Antes so ficava em `meta`, sem
+   nenhum aviso na tela.
+4. **Bug da scroll dupla — investigado E corrigido** (escopo original
+   era so investigar; usuario pediu a correcao depois de ver a causa
+   confirmada). Causa raiz real, achada via
+   `scrollHeight`/`clientHeight` ao vivo (nao suposicao): `#pitchSection`
+   e `height:100vh` com scroll proprio (carrossel de slides,
+   `overflow-y:auto`), mas fica no fluxo normal da pagina, logo depois
+   do `.hero` — que nunca era escondido pelo `switchView`. hero
+   (~480px) + pitchSection (100vh) juntos passavam da altura da tela,
+   entao a pagina externa TAMBEM precisava rolar — duas areas de scroll
+   simultaneas e independentes. Corrigido em `switchView()` (`app.js`):
+   esconde o `.hero` e trava o scroll externo (`body.classList.toggle
+   ('modal-open', ...)`, reaproveitando o mesmo mecanismo ja usado nos
+   modais de login/demo) sempre que a apresentacao esta ativa.
+   Verificado ao vivo: uma unica area de scroll, carrossel interno do
+   pitch continua funcionando, volta pro app restaura o hero e destrava
+   o scroll normalmente, `toggleHeader()` nao quebrou.
+5. **`.vscode/` conferido** — so tem `extensions.json` (recomenda 1
+   extensao do editor), nada sensivel. O `.gitignore` ja tinha uma regra
+   especifica pra ignorar so `.vscode/settings.json`, entao a intencao
+   sempre foi rastrear esse arquivo — vai entrar no proximo commit.
+
 ## Estado em uma frase
 
 O Karamu (renomeado de "Chef IA Studio" em 2026-08-06 — ver secao
@@ -769,8 +897,10 @@ troca (README, estes documentos, texto visivel em `public/index.html`,
 que usam o placeholder neutro `app-cardapio-ia`) foi **adiada de proposito
 pelo usuario** para acontecer junto com a reestruturacao de navegacao
 (Plano 16, item 7) — nao fazer a troca antes disso sem o usuario pedir.
-Falta ainda: busca formal no INPI por classe (provavel NCL 42, possivelmente
-9/35/41) antes de registrar de verdade a marca ou comprar dominio.
+Busca formal no INPI por classe (NCL 42/43) — ver decisao do usuario em
+2026-08-31 na "Proxima acao curta", item 2: aceita a busca pontual ja
+feita como suficiente por enquanto, formal fica pra mais perto do
+registro de verdade.
 
 ### Plano 16, item 6: precos proprios por usuario (2026-08-06)
 
@@ -1722,33 +1852,31 @@ esse e o unico dos 4 que vale manter.
 
 ## Proxima acao curta
 
-1. ~~publicar o app do Google em modo "Producao"~~ — **RESOLVIDO em
-   2026-08-31** (ver secao dedicada "Login do Google publicado em modo
-   'Producao'" acima): status mudou de "Testando" pra "Em produção",
-   qualquer conta Google ja consegue logar, nao so testadores. Logo
-   deixado de fora por decisao do usuario (evita fila de verificacao do
-   Google) — pode ser retomado depois se quiser um icone proprio na tela
-   de login do Google. **Unico passo que ainda falta**: enviar
-   (`git push`) `privacidade.html`/`termos.html` pro GitHub — commitado
-   localmente (`d94cf2e`), push pendente de confirmacao do usuario. Sem
-   isso, as URLs de Privacidade/Termos que o Google agora aponta ainda
-   nao existem de verdade em producao;
-2. antes de registrar a marca/comprar dominio de verdade: fazer a busca
-   formal do INPI por classe para "Karamu" (so foram feitas buscas pontuais
-   ate agora);
-3. limpeza tecnica de baixa prioridade, sem pressa: consolidar as ~12 copias
-   pre-existentes de `normalizarTexto` (remover acento/normalizar caixa)
-   espalhadas em `src/` (`validate-plan.js`, `motor.service.js`,
-   `event-coherence.service.js`, `culinary-variety.service.js`,
-   `culinary-matrix.service.js`, `event-quality.service.js`,
-   `food-yield.service.js`, `beverage-variety.service.js`,
-   `image-selection.service.js`, `image-catalog.service.js`, entre outras)
-   para importar de `src/utils/text-normalize.js` (criado em 2026-08-06,
-   ver secao acima) — nenhuma delas foi tocada ainda, e sao pre-existentes
-   ao trabalho desta sessao, entao nao entraram no fix pontual;
-4. baixa prioridade: mostrar na UI quando `meta.catalogo_usuario_truncado`
-   vier `true` (hoje so fica no `meta`, sem aviso visual pro usuario com
-   mais de 60 precos cadastrados);
+1. ~~publicar o app do Google em modo "Producao"~~ — **RESOLVIDO por
+   completo em 2026-08-31** (ver secao dedicada "Login do Google
+   publicado em modo 'Producao'" acima): status mudou de "Testando" pra
+   "Em produção", qualquer conta Google ja consegue logar, nao so
+   testadores. Logo deixado de fora por decisao do usuario (evita fila de
+   verificacao do Google) — pode ser retomado depois se quiser um icone
+   proprio na tela de login do Google. `privacidade.html`/`termos.html`
+   enviados ao GitHub (`327a5cb`) e confirmados no ar em producao
+   (`app-cardapio-ia.vercel.app/privacidade.html` e `/termos.html`,
+   HTTP 200 conferido ao vivo);
+2. ~~antes de registrar a marca/comprar dominio de verdade: fazer a busca
+   formal do INPI por classe para "Karamu"~~ — **decisao do usuario em
+   2026-08-31**: a busca pontual ja feita antes (ver secao "Nome novo
+   escolhido" acima — buscou "Karamu" direto no INPI, nada registrado)
+   aceita como suficiente por enquanto. A busca formal cruzando Classe 42
+   (software) e 43 (alimentacao/eventos) + variacoes foneticas
+   (Caramu, Karamú) fica pra mais perto da hora de registrar a marca de
+   verdade, nao e bloqueante pro desenvolvimento continuar;
+3. ~~limpeza tecnica: consolidar as copias de `normalizarTexto`~~ —
+   **RESOLVIDO em 2026-08-31**, Sprint 1 (ver secao dedicada acima). 13
+   ocorrencias reais em 11 arquivos, todas delegando pra
+   `src/utils/text-normalize.js` agora;
+4. ~~baixa prioridade: mostrar na UI quando `meta.catalogo_usuario_truncado`
+   vier `true`~~ — **RESOLVIDO em 2026-08-31**, Sprint 1 (ver secao
+   dedicada acima);
 5. ~~acao manual pendente do usuario (auditoria de seguranca, 2026-08-17,
    ponto 5): conferir Redirect URLs no Supabase~~ — **RESOLVIDO em
    2026-08-31**: usuario conferiu ao vivo (`Authentication → URL
@@ -1763,15 +1891,14 @@ esse e o unico dos 4 que vale manter.
    URL aqui no Supabase) **e** atualizar "Authorized redirect URIs" nas
    credenciais OAuth do Google Cloud Console, senao o login com Google
    quebra no dominio novo;
-6. **debito tecnico documentado, sem data** (auditoria de seguranca,
-   2026-08-17, ponto 4): remover `'unsafe-inline'` de `scriptSrc`/
-   `scriptSrcAttr` no CSP (`server.js`) exige antes converter ~26
-   atributos `onclick`/`onchange` inline para `addEventListener` (14 em
-   `render.js`, 6 em `index.html`, 5 em `app.js`; a maioria em
-   `render.js` esta dentro de template strings de cards gerados
-   dinamicamente, entao precisa de delegacao de evento, nao troca 1 por
-   1). Usuario optou explicitamente por adiar (nao e vulnerabilidade
-   ativa hoje) — retomar quando houver folga para o refactor;
+6. ~~debito tecnico documentado (auditoria de seguranca, 2026-08-17,
+   ponto 4): remover `'unsafe-inline'` de `scriptSrc`/`scriptSrcAttr`~~ —
+   **RESOLVIDO em 2026-08-31**, Sprint 1 - Saude tecnica (ver secao
+   dedicada acima). Todos os 28 `onclick`/`onchange` inline convertidos
+   pra `addEventListener`/delegacao de evento; `scriptSrc` sem
+   `'unsafe-inline'`, `scriptSrcAttr` removido. `styleSrc` mantido com
+   `'unsafe-inline'` (fora de escopo desta sprint, refactor separado se
+   um dia for priorizado);
 7. historico de commits da identidade visual: interface de perfil,
    integracao catalogo/custo, reestruturacao de navegacao e rename
    Karamu em `f32a5fb` (2026-08-09); Fases 1-2 + as 3 correcoes da

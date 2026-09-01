@@ -1,4 +1,5 @@
 const { calcularMinimoVariedadeBebidas } = require("./beverage-variety.service");
+const { normalizarTexto } = require("../../utils/text-normalize");
 
 function avaliarQualidadeEvento(plano = {}, evento = {}, diretriz = {}) {
   const cardapio = Array.isArray(plano.cardapio) ? plano.cardapio : [];
@@ -116,7 +117,7 @@ function localizarItensARevisar(cardapio, evento) {
 function criterio(criterio, pontos, maximo, resultado) {
   return { criterio, pontos: arredondar(Math.max(0, Math.min(maximo, pontos))), maximo, resultado };
 }
-function chave(valor) { return String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+function chave(valor) { return normalizarTexto(valor); }
 function arredondar(valor) { return Math.round((Number(valor) || 0) * 10) / 10; }
 function formatarNota(valor) { return Number(valor).toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
 

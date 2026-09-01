@@ -3,6 +3,7 @@ const catalogoFontes = require("../../../data/culinary/source-catalog.json");
 const catalogoAlimentos = require("../../../data/culinary/food-catalog.json");
 const { construirContextoEvento } = require("./event-coherence.service");
 const { calcularMinimoVariedadeBebidas } = require("./beverage-variety.service");
+const { normalizarTexto } = require("../../utils/text-normalize");
 
 const errosTaxonomia = validarTaxonomiaCulinaria(matriz);
 if (errosTaxonomia.length) {
@@ -276,10 +277,7 @@ function selecionarFontes(contexto) {
 }
 
 function normalizar(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
+  return normalizarTexto(valor);
 }
 
 function validarTaxonomiaCulinaria(valor) {

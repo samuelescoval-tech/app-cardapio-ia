@@ -310,8 +310,8 @@
 
     <!-- TAG: barra-status | Marca (volta a apresentacao) + status de conta, nao mais abas paralelas -->
     <nav class="status-bar" aria-label="Marca e conta">
-        <button type="button" class="nav-btn brand-link wordmark" id="btnApresentacao" onclick="switchView('pitch')"><span class="wordmark-mark"><svg class="chef-hat-accent" aria-hidden="true"><use href="#chef-hat-accent"></use></svg>KARAMU</span></button>
-        <button type="button" class="nav-btn account-status" id="btnConta" onclick="abrirModalConta()"><svg class="icon" aria-hidden="true"><use href="#icon-account"></use></svg> Entrar</button>
+        <button type="button" class="nav-btn brand-link wordmark" id="btnApresentacao"><span class="wordmark-mark"><svg class="chef-hat-accent" aria-hidden="true"><use href="#chef-hat-accent"></use></svg>KARAMU</span></button>
+        <button type="button" class="nav-btn account-status" id="btnConta"><svg class="icon" aria-hidden="true"><use href="#icon-account"></use></svg> Entrar</button>
     </nav>
 
     <!-- TAG: hero-dinamico | Capa visual compactavel -->
@@ -325,7 +325,7 @@
             <h1 class="hero-title wordmark"><span class="wordmark-mark"><svg class="chef-hat-accent" aria-hidden="true"><use href="#chef-hat-accent"></use></svg>KARAMU</span><span class="hero-rule"></span></h1>
             <p class="hero-sub">ARQUITETURA GASTRONÔMICA E LOGÍSTICA</p>
         </div>
-        <button type="button" class="toggle-header" aria-controls="mainHero" aria-expanded="true" aria-label="Recolher capa" onclick="toggleHeader()">↕</button>
+        <button type="button" id="btnToggleHeader" class="toggle-header" aria-controls="mainHero" aria-expanded="true" aria-label="Recolher capa">↕</button>
     </header>
 
     <!-- TAG: app-gerador | Formulario principal do evento -->
@@ -489,19 +489,19 @@
                 </div>
                 <div class="chat-input-wrap">
                     <input type="text" id="userChat" class="premium-input" maxlength="1000" placeholder="Fale com o Chef...">
-                    <input type="file" id="importChef" accept=".chef" class="hidden" onchange="importarProjeto(event)">
-                    <button type="button" class="btn-icon" aria-label="Importar projeto Chef" title="Importar projeto Chef" onclick="document.getElementById('importChef').click()"><svg class="icon" aria-hidden="true"><use href="#icon-folder"></use></svg></button>
+                    <input type="file" id="importChef" accept=".chef" class="hidden">
+                    <button type="button" id="btnImportarProjeto" class="btn-icon" aria-label="Importar projeto Chef" title="Importar projeto Chef"><svg class="icon" aria-hidden="true"><use href="#icon-folder"></use></svg></button>
                 </div>
             </div>
 
-            <button type="button" class="btn-epic" id="btnGerar" onclick="gerarTudo()"><svg class="icon" aria-hidden="true"><use href="#icon-generate"></use></svg> CALCULAR + GERAR PLANEJAMENTO COMPLETO</button>
+            <button type="button" class="btn-epic" id="btnGerar"><svg class="icon" aria-hidden="true"><use href="#icon-generate"></use></svg> CALCULAR + GERAR PLANEJAMENTO COMPLETO</button>
         </section>
 
         <!-- TAG: historico-ui | FASE 1: Histórico Local -->
         <section class="glass-panel historico-section" id="historicoSection">
             <div class="historico-header">
                 <h2 class="panel-title"><span><svg class="icon" aria-hidden="true"><use href="#icon-clipboard"></use></svg></span> Seus Planejamentos Recentes</h2>
-                <button id="limpar-historico-btn" class="btn-secondary btn-small" onclick="limparHistoricoUI()">
+                <button id="limpar-historico-btn" class="btn-secondary btn-small">
                     <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> Limpar Tudo
                 </button>
             </div>
@@ -517,10 +517,10 @@
 
     <!-- TAG: perfil-usuario | Fornecedores, fotos, chave de IA e precos proprios -->
     <!-- TAG: perfil-painel | Painel sobreposto de conta (estilo dropdown de conta Google) -->
-    <div class="perfil-backdrop hidden" id="perfilBackdrop" onclick="fecharPainelPerfil()"></div>
+    <div class="perfil-backdrop hidden" id="perfilBackdrop"></div>
     <aside class="perfil-panel hidden" id="perfilSection" role="dialog" aria-modal="false" aria-label="Meu perfil">
         <section class="glass-panel">
-            <button type="button" class="btn-icon btn-round" id="perfilFechar" aria-label="Fechar" onclick="fecharPainelPerfil()">X</button>
+            <button type="button" class="btn-icon btn-round" id="perfilFechar" aria-label="Fechar">X</button>
             <h2 class="panel-title"><span><svg class="icon" aria-hidden="true"><use href="#icon-account"></use></svg></span> Meu Perfil</h2>
             <p class="field-hint" id="perfilEmailLabel"></p>
 

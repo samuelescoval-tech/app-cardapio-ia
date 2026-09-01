@@ -1,3 +1,5 @@
+const { normalizarTexto } = require("../../utils/text-normalize");
+
 function avaliarResultadoBenchmark({ resposta = {}, diretriz = {}, expectativas = [] } = {}) {
   const plano = resposta.plano || {};
   const cardapio = Array.isArray(plano.cardapio) ? plano.cardapio : [];
@@ -119,12 +121,7 @@ function razao(coberto, esperado) {
 }
 
 function normalizar(valor) {
-  return String(valor || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
+  return normalizarTexto(valor).replace(/[^a-z0-9]+/g, " ").trim();
 }
 
 module.exports = {

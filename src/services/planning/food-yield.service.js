@@ -1,3 +1,5 @@
+const { normalizarTexto } = require("../../utils/text-normalize");
+
 function avaliarRendimentoAlimentar(plano = {}, evento = {}, motor = {}) {
   const pessoasEquivalentes = calcularPessoasEquivalentes(evento, motor);
   const contexto = normalizar([evento.tipo, evento.refeicao].filter(Boolean).join(" "));
@@ -116,7 +118,7 @@ function rotuloServico(coffeeBreak, churrasco, refeicaoPrincipal) {
   return "evento geral";
 }
 
-function normalizar(valor) { return String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); }
+function normalizar(valor) { return normalizarTexto(valor); }
 function numero(valor) { const resultado = Number(valor); return Number.isFinite(resultado) && resultado > 0 ? resultado : 0; }
 function arredondar1(valor) { return Math.round((Number(valor) || 0) * 10) / 10; }
 function formatar(valor) { return Number(valor).toLocaleString("pt-BR", { maximumFractionDigits: 1 }); }

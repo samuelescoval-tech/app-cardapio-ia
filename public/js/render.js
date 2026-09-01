@@ -27,7 +27,7 @@ function exibirResultadoLuxo(dados, pessoas, evento = null) {
                     <h2>Planejamento para ${escapeHTML(pessoas)} pessoas</h2>
                     <p>Cardapio, logistica, compras, equipe, roteiro e contexto de precificacao em um unico plano.</p>
                 </div>
-                <button class="btn-epic btn-compact" onclick="baixarRelatorioPDF()">Baixar PDF</button>
+                <button class="btn-epic btn-compact" data-action="baixar-pdf">Baixar PDF</button>
             </div>
 
             ${renderResumoExecutivo(dados, pessoas, cardapio, compras)}
@@ -76,10 +76,10 @@ function renderGaleriaEventoPendente() {
                 <summary id="eventGallerySummary">Preparando fontes visuais...</summary>
                 <div class="gallery-controls" id="eventGalleryControls" aria-label="Visualizacao das referencias visuais" hidden>
                     <span id="eventGalleryCount">Preparando</span>
-                    <button type="button" class="carousel-toggle active" data-gallery-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoGaleria('carousel')">Carrossel</button>
-                    <button type="button" class="carousel-toggle" data-gallery-view="list" aria-pressed="false" onclick="alternarVisualizacaoGaleria('list')">Lista</button>
-                    <button type="button" class="carousel-nav" data-gallery-nav="prev" aria-label="Imagens anteriores" onclick="rolarGaleria(-1)">←</button>
-                    <button type="button" class="carousel-nav" data-gallery-nav="next" aria-label="Proximas imagens" onclick="rolarGaleria(1)">→</button>
+                    <button type="button" class="carousel-toggle active" data-gallery-view="carousel" aria-pressed="true">Carrossel</button>
+                    <button type="button" class="carousel-toggle" data-gallery-view="list" aria-pressed="false">Lista</button>
+                    <button type="button" class="carousel-nav" data-gallery-nav="prev" aria-label="Imagens anteriores">←</button>
+                    <button type="button" class="carousel-nav" data-gallery-nav="next" aria-label="Proximas imagens">→</button>
                 </div>
                 <div id="eventGalleryContent" class="event-gallery-loading">
                     <span class="gallery-loading-visual" aria-hidden="true"></span>
@@ -306,8 +306,8 @@ function renderImagemEvento(imagem, possuiAlternativas = false, historico = fals
                     ${imagem.source_url ? `<a href="${escapeHTML(imagem.source_url)}" target="_blank" rel="noopener noreferrer">Ver fonte original</a>` : `<span>Recurso local</span>`}
                 </div>
                 <div class="gallery-card-actions" aria-label="Acoes desta referencia visual">
-                    ${possuiAlternativas ? `<button type="button" class="gallery-action-btn gallery-swap-btn" onclick="trocarImagemGaleria('${escapeHTML(alvo)}')">Trocar imagem</button>` : ""}
-                    <button type="button" class="gallery-action-btn gallery-hide-btn" onclick="ocultarImagemGaleria('${escapeHTML(alvo)}')">Ocultar</button>
+                    ${possuiAlternativas ? `<button type="button" class="gallery-action-btn gallery-swap-btn" data-action="trocar-imagem" data-alvo="${escapeHTML(alvo)}">Trocar imagem</button>` : ""}
+                    <button type="button" class="gallery-action-btn gallery-hide-btn" data-action="ocultar-imagem" data-alvo="${escapeHTML(alvo)}">Ocultar</button>
                 </div>
                 ${historico ? "" : renderControlesFeedbackVisual(alvo, imagem.slot, avaliacao)}
             </figcaption>
@@ -326,7 +326,7 @@ function renderControlesFeedbackVisual(alvo, slot, avaliacao) {
         <div class="gallery-feedback" role="group" aria-label="Avaliar referencia de ${escapeHTML(rotuloSlotGaleria(slot))}">
             <span>Esta imagem combina com o evento?</span>
             <div>
-                ${opcoes.map(([valor, rotulo]) => `<button type="button" class="gallery-feedback-btn ${avaliacao === valor ? "active" : ""}" data-gallery-rating="${valor}" aria-pressed="${avaliacao === valor ? "true" : "false"}" onclick="avaliarImagemGaleria('${escapeHTML(alvo)}','${valor}')">${rotulo}</button>`).join("")}
+                ${opcoes.map(([valor, rotulo]) => `<button type="button" class="gallery-feedback-btn ${avaliacao === valor ? "active" : ""}" data-gallery-rating="${valor}" aria-pressed="${avaliacao === valor ? "true" : "false"}" data-action="avaliar-imagem" data-alvo="${escapeHTML(alvo)}">${rotulo}</button>`).join("")}
             </div>
         </div>
     `;
@@ -344,7 +344,7 @@ function conteudoResumoFeedbackVisual() {
     }
     return `
         <span><strong>${escapeHTML(resumo.total)} preferencias locais:</strong> ${escapeHTML(resumo.adequada)} adequadas · ${escapeHTML(resumo.generica)} genericas · ${escapeHTML(resumo.inadequada)} inadequadas.</span>
-        <button type="button" class="gallery-feedback-clear" onclick="limparAvaliacoesGaleria()">Limpar preferencias visuais</button>
+        <button type="button" class="gallery-feedback-clear" data-action="limpar-avaliacoes">Limpar preferencias visuais</button>
     `;
 }
 
@@ -1263,10 +1263,10 @@ function renderCardapio(cardapio) {
                 </div>
                 <div class="menu-controls" aria-label="Visualizacao do cardapio">
                     <span>${cardapio.length} itens individuais</span>
-                    <button type="button" class="carousel-toggle active" data-menu-view="carousel" aria-pressed="true" onclick="alternarVisualizacaoCardapio('carousel')">Carrossel</button>
-                    <button type="button" class="carousel-toggle" data-menu-view="list" aria-pressed="false" onclick="alternarVisualizacaoCardapio('list')">Lista</button>
-                    <button type="button" class="carousel-nav" data-menu-nav="prev" aria-label="Pratos anteriores" onclick="rolarCardapio(-1)">←</button>
-                    <button type="button" class="carousel-nav" data-menu-nav="next" aria-label="Proximos pratos" onclick="rolarCardapio(1)">→</button>
+                    <button type="button" class="carousel-toggle active" data-menu-view="carousel" aria-pressed="true">Carrossel</button>
+                    <button type="button" class="carousel-toggle" data-menu-view="list" aria-pressed="false">Lista</button>
+                    <button type="button" class="carousel-nav" data-menu-nav="prev" aria-label="Pratos anteriores">←</button>
+                    <button type="button" class="carousel-nav" data-menu-nav="next" aria-label="Proximos pratos">→</button>
                 </div>
             </div>
             <div class="dish-grid dish-carousel" id="cardapioVisualizacao">
@@ -1487,7 +1487,7 @@ function renderReferenciasExternas() {
             <p>Consulta opcional ao Spoonacular. Exibe somente referências e autoria; não salva ingredientes ou instruções.</p>
             <div class="reference-search-row">
                 <input id="recipeReferenceQuery" class="premium-input" maxlength="80" placeholder="Ex: brunch, risotto, barbecue">
-                <button id="recipeReferenceButton" class="btn-secondary" type="button" onclick="buscarReferenciasExternas()">Buscar referências</button>
+                <button id="recipeReferenceButton" class="btn-secondary" type="button" data-action="buscar-referencias">Buscar referências</button>
             </div>
             <div id="recipeReferenceResults" aria-live="polite"></div>
         </div>
@@ -1587,4 +1587,49 @@ function renderListaCards(lista, classe) {
 
 function pill(valor) {
     return valor ? `<span>${escapeHTML(valor)}</span>` : "";
+}
+
+/* TAG: delegacao-resultado | CSP sem 'unsafe-inline': os botoes do
+   cardapio/galeria/PDF sao gerados dinamicamente nas funcoes acima
+   (template strings), entao nao existem no DOM na hora do carregamento
+   da pagina e um addEventListener direto neles nao seria suficiente
+   apos cada nova geracao. #resultadoArea e um container estatico (so o
+   innerHTML dele e substituido, o elemento em si nunca e recriado), entao
+   um unico listener delegado aqui cobre todo botao dentro dele, mesmo
+   depois de re-renderizacoes. */
+function tratarCliqueResultado(event) {
+    const alvo = event.target.closest(
+        "[data-action], [data-gallery-view], [data-gallery-nav], [data-menu-view], [data-menu-nav]"
+    );
+    if (!alvo) return;
+
+    if (alvo.dataset.galleryView) {
+        alternarVisualizacaoGaleria(alvo.dataset.galleryView);
+        return;
+    }
+    if (alvo.dataset.galleryNav) {
+        rolarGaleria(alvo.dataset.galleryNav === "prev" ? -1 : 1);
+        return;
+    }
+    if (alvo.dataset.menuView) {
+        alternarVisualizacaoCardapio(alvo.dataset.menuView);
+        return;
+    }
+    if (alvo.dataset.menuNav) {
+        rolarCardapio(alvo.dataset.menuNav === "prev" ? -1 : 1);
+        return;
+    }
+
+    switch (alvo.dataset.action) {
+        case "baixar-pdf": baixarRelatorioPDF(); break;
+        case "trocar-imagem": trocarImagemGaleria(alvo.dataset.alvo); break;
+        case "ocultar-imagem": ocultarImagemGaleria(alvo.dataset.alvo); break;
+        case "avaliar-imagem": avaliarImagemGaleria(alvo.dataset.alvo, alvo.dataset.galleryRating); break;
+        case "limpar-avaliacoes": limparAvaliacoesGaleria(); break;
+        case "buscar-referencias": buscarReferenciasExternas(); break;
+    }
+}
+
+if (typeof document !== "undefined") {
+    document.getElementById("resultadoArea")?.addEventListener("click", tratarCliqueResultado);
 }
