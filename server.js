@@ -458,16 +458,21 @@ async function obterCatalogoUsuarioOuNulo(token) {
 
 async function gerarCardapioHandler(req, res) {
     try {
-        // Usuario com a propria chave Gemini configurada (Plano 16, item 2) nao
-        // consome a cota compartilhada, entao a senha demo nao se aplica a ele.
-        // Token verificado uma unica vez; chave-ia e catalogo sao buscados em
-        // paralelo a partir dele (antes eram 2 chamadas serializadas ao Supabase Auth).
+        // A senha demo protege o uso da chave Gemini COMPARTILHADA, nao o acesso
+        // ao app em si. Dois casos dispensam ela: usuario com a propria chave
+        // Gemini configurada (Plano 16, item 2, nao consome a cota compartilhada)
+        // e usuario com sessao real (login por e-mail/senha ou Google, decisao
+        // do usuario em 2026-08-31 apos login social ir pra producao — cadastro
+        // real vira a protecao contra abuso, a senha demo fica so pra quem testa
+        // sem conta). Token verificado uma unica vez; chave-ia e catalogo sao
+        // buscados em paralelo a partir dele (antes eram 2 chamadas serializadas
+        // ao Supabase Auth).
         const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
         const [chaveIAUsuario, catalogoUsuario] = await Promise.all([
             obterChaveIAUsuarioOuNulo(tokenAutenticado),
             obterCatalogoUsuarioOuNulo(tokenAutenticado)
         ]);
-        if (!chaveIAUsuario && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+        if (!chaveIAUsuario && !tokenAutenticado && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
             return res.status(401).json({
                 ok: false,
                 error: "Senha de teste inválida ou ausente."
@@ -560,7 +565,8 @@ app.post('/gerar-cardapio', limitadorGeracao, gerarCardapioHandler);
 
 async function buscarReferenciasHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+        const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
+        if (!tokenAutenticado && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
             return res.status(401).json({
                 ok: false,
                 error: "Senha de teste inválida ou ausente."
@@ -589,7 +595,8 @@ app.post('/api/referencias-receitas', limitadorPersonalizacao, buscarReferencias
 
 async function buscarImagensEventoHandler(req, res) {
     try {
-        if (demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+        const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
+        if (!tokenAutenticado && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
             return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
         }
         const evento = validarEvento(req.body?.evento);

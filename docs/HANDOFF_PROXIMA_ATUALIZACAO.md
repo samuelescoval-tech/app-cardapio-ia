@@ -165,6 +165,70 @@ sugeridos. Precisa que o usuario mande 2-3 exemplos concretos (prato
 esperado × imagem que veio) antes de mexer em
 `image-selection.service.js` — sem isso seria so suposicao.
 
+### Achados testando o site publicado, fora do escopo original da Sprint 2 (2026-08-31)
+
+Usuario testou o site publicado (`app-cardapio-ia-samuel-es-coval.vercel.app`
+— apelido alternativo do mesmo deploy de producao, ver nota abaixo) e
+reportou varios pontos de uma vez. Triados por gravidade:
+
+1. **RESOLVIDO na hora, por ser potencialmente bloqueante**: senha demo
+   sendo exigida (e recusada) mesmo com o usuario logado numa conta real
+   (Google). Investigado: `demo_access.required` (`/api/status`) e o
+   gate nas 3 rotas (`gerarCardapioHandler`, `buscarReferenciasHandler`,
+   `buscarImagensEventoHandler`) nunca verificavam sessao — so
+   verificavam se havia chave de IA propria configurada. Ou seja, nao
+   era bug de logica quebrada, era o desenho original (senha protege o
+   uso da chave Gemini **compartilhada**, nao o login em si) — mas agora
+   que o login social esta em producao, faz sentido revisar. **Usuario
+   decidiu**: conta logada (e-mail/senha ou Google) passa a dispensar a
+   senha demo, dispensa fica so pra quem usa sem conta. Implementado nas
+   3 rotas (`server.js`, adicionado `!tokenAutenticado`/
+   `obterTokenAutenticadoOuNulo(req)` na condicao) e no frontend
+   (`obterDemoAccessKey()`, `app.js`, checa `obterSessaoUsuario()` antes
+   de abrir o modal). 190/190 testes; confirmado ao vivo que requisicao
+   sem sessao valida continua exigindo a senha (comportamento anonimo
+   preservado).
+2. **Em investigacao, aguardando reteste do usuario**: rodape mostrando
+   so o icone do chapeu, sem o texto "KARAMU" (o efeito de brilho dourado
+   no wordmark, ver secao "Sugestao do usuario, implementada" acima).
+   Testado ao vivo localmente (Chrome headless via CDP): renderiza
+   correto, texto e icone visiveis. Duas hipoteses levantadas, nao
+   confirmadas ainda: (a) o teste do usuario foi feito no navegador
+   embutido do VS Code, que pode ter suporte limitado a
+   `background-clip:text`; (b) cache do navegador servindo uma versao
+   antiga do CSS. Usuario vai retestar num navegador padrao com refresh
+   forcado (Ctrl+Shift+R) na URL principal e avisar se persiste.
+3. **Registrado como backlog, nao investigado ainda**: dropdown nativo
+   de "Tipo de Evento" (`<select>`) aparece com estilo padrao do
+   navegador (nao o visual dourado/escuro do resto do site) e, segundo o
+   usuario, "vai pra fora do evento" / "destoa da aparencia do site".
+   Estilizar `<option>`/lista nativa de `<select>` tem suporte limitado
+   entre navegadores — solucao real provavelmente exige substituir por
+   um dropdown customizado (JS), nao so CSS. Precisa de mais detalhe do
+   usuario sobre o que exatamente "vai pra fora"/"fica vazio" antes de
+   escopar a correcao.
+4. **Registrado como backlog**: login com Google exige 2 cliques
+   (primeiro escolhe/adiciona a conta Google, segundo efetivamente
+   entra) — pode ser comportamento normal do seletor de contas do
+   Google (nao necessariamente bug), avaliar se da pra simplificar.
+5. **Registrado como backlog, ideia ja existente**: usuario pediu pra
+   revisitar uma animacao de entrada/carregamento durante a geracao do
+   evento — relacionado a ideia ja registrada de splash screen animado
+   (ver memoria `project_future_splash_screen`), nao e pedido novo. O
+   app ja tem um estado de carregamento basico hoje
+   (`.gallery-loading-visual` + texto "O Karamu esta arquitetando seu
+   evento...", em `app.js`) — usuario quer refinar isso, escopo exato a
+   definir.
+
+**Nota sobre a URL testada**: `app-cardapio-ia-samuel-es-coval.vercel.app`
+e um apelido de dominio que a Vercel as vezes atribui a contas pessoais
+(`<projeto>-<usuario>.vercel.app`), alem do dominio principal
+`app-cardapio-ia.vercel.app` ja usado no resto deste documento — ambos
+devem apontar pro mesmo deploy de producao, mas nao foi confirmado que
+sao 100% equivalentes (ex: nao verificado se ambos estao nos Redirect
+URLs do Supabase). Vale conferir se o login social funciona igual nas
+duas URLs.
+
 ## Estado em uma frase
 
 O Karamu (renomeado de "Chef IA Studio" em 2026-08-06 — ver secao

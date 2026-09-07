@@ -58,6 +58,10 @@ async function entrarComGoogle() {
 
 async function obterDemoAccessKey() {
     if (!demoAccessRequired) return null;
+    // Usuario com sessao real (e-mail/senha ou Google) dispensa a senha demo
+    // (decisao do usuario em 2026-08-31, espelha o bypass feito no servidor
+    // em gerarCardapioHandler/buscarReferenciasHandler/buscarImagensEventoHandler).
+    if (obterSessaoUsuario()) return null;
 
     const key = sessionStorage.getItem('chef_ia_demo_access_key');
     if (!key) {
