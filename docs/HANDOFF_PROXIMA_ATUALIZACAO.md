@@ -26,12 +26,17 @@ listadas abaixo):
    completo de cada um dos 5 itens (incluindo um sexto achado real, nao
    previsto no escopo original: a causa raiz do bug da scroll dupla,
    investigada E corrigida na mesma sprint por decisao do usuario).
-2. **Polimento de UX represado** — em andamento. ~~Acordeao na lista de
-   compras por setor~~ **FEITO em 2026-08-31** (ver secao dedicada
-   "Sprint 2 — Polimento de UX represado (em andamento)" abaixo). Falta
-   so o segundo item: investigar vies de imagem de prato — **bloqueado**
-   ate o usuario mandar 2-3 exemplos concretos (prato esperado × imagem
-   que veio). **Sprint ativa agora.**
+2. **Polimento de UX represado** — em andamento, escopo ampliado em
+   2026-08-31 apos teste real de geracao pelo usuario (ver secao
+   dedicada "Sprint 2" abaixo pro detalhamento e a ordem confirmada).
+   Item 1 (acordeao na lista de compras) **FEITO**. Fila confirmada,
+   ordem por facilidade + dependencia (nao pura facilidade — ver
+   raciocinio na secao dedicada): (2) receitas em acordeao, (3) cardapio
+   segmentado por tipo de prato, (4) investigar zero fotos nos pratos
+   (agora com exemplo real, desbloqueado), (5) dropdown nativo de tipo
+   de evento mal estilizado, (6) tema do evento completamente ignorado
+   nas sugestoes (mais dificil, unico que exige geracao real na IA pra
+   verificar). **Sprint ativa agora, comecando pelo item 2.**
 3. **Fechamento legal** — revisao juridica formal de privacidade/termos,
    busca formal INPI (Classe 42+43, variacoes foneticas), decisao sobre
    logo do Google. ~85% decisao do usuario, eu so acompanho.
@@ -160,10 +165,55 @@ fechados, confirmado programaticamente); reabrir mostra a contagem e os
 itens corretos. 190/190 testes (nenhuma asercao de teste referenciava
 esse markup).
 
-**Item 2, ainda bloqueado**: investigar vies nas imagens dos pratos
-sugeridos. Precisa que o usuario mande 2-3 exemplos concretos (prato
-esperado × imagem que veio) antes de mexer em
-`image-selection.service.js` — sem isso seria so suposicao.
+**Escopo ampliado em 2026-08-31, apos teste real de geracao pelo
+usuario** (evento "Debutante", tema "Toy Story"). Usuario pediu ordem
+por facilidade, mas com prioridade de dependencia: se fazer X antes de Y
+obrigaria refazer X depois de Y, faz Y primeiro mesmo sendo mais dificil.
+Ordem confirmada, registrada aqui pra nao perder:
+
+2. ~~**Receitas em acordeao**~~ — **FEITO em 2026-08-31**. `.recipe-card`
+   virou `<details>` aninhado: clicar no nome mostra ingredientes (`<h5>`
+   "Ingredientes" + lista), um segundo `<details>` interno ("Modo de
+   preparo") so mostra o passo a passo quando clicado — os dois fechados
+   por padrao. `.recipe-grid` deixou de ser grade lado a lado e virou
+   lista empilhada, mesmo motivo do item 1 (evita cartao vizinho
+   esticando quando um expande). Verificado ao vivo com fixture de 2
+   receitas: ambas fechadas por padrao; abrir o nome mostra ingredientes
+   mas mantem "modo de preparo" fechado; abrir "modo de preparo" mostra
+   os passos; a segunda receita nunca e afetada. 190/190 testes (nenhuma
+   asercao de teste referenciava esse markup).
+3. **Cardapio (carrossel/lista) segmentado por tipo de prato** (Entrada,
+   Prato Principal, Sobremesa, Bebidas etc.), mantendo as visualizacoes
+   carrossel/lista ja existentes. Vem depois do item 2 de proposito: se
+   fosse feito antes, corria o risco de inventar uma estrutura diferente
+   da usada nas receitas e precisar refazer pra ficar consistente.
+4. **Investigar por que nenhuma foto veio pra nenhum prato** — achado
+   real do teste do usuario (nao e mais so "suspeita de vies", e ausencia
+   total confirmada). Vem depois dos itens 2-3 porque o card de prato
+   onde a foto aparece so fica com a estrutura final depois dessas
+   mudancas de layout — investigar antes arriscaria testar contra uma
+   tela que ainda vai mudar. Logica de backend
+   (`image-selection.service.js`/`image-catalog.service.js`), testavel
+   com dados ficticios, sem depender de chamada real a IA.
+5. **Dropdown nativo de "Tipo de Evento" com estilo fora do padrao do
+   site** (usuario relatou que "vai pra fora do evento"/"fica vazio",
+   destoando visualmente). Precisa de uma decisao de escopo antes de
+   comecar (ajuste CSS simples vs. componente customizado do zero) — sem
+   isso, fazer o jeito facil agora arriscaria ter que refazer se depois
+   quiser o componente completo.
+6. **Tema do evento (ex: "Toy Story") completamente ignorado** nas
+   sugestoes de decoracao, entretenimento e lembrancinhas — achado mais
+   serio do teste, sobre qualidade central da geracao, nao so aparencia.
+   Ultimo da fila por ser o mais dificil (exige mexer em como o prompt e
+   montado, `src/prompts/event.prompt.js`, e **verificar com geracao
+   real na IA**, nao da pra simular) — assim nao consome cota de
+   geracao real enquanto os itens 2-5 (so front-end) ainda estao sendo
+   ajustados.
+
+**Fora da Sprint 2** (backlog, sem data): login com Google exigindo 2
+cliques (pode ser comportamento normal do seletor de contas do Google,
+avaliar depois); revisar organizacao de pastas do projeto (usuario viu
+exemplo mais simples/organizado via CodePen).
 
 ### Achados testando o site publicado, fora do escopo original da Sprint 2 (2026-08-31)
 

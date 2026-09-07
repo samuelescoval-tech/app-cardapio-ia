@@ -399,7 +399,6 @@
 .metric-grid,
 .place-grid,
 .info-grid,
-.recipe-grid,
 .check-grid,
 .budget-grid{
     display:grid;
@@ -407,12 +406,14 @@
     gap:12px;
 }
 
-/* Lista de compras: empilhada (nao grade lado a lado) — cada setor vira
-   um acordeao (<details>), entao precisa ficar sozinho por linha, senao
-   um setor aberto ao lado de um fechado gera buracos vazios na grade
-   (Sprint 2 - Polimento de UX represado, 2026-08-31, pedido do usuario
-   pra lista com muitos itens ficar escaneavel). */
-.sector-grid{
+/* Lista de compras e receitas: empilhadas (nao grade lado a lado) — cada
+   setor/receita vira um acordeao (<details>), entao precisa ficar
+   sozinho por linha, senao um item aberto ao lado de um fechado gera
+   buracos vazios na grade (Sprint 2 - Polimento de UX represado,
+   2026-08-31, pedido do usuario pra listas longas ficarem escaneaveis).
+   .recipe-grid segue o mesmo padrao aqui pelo mesmo motivo. */
+.sector-grid,
+.recipe-grid{
     display:flex;
     flex-direction:column;
     gap:10px;
@@ -992,7 +993,6 @@
 }
 
 .place-card h4,
-.recipe-card h4,
 .check-col h4{
     margin-bottom:8px;
     font-family:'Playfair Display',serif;
@@ -1054,6 +1054,88 @@
 
 .sector-card-itens{
     padding:0 14px 14px;
+}
+
+/* .recipe-card virou <details> aninhado (Sprint 2 - Polimento de UX
+   represado, 2026-08-31): clicar no nome da receita mostra os
+   ingredientes; um segundo <details> interno ("Modo de preparo") so
+   mostra o passo a passo quando clicado. Mesmo padrao de <summary>
+   ja usado em .sector-card. */
+.recipe-card{
+    padding:0;
+    overflow:hidden;
+}
+
+.recipe-card > summary{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:14px;
+    cursor:pointer;
+    list-style:none;
+}
+
+.recipe-card > summary::-webkit-details-marker{
+    display:none;
+}
+
+.recipe-card-nome{
+    font-family:'Playfair Display',serif;
+    font-size:1.05rem;
+    color:var(--ink-strong);
+}
+
+.recipe-card-nome::before{
+    content:"+";
+    display:inline-block;
+    width:14px;
+    margin-right:8px;
+    font-family:'Montserrat',sans-serif;
+    font-weight:800;
+    color:var(--gold-dark);
+}
+
+.recipe-card[open] > summary .recipe-card-nome::before{
+    content:"−";
+}
+
+.recipe-card-corpo{
+    padding:0 14px 14px;
+}
+
+.recipe-preparo{
+    margin-top:12px;
+    border-top:1px solid var(--cream-border);
+    padding-top:10px;
+}
+
+.recipe-preparo summary{
+    cursor:pointer;
+    list-style:none;
+    color:var(--ink);
+    font-size:.78rem;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.7px;
+}
+
+.recipe-preparo summary::-webkit-details-marker{
+    display:none;
+}
+
+.recipe-preparo summary::before{
+    content:"+ ";
+    color:var(--gold-dark);
+}
+
+.recipe-preparo[open] summary::before{
+    content:"− ";
+}
+
+.recipe-preparo .recipe-steps,
+.recipe-preparo p{
+    margin-top:8px;
 }
 
 .recipe-card h5{
@@ -1713,7 +1795,6 @@
     .metric-grid,
     .place-grid,
     .info-grid,
-    .recipe-grid,
     .check-grid,
     .budget-grid{
         grid-template-columns:1fr;

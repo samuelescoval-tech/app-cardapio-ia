@@ -1464,22 +1464,28 @@ function renderReceitas(receitas) {
             ${receitas.map(r => typeof r === "string" ? `
                 <div class="recipe-card"><p>${escapeHTML(r)}</p></div>
             ` : `
-                <div class="recipe-card">
-                    ${r.status === "ficha_operacional_recuperada" ? `<span class="recipe-recovered-badge">Ficha recuperada</span>` : ""}
-                    <h4>${escapeHTML(r.nome || "Receita")}</h4>
-                    ${normalizarArray(r.ingredientes).length ? `
-                        <h5>Ingredientes</h5>
-                        <ul class="recipe-ingredients">
-                            ${normalizarArray(r.ingredientes).map(ingrediente => `<li>${escapeHTML(ingrediente.item || "Ingrediente")} — ${escapeHTML([ingrediente.quantidade, ingrediente.unidade].filter(Boolean).join(" "))}</li>`).join("")}
-                        </ul>
-                    ` : ""}
-                    <h5>Modo de preparo</h5>
-                    ${normalizarArray(r.preparo_passos).length ? `
-                        <ol class="recipe-steps">${normalizarArray(r.preparo_passos).map(passo => `<li>${escapeHTML(passo)}</li>`).join("")}</ol>
-                    ` : `<p>${escapeHTML(r.preparo || "Preparo não informado.")}</p>`}
-                    <small>${escapeHTML([r.tempo, r.rendimento, r.quantidade_total].filter(Boolean).join(" · "))}</small>
-                    ${r.observacao ? `<p class="recipe-operational-note">${escapeHTML(r.observacao)}</p>` : ""}
-                </div>
+                <details class="recipe-card">
+                    <summary>
+                        <span class="recipe-card-nome">${escapeHTML(r.nome || "Receita")}</span>
+                        ${r.status === "ficha_operacional_recuperada" ? `<span class="recipe-recovered-badge">Ficha recuperada</span>` : ""}
+                    </summary>
+                    <div class="recipe-card-corpo">
+                        ${normalizarArray(r.ingredientes).length ? `
+                            <h5>Ingredientes</h5>
+                            <ul class="recipe-ingredients">
+                                ${normalizarArray(r.ingredientes).map(ingrediente => `<li>${escapeHTML(ingrediente.item || "Ingrediente")} — ${escapeHTML([ingrediente.quantidade, ingrediente.unidade].filter(Boolean).join(" "))}</li>`).join("")}
+                            </ul>
+                        ` : ""}
+                        <details class="recipe-preparo">
+                            <summary>Modo de preparo</summary>
+                            ${normalizarArray(r.preparo_passos).length ? `
+                                <ol class="recipe-steps">${normalizarArray(r.preparo_passos).map(passo => `<li>${escapeHTML(passo)}</li>`).join("")}</ol>
+                            ` : `<p>${escapeHTML(r.preparo || "Preparo não informado.")}</p>`}
+                        </details>
+                        <small>${escapeHTML([r.tempo, r.rendimento, r.quantidade_total].filter(Boolean).join(" · "))}</small>
+                        ${r.observacao ? `<p class="recipe-operational-note">${escapeHTML(r.observacao)}</p>` : ""}
+                    </div>
+                </details>
             `).join("")}
         </div>` : renderConteudoAusente("Receitas ainda não detalhadas no plano.")}
     `);
