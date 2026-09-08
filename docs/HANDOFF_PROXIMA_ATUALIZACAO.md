@@ -29,15 +29,16 @@ listadas abaixo):
 2. **Polimento de UX represado** — em andamento, escopo ampliado em
    2026-08-31 apos teste real de geracao pelo usuario (ver secao
    dedicada "Sprint 2" abaixo pro detalhamento e a ordem confirmada).
-   Itens 1-4 **FEITOS**: (1) acordeao na lista de compras, (2) receitas
+   Itens 1-5 **FEITOS**: (1) acordeao na lista de compras, (2) receitas
    em acordeao, (3) cardapio segmentado por tipo de prato, (4) causa
    raiz do "zero fotos" achada e corrigida (nao era vies de imagem — era
    as chamadas de `app.js` nunca mandando `Authorization: Bearer`, ver
    secao dedicada "Fluxo do usuario nunca mandava o cabecalho de
-   sessao"). Faltam: (5) dropdown nativo de tipo de evento mal
-   estilizado, (6) tema do evento completamente ignorado nas sugestoes
-   (mais dificil, unico que exige geracao real na IA pra
-   verificar). **Sprint ativa agora, comecando pelo item 2.**
+   sessao"), (5) combobox customizado substituindo o `<datalist>` nativo
+   de tipo de evento (sem controle de CSS possivel em nenhum navegador).
+   Falta so: (6) tema do evento completamente ignorado nas sugestoes
+   (mais dificil, unico que exige geracao real na IA pra verificar).
+   **Sprint ativa agora, ultimo item restante.**
 3. **Fechamento legal** — revisao juridica formal de privacidade/termos,
    busca formal INPI (Classe 42+43, variacoes foneticas), decisao sobre
    logo do Google. ~85% decisao do usuario, eu so acompanho.
@@ -214,12 +215,29 @@ Ordem confirmada, registrada aqui pra nao perder:
    **CAUSA RAIZ ACHADA E CORRIGIDA em 2026-09-07** (nao era vies de
    imagem — ver secao dedicada "Fluxo do usuario nunca mandava o
    cabecalho de sessao" abaixo pro detalhamento completo).
-5. **Dropdown nativo de "Tipo de Evento" com estilo fora do padrao do
-   site** (usuario relatou que "vai pra fora do evento"/"fica vazio",
-   destoando visualmente). Precisa de uma decisao de escopo antes de
-   comecar (ajuste CSS simples vs. componente customizado do zero) — sem
-   isso, fazer o jeito facil agora arriscaria ter que refazer se depois
-   quiser o componente completo.
+5. ~~**Dropdown nativo de "Tipo de Evento" com estilo fora do padrao do
+   site**~~ — **FEITO em 2026-09-07**. Confirmado que `<input
+   list="...">` + `<datalist>` nao tem NENHUM controle de CSS possivel
+   em nenhum navegador (limitacao real da plataforma, nao bug) — por
+   isso a lista de sugestoes aparecia com o estilo nativo do sistema.
+   Usuario optou pela opcao completa (nao um ajuste parcial): construido
+   um combobox customizado do zero (`.combo`/`.combo-listbox` em
+   `form.css`, logica em `app.js`) substituindo o `<datalist>` — mesmas
+   11 sugestoes, mesmo texto livre permitido, mas com:
+   - Filtro ao digitar (substring, nao differenciando maiusculas);
+   - Navegacao por teclado (seta cima/baixo move o item ativo, Enter
+     seleciona, Escape fecha);
+   - Clique na opcao seleciona; clique fora fecha;
+   - Padrao ARIA combobox (`role="combobox"`, `aria-expanded`,
+     `aria-activedescendant`, `role="listbox"`/`role="option"`).
+
+   Verificado ao vivo via CDP com interacao real (nao so leitura de
+   estado): abrir mostra as 11 opcoes; digitar "ani" filtra pra 2;
+   2× seta-baixo marca a segunda como ativa; Enter seleciona e fecha;
+   clicar em "Casamento" seleciona e fecha; clicar fora fecha; texto
+   livre nao listado ("Formatura de medicina") continua aceito, so
+   mostra uma mensagem de "sem sugestao" sem bloquear. Zero erro JS.
+   190/190 testes (nenhuma asercao referenciava o `<datalist>` antigo).
 6. **Tema do evento (ex: "Toy Story") completamente ignorado** nas
    sugestoes de decoracao, entretenimento e lembrancinhas — achado mais
    serio do teste, sobre qualidade central da geracao, nao so aparencia.
@@ -421,6 +439,57 @@ vivo**:
   white-space:nowrap` (mais robusto que depender de quebra de texto
   natural). Reverificado: os 3 com posicao identica do icone (10px),
   sem estourar em mobile (390px, testado).
+
+**Ajuste adicional no brilho, mesmo dia**: usuario testou de novo e
+achou que ainda estava rapido — nao a frequencia (9s de ciclo estava
+bom), mas o brilho em si parecia um "flash"/pisca em vez de suave.
+Causa: a zona de transicao do gradiente (`.footer-wordmark`,
+`pitch.css`) era estreita (46%→54%, 8% do gradiente) com pico em branco
+puro (`#fff`), alto contraste. Alargada pra 30%→70% (40% do gradiente,
+5x mais larga) com pico suavizado pra um quase-branco quente
+(`#fff8e1`). 190/190 testes; verificado screenshot em multiplos pontos
+da passada (visualmente mais gradual, embora o efeito real seja mais
+perceptivel em movimento do que em frame estatico).
+
+### Dois achados novos testando geracao real (nao fazem parte da Sprint 2, registrados como pendencia futura)
+
+Usuario testou a geracao real apos os fixes acima e reportou dois
+pontos adicionais. **Decisao explicita do usuario**: nao entram na
+Sprint 2 atual (evitar fugir do escopo já combinado) — ficam
+registrados aqui pra retomar depois, provavelmente como sprint própria.
+
+1. **Pratos vem com ilustracao local em vez de foto real, na maioria
+   das vezes** — causa raiz investigada e explicada (nao corrigida
+   ainda): `CONCEITOS_VISUAIS` (`image-catalog.service.js`, ~40
+   entradas) e o dicionario que traduz nome de prato em portugues pra
+   termo de busca em ingles no Openverse. Pratos comuns testados
+   ("Bolinha de queijo", "Kibe frito tradicional", "Mini rissole de
+   carne", "Penne ao molho pomodoro") **nao tem entrada nesse
+   dicionario** — sem traducao, `construirTermosAncora()` devolve zero
+   termos-ancora, e `temAncoraVisual()` **recusa qualquer imagem externa
+   de cara** quando nao ha nenhum termo-ancora (`if (!ancoras.length)
+   return false`), forcando o fallback pra ilustracao local
+   sistematicamente pra esses pratos — nao e falha de correspondencia,
+   e impossibilidade estrutural por falta de vocabulario. Pratos que
+   batem no dicionario (ex: "frango" → "chicken") tem chance real, mas
+   ainda passam por uma segunda barreira (`TERMOS_APRESENTACAO` por
+   slot) quando so 1 termo-ancora bate. **Correcao proposta**: expandir
+   bastante `CONCEITOS_VISUAIS` com mais pratos brasileiros comuns —
+   trabalho real de mapeamento, nao ajuste pontual. Mesmo expandido,
+   pratos muito regionais (coxinha, kibe) podem legitimamente nao ter
+   foto boa em banco CC0/BY livre — nesse caso a ilustracao local
+   continua sendo o comportamento correto, nao um bug a eliminar por
+   completo.
+2. **Historico de eventos nao e salvo na conta** — hoje `renderizarHistorico()`/
+   `storageService` (ver `public/js/storage.service.js`) usa so
+   `localStorage` do navegador, por dispositivo — nao ha sincronizacao
+   com a conta do usuario no Supabase. Usuario apontou isso como
+   problema real ("deve ser salvo"). Corrigir de verdade exige: nova
+   tabela no Supabase (RLS por dono, mesmo padrao das outras tabelas de
+   personalizacao) pra guardar evento+plano gerado, rotas novas no
+   backend (listar/salvar/deletar por usuario), e mudar o frontend pra
+   usar essas rotas em vez de (ou alem de) `localStorage` pra quem esta
+   logado. Escopo de feature nova, nao fix pontual.
 
 ## Estado em uma frase
 

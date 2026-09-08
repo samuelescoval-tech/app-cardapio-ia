@@ -936,6 +936,95 @@ document.getElementById('historico-container')?.addEventListener('click', event 
 /* TAG: ligacao-botoes-estaticos | CSP sem 'unsafe-inline': botoes que ja
    existem no HTML no carregamento da pagina (nao gerados por template
    string) sao ligados aqui uma unica vez, em vez de onclick="" inline. */
+// TAG: combo-tipo-evento | Sprint 2, item 5 (2026-09-07): <input
+// list="..."> + <datalist> nao tem NENHUM controle de CSS possivel em
+// nenhum navegador (limitacao real da plataforma) — a lista de
+// sugestoes aparecia com o estilo nativo do sistema, destoando do
+// resto do site. Substituido por um combobox proprio, mesmo texto
+// livre de antes ("escolha uma sugestao ou escreva livremente").
+const TIPOS_EVENTO_SUGERIDOS = [
+    "Aniversário de debutante", "Aniversário adulto", "Festa infantil", "Casamento",
+    "Churrasco", "Evento corporativo", "Atendimento domiciliar", "Ceia de Natal",
+    "Réveillon / Ano Novo", "Almoço de Páscoa", "Baile de Carnaval"
+];
+
+function inicializarComboTipoEvento() {
+    const input = document.getElementById('tipo');
+    const lista = document.getElementById('tipoListbox');
+    if (!input || !lista) return;
+
+    let opcoesFiltradas = [];
+    let indiceAtivo = -1;
+
+    function renderizarOpcoes(filtro) {
+        const termo = filtro.trim().toLowerCase();
+        opcoesFiltradas = TIPOS_EVENTO_SUGERIDOS.filter(tipo => tipo.toLowerCase().includes(termo));
+        indiceAtivo = -1;
+        lista.innerHTML = opcoesFiltradas.length
+            ? opcoesFiltradas.map((tipo, i) => `<li class="combo-option" role="option" id="tipoOpcao${i}">${escapeHTML(tipo)}</li>`).join('')
+            : `<li class="combo-empty">Nenhuma sugestão — pode continuar digitando livremente.</li>`;
+    }
+
+    function abrir() {
+        renderizarOpcoes(input.value);
+        lista.classList.remove('hidden');
+        input.setAttribute('aria-expanded', 'true');
+    }
+
+    function fechar() {
+        lista.classList.add('hidden');
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
+        indiceAtivo = -1;
+    }
+
+    function marcarAtivo() {
+        lista.querySelectorAll('.combo-option').forEach((el, i) => el.classList.toggle('active', i === indiceAtivo));
+        if (indiceAtivo >= 0) input.setAttribute('aria-activedescendant', `tipoOpcao${indiceAtivo}`);
+        else input.removeAttribute('aria-activedescendant');
+    }
+
+    input.addEventListener('input', abrir);
+    input.addEventListener('focus', abrir);
+
+    input.addEventListener('keydown', event => {
+        if (lista.classList.contains('hidden')) {
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') abrir();
+            return;
+        }
+        if (event.key === 'ArrowDown' && opcoesFiltradas.length) {
+            event.preventDefault();
+            indiceAtivo = (indiceAtivo + 1) % opcoesFiltradas.length;
+            marcarAtivo();
+        } else if (event.key === 'ArrowUp' && opcoesFiltradas.length) {
+            event.preventDefault();
+            indiceAtivo = (indiceAtivo - 1 + opcoesFiltradas.length) % opcoesFiltradas.length;
+            marcarAtivo();
+        } else if (event.key === 'Enter' && indiceAtivo >= 0 && opcoesFiltradas[indiceAtivo]) {
+            event.preventDefault();
+            input.value = opcoesFiltradas[indiceAtivo];
+            fechar();
+        } else if (event.key === 'Escape') {
+            fechar();
+        }
+    });
+
+    lista.addEventListener('click', event => {
+        const opcao = event.target.closest('.combo-option');
+        if (!opcao || !opcoesFiltradas.length) return;
+        const indice = Array.from(lista.children).indexOf(opcao);
+        if (opcoesFiltradas[indice]) {
+            input.value = opcoesFiltradas[indice];
+            fechar();
+            input.focus();
+        }
+    });
+
+    document.addEventListener('click', event => {
+        if (!event.target.closest('#tipoCombo')) fechar();
+    });
+}
+
 function ligarBotoesEstaticos() {
     document.getElementById('btnApresentacao')?.addEventListener('click', () => switchView('pitch'));
     document.getElementById('btnConta')?.addEventListener('click', abrirModalConta);
@@ -944,6 +1033,7 @@ function ligarBotoesEstaticos() {
     document.getElementById('limpar-historico-btn')?.addEventListener('click', limparHistoricoUI);
     document.getElementById('perfilBackdrop')?.addEventListener('click', fecharPainelPerfil);
     document.getElementById('perfilFechar')?.addEventListener('click', fecharPainelPerfil);
+    inicializarComboTipoEvento();
 
     document.getElementById('btnImportarProjeto')?.addEventListener('click', () => {
         document.getElementById('importChef')?.click();
