@@ -145,13 +145,19 @@
 }
 
 .style-grid label{
-    padding:16px 10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+
+    padding:16px 8px;
 
     border-radius:14px;
 
     border:2px solid #ececec;
 
     text-align:center;
+    white-space:nowrap;
 
     cursor:pointer;
 

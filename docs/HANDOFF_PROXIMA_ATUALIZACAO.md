@@ -368,6 +368,60 @@ proxima vez que uma mudanca envolver autenticacao, verificar via CDP
 interceptando a requisicao de verdade (`Network.requestWillBeSent`),
 nao so simular o lado do servidor.
 
+### Segundo bug real na mesma area: bloqueio no FRONTEND nao contava com sessao (2026-09-07)
+
+Usuario testou de novo apos o fix acima (URL certa, `Ctrl+Shift+R`) e a
+senha demo **continuou** sendo pedida mesmo logado. Nao era cache nem
+URL errada — era mais um bug real, numa camada diferente do mesmo
+problema.
+
+`gerarTudo()` e `buscarReferenciasExternas()` (`app.js`) tinham essa
+checagem antes de eu tocar nelas:
+```js
+if (demoAccessRequired && !demoAccessKey) {
+    exibirErroResultado(..., "A demo esta protegida...");
+    return; // nunca chega a tentar o fetch
+}
+```
+`demoAccessRequired` reflete so a configuracao do **servidor**
+(`DEMO_ACCESS_KEY` existe ou nao) — fica `true` pra sempre, independente
+de sessao. `obterDemoAccessKey()` (corrigido em 2026-09-07, secao acima)
+corretamente devolve `null` pra usuario logado — mas essa checagem
+tratava "sem chave" como "bloquear na hora", sem considerar que "sem
+chave" tambem e o valor esperado/correto quando ha sessao. Ou seja, meu
+proprio fix anterior no mesmo dia introduziu esse bloqueio (antes,
+`obterDemoAccessKey()` nunca devolvia `null` estando logado, entao essa
+condicao nunca disparava incorretamente).
+
+**Corrigido**: as duas checagens passaram a ser
+`demoAccessRequired && !demoAccessKey && !obterSessaoUsuario()`.
+Verificado ao vivo via CDP (mockando `fetch` pra nao gastar API de
+verdade): com sessao falsa ativa e `demoAccessRequired=true` (cenario
+identico a producao), `gerarTudo()` nao mostra mais o erro e chega a
+chamar o fetch de geracao; sem sessao e sem chave, continua bloqueando
+corretamente (nao chama o fetch). 190/190 testes.
+
+**Dois ajustes visuais no mesmo lote, pedidos pelo usuario testando ao
+vivo**:
+- **Brilho do wordmark do rodape muito rapido**: ciclo era 5s com a
+  passada em si levando so 0.6s (88%→100% do ciclo). Aumentado pra 9s de
+  ciclo com a passada levando ~1.8s (78%→100%). Verificado com
+  `getComputedStyle` polling (mesma tecnica rigorosa usada quando esse
+  efeito foi criado, nao so a leitura do CSS): confirmado 9s de
+  `animation-duration` e a passada acontecendo em ~1.8s reais.
+- **Botoes "Simples/Elegante/Premium" com texto "desalinhado"**: nao era
+  desalinhamento de posicao — "Elegante" e "Premium" quebravam o icone
+  (linha 1) e o texto (linha 2) em duas linhas, enquanto "Simples" cabia
+  numa linha so, entao pareciam inconsistentes entre si. Achado medindo
+  a posicao real do icone em cada botao (`getBoundingClientRect`) antes
+  de mexer: 13px de distancia da borda pro icone do "Simples" (1 linha)
+  contra 42px pros outros dois (icone sozinho, centralizado sem o
+  texto). Corrigido convertendo `.style-grid label` pra
+  `display:flex; align-items:center; justify-content:center; gap:6px;
+  white-space:nowrap` (mais robusto que depender de quebra de texto
+  natural). Reverificado: os 3 com posicao identica do icone (10px),
+  sem estourar em mobile (390px, testado).
+
 ## Estado em uma frase
 
 O Karamu (renomeado de "Chef IA Studio" em 2026-08-06 — ver secao

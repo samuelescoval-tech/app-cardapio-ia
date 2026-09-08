@@ -530,7 +530,14 @@ async function gerarTudo() {
 
     try {
         const demoAccessKey = await obterDemoAccessKey();
-        if (demoAccessRequired && !demoAccessKey) {
+        // TAG: bug-bloqueio-mesmo-logado | demoAccessRequired reflete so a
+        // config do SERVIDOR (DEMO_ACCESS_KEY existe), independente de
+        // sessao — continua true mesmo pra quem esta logado. Desde o fix
+        // "logado dispensa a senha demo" (2026-08-31), obterDemoAccessKey()
+        // corretamente devolve null nesse caso, mas essa checagem nao tinha
+        // sido atualizada e bloqueava a geracao mesmo assim, achado testando
+        // ao vivo (usuario logado continuava vendo "demo esta protegida").
+        if (demoAccessRequired && !demoAccessKey && !obterSessaoUsuario()) {
             exibirErroResultado(resultadoArea, "A demo esta protegida. Informe a senha temporaria para gerar o planejamento.");
             return;
         }
@@ -681,7 +688,10 @@ async function buscarReferenciasExternas() {
 
     try {
         const demoAccessKey = await obterDemoAccessKey();
-        if (demoAccessRequired && !demoAccessKey) {
+        // Mesmo raciocinio da checagem em gerarTudo(): demoAccessRequired
+        // reflete config do servidor, nao sessao — usuario logado tem
+        // demoAccessKey null por design, nao deve ser bloqueado aqui.
+        if (demoAccessRequired && !demoAccessKey && !obterSessaoUsuario()) {
             resultado.innerHTML = '<p class="reference-message">Informe a senha temporária para consultar referências.</p>';
             return;
         }

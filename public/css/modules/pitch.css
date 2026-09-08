@@ -287,11 +287,15 @@
     -webkit-background-clip:text;
     background-clip:text;
     color:transparent;
-    animation:wordmark-shine 5s ease-in-out infinite;
+    animation:wordmark-shine 9s ease-in-out infinite;
 }
 
+/* Passada mais lenta e o ciclo menos frequente, a pedido do usuario
+   (2026-09-07) — era 5s de ciclo com a passada em si levando so 0.6s
+   (88%->100%); agora 9s de ciclo com a passada levando ~1.8s
+   (78%->100%), mais suave de acompanhar. */
 @keyframes wordmark-shine{
-    0%, 88%{
+    0%, 78%{
         background-position:0% 0;
     }
     100%{
