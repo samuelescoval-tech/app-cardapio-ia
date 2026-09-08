@@ -148,6 +148,24 @@ function obterSessaoUsuario() {
     }
 }
 
+// TAG: bug-header-sessao-ausente | /gerar-cardapio, /api/imagens-evento e
+// /api/referencias-receitas nunca mandavam Authorization: Bearer <token> —
+// so perfil.js fazia isso certinho (perfilHeaders()). Resultado real:
+// obterTokenAutenticadoOuNulo() no servidor sempre via o usuario como
+// anonimo nessas 3 rotas, entao o bypass "logado dispensa a senha demo"
+// (2026-08-31) nunca chegava a valer pra elas. O gerador principal so
+// parecia funcionar pra quem ja tinha chave Gemini propria configurada
+// (bypass antigo, sem relacao com sessao) — imagens/receitas nao tem
+// esse bypass alternativo, entao sempre caiam em 401 "senha invalida",
+// que o front trata como "nenhuma fotografia confiavel encontrada".
+// Achado ao vivo testando um evento real (Toy Story), 2026-09-07.
+function headersComSessao(comJson = true) {
+    const headers = comJson ? { "Content-Type": "application/json" } : {};
+    const sessao = obterSessaoUsuario();
+    if (sessao?.accessToken) headers["Authorization"] = `Bearer ${sessao.accessToken}`;
+    return headers;
+}
+
 function salvarSessaoUsuario(sessao) {
     sessionStorage.setItem('chef_ia_sessao_usuario', JSON.stringify(sessao));
     atualizarBotaoConta();
@@ -532,7 +550,7 @@ async function gerarTudo() {
             </div>
         `;
 
-        const headers = { "Content-Type": "application/json" };
+        const headers = headersComSessao();
         if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
 
         // 2. Chamada ao Servidor (Back-end)
@@ -620,7 +638,7 @@ async function carregarImagensEvento(evento, pratos = [], demoAccessKey = null) 
     }
 
     try {
-        const headers = { "Content-Type": "application/json" };
+        const headers = headersComSessao();
         if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
         const response = await fetch("/api/imagens-evento", {
             method: "POST",
@@ -672,7 +690,7 @@ async function buscarReferenciasExternas() {
         botao.textContent = 'Consultando...';
         resultado.innerHTML = '<p class="reference-message">Busca transitória em andamento. Nenhum conteúdo será salvo.</p>';
 
-        const headers = { 'Content-Type': 'application/json' };
+        const headers = headersComSessao();
         if (demoAccessKey) headers['x-demo-access-key'] = demoAccessKey;
         const response = await fetch('/api/referencias-receitas', {
             method: 'POST',

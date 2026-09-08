@@ -29,13 +29,14 @@ listadas abaixo):
 2. **Polimento de UX represado** — em andamento, escopo ampliado em
    2026-08-31 apos teste real de geracao pelo usuario (ver secao
    dedicada "Sprint 2" abaixo pro detalhamento e a ordem confirmada).
-   Item 1 (acordeao na lista de compras) **FEITO**. Fila confirmada,
-   ordem por facilidade + dependencia (nao pura facilidade — ver
-   raciocinio na secao dedicada): (2) receitas em acordeao, (3) cardapio
-   segmentado por tipo de prato, (4) investigar zero fotos nos pratos
-   (agora com exemplo real, desbloqueado), (5) dropdown nativo de tipo
-   de evento mal estilizado, (6) tema do evento completamente ignorado
-   nas sugestoes (mais dificil, unico que exige geracao real na IA pra
+   Itens 1-4 **FEITOS**: (1) acordeao na lista de compras, (2) receitas
+   em acordeao, (3) cardapio segmentado por tipo de prato, (4) causa
+   raiz do "zero fotos" achada e corrigida (nao era vies de imagem — era
+   as chamadas de `app.js` nunca mandando `Authorization: Bearer`, ver
+   secao dedicada "Fluxo do usuario nunca mandava o cabecalho de
+   sessao"). Faltam: (5) dropdown nativo de tipo de evento mal
+   estilizado, (6) tema do evento completamente ignorado nas sugestoes
+   (mais dificil, unico que exige geracao real na IA pra
    verificar). **Sprint ativa agora, comecando pelo item 2.**
 3. **Fechamento legal** — revisao juridica formal de privacidade/termos,
    busca formal INPI (Classe 42+43, variacoes foneticas), decisao sobre
@@ -209,14 +210,10 @@ Ordem confirmada, registrada aqui pra nao perder:
    tipo de toggle). Reverificado: cards somem de verdade, contagem
    "N itens"/"N item" (singular/plural), filtro sobrevive a troca entre
    carrossel/lista, "Todos" restaura tudo. 190/190 testes.
-4. **Investigar por que nenhuma foto veio pra nenhum prato** — achado
-   real do teste do usuario (nao e mais so "suspeita de vies", e ausencia
-   total confirmada). Vem depois dos itens 2-3 porque o card de prato
-   onde a foto aparece so fica com a estrutura final depois dessas
-   mudancas de layout — investigar antes arriscaria testar contra uma
-   tela que ainda vai mudar. Logica de backend
-   (`image-selection.service.js`/`image-catalog.service.js`), testavel
-   com dados ficticios, sem depender de chamada real a IA.
+4. ~~**Investigar por que nenhuma foto veio pra nenhum prato**~~ —
+   **CAUSA RAIZ ACHADA E CORRIGIDA em 2026-09-07** (nao era vies de
+   imagem — ver secao dedicada "Fluxo do usuario nunca mandava o
+   cabecalho de sessao" abaixo pro detalhamento completo).
 5. **Dropdown nativo de "Tipo de Evento" com estilo fora do padrao do
    site** (usuario relatou que "vai pra fora do evento"/"fica vazio",
    destoando visualmente). Precisa de uma decisao de escopo antes de
@@ -260,6 +257,14 @@ reportou varios pontos de uma vez. Triados por gravidade:
    de abrir o modal). 190/190 testes; confirmado ao vivo que requisicao
    sem sessao valida continua exigindo a senha (comportamento anonimo
    preservado).
+
+   **Correcao importante, achada em 2026-09-07**: essa verificacao "ao
+   vivo" testou a logica do servidor isolada (via `curl` com cabecalhos
+   montados a mao), **nao o fluxo real do navegador** — e o navegador de
+   verdade nunca mandava o cabecalho `Authorization`, entao o bypass
+   "logado dispensa a senha demo" na pratica nunca disparava. Ver item
+   detalhado na secao "Fluxo do usuario nunca mandava o cabecalho de
+   sessao" abaixo pro achado completo e a correcao de verdade.
 2. **Em investigacao, aguardando reteste do usuario**: rodape mostrando
    so o icone do chapeu, sem o texto "KARAMU" (o efeito de brilho dourado
    no wordmark, ver secao "Sugestao do usuario, implementada" acima).
@@ -292,14 +297,76 @@ reportou varios pontos de uma vez. Triados por gravidade:
    evento...", em `app.js`) — usuario quer refinar isso, escopo exato a
    definir.
 
-**Nota sobre a URL testada**: `app-cardapio-ia-samuel-es-coval.vercel.app`
-e um apelido de dominio que a Vercel as vezes atribui a contas pessoais
-(`<projeto>-<usuario>.vercel.app`), alem do dominio principal
-`app-cardapio-ia.vercel.app` ja usado no resto deste documento — ambos
-devem apontar pro mesmo deploy de producao, mas nao foi confirmado que
-sao 100% equivalentes (ex: nao verificado se ambos estao nos Redirect
-URLs do Supabase). Vale conferir se o login social funciona igual nas
-duas URLs.
+**Nota sobre a URL testada, CONFIRMADA em 2026-08-31**:
+`app-cardapio-ia-samuel-es-coval.vercel.app` retorna **302 redirecionando
+pra `vercel.com/sso-api`** — e um alias protegido por autenticacao da
+propria Vercel (SSO), nao o dominio publico de producao. O usuario
+consegue acessar so porque esta logado na propria conta Vercel no
+navegador (libera automatico pro dono do projeto); um cliente real, sem
+conta Vercel, bateria nesse redirecionamento e nunca veria o site. **A
+partir de 2026-08-31, testar sempre em `app-cardapio-ia.vercel.app`**,
+que e o dominio publico de verdade.
+
+### Fluxo do usuario nunca mandava o cabecalho de sessao (achado real, 2026-09-07)
+
+Usuario gerou um evento real (Debutante, tema "Toy Story") pra reunir
+exemplos concretos do item 4 da Sprint 2 (vies de imagem). O gerador
+principal funcionou (plano completo, cardapio, receitas), mas **nenhuma
+foto apareceu pra nenhum prato** — a tela mostrava "Nenhuma fotografia
+confiavel foi encontrada", como se fosse falha de correspondencia de
+imagem.
+
+**Investigacao, do jeito mais rigoroso possivel antes de concluir
+qualquer coisa** — nao assumida, testada camada por camada:
+1. `criarImageSelectionService` chamado diretamente (Node, sem servidor)
+   com nomes de prato reais do evento, em 3 cenarios (sem Openverse,
+   Openverse lancando erro, Openverse retornando vazio) — **os 3
+   retornaram imagem local pra 100% dos pratos** (`coverage.displayed`
+   sempre igual ao solicitado). A logica de fallback local esta correta.
+2. `normalizarImagemEvento` (frontend, `render.js`) testado com os
+   objetos reais devolvidos no passo 1 — **aceitou todos**. A validacao
+   do frontend tambem esta correta.
+3. Rota `/api/imagens-evento` chamada direto via `curl` com a chave demo
+   real — **retornou sucesso com imagens validas**. O endpoint em si
+   funciona.
+4. So no passo 4 apareceu o problema real: chamando a MESMA rota **sem
+   nenhum cabecalho de autenticacao** (nem `Authorization`, nem chave
+   demo) — exatamente o que o navegador de verdade faz hoje — o servidor
+   devolve **401 "Senha de teste invalida ou ausente"**. Esse 401 cai no
+   `catch` de `carregarImagensEvento()` (`app.js`), que chama
+   `renderizarGaleriaEventoFallback(error.message)` → `images: []` → a
+   mesma tela de "nenhuma fotografia confiavel", **disfarçando um erro
+   de autenticacao como se fosse falha de correspondencia visual**.
+
+**Causa raiz real**: as 3 chamadas de `app.js` pro servidor
+(`/gerar-cardapio`, `/api/imagens-evento`, `/api/referencias-receitas`)
+**nunca mandavam `Authorization: Bearer <token>`** — so `perfil.js` fazia
+isso certo (`perfilHeaders()`). Ou seja, o bypass "logado dispensa a
+senha demo" implementado em 2026-08-31 (ver secao acima) **nunca chegava
+a valer na pratica pro navegador real** — so parecia funcionar nos meus
+proprios testes porque eu montava o cabecalho `Authorization` a mao via
+`curl`, o que o navegador nunca faz sozinho. O gerador principal
+"funcionava" pra esse usuario por um motivo **sem relacao nenhuma com
+sessao**: a conta dele ja tem uma chave Gemini propria configurada
+(bypass antigo, `chaveIAUsuario`), entao `/gerar-cardapio` nunca dependia
+do cabecalho de sessao pra essa conta especifica — mas
+`/api/imagens-evento` e `/api/referencias-receitas` nao tem esse bypass
+alternativo, entao sempre caiam em 401.
+
+**Corrigido**: novo helper `headersComSessao()` em `app.js` (mesmo
+padrao ja usado em `perfilHeaders()` de `perfil.js` — le
+`obterSessaoUsuario().accessToken`, adiciona `Authorization: Bearer` se
+existir), aplicado nas 3 chamadas. Verificado ao vivo via CDP
+(`Network.requestWillBeSent`, nao so o retorno da funcao): com sessao
+falsa ativa, o cabecalho `Authorization` sai corretamente na requisicao
+de verdade; sem sessao, nao sai (anonimo preservado). 190/190 testes.
+
+**Licao pra levar adiante**: "testado ao vivo" com `curl` e cabecalhos
+montados a mao verifica a logica do servidor, **nao** verifica se o
+navegador realmente manda esses cabecalhos — sao coisas diferentes. Da
+proxima vez que uma mudanca envolver autenticacao, verificar via CDP
+interceptando a requisicao de verdade (`Network.requestWillBeSent`),
+nao so simular o lado do servidor.
 
 ## Estado em uma frase
 
