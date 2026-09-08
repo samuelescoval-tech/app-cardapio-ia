@@ -1254,6 +1254,21 @@ function renderMetricGroup(titulo, itens) {
 
 function renderCardapio(cardapio) {
     if (!cardapio.length) return "";
+    // TAG: abas-categoria-cardapio | Sprint 2 - Polimento de UX represado,
+    // 2026-08-31: agrupa por item.categoria (mesmo padrao robusto ja usado
+    // em renderCompras pra setor — texto livre, sem lista fixa de valores
+    // esperados). Filtra visibilidade dentro do MESMO container/carrossel
+    // existente (nao duplica #cardapioVisualizacao por categoria), entao
+    // alternarVisualizacaoCardapio()/rolarCardapio() continuam funcionando
+    // sem nenhuma mudanca — cards escondidos via [hidden] saem do fluxo
+    // sozinhos, tanto no grid quanto no scroll-snap do carrossel.
+    const categorias = [];
+    cardapio.forEach(item => {
+        const categoria = item.categoria || "Outros";
+        if (!categorias.includes(categoria)) categorias.push(categoria);
+    });
+    const temAbas = categorias.length > 1;
+
     return `
         <section class="result-section menu-section">
             <div class="section-head menu-head">
@@ -1262,18 +1277,25 @@ function renderCardapio(cardapio) {
                     <small>Cada preparação e bebida aparece individualmente; os agrupamentos ficam restritos à operação e às compras.</small>
                 </div>
                 <div class="menu-controls" aria-label="Visualizacao do cardapio">
-                    <span>${cardapio.length} itens individuais</span>
+                    <span id="menuContagem">${cardapio.length} itens individuais</span>
                     <button type="button" class="carousel-toggle active" data-menu-view="carousel" aria-pressed="true">Carrossel</button>
                     <button type="button" class="carousel-toggle" data-menu-view="list" aria-pressed="false">Lista</button>
                     <button type="button" class="carousel-nav" data-menu-nav="prev" aria-label="Pratos anteriores">←</button>
                     <button type="button" class="carousel-nav" data-menu-nav="next" aria-label="Proximos pratos">→</button>
                 </div>
             </div>
+            ${temAbas ? `
+            <div class="menu-tabs" role="tablist" aria-label="Filtrar por tipo de prato">
+                <button type="button" class="carousel-toggle active" data-menu-categoria="" aria-pressed="true">Todos</button>
+                ${categorias.map(categoria => `<button type="button" class="carousel-toggle" data-menu-categoria="${escapeHTML(categoria)}" aria-pressed="false">${escapeHTML(categoria)}</button>`).join("")}
+            </div>
+            ` : ""}
             <div class="dish-grid dish-carousel" id="cardapioVisualizacao">
                 ${cardapio.map((item, i) => {
                     const slot = slotGaleriaPrato(item);
+                    const categoriaItem = item.categoria || "Outros";
                     return `
-                        <article class="dish-card-rich menu-item-card" data-dish-id="${escapeHTML(item.id || `prato-${i + 1}`)}" data-dish-slot="${escapeHTML(slot)}" data-dish-name="${escapeHTML(item.nome || "Item do cardápio")}">
+                        <article class="dish-card-rich menu-item-card" data-dish-id="${escapeHTML(item.id || `prato-${i + 1}`)}" data-dish-slot="${escapeHTML(slot)}" data-dish-name="${escapeHTML(item.nome || "Item do cardápio")}" data-dish-categoria="${escapeHTML(categoriaItem)}">
                             <div class="dish-visual">
                                 <img data-dish-image alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" hidden>
                                 <div class="dish-placeholder">
@@ -1336,6 +1358,41 @@ function rolarCardapio(direcao) {
         left: direcao * Math.max(cardapio.clientWidth * 0.82, 260),
         behavior: "smooth"
     });
+}
+
+function filtrarCardapioPorCategoria(categoria) {
+    const cardapio = document.getElementById("cardapioVisualizacao");
+    if (!cardapio) return;
+
+    // TAG: fix-hidden-especificidade | .dish-card-rich{display:flex} tem a
+    // mesma especificidade do que o [hidden] nativo do navegador — como
+    // regra de autor sempre vence regra de user-agent (mesma especificidade,
+    // ordem nao importa aqui), setar card.hidden=true NAO escondia o card
+    // (achado ao vivo: contagem dizia "1 item" mas os cards continuavam
+    // visiveis). Usa a classe .hidden (com !important, base.css) em vez do
+    // atributo, que ja e o padrao usado no resto do app pra esse problema.
+    let visiveis = 0;
+    cardapio.querySelectorAll(".menu-item-card").forEach(card => {
+        const mostrar = !categoria || card.dataset.dishCategoria === categoria;
+        card.classList.toggle("hidden", !mostrar);
+        if (mostrar) visiveis += 1;
+    });
+
+    document.querySelectorAll("[data-menu-categoria]").forEach(botao => {
+        const ativo = botao.dataset.menuCategoria === categoria;
+        botao.classList.toggle("active", ativo);
+        botao.setAttribute("aria-pressed", String(ativo));
+    });
+
+    const contagem = document.getElementById("menuContagem");
+    if (contagem) contagem.textContent = `${visiveis} ${visiveis === 1 ? "item" : "itens"}${categoria ? "" : " individuais"}`;
+
+    // Volta pro inicio do carrossel: com outra categoria filtrada, a
+    // posicao de scroll anterior nao faz mais sentido (podia ficar
+    // olhando pra um trecho vazio, so com cards escondidos).
+    if (!cardapio.classList.contains("dish-list")) {
+        cardapio.scrollTo({ left: 0, behavior: "auto" });
+    }
 }
 
 function formatarPrecoBRL(valor) {
@@ -1610,7 +1667,7 @@ function pill(valor) {
    depois de re-renderizacoes. */
 function tratarCliqueResultado(event) {
     const alvo = event.target.closest(
-        "[data-action], [data-gallery-view], [data-gallery-nav], [data-menu-view], [data-menu-nav]"
+        "[data-action], [data-gallery-view], [data-gallery-nav], [data-menu-view], [data-menu-nav], [data-menu-categoria]"
     );
     if (!alvo) return;
 
@@ -1628,6 +1685,12 @@ function tratarCliqueResultado(event) {
     }
     if (alvo.dataset.menuNav) {
         rolarCardapio(alvo.dataset.menuNav === "prev" ? -1 : 1);
+        return;
+    }
+    // "Todos" usa data-menu-categoria="" — presente mas vazio, entao a
+    // checagem e por existencia do atributo, nao por valor truthy.
+    if ("menuCategoria" in alvo.dataset) {
+        filtrarCardapioPorCategoria(alvo.dataset.menuCategoria);
         return;
     }
 

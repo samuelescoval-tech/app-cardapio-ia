@@ -655,6 +655,17 @@
     flex-wrap:wrap;
 }
 
+/* Abas de filtro por tipo de prato (Sprint 2 - Polimento de UX
+   represado, 2026-08-31) — reaproveita o botao .carousel-toggle que ja
+   existe (mesmo par carrossel/lista), so filtra visibilidade dentro do
+   #cardapioVisualizacao existente via [hidden], sem duplicar container. */
+.menu-tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin:14px 0 4px;
+}
+
 .section-head span,
 .shopping-head span{
     background:linear-gradient(135deg,var(--gold),var(--gold-dark));

@@ -182,11 +182,33 @@ Ordem confirmada, registrada aqui pra nao perder:
    mas mantem "modo de preparo" fechado; abrir "modo de preparo" mostra
    os passos; a segunda receita nunca e afetada. 190/190 testes (nenhuma
    asercao de teste referenciava esse markup).
-3. **Cardapio (carrossel/lista) segmentado por tipo de prato** (Entrada,
-   Prato Principal, Sobremesa, Bebidas etc.), mantendo as visualizacoes
-   carrossel/lista ja existentes. Vem depois do item 2 de proposito: se
-   fosse feito antes, corria o risco de inventar uma estrutura diferente
-   da usada nas receitas e precisar refazer pra ficar consistente.
+3. ~~**Cardapio (carrossel/lista) segmentado por tipo de prato**~~ —
+   **FEITO em 2026-08-31**. Em vez de duplicar `#cardapioVisualizacao`
+   por categoria (mais arriscado, exigiria reescrever
+   `alternarVisualizacaoCardapio()`/`rolarCardapio()`), a solucao filtra
+   visibilidade **dentro do mesmo container existente**: uma linha de
+   abas (`.menu-tabs`, reaproveitando o botao `.carousel-toggle` que ja
+   existia pro par Carrossel/Lista) com "Todos" + uma aba por categoria
+   real do cardapio (agrupamento por texto livre, mesmo padrao robusto
+   de `renderCompras`/setor — sem lista fixa de categorias esperadas).
+   Cardapio com so 1 categoria nao mostra abas (sem mudanca visual pra
+   quem nao precisa). Clicar numa aba usa a MESMA infraestrutura de
+   delegacao de evento da Sprint 1 (`data-menu-categoria` no switch de
+   `tratarCliqueResultado`), zero `addEventListener` novo.
+
+   **Bug real achado e corrigido durante a propria verificacao**: a
+   primeira versao escondia os cards com o atributo nativo `card.hidden
+   = true`, mas `.dish-card-rich{display:flex}` tem a mesma
+   especificidade CSS do que o `[hidden]` padrao do navegador — regra de
+   autor sempre vence regra de user-agent, entao os cards NAO
+   desapareciam de verdade (a contagem dizia "1 item" mas 3 cards
+   continuavam visiveis na tela). So foi pego porque o screenshot foi
+   conferido visualmente, nao so os numeros retornados pelo script.
+   Corrigido trocando pra `classList.toggle('hidden', ...)` (classe
+   `!important` de `base.css`, ja usada em todo o resto do app pra esse
+   tipo de toggle). Reverificado: cards somem de verdade, contagem
+   "N itens"/"N item" (singular/plural), filtro sobrevive a troca entre
+   carrossel/lista, "Todos" restaura tudo. 190/190 testes.
 4. **Investigar por que nenhuma foto veio pra nenhum prato** — achado
    real do teste do usuario (nao e mais so "suspeita de vies", e ausencia
    total confirmada). Vem depois dos itens 2-3 porque o card de prato
