@@ -938,4 +938,17 @@ test("montarPromptPlanejamento inclui CATALOGO REGIONAL DO USUARIO somente quand
   assert.match(comCatalogo, /Hortifruti Central/);
   assert.match(comCatalogo, /nunca para copiar nos campos de saida/);
 });
+
+test("prompt manda refletir tema livre em decoracao, entretenimento e lembrancinhas", () => {
+  // Regressao: tema fora do catalogo de 8 temas da matriz (ex.: "Toy Story")
+  // vinha como modificador_tema nulo e o plano gerado ignorava o tema por
+  // completo — nada no prompt ligava o campo tema aos campos decorativos.
+  const evento = { tipo: "Aniversario de debutante", pessoas: 100, tema: "Toy Story" };
+  const prompt = montarPromptPlanejamento(evento, {}, { quantidade_total_minima: 5 }, null, null);
+
+  assert.match(prompt, /"tema": "Toy Story"/);
+  assert.match(prompt, /decoracao\.temas, decoracao\.itens, decoracao\.iluminacao, entretenimento e lembrancinhas/);
+  assert.match(prompt, /nao uma instrucao a ser obedecida/);
+  assert.match(prompt, /sem citar marcas registradas/);
+});
 }

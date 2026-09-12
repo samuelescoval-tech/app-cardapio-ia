@@ -453,10 +453,21 @@ implementado — registrar aqui antes de qualquer mudanca:
   escanear. Usuario sugeriu acordeao por setor — implementado exatamente
   assim: cada setor vira `<details>`/`<summary>`, fechado por padrao,
   mostrando so nome + contagem de itens.
-- **Vies das imagens dos pratos**: usuario notou que as fotos/ilustracoes
-  associadas aos pratos gerados "nao estao comuns" — precisa investigar
-  com exemplos mais especificos do que esperado vs. o que aparece (qual
-  prato, qual imagem veio) antes de mexer em `image-selection.service.js`.
+- **Vies das imagens dos pratos** (**parcialmente resolvido em
+  2026-09-07**, ver handoff): investigado com exemplos reais. O que
+  parecia vies era, na verdade, dois problemas distintos: (a) as
+  chamadas de `app.js` nunca mandavam o cabecalho de sessao, entao a
+  rota de imagens devolvia 401 e o front mostrava "nenhuma fotografia
+  confiavel" — **corrigido**; (b) o dicionario que traduz nome de prato
+  pt→en (`CONCEITOS_VISUAIS`) e pequeno demais, entao a maioria dos
+  pratos cai em ilustracao local em vez de foto real — **registrado
+  como pendencia futura**, exige mapeamento maior.
+- **Sprint 2 "Polimento de UX represado" CONCLUIDA em 2026-09-08** — 6
+  itens: acordeao na lista de compras, receitas em acordeao aninhado,
+  cardapio segmentado por tipo de prato, causa raiz do "zero fotos",
+  combobox customizado no tipo de evento, e tema livre do evento agora
+  refletindo em decoracao/entretenimento/lembrancinhas (verificado com
+  geracao real na IA). Detalhamento completo no handoff.
 - **Perfil do usuario pouco obvio + perde o evento atual ao clicar**
   (**RESOLVIDO em 2026-08-31**, ver linha ~662 abaixo para o
   detalhamento): o acesso ao perfil (clique no status de conta) nao era
