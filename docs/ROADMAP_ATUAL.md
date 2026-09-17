@@ -1,11 +1,62 @@
 # Roadmap atual - Karamu
 
-Atualizado em 2026-08-31.
+Atualizado em 2026-09-17.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
 
-## Etapa atual
+## Etapa atual — retomada em 2026-09-17
+
+Sprints 1 (saude tecnica) e 2 (polimento de UX) concluidas conforme o
+historico. A retomada confirmou 191 testes passando localmente e identificou
+falhas/limitacoes que justificam priorizar correcoes antes do fechamento legal.
+Escopo, evidencias, criterios de saida e responsabilidades ficam na secao
+"Retomada com Codex" do handoff. Sprint 3 implementada e validada localmente
+em 2026-09-17: 204 testes passaram no Node 24.21.0 e o formulario/avisos foram
+conferidos no Chrome. Publicacao e homologacao com servicos reais pendentes.
+
+**Prioridade urgente em 2026-09-17:** falha de logout e exposicao local do
+historico entre contas reproduzidas. Sprint **3A** entra antes da Sprint 4;
+contencao implementada e validada localmente com 214 testes e Chrome usando
+SDK real/servidor Auth ficticio. Ainda pendem destino do historico legado,
+publicacao e homologacao real. Nao declarar isolamento completo. Evidencias, impacto e criterios no
+[registro urgente do handoff](HANDOFF_PROXIMA_ATUALIZACAO.md#prioridade-urgente--sprint-3a-logout-e-isolamento-de-dados).
+
+| Sprint | Objetivo | Estado / dependencia |
+|---|---|---|
+| 1 | Saude tecnica | Concluida em 2026-08-31 |
+| 2 | Polimento de UX | Concluida em 2026-09-08 |
+| 3 | Corrigir upload de fotos e usar catalogo completo no custo | Implementada e validada localmente; homologacao externa pendente |
+| 3A | Corrigir logout e isolamento local de dados | Contencao local validada; legado e homologacao pendentes |
+| 4 | Historico sincronizado e isolado por conta | Planejada; apos 3 e 3A |
+| 5 | Melhorar cobertura e carregamento de imagens | Planejada; apos 4 |
+| 6 | Fechamento legal e fluxos de conta | Planejada; refletir persistencia da 4 |
+| 7 | Apresentacao e validacao da jornada completa | Planejada; apos etapas anteriores |
+
+Relatos adicionais: upload/persistencia de fotos segue na homologacao da Sprint 3;
+analise de vinculo foto/fornecedor/preco entra na Sprint 5, prioridade media.
+Acesso permanente ao Gerador implementado e validado localmente na Sprint 3A.
+Complemento: reabertura do planejamento completo corrigida e envio automatico
+de memoria entre eventos desativado; 217 testes locais. Persistencia permanente
+na conta continua na Sprint 4.
+
+Fila futura renumerada nesta retomada: fechamento legal (antes 3) passa a 6,
+apresentacao (antes 4) passa a 7. Decisoes externas podem ser preparadas antes,
+mantendo uma sprint de implementacao por vez. Pagamentos, catalogo regional
+piloto, expansao culinaria e seletor de contexto da IA continuam no backlog.
+A janela adicional de contexto do Claude ainda sera reconciliada quando recebida.
+
+**Possibilidade futura, sem ativacao — decisao de 2026-09-17:** ampliar ou
+permitir escolher o catalogo enviado a IA permanece fora das Sprints 3 a 7.
+Manter 60 itens no contexto e catalogo completo no calculo local. Retomar
+somente por decisao do usuario, apos avaliar consumo e custo. Motivos,
+restricoes, alternativas e criterios estao em
+[Possibilidades futuras — contexto de precos da IA](HANDOFF_PROXIMA_ATUALIZACAO.md#possibilidades-futuras--contexto-de-precos-da-ia).
+
+## Historico dos planos — anterior ao metodo de sprints
+
+Os registros abaixo preservam a evolucao. Referencias temporais como "sem
+inicio" dentro de relatos antigos nao substituem a fila vigente acima.
 
 Plano 13 e Plano 14 concluidos (contas, banco, fornecedores, fotos proprias
 e deploy na Vercel, todos testados com conta real; bug de cadastro
@@ -63,16 +114,12 @@ proxima-acao no handoff).
 | 11 | Criar biblioteca visual local e controlada | Concluido |
 | 12 | Medir e corrigir cobertura visual em eventos representativos | Concluido |
 | 13 | Ampliar biblioteca visual e reduzir imagens de categoria | Concluido |
-| 14 | Contas, banco de dados, personalizacao e deploy | Em andamento |
-| 15 | Auditoria geral do app (o que ainda condiz, o que limpar/ajustar) | Planejado, sem inicio |
+| 14 | Contas, banco de dados, personalizacao e deploy | Concluido conforme historico |
+| 15 | Auditoria geral do app (o que ainda condiz, o que limpar/ajustar) | Rodadas concluidas conforme historico |
+| 16 | Preparacao para escala e lancamento | Entregas parciais; continuidade na fila de sprints |
 
-Contagem atual:
-
-- 13 planos principais concluidos;
-- 1 subplano tecnico concluido;
-- 1 plano em andamento;
-- 1 plano planejado, aguardando o Plano 14 terminar;
-- nenhuma etapa posterior aprovada automaticamente.
+Os planos e as sprints sao organizacoes de epocas diferentes; nao somar suas
+contagens como entregas independentes. O estado atual e a fila no topo.
 
 ## Plano 11 - resultado
 

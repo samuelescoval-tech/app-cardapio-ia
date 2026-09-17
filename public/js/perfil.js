@@ -49,10 +49,11 @@ function perfilAtivarAba(nome) {
 /* ---------- FORNECEDORES ---------- */
 
 async function perfilCarregarFornecedores() {
+    const contextoSessao = capturarContextoSessao();
     const lista = document.getElementById("fornecedoresLista");
     const vazio = document.getElementById("fornecedoresVazio");
     try {
-        const response = await fetch("/api/fornecedores", { headers: perfilHeaders(false) });
+        const response = await fetchDaSessao("/api/fornecedores", { headers: perfilHeaders(false) }, contextoSessao);
         const dados = await response.json();
         const fornecedores = dados.fornecedores || [];
         perfilFornecedoresCache = fornecedores;
@@ -77,6 +78,7 @@ async function perfilCarregarFornecedores() {
             botao.onclick = () => perfilRemoverFornecedor(botao.dataset.removerFornecedor);
         });
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         console.warn("Nao foi possivel carregar fornecedores:", error.message);
     }
 }
@@ -91,6 +93,7 @@ function perfilPreencherSelectFornecedores() {
 }
 
 async function perfilCriarFornecedor() {
+    const contextoSessao = capturarContextoSessao();
     const erro = document.getElementById("fornecedorErro");
     erro.textContent = "";
     const corpo = {
@@ -101,7 +104,7 @@ async function perfilCriarFornecedor() {
         observacoes: document.getElementById("fornecedorObservacoes").value.trim()
     };
     try {
-        const response = await fetch("/api/fornecedores", { method: "POST", headers: perfilHeaders(), body: JSON.stringify(corpo) });
+        const response = await fetchDaSessao("/api/fornecedores", { method: "POST", headers: perfilHeaders(), body: JSON.stringify(corpo) }, contextoSessao);
         const dados = await response.json();
         if (!response.ok || dados.ok === false) {
             erro.textContent = dados.error || "Nao foi possivel adicionar o fornecedor.";
@@ -111,16 +114,19 @@ async function perfilCriarFornecedor() {
         document.getElementById("fornecedorCategoria").value = "";
         await perfilCarregarFornecedores();
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         erro.textContent = "Erro de conexao. Tente novamente.";
     }
 }
 
 async function perfilRemoverFornecedor(id) {
+    const contextoSessao = capturarContextoSessao();
     if (!confirm("Remover este fornecedor?")) return;
     try {
-        await fetch(`/api/fornecedores/${id}`, { method: "DELETE", headers: perfilHeaders(false) });
+        await fetchDaSessao(`/api/fornecedores/${id}`, { method: "DELETE", headers: perfilHeaders(false) }, contextoSessao);
         await perfilCarregarFornecedores();
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         console.warn("Nao foi possivel remover fornecedor:", error.message);
     }
 }
@@ -128,10 +134,11 @@ async function perfilRemoverFornecedor(id) {
 /* ---------- FOTOS ---------- */
 
 async function perfilCarregarFotos() {
+    const contextoSessao = capturarContextoSessao();
     const lista = document.getElementById("fotosLista");
     const vazio = document.getElementById("fotosVazio");
     try {
-        const response = await fetch("/api/fotos", { headers: perfilHeaders(false) });
+        const response = await fetchDaSessao("/api/fotos", { headers: perfilHeaders(false) }, contextoSessao);
         const dados = await response.json();
         const fotos = dados.fotos || [];
 
@@ -150,6 +157,7 @@ async function perfilCarregarFotos() {
             botao.onclick = () => perfilRemoverFoto(botao.dataset.removerFoto);
         });
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         console.warn("Nao foi possivel carregar fotos:", error.message);
     }
 }
@@ -164,6 +172,7 @@ function perfilLerArquivoComoDataUrl(arquivo) {
 }
 
 async function perfilEnviarFoto() {
+    const contextoSessao = capturarContextoSessao();
     const erro = document.getElementById("fotoErro");
     erro.textContent = "";
     const input = document.getElementById("fotoArquivo");
@@ -172,16 +181,26 @@ async function perfilEnviarFoto() {
         erro.textContent = "Escolha um arquivo de imagem.";
         return;
     }
+    if (arquivo.size > FOTO_UPLOAD_CONFIG.tamanhoMaximoBytes) {
+        erro.textContent = FOTO_UPLOAD_CONFIG.mensagemLimite;
+        return;
+    }
     const botao = document.getElementById("fotoSubmit");
     botao.disabled = true;
     try {
         const dataUrl = await perfilLerArquivoComoDataUrl(arquivo);
+        if (!contextoSessaoAtual(contextoSessao)) return;
         const corpo = {
             tipo: arquivo.type,
             arquivo: dataUrl,
             nome_prato: document.getElementById("fotoNomePrato").value.trim()
         };
-        const response = await fetch("/api/fotos", { method: "POST", headers: perfilHeaders(), body: JSON.stringify(corpo) });
+        const response = await fetchDaSessao("/api/fotos", { method: "POST", headers: perfilHeaders(), body: JSON.stringify(corpo) }, contextoSessao);
+        // A hospedagem pode rejeitar antes do Express e devolver texto/HTML.
+        if (response.status === 413) {
+            erro.textContent = FOTO_UPLOAD_CONFIG.mensagemLimite;
+            return;
+        }
         const dados = await response.json();
         if (!response.ok || dados.ok === false) {
             erro.textContent = dados.error || "Nao foi possivel enviar a foto.";
@@ -191,18 +210,21 @@ async function perfilEnviarFoto() {
         input.value = "";
         await perfilCarregarFotos();
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         erro.textContent = error.message || "Erro de conexao. Tente novamente.";
     } finally {
-        botao.disabled = false;
+        if (contextoSessaoAtual(contextoSessao)) botao.disabled = false;
     }
 }
 
 async function perfilRemoverFoto(id) {
+    const contextoSessao = capturarContextoSessao();
     if (!confirm("Remover esta foto?")) return;
     try {
-        await fetch(`/api/fotos/${id}`, { method: "DELETE", headers: perfilHeaders(false) });
+        await fetchDaSessao(`/api/fotos/${id}`, { method: "DELETE", headers: perfilHeaders(false) }, contextoSessao);
         await perfilCarregarFotos();
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         console.warn("Nao foi possivel remover foto:", error.message);
     }
 }
@@ -210,10 +232,11 @@ async function perfilRemoverFoto(id) {
 /* ---------- CHAVE DE IA ---------- */
 
 async function perfilCarregarChaveIA() {
+    const contextoSessao = capturarContextoSessao();
     const badge = document.getElementById("chaveIABadge");
     const removerBtn = document.getElementById("chaveIARemover");
     try {
-        const response = await fetch("/api/perfil/chave-ia", { headers: perfilHeaders(false) });
+        const response = await fetchDaSessao("/api/perfil/chave-ia", { headers: perfilHeaders(false) }, contextoSessao);
         const dados = await response.json();
         const configurada = Boolean(dados.configurada);
         badge.innerHTML = configurada ? `${icon("check")} Chave configurada` : "Nenhuma chave configurada";
@@ -221,20 +244,22 @@ async function perfilCarregarChaveIA() {
         badge.classList.toggle("nao-configurada", !configurada);
         removerBtn.classList.toggle("hidden", !configurada);
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         console.warn("Nao foi possivel consultar a chave de IA:", error.message);
     }
 }
 
 async function perfilSalvarChaveIA() {
+    const contextoSessao = capturarContextoSessao();
     const erro = document.getElementById("chaveIAErro");
     const info = document.getElementById("chaveIAInfo");
     erro.textContent = "";
     info.textContent = "";
     const input = document.getElementById("chaveIAInput");
     try {
-        const response = await fetch("/api/perfil/chave-ia", {
+        const response = await fetchDaSessao("/api/perfil/chave-ia", {
             method: "PUT", headers: perfilHeaders(), body: JSON.stringify({ chave: input.value.trim() })
-        });
+        }, contextoSessao);
         const dados = await response.json();
         if (!response.ok || dados.ok === false) {
             erro.textContent = dados.error || "Nao foi possivel salvar a chave.";
@@ -244,18 +269,20 @@ async function perfilSalvarChaveIA() {
         info.textContent = "Chave salva com sucesso.";
         await perfilCarregarChaveIA();
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         erro.textContent = "Erro de conexao. Tente novamente.";
     }
 }
 
 async function perfilRemoverChaveIA() {
+    const contextoSessao = capturarContextoSessao();
     if (!confirm("Remover sua chave Gemini? A geracao voltara a usar a chave compartilhada.")) return;
     const erro = document.getElementById("chaveIAErro");
     const info = document.getElementById("chaveIAInfo");
     erro.textContent = "";
     info.textContent = "";
     try {
-        const response = await fetch("/api/perfil/chave-ia", { method: "DELETE", headers: perfilHeaders(false) });
+        const response = await fetchDaSessao("/api/perfil/chave-ia", { method: "DELETE", headers: perfilHeaders(false) }, contextoSessao);
         const dados = await response.json();
         if (!response.ok || dados.ok === false) {
             erro.textContent = dados.error || "Nao foi possivel remover a chave.";
@@ -264,6 +291,7 @@ async function perfilRemoverChaveIA() {
         info.textContent = "Chave removida.";
         await perfilCarregarChaveIA();
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         erro.textContent = "Erro de conexao. Tente novamente.";
     }
 }
@@ -273,10 +301,11 @@ async function perfilRemoverChaveIA() {
 // deste arquivo em index.html — mesmo escopo global, sem precisar duplicar.
 
 async function perfilCarregarPrecos() {
+    const contextoSessao = capturarContextoSessao();
     const lista = document.getElementById("precosLista");
     const vazio = document.getElementById("precosVazio");
     try {
-        const response = await fetch("/api/precos", { headers: perfilHeaders(false) });
+        const response = await fetchDaSessao("/api/precos", { headers: perfilHeaders(false) }, contextoSessao);
         const dados = await response.json();
         const precos = dados.precos || [];
 
@@ -300,11 +329,13 @@ async function perfilCarregarPrecos() {
             botao.onclick = () => perfilRemoverPreco(botao.dataset.removerPreco);
         });
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         console.warn("Nao foi possivel carregar precos:", error.message);
     }
 }
 
 async function perfilCriarPreco() {
+    const contextoSessao = capturarContextoSessao();
     const erro = document.getElementById("precoErro");
     erro.textContent = "";
     const corpo = {
@@ -316,7 +347,7 @@ async function perfilCriarPreco() {
         observacoes: document.getElementById("precoObservacoes").value.trim()
     };
     try {
-        const response = await fetch("/api/precos", { method: "POST", headers: perfilHeaders(), body: JSON.stringify(corpo) });
+        const response = await fetchDaSessao("/api/precos", { method: "POST", headers: perfilHeaders(), body: JSON.stringify(corpo) }, contextoSessao);
         const dados = await response.json();
         if (!response.ok || dados.ok === false) {
             erro.textContent = dados.error || "Nao foi possivel adicionar o preco.";
@@ -327,23 +358,27 @@ async function perfilCriarPreco() {
         document.getElementById("precoFornecedor").value = "";
         await perfilCarregarPrecos();
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         erro.textContent = "Erro de conexao. Tente novamente.";
     }
 }
 
 async function perfilRemoverPreco(id) {
+    const contextoSessao = capturarContextoSessao();
     if (!confirm("Remover este preco?")) return;
     try {
-        await fetch(`/api/precos/${id}`, { method: "DELETE", headers: perfilHeaders(false) });
+        await fetchDaSessao(`/api/precos/${id}`, { method: "DELETE", headers: perfilHeaders(false) }, contextoSessao);
         await perfilCarregarPrecos();
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         console.warn("Nao foi possivel remover preco:", error.message);
     }
 }
 
 async function perfilExportarPrecosCSV() {
+    const contextoSessao = capturarContextoSessao();
     try {
-        const response = await fetch("/api/precos/exportar", { headers: perfilHeaders(false) });
+        const response = await fetchDaSessao("/api/precos/exportar", { headers: perfilHeaders(false) }, contextoSessao);
         if (!response.ok) throw new Error("Falha ao exportar.");
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
@@ -355,6 +390,7 @@ async function perfilExportarPrecosCSV() {
         link.remove();
         URL.revokeObjectURL(url);
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         console.warn("Nao foi possivel exportar precos:", error.message);
     }
 }
@@ -376,14 +412,12 @@ function perfilLigarEventosUmaVez() {
     document.getElementById("precosExportar").onclick = perfilExportarPrecosCSV;
     document.getElementById("precoSubmit").onclick = perfilCriarPreco;
     document.getElementById("perfilSair").onclick = () => {
-        if (confirm("Sair da conta?")) {
-            encerrarSessaoUsuario();
-            switchView("app");
-        }
+        if (confirm("Sair da conta? O histórico temporário desta sessão será removido. Salve o PDF antes de sair.")) void encerrarSessaoUsuario();
     };
 }
 
 async function perfilAbrir() {
+    const contextoSessao = capturarContextoSessao();
     const sessao = obterSessaoUsuario();
     if (!sessao) return;
 
@@ -393,6 +427,7 @@ async function perfilAbrir() {
     perfilPreencherSelect(document.getElementById("precoCategoria"));
 
     await perfilCarregarFornecedores();
+    if (!contextoSessaoAtual(contextoSessao)) return;
     await Promise.all([
         perfilCarregarFotos(),
         perfilCarregarChaveIA(),
@@ -400,4 +435,16 @@ async function perfilAbrir() {
     ]);
 }
 
-window.chefIAPerfil = { abrir: perfilAbrir };
+function perfilLimpar() {
+    perfilFornecedoresCache = [];
+    perfilPreencherSelectFornecedores();
+    for (const id of ['fornecedorErro', 'fotoErro', 'chaveIAErro', 'chaveIAInfo', 'precoErro']) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '';
+    }
+    const badge = document.getElementById('chaveIABadge');
+    if (badge) { badge.textContent = 'Entre para consultar'; badge.classList.remove('configurada'); }
+    document.querySelectorAll('#perfilSection button').forEach(botao => { botao.disabled = false; });
+}
+
+window.chefIAPerfil = { abrir: perfilAbrir, limpar: perfilLimpar };

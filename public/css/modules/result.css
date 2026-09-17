@@ -1344,9 +1344,7 @@
     line-height:1.5;
 }
 
-/* Catalogo de precos do usuario cortado em 60 itens (server.js) — aviso
-   visual real, nao so uma nota informativa, entao usa o token semantico
-   de atencao em vez do texto neutro acima. */
+/* Avisos sobre contexto de precos e indisponibilidade do catalogo. */
 .cost-estimate-note--aviso{
     margin-top:12px;
     padding:9px 12px;

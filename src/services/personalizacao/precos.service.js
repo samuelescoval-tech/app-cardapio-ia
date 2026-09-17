@@ -77,12 +77,33 @@ function criarPrecosService(opcoes = {}) {
   async function listar(token) {
     const client = criarClientePorToken(token);
     if (!client) throw new ErroAutenticacao("Supabase nao configurado no .env.", 500);
-    const { data, error } = await client
-      .from("precos_usuario")
-      .select("*")
-      .order("item", { ascending: true });
-    if (error) throw new ErroPreco(error.message, 400);
-    return data;
+    // A API do banco limita cada resposta. Buscar paginas evita trocar o
+    // antigo corte local de 60 por um corte silencioso no banco.
+    const precos = [];
+    const tamanhoPagina = 500;
+    let total = null;
+    for (let inicio = 0; ;) {
+      const { data, error, count } = await client
+        .from("precos_usuario")
+        .select("*", inicio === 0 ? { count: "exact" } : {})
+        .order("item", { ascending: true })
+        .order("id", { ascending: true })
+        .range(inicio, inicio + tamanhoPagina - 1);
+      if (error) throw new ErroPreco(error.message, 400);
+      if (inicio === 0 && Number.isInteger(count)) total = count;
+      if (!data.length) {
+        if (total !== null && precos.length < total) {
+          throw new ErroPreco("O catalogo mudou durante a consulta. Tente novamente.", 409);
+        }
+        return precos;
+      }
+      precos.push(...data);
+      // Evita pedir uma pagina alem do fim (pode resultar em HTTP 416).
+      if (total !== null && precos.length >= total) return precos;
+      // Avancar pelo recebido tambem funciona se o painel do banco tiver
+      // um limite por resposta menor que o tamanho solicitado.
+      inicio += data.length;
+    }
   }
 
   async function criar(token, usuarioId, body) {

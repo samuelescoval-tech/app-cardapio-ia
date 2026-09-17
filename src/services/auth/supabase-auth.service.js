@@ -39,7 +39,9 @@ function criarSupabaseAuthService(opcoes = {}) {
     return {
       usuario_id: data.user?.id || null,
       email: data.user?.email || null,
-      confirmacao_pendente: !data.session
+      confirmacao_pendente: !data.session,
+      access_token: data.session?.access_token || null,
+      refresh_token: data.session?.refresh_token || null
     };
   }
 
@@ -51,6 +53,7 @@ function criarSupabaseAuthService(opcoes = {}) {
       usuario_id: data.user?.id || null,
       email: data.user?.email || null,
       access_token: data.session?.access_token || null,
+      refresh_token: data.session?.refresh_token || null,
       expira_em: data.session?.expires_at || null
     };
   }

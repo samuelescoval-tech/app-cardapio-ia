@@ -12,6 +12,7 @@
     "benchmark:images": "node scripts/benchmark-image-relevance.js",
     "benchmark:images:commons": "node scripts/benchmark-wikimedia-relevance.js",
     "test:openverse:live": "node scripts/validate-openverse-live.js",
+    "test:session-ui": "node scripts/validate-session-ui.js",
     "test:gallery-ui": "node scripts/validate-gallery-ui.js",
     "test:spoonacular:live": "node scripts/validate-spoonacular-live.js",
     "start": "node server.js"

@@ -74,6 +74,10 @@
     background:rgba(255,255,255,.08);
     font-size:.62rem;
     padding:10px 16px;
+    max-width:240px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
 }
 
 .nav-btn.account-status:hover{
@@ -340,6 +344,16 @@
         padding:10px 12px;
         font-size:.65rem;
         letter-spacing:1px;
+    }
+
+    .status-bar .brand-link, .status-bar #btnIrGerador{
+        flex:0 0 auto;
+        padding:10px 8px;
+    }
+
+    .status-bar .account-status{
+        flex:1 1 0;
+        padding:10px 8px;
     }
 
     .hero{

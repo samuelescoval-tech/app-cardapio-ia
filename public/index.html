@@ -27,10 +27,12 @@
         crossorigin="anonymous"></script>
     <!-- TAG: chef-modulos | ordem obrigatoria: storage -> feedback visual -> utils -> render -> app -->
     <script defer src="js/storage.service.js"></script>
+    <script defer src="js/sessao.service.js"></script>
     <script defer src="js/visual-feedback.service.js"></script>
     <script defer src="js/utils.js"></script>
     <script defer src="js/render.js"></script>
     <script defer src="js/app.js"></script>
+    <script defer src="js/foto-config.js"></script>
     <script defer src="js/perfil.js"></script>
 </head>
 <body>
@@ -311,8 +313,10 @@
     <!-- TAG: barra-status | Marca (volta a apresentacao) + status de conta, nao mais abas paralelas -->
     <nav class="status-bar" aria-label="Marca e conta">
         <button type="button" class="nav-btn brand-link wordmark" id="btnApresentacao"><span class="wordmark-mark"><svg class="chef-hat-accent" aria-hidden="true"><use href="#chef-hat-accent"></use></svg>KARAMU</span></button>
+        <button type="button" class="nav-btn" id="btnIrGerador">Gerador</button>
         <button type="button" class="nav-btn account-status" id="btnConta"><svg class="icon" aria-hidden="true"><use href="#icon-account"></use></svg> Entrar</button>
     </nav>
+    <p id="sessaoAviso" class="glass-panel hidden" role="status" style="position:fixed;top:85px;left:5%;width:90%;z-index:99998;"></p>
 
     <!-- TAG: hero-dinamico | Capa visual compactavel -->
     <header class="hero" id="mainHero">
@@ -499,6 +503,8 @@
             <div id="historico-container" class="historico-container">
                 <p class="historico-vazio">Nenhum planejamento salvo ainda</p>
             </div>
+            <p class="field-hint">Histórico temporário desta sessão. Ao sair da conta, estes projetos são removidos deste histórico. Salve o PDF antes de sair. A sincronização com a conta ainda não está disponível.</p>
+            <p id="historicoLegadoAviso" class="field-hint hidden">Há projetos antigos neste navegador sem identificação de conta. Eles foram preservados, mas não são exibidos ou usados automaticamente. A recuperação precisa ser definida pelo responsável por esses projetos.</p>
         </section>
 
         <!-- TAG: resultado-ia | Area preenchida por render.js -->
@@ -564,7 +570,7 @@
                         <input type="text" id="fotoNomePrato" class="premium-input" maxlength="120" placeholder="Ex: Bolo de cenoura">
                     </div>
                     <div class="fgroup">
-                        <label class="flabel" for="fotoArquivo">Arquivo (JPEG, PNG ou WEBP, até 5MB)</label>
+                        <label class="flabel" for="fotoArquivo">Arquivo (JPEG, PNG ou WEBP, até 3 MB)</label>
                         <input type="file" id="fotoArquivo" class="premium-input" accept="image/jpeg,image/png,image/webp">
                     </div>
                 </div>

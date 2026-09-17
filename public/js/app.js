@@ -12,10 +12,173 @@ const slides = document.querySelectorAll('.slide');
 let demoAccessRequired = false;
 let demoAccessMessage = "";
 let sequenciaConsultaVisual = 0;
+let sequenciaGeracao = 0;
 window.chefIARecipeReferencesAvailable = false;
 window.chefIAVisualReferencesAvailable = null;
 
 let supabaseClient = null;
+let configuracaoAuth = null;
+let authAtiva = null;
+let saidaEmCurso = null;
+let loginPermitido = false;
+let timerExpiracao = null;
+const AUTH_STORAGE = 'karamu_auth_v2';
+const controleSessao = criarControleSessao({ aoTrocar: limparEstadoPrivado });
+const capturarContextoSessao = () => controleSessao.capturar();
+const contextoSessaoAtual = contexto => controleSessao.atual(contexto);
+const fetchDaSessao = (url, opcoes, contexto) => controleSessao.requisitar(url, opcoes, contexto);
+
+function mostrarAvisoSessao(mensagem = '') {
+    const aviso = document.getElementById('sessaoAviso');
+    if (!aviso) return;
+    aviso.textContent = mensagem;
+    aviso.classList.toggle('hidden', !mensagem);
+}
+
+function limparEstadoPrivado(sessao) {
+    clearTimeout(timerExpiracao);
+    cancelarConsultaVisualPendente();
+    window.storageService?.definirContextoHistorico(sessao?.usuarioId || null);
+    for (const nome of ['chefIAUltimoPlano', 'chefIAGaleriaEstado', 'chefIALastResponseMeta', 'chefIAHistoricoCarregadoId', 'chefIALastCulinaryMemoryCount']) delete window[nome];
+    for (const id of ['resultadoArea', 'historico-container', 'fornecedoresLista', 'fotosLista', 'precosLista', 'perfilEmailLabel']) {
+        const elemento = document.getElementById(id);
+        if (elemento) { elemento.innerHTML = ''; delete elemento.dataset.planoValido; }
+    }
+    document.getElementById('resultadoArea')?.classList.add('hidden');
+    document.querySelectorAll('#formCard input, #formCard textarea, #perfilSection input, #perfilSection textarea, #authModal input').forEach(campo => {
+        if (campo.type === 'radio' || campo.type === 'checkbox') campo.checked = campo.defaultChecked;
+        else campo.value = '';
+    });
+    document.querySelectorAll('#formCard select, #perfilSection select').forEach(campo => { campo.selectedIndex = 0; });
+    document.querySelectorAll('#perfilSection .access-modal-error').forEach(el => { el.textContent = ''; });
+    window.chefIAPerfil?.limpar();
+    const botao = document.getElementById('btnGerar');
+    if (botao) { botao.disabled = false; botao.innerHTML = `${icon('generate')} CALCULAR + GERAR PLANEJAMENTO COMPLETO`; }
+    fecharPainelPerfil();
+    renderizarHistorico();
+}
+
+function descartarClienteAuth() {
+    if (!authAtiva) return;
+    authAtiva.ativa = false; // bloqueia callbacks e gravacoes tardias do SDK
+    authAtiva.subscription?.unsubscribe();
+    void authAtiva.client.auth.stopAutoRefresh();
+    authAtiva = null;
+    supabaseClient = null;
+}
+
+function limparSessaoLocal() {
+    loginPermitido = false;
+    sessionStorage.removeItem('chef_ia_sessao_usuario');
+    sessionStorage.removeItem('chef_ia_modo_demo_ativo');
+    sessionStorage.removeItem('chef_ia_demo_access_key');
+    sessionStorage.removeItem('karamu_login_oauth_pendente');
+    for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const chave = sessionStorage.key(i);
+        if (chave?.startsWith(AUTH_STORAGE)) sessionStorage.removeItem(chave);
+    }
+    controleSessao.definir(null, true);
+    atualizarBotaoConta();
+    document.getElementById('authModal')?.classList.add('hidden');
+    switchView('pitch');
+}
+
+function sessaoFoiEncerrada(usuarioId) {
+    try {
+        return Number(localStorage.getItem(`karamu_saida_${usuarioId}`) || 0) >= Number(sessionStorage.getItem('karamu_login_inicio') || 0);
+    } catch { return true; } // sem armazenamento confiavel, exige novo login
+}
+
+function prepararClienteAuth() {
+    if (supabaseClient) return supabaseClient;
+    if (!configuracaoAuth || !window.supabase?.createClient) return null;
+    // Canal exclusivo por instancia evita que SIGNED_IN em outra aba troque
+    // a conta desta aba. O adaptador persiste somente na sessionStorage.
+    const chaveInstancia = `karamu-${crypto.randomUUID()}`;
+    const registro = { ativa: true, client: null, subscription: null };
+    const chavePersistida = chave => chave.replace(chaveInstancia, AUTH_STORAGE);
+    const storage = {
+        getItem: chave => registro.ativa ? sessionStorage.getItem(chavePersistida(chave)) : (chave === chaveInstancia ? registro.sessaoEncerramento || null : null),
+        setItem: (chave, valor) => { if (registro.ativa) sessionStorage.setItem(chavePersistida(chave), valor); },
+        removeItem: chave => { if (registro.ativa) sessionStorage.removeItem(chavePersistida(chave)); }
+    };
+    const client = window.supabase.createClient(configuracaoAuth.url, configuracaoAuth.anonKey, {
+        auth: { storage, storageKey: chaveInstancia, persistSession: true, autoRefreshToken: true, flowType: 'pkce' }
+    });
+    registro.client = client;
+    authAtiva = registro;
+    supabaseClient = client;
+    const inscricao = client.auth.onAuthStateChange((evento, sessao) => {
+        if (!registro.ativa || authAtiva !== registro) return;
+        if (evento === 'SIGNED_OUT') {
+            descartarClienteAuth();
+            limparSessaoLocal();
+            return;
+        }
+        if (!['INITIAL_SESSION', 'SIGNED_IN', 'TOKEN_REFRESHED'].includes(evento)) return;
+        if (!sessao?.user?.id || !sessao.access_token) {
+            if (evento === 'INITIAL_SESSION' && !loginPermitido && !modoDemoAtivo() && !sessionStorage.getItem('karamu_login_oauth_pendente')) {
+                window.storageService?.definirContextoHistorico(null);
+                renderizarHistorico();
+            }
+            return;
+        }
+        const oauthPendente = sessionStorage.getItem('karamu_login_oauth_pendente') === 'true';
+        if (sessaoFoiEncerrada(sessao.user.id)) {
+            queueMicrotask(() => { if (authAtiva === registro) void encerrarSessaoUsuario({ notificar: false }); });
+            return;
+        }
+        if (evento === 'SIGNED_IN' && !loginPermitido && !oauthPendente && !obterSessaoUsuario()) return;
+        if (obterSessaoUsuario() && obterSessaoUsuario().usuarioId !== sessao.user.id && !loginPermitido && !oauthPendente) return;
+        salvarSessaoUsuario({ usuarioId: sessao.user.id, email: sessao.user.email, accessToken: sessao.access_token, expiraEm: sessao.expires_at });
+        sessionStorage.removeItem('karamu_login_oauth_pendente');
+        loginPermitido = false;
+        document.getElementById('authModal')?.classList.add('hidden');
+        if (evento !== 'TOKEN_REFRESHED') switchView('app');
+    });
+    registro.subscription = inscricao?.data?.subscription;
+    return client;
+}
+
+async function encerrarSessaoUsuario({ notificar = true } = {}) {
+    if (saidaEmCurso) return saidaEmCurso;
+    const sessao = controleSessao.obter();
+    const client = supabaseClient;
+    const registro = authAtiva;
+    if (registro) registro.sessaoEncerramento = sessionStorage.getItem(AUTH_STORAGE);
+    if (notificar && sessao?.usuarioId) {
+        try { localStorage.setItem(`karamu_saida_${sessao.usuarioId}`, String(Date.now())); }
+        catch { /* A limpeza desta aba deve ocorrer mesmo sem armazenamento entre abas. */ }
+    }
+    descartarClienteAuth();
+    limparSessaoLocal(); // limpa imediatamente, sem depender da rede
+    mostrarAvisoSessao('Encerrando a sessão...');
+    saidaEmCurso = (async () => {
+        await Promise.resolve(); // atribuir a promessa antes de qualquer finally
+        let timer;
+        try {
+            const resultado = client ? await Promise.race([
+                client.auth.signOut({ scope: 'local' }),
+                new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Tempo esgotado')), 10000); })
+            ]) : { error: null };
+            if (resultado.error) throw resultado.error;
+            mostrarAvisoSessao('Você saiu da conta neste navegador.');
+        } catch {
+            mostrarAvisoSessao('Os dados foram removidos desta sessão, mas não foi possível confirmar a saída no servidor. Feche as abas em um computador compartilhado.');
+        } finally { clearTimeout(timer); if (registro) registro.sessaoEncerramento = null; saidaEmCurso = null; }
+    })();
+    return saidaEmCurso;
+}
+
+window.addEventListener('storage', evento => {
+    const id = controleSessao.obter()?.usuarioId;
+    if (id && evento.key === `karamu_saida_${id}`) void encerrarSessaoUsuario({ notificar: false });
+});
+window.addEventListener('pageshow', () => {
+    const id = controleSessao.obter()?.usuarioId;
+    if (id && (!obterSessaoUsuario() || sessaoFoiEncerrada(id))) void encerrarSessaoUsuario({ notificar: false });
+});
+
 
 async function inicializarAcessoDemo() {
     try {
@@ -34,26 +197,30 @@ async function inicializarAcessoDemo() {
 // fluxo (redireciona pro Google e volta com a sessao). O restante do app
 // continua falando so com o nosso backend, como sempre.
 function inicializarLoginSocial(supabaseUrl, supabaseAnonKey) {
-    if (!supabaseUrl || !supabaseAnonKey || !window.supabase?.createClient) return;
-    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-    supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (event !== 'SIGNED_IN' || !session?.user) return;
-        salvarSessaoUsuario({ email: session.user.email, accessToken: session.access_token });
-        const modal = document.getElementById('authModal');
-        if (modal && !modal.classList.contains('hidden')) {
-            modal.classList.add('hidden');
-            document.body.classList.remove('modal-open');
-        }
-        switchView('app');
-    });
+    if (!supabaseUrl || !supabaseAnonKey) return;
+    configuracaoAuth = { url: supabaseUrl, anonKey: supabaseAnonKey };
+    // A versao antiga mantinha sessao Google no localStorage. Nao reutilizar
+    // credenciais persistentes sem nova entrada explicita apos a migracao.
+    const antiga = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`;
+    localStorage.removeItem(antiga);
+    localStorage.removeItem(`${antiga}-code-verifier`);
+    sessionStorage.removeItem('chef_ia_sessao_usuario');
+    prepararClienteAuth();
 }
 
 async function entrarComGoogle() {
-    if (!supabaseClient) return;
-    await supabaseClient.auth.signInWithOAuth({
-        provider: 'google',
-        options: { redirectTo: window.location.origin }
+    if (saidaEmCurso) return;
+    const client = prepararClienteAuth();
+    if (!client) return;
+    sessionStorage.setItem('karamu_login_inicio', String(Date.now()));
+    sessionStorage.setItem('karamu_login_oauth_pendente', 'true');
+    const { error } = await client.auth.signInWithOAuth({
+        provider: 'google', options: { redirectTo: window.location.origin }
     });
+    if (error) {
+        sessionStorage.removeItem('karamu_login_oauth_pendente');
+        mostrarAvisoSessao('Não foi possível iniciar o login com Google. Tente novamente.');
+    }
 }
 
 async function obterDemoAccessKey() {
@@ -140,12 +307,9 @@ function limparDemoAccessKey(message = "") {
 let authModoCadastro = false;
 
 function obterSessaoUsuario() {
-    try {
-        const bruto = sessionStorage.getItem('chef_ia_sessao_usuario');
-        return bruto ? JSON.parse(bruto) : null;
-    } catch (error) {
-        return null;
-    }
+    const sessao = controleSessao.obter();
+    if (sessao?.expiraEm && sessao.expiraEm * 1000 <= Date.now()) return null;
+    return sessao;
 }
 
 // TAG: bug-header-sessao-ausente | /gerar-cardapio, /api/imagens-evento e
@@ -167,12 +331,14 @@ function headersComSessao(comJson = true) {
 }
 
 function salvarSessaoUsuario(sessao) {
-    sessionStorage.setItem('chef_ia_sessao_usuario', JSON.stringify(sessao));
-    atualizarBotaoConta();
-}
-
-function encerrarSessaoUsuario() {
-    sessionStorage.removeItem('chef_ia_sessao_usuario');
+    if (!sessao?.usuarioId || !sessao.accessToken) return;
+    sessionStorage.removeItem('chef_ia_modo_demo_ativo');
+    controleSessao.definir(sessao);
+    clearTimeout(timerExpiracao);
+    if (sessao.expiraEm) timerExpiracao = setTimeout(() => {
+        if (!obterSessaoUsuario()) void encerrarSessaoUsuario();
+    }, Math.min(2147483647, Math.max(0, sessao.expiraEm * 1000 - Date.now())));
+    mostrarAvisoSessao();
     atualizarBotaoConta();
 }
 
@@ -184,6 +350,11 @@ function modoDemoAtivo() {
 }
 
 function entrarModoDemo() {
+    if (saidaEmCurso) return;
+    if (obterSessaoUsuario()) { switchView('app'); return; }
+    controleSessao.definir(null, true);
+    window.storageService?.definirContextoHistorico('demo');
+    mostrarAvisoSessao();
     sessionStorage.setItem('chef_ia_modo_demo_ativo', 'true');
     atualizarBotaoConta();
     switchView('app');
@@ -193,6 +364,7 @@ function atualizarBotaoConta() {
     const botao = document.getElementById('btnConta');
     if (!botao) return;
     const sessao = obterSessaoUsuario();
+    botao.title = sessao?.email || '';
     if (sessao) {
         botao.innerHTML = `${icon("account")} ${escapeHTML(sessao.email)}`;
     } else if (modoDemoAtivo()) {
@@ -266,38 +438,41 @@ function abrirModalConta() {
     };
 
     async function enviar() {
-        erro.textContent = "";
-        info.textContent = "";
-
-        const rota = authModoCadastro ? "/api/auth/registrar" : "/api/auth/login";
+        if (submit.disabled || saidaEmCurso) return;
+        const client = prepararClienteAuth();
+        if (!client) { erro.textContent = 'O login está indisponível. Aguarde ou recarregue a página.'; return; }
+        const contexto = capturarContextoSessao();
+        const registro = authAtiva;
+        erro.textContent = '';
+        info.textContent = '';
+        submit.disabled = true;
+        const cadastro = authModoCadastro;
         try {
-            const response = await fetch(rota, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+            const response = await fetchDaSessao(cadastro ? '/api/auth/registrar' : '/api/auth/login', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: email.value.trim(), senha: senha.value })
-            });
+            }, contexto);
             const dados = await response.json();
-            if (!response.ok || dados.ok === false) {
-                erro.textContent = dados.error || "Nao foi possivel completar a operacao.";
+            if (!response.ok || dados.ok === false) throw new Error(dados.error || 'Não foi possível entrar.');
+            senha.value = '';
+            if (cadastro && dados.confirmacao_pendente) {
+                info.textContent = 'Cadastro criado. Confira seu e-mail para confirmar antes de entrar.';
                 return;
             }
-
-            if (authModoCadastro) {
-                if (dados.confirmacao_pendente) {
-                    info.textContent = "Cadastro criado. Confira seu e-mail para confirmar antes de entrar.";
-                    return;
-                }
-                salvarSessaoUsuario({ email: dados.email, accessToken: dados.access_token });
-                fechar();
-                switchView('app');
-                return;
-            }
-
-            salvarSessaoUsuario({ email: dados.email, accessToken: dados.access_token });
+            if (!dados.access_token || !dados.refresh_token) throw new Error('Sessão incompleta. Entre novamente.');
+            loginPermitido = true;
+            sessionStorage.setItem('karamu_login_inicio', String(Date.now()));
+            const { error } = await client.auth.setSession({ access_token: dados.access_token, refresh_token: dados.refresh_token });
+            if (!registro.ativa || authAtiva !== registro) return;
+            if (error) throw error;
+            if (!obterSessaoUsuario()) throw new Error('Não foi possível confirmar sua sessão. Entre novamente.');
             fechar();
             switchView('app');
         } catch (error) {
-            erro.textContent = "Erro de conexao. Tente novamente.";
+            if (error.name !== 'AbortError' && registro.ativa) erro.textContent = error.message || 'Erro de conexão. Tente novamente.';
+        } finally {
+            if (authAtiva === registro) loginPermitido = false;
+            submit.disabled = false;
         }
     }
 
@@ -308,7 +483,7 @@ function abrirModalConta() {
 
     const google = document.getElementById('authGoogleButton');
     if (google) {
-        google.disabled = !supabaseClient;
+        google.disabled = !configuracaoAuth || !window.supabase?.createClient;
         google.onclick = entrarComGoogle;
     }
 
@@ -378,6 +553,7 @@ setInterval(() => {
 // dessa troca de secoes: e um painel sobreposto (ver abrirPainelPerfil),
 // entao trocar de view so precisa fechar o painel se estiver aberto.
 function switchView(view) {
+    if (view === 'app' && !obterSessaoUsuario() && !modoDemoAtivo()) { abrirModalConta(); return; }
     const secoes = { app: 'appSection', pitch: 'pitchSection' };
 
     for (const [nome, idSecao] of Object.entries(secoes)) {
@@ -470,6 +646,9 @@ function toggleHeader() {
 
 /* TAG: fluxo-principal-ia */
 async function gerarTudo() {
+    const contextoSessao = capturarContextoSessao();
+    const sequencia = ++sequenciaGeracao;
+    const geracaoAtual = () => contextoSessaoAtual(contextoSessao) && sequencia === sequenciaGeracao;
     // 1. Captura de Campos (Nova Interface + Antiga)
     const tipo = document.getElementById('tipo').value;
     const pessoas = document.getElementById('pessoas').value;
@@ -530,6 +709,7 @@ async function gerarTudo() {
 
     try {
         const demoAccessKey = await obterDemoAccessKey();
+        if (!geracaoAtual()) return;
         // TAG: bug-bloqueio-mesmo-logado | demoAccessRequired reflete so a
         // config do SERVIDOR (DEMO_ACCESS_KEY existe), independente de
         // sessao — continua true mesmo pra quem esta logado. Desde o fix
@@ -541,6 +721,9 @@ async function gerarTudo() {
             exibirErroResultado(resultadoArea, "A demo esta protegida. Informe a senha temporaria para gerar o planejamento.");
             return;
         }
+
+        cancelarConsultaVisualPendente();
+        delete window.chefIAHistoricoCarregadoId;
 
         // Feedback visual
         btn.disabled = true;
@@ -561,14 +744,16 @@ async function gerarTudo() {
         if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
 
         // 2. Chamada ao Servidor (Back-end)
-        const historicoCulinario = window.storageService?.criarMemoriaCulinaria?.() || [];
+        // Cada evento e independente; nao enviar memoria de projetos anteriores.
+        const historicoCulinario = [];
         window.chefIALastCulinaryMemoryCount = historicoCulinario.length;
-        const response = await fetch("/gerar-cardapio", {
+        const response = await fetchDaSessao("/gerar-cardapio", {
             method: "POST",
             headers,
             body: JSON.stringify({ evento, historico_culinario: historicoCulinario })
-        });
-        const resposta = await response.json().catch(() => ({}));
+        }, contextoSessao);
+        const resposta = await response.json().catch(error => { if (error.name === 'AbortError') throw error; return {}; });
+        if (!geracaoAtual()) return;
         window.chefIALastResponseMeta = resposta.meta || null;
 
         if (response.status === 401) {
@@ -597,18 +782,22 @@ async function gerarTudo() {
         exibirResultadoLuxo(dadosIA, pessoas, evento);
         resultadoArea.dataset.planoValido = "true";
 
-        // TAG: aviso-catalogo-truncado | server.js corta o catalogo de
-        // precos do usuario em 60 itens (ordem alfabetica); antes isso so
-        // ficava em meta, sem aviso visual pra quem tem mais de 60 precos
-        // cadastrados (item de baixa prioridade da Sprint 1, 2026-08-31).
-        if (resposta.meta?.catalogo_usuario_truncado) {
+        // O limite se aplica somente ao contexto da IA, nunca ao custo local.
+        if (resposta.meta?.catalogo_prompt_truncado) {
             const painelCusto = resultadoArea.querySelector('.cost-estimate-panel');
             if (painelCusto) {
                 const aviso = document.createElement('p');
                 aviso.className = 'cost-estimate-note cost-estimate-note--aviso';
-                aviso.textContent = 'Seu catálogo de preços tem mais de 60 itens cadastrados — só os 60 primeiros (ordem alfabética) entraram nesta estimativa. Os demais não foram considerados no cálculo.';
+                aviso.textContent = 'Todos os preços cadastrados foram consultados para calcular esta estimativa. Os primeiros 60 itens, em ordem alfabética, também orientaram as sugestões do cardápio.';
                 painelCusto.appendChild(aviso);
             }
+        }
+
+        if (resposta.meta?.catalogo_usuario_status === 'indisponivel') {
+            const aviso = document.createElement('p');
+            aviso.className = 'cost-estimate-note cost-estimate-note--aviso';
+            aviso.textContent = 'Não foi possível carregar seus preços. Este planejamento foi gerado sem a estimativa de custo. Tente gerar novamente quando a conexão estiver disponível.';
+            resultadoArea.prepend(aviso);
         }
 
         // TAG: integracao-historico | FASE 1
@@ -629,15 +818,18 @@ async function gerarTudo() {
         void carregarImagensEvento(evento, dadosIA.cardapio || [], demoAccessKey);
 
     } catch (error) {
+        if (!geracaoAtual() || error.name === 'AbortError') return;
         console.error(error);
         exibirErroResultado(resultadoArea, `Detalhes: ${error.message}`, resultadoAnterior);
     } finally {
+        if (!geracaoAtual()) return;
         btn.disabled = false;
         btn.innerHTML = `${icon("generate")} CALCULAR + GERAR PLANEJAMENTO COMPLETO`;
     }
 }
 
 async function carregarImagensEvento(evento, pratos = [], demoAccessKey = null) {
+    const contextoSessao = capturarContextoSessao();
     const sequencia = ++sequenciaConsultaVisual;
     if (window.chefIAVisualReferencesAvailable === false) {
         renderizarGaleriaEventoFallback("A consulta visual externa nao esta configurada.");
@@ -647,12 +839,13 @@ async function carregarImagensEvento(evento, pratos = [], demoAccessKey = null) 
     try {
         const headers = headersComSessao();
         if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
-        const response = await fetch("/api/imagens-evento", {
+        const response = await fetchDaSessao("/api/imagens-evento", {
             method: "POST",
             headers,
             body: JSON.stringify({ evento, pratos })
-        });
-        const resultado = await response.json().catch(() => ({}));
+        }, contextoSessao);
+        const resultado = await response.json().catch(error => { if (error.name === 'AbortError') throw error; return {}; });
+        if (!contextoSessaoAtual(contextoSessao)) return;
         if (sequencia !== sequenciaConsultaVisual) return;
 
         if (response.status === 401) {
@@ -664,6 +857,7 @@ async function carregarImagensEvento(evento, pratos = [], demoAccessKey = null) 
         }
         renderizarGaleriaEvento(resultado);
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         if (sequencia !== sequenciaConsultaVisual) return;
         console.warn("Referencias visuais indisponiveis:", error.message);
         renderizarGaleriaEventoFallback(error.message);
@@ -675,6 +869,7 @@ function cancelarConsultaVisualPendente() {
 }
 
 async function buscarReferenciasExternas() {
+    const contextoSessao = capturarContextoSessao();
     const input = document.getElementById('recipeReferenceQuery');
     const resultado = document.getElementById('recipeReferenceResults');
     const botao = document.getElementById('recipeReferenceButton');
@@ -688,6 +883,7 @@ async function buscarReferenciasExternas() {
 
     try {
         const demoAccessKey = await obterDemoAccessKey();
+        if (!contextoSessaoAtual(contextoSessao)) return;
         // Mesmo raciocinio da checagem em gerarTudo(): demoAccessRequired
         // reflete config do servidor, nao sessao — usuario logado tem
         // demoAccessKey null por design, nao deve ser bloqueado aqui.
@@ -702,12 +898,13 @@ async function buscarReferenciasExternas() {
 
         const headers = headersComSessao();
         if (demoAccessKey) headers['x-demo-access-key'] = demoAccessKey;
-        const response = await fetch('/api/referencias-receitas', {
+        const response = await fetchDaSessao('/api/referencias-receitas', {
             method: 'POST',
             headers,
             body: JSON.stringify({ query })
-        });
-        const data = await response.json().catch(() => ({}));
+        }, contextoSessao);
+        const data = await response.json().catch(error => { if (error.name === 'AbortError') throw error; return {}; });
+        if (!contextoSessaoAtual(contextoSessao)) return;
 
         if (response.status === 401) {
             demoAccessRequired = true;
@@ -723,8 +920,10 @@ async function buscarReferenciasExternas() {
                <p class="reference-disclaimer">Resultados transitórios: não entram no planejamento, histórico ou PDF. Confira a fonte original.</p>`
             : '<p class="reference-message">Nenhuma referência encontrada para essa busca.</p>';
     } catch (error) {
+        if (!contextoSessaoAtual(contextoSessao) || error.name === 'AbortError') return;
         resultado.innerHTML = `<p class="reference-message">${escapeHTML(error.message)}</p>`;
     } finally {
+        if (!contextoSessaoAtual(contextoSessao)) return;
         botao.disabled = false;
         botao.textContent = 'Buscar referências';
     }
@@ -776,7 +975,7 @@ function renderizarHistorico() {
     if (historico.length === 0) {
         container.innerHTML = erroHistorico
             ? `<p class="historico-vazio">${escapeHTML(erroHistorico)} Os dados existentes não foram apagados.</p>`
-            : '<p class="historico-vazio">Nenhum planejamento salvo neste navegador e endereço.</p>';
+            : '<p class="historico-vazio">Nenhum planejamento salvo nesta sessão.</p>';
         return;
     }
 
@@ -822,6 +1021,15 @@ function carregarDoHistorico(id) {
         return;
     }
 
+    // Abrir um salvo invalida geracoes que ainda possam chegar nesta sessao.
+    sequenciaGeracao++;
+    const btnGerar = document.getElementById('btnGerar');
+    if (btnGerar) {
+        btnGerar.disabled = false;
+        btnGerar.innerHTML = `${icon("generate")} CALCULAR + GERAR PLANEJAMENTO COMPLETO`;
+    }
+    window.chefIALastResponseMeta = null;
+    window.chefIALastCulinaryMemoryCount = 0;
     // Preencher formulário
     const evento = entrada.evento;
     // Historico salvo antes do rename para "Karamu" pode ter o sentinela
@@ -871,6 +1079,7 @@ function carregarDoHistorico(id) {
         renderizarGaleriaHistorico();
         const resultadoArea = document.getElementById('resultadoArea');
         if (resultadoArea) {
+            resultadoArea.classList.remove('hidden');
             resultadoArea.dataset.planoValido = "true";
             resultadoArea.insertAdjacentHTML('afterbegin', `
                 <div class="history-loaded-banner" role="status">
@@ -1027,6 +1236,7 @@ function inicializarComboTipoEvento() {
 
 function ligarBotoesEstaticos() {
     document.getElementById('btnApresentacao')?.addEventListener('click', () => switchView('pitch'));
+    document.getElementById('btnIrGerador')?.addEventListener('click', () => switchView('app'));
     document.getElementById('btnConta')?.addEventListener('click', abrirModalConta);
     document.getElementById('btnToggleHeader')?.addEventListener('click', toggleHeader);
     document.getElementById('btnGerar')?.addEventListener('click', gerarTudo);
@@ -1058,6 +1268,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Quem ja tem sessao ou ja escolheu o modo demo cai direto no gerador;
     // visitante novo ve a apresentacao primeiro (Plano 16, item 7).
     switchView(obterSessaoUsuario() || modoDemoAtivo() ? 'app' : 'pitch');
+
+    if (modoDemoAtivo() && !obterSessaoUsuario()) window.storageService?.definirContextoHistorico('demo');
+    document.getElementById('historicoLegadoAviso')?.classList.toggle('hidden', !window.storageService?.temHistoricoLegado());
 
     // Renderizar histórico ao carregar
     setTimeout(() => {

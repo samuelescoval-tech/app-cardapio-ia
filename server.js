@@ -22,6 +22,7 @@ const { avaliarRendimentoAlimentar } = require('./src/services/planning/food-yie
 const { criarSupabaseAuthService, ErroAutenticacao } = require('./src/services/auth/supabase-auth.service');
 const { criarFornecedoresService, ErroFornecedor } = require('./src/services/personalizacao/fornecedores.service');
 const { criarFotosService, ErroFoto } = require('./src/services/personalizacao/fotos.service');
+const fotoConfig = require('./public/js/foto-config');
 const { criarChaveIAService, ErroChaveIA } = require('./src/services/personalizacao/chave-ia.service');
 const { criarPrecosService, ErroPreco } = require('./src/services/personalizacao/precos.service');
 const { calcularEstimativaCusto } = require('./src/services/planning/custo-estimado.service');
@@ -97,7 +98,25 @@ const limitadorPersonalizacao = rateLimit({
     message: { ok: false, error: "Muitas solicitacoes seguidas. Aguarde um minuto e tente novamente." }
 });
 
+// Registrar o parser especifico antes do global. Express pula o segundo
+// parser quando o corpo ja foi lido; a excecao vale so para POST /api/fotos.
+app.post('/api/fotos', limitadorPersonalizacao, express.json({ limit: fotoConfig.corpoMaximoBytes }));
 app.use(express.json({ limit: '20kb' }));
+
+app.use((error, req, res, next) => {
+    if (error.type === 'entity.too.large') {
+        return res.status(413).json({
+            ok: false,
+            error: req.method === 'POST' && /^\/api\/fotos\/?$/i.test(req.path)
+                ? fotoConfig.mensagemLimite
+                : 'Os dados enviados excedem o limite permitido. Reduza o conteúdo e tente novamente.'
+        });
+    }
+    if (error.type === 'entity.parse.failed') {
+        return res.status(400).json({ ok: false, error: 'Os dados enviados não são um JSON válido.' });
+    }
+    next(error);
+});
 
 // Serve os arquivos estáticos da pasta public/
 app.use(express.static(path.join(__dirname, 'public')));
@@ -193,6 +212,7 @@ async function perfilHandler(req, res) {
     }
 }
 
+app.use('/api/auth', (req, res, next) => { res.set('Cache-Control', 'no-store'); next(); });
 app.post('/api/auth/registrar', limitadorAuth, registrarHandler);
 app.post('/api/auth/login', limitadorAuth, loginHandler);
 app.get('/api/auth/perfil', limitadorPersonalizacao, perfilHandler);
@@ -292,7 +312,7 @@ async function removerFotoHandler(req, res) {
 }
 
 app.get('/api/fotos', limitadorPersonalizacao, listarFotosHandler);
-app.post('/api/fotos', limitadorPersonalizacao, express.json({ limit: '8mb' }), criarFotoHandler);
+app.post('/api/fotos', criarFotoHandler);
 app.delete('/api/fotos/:id', limitadorPersonalizacao, removerFotoHandler);
 
 async function obterStatusChaveIAHandler(req, res) {
@@ -427,32 +447,34 @@ async function obterChaveIAUsuarioOuNulo(token) {
 // Plano 16, item 6/7: fornecedores e precos cadastrados pelo usuario viram
 // contexto real para o gerador (catalogo regional), em vez de cadastros
 // isolados sem relacao com o cardapio gerado.
-async function obterCatalogoUsuarioOuNulo(token) {
-    if (!token) return null;
+async function obterCatalogoUsuario(token) {
+    if (!token) return { completo: [], prompt: [], status: 'anonimo' };
     try {
         const [precos, fornecedores] = await Promise.all([
             precosService.listar(token),
-            fornecedoresService.listar(token)
+            fornecedoresService.listar(token).catch(error => {
+                // Nomes de fornecedor enriquecem o contexto, mas sua ausencia
+                // nao deve descartar os precos disponiveis para o calculo.
+                console.error('⚠️ Falha ao obter fornecedores do catalogo:', error.message);
+                return [];
+            })
         ]);
-        if (!precos?.length) return null;
+        if (!precos?.length) return { completo: [], prompt: [], status: 'vazio' };
         const fornecedoresPorId = new Map((fornecedores || []).map(f => [f.id, f.nome]));
-        const catalogo = precos.slice(0, 60).map(preco => ({
+        const completo = precos.map(preco => ({
             item: preco.item,
             unidade: preco.unidade,
             preco: preco.preco,
             categoria: preco.categoria || null,
             fornecedor: preco.fornecedor_id ? (fornecedoresPorId.get(preco.fornecedor_id) || null) : null
         }));
-        // precos.length > 60 significa que o catalogo foi cortado (ordem
-        // alfabetica, ver precosService.listar); exposto em meta para nao
-        // ficar um limite silencioso quando o cardapio for gerado.
-        catalogo.truncado = precos.length > catalogo.length;
-        return catalogo;
+        // So o contexto enviado a IA e limitado. O custo usa todos os precos.
+        return { completo, prompt: completo.slice(0, 60), status: 'disponivel' };
     } catch (error) {
         // Mesmo raciocinio de obterChaveIAUsuarioOuNulo: token ja validado,
         // entao a falha aqui e real e vale registrar antes de gerar sem catalogo.
         console.error("⚠️ Falha ao obter catalogo do usuario:", error.message);
-        return null;
+        return { completo: [], prompt: [], status: 'indisponivel' };
     }
 }
 
@@ -470,7 +492,7 @@ async function gerarCardapioHandler(req, res) {
         const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
         const [chaveIAUsuario, catalogoUsuario] = await Promise.all([
             obterChaveIAUsuarioOuNulo(tokenAutenticado),
-            obterCatalogoUsuarioOuNulo(tokenAutenticado)
+            obterCatalogoUsuario(tokenAutenticado)
         ]);
         if (!chaveIAUsuario && !tokenAutenticado && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
             return res.status(401).json({
@@ -488,14 +510,21 @@ async function gerarCardapioHandler(req, res) {
         const contextoVariedade = criarContextoVariedade(evento, diretrizCulinaria, historicoCulinario);
         console.log('⚙️ Motor: Calculado');
 
-        const prompt = montarPromptPlanejamento(evento, motor, diretrizCulinaria, contextoVariedade, catalogoUsuario);
+        const prompt = montarPromptPlanejamento(evento, motor, diretrizCulinaria, contextoVariedade, catalogoUsuario.prompt);
         console.log('📝 Prompt:', `${prompt.length} chars`);
 
         const gerarPlanoComChave = chaveIAUsuario
             ? criarGeminiService({ apiKey: chaveIAUsuario }).gerarPlano
             : gerarPlano;
         const resposta = await gerarPlanoComChave(prompt, { diretrizCulinaria, evento });
-        resposta.meta = { ...(resposta.meta || {}), chave_ia_propria: Boolean(chaveIAUsuario) };
+        resposta.meta = {
+            ...(resposta.meta || {}),
+            chave_ia_propria: Boolean(chaveIAUsuario),
+            catalogo_usuario_status: catalogoUsuario.status,
+            catalogo_usuario_total: catalogoUsuario.completo.length,
+            catalogo_prompt_itens: catalogoUsuario.prompt.length,
+            catalogo_prompt_truncado: catalogoUsuario.completo.length > catalogoUsuario.prompt.length
+        };
         if (resposta.ok && resposta.plano) {
             resposta.plano.variedade_culinaria = avaliarVariedadePlano(resposta.plano, contextoVariedade);
             resposta.plano.contexto_evento = diretrizCulinaria.contexto_evento;
@@ -525,13 +554,13 @@ async function gerarCardapioHandler(req, res) {
             };
         }
 
-        if (catalogoUsuario?.length && resposta.plano?.lista_compras) {
+        if (catalogoUsuario.completo.length && resposta.plano?.lista_compras) {
             try {
-                resposta.plano.estimativa_custo = calcularEstimativaCusto(resposta.plano.lista_compras, catalogoUsuario);
+                resposta.plano.estimativa_custo = calcularEstimativaCusto(resposta.plano.lista_compras, catalogoUsuario.completo);
                 resposta.meta = {
                     ...(resposta.meta || {}),
                     catalogo_usuario_aplicado: true,
-                    catalogo_usuario_truncado: Boolean(catalogoUsuario.truncado),
+                    catalogo_usuario_truncado: false,
                     custo_estimado_total: resposta.plano.estimativa_custo.total_estimado
                 };
             } catch (erroEstimativa) {

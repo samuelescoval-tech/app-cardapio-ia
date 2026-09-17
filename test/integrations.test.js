@@ -540,10 +540,10 @@ test("fotosService rejeita tipo de imagem invalido e arquivo ausente", async () 
   await assert.rejects(() => service.criar("tok", "u1", { tipo: "image/png", arquivo: "" }), ErroFoto);
 });
 
-test("fotosService rejeita imagem acima de 5MB", async () => {
+test("fotosService rejeita imagem acima de 3MB", async () => {
   const service = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: {}, error: null } }) });
-  const grande = Buffer.alloc(6 * 1024 * 1024, 1).toString("base64");
-  await assert.rejects(() => service.criar("tok", "u1", { tipo: "image/png", arquivo: grande }), ErroFoto);
+  const grande = Buffer.alloc(3 * 1024 * 1024 + 1, 1).toString("base64");
+  await assert.rejects(() => service.criar("tok", "u1", { tipo: "image/png", arquivo: grande }), error => error instanceof ErroFoto && error.statusCode === 413);
 });
 
 test("fotosService rejeita quando o conteudo real do arquivo nao bate com o tipo declarado (auditoria 2026-08)", async () => {
@@ -715,6 +715,9 @@ function builderFake(resultado) {
     delete() { return builder; },
     eq() { return builder; },
     order() { return builder; },
+    range(inicio, fim) {
+      return Promise.resolve({ ...resultado, data: Array.isArray(resultado.data) ? resultado.data.slice(inicio, fim + 1) : resultado.data });
+    },
     single: async () => resultado,
     maybeSingle: async () => resultado,
     then(resolve, reject) { return Promise.resolve(resultado).then(resolve, reject); }

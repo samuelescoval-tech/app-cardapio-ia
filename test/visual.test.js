@@ -24,7 +24,7 @@ test("galeria consulta imagens somente depois de um plano valido", () => {
   assert.ok(renderPlano > inicioSucesso);
   assert.ok(planoValido > renderPlano);
   assert.ok(consulta > planoValido);
-  assert.match(app, /fetch\("\/api\/imagens-evento"/);
+  assert.match(app, /fetchDaSessao\("\/api\/imagens-evento"/);
 });
 
 test("servico de preferencias visuais carrega antes do renderizador", () => {

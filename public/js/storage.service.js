@@ -1,10 +1,25 @@
 /**
- * Storage Service - Gerenciar histórico local com localStorage
+ * Storage Service - Histórico temporário isolado na sessão
  * TAG: storage-local
- * FASE 1: Histórico Local
+ * Sprint 3A: legado preservado sem leitura automática
  */
 
-const STORAGE_KEY = 'chef_ia_historico';
+const STORAGE_KEY = 'karamu_historico_sessao_v2';
+const LEGACY_STORAGE_KEY = 'chef_ia_historico';
+let contextoHistorico = null;
+
+function definirContextoHistorico(contexto) {
+  const anterior = sessionStorage.getItem('karamu_historico_dono_v2');
+  if (!contexto || anterior !== contexto) sessionStorage.removeItem(STORAGE_KEY);
+  contextoHistorico = contexto || null;
+  if (contexto) sessionStorage.setItem('karamu_historico_dono_v2', contexto);
+  else sessionStorage.removeItem('karamu_historico_dono_v2');
+  ultimoErroHistorico = null;
+}
+
+function temHistoricoLegado() {
+  try { return Boolean(localStorage.getItem(LEGACY_STORAGE_KEY)); } catch { return false; }
+}
 const MAX_ENTRIES = 50;
 const MAX_VARIETY_ENTRIES = 5;
 const MAX_VARIETY_DISHES = 18;
@@ -15,6 +30,7 @@ let ultimoErroHistorico = null;
  */
 function salvarHistorico(evento, plano) {
   try {
+    if (!contextoHistorico) throw new Error('Entre na conta ou no modo demo antes de salvar.');
     if (!planoTemConteudo(plano)) {
       ultimoErroHistorico = 'Planejamento incompleto não foi salvo.';
       console.warn('⚠️ Histórico ignorou planejamento incompleto.');
@@ -40,7 +56,7 @@ function salvarHistorico(evento, plano) {
     historico.unshift(entrada); // Adiciona no início (mais recente)
     historico = historico.slice(0, MAX_ENTRIES); // Mantém apenas os últimos 50
 
-    const persistencia = persistirHistoricoComLimite(localStorage, historico);
+    const persistencia = persistirHistoricoComLimite(sessionStorage, historico);
     historico = persistencia.historico;
     const confirmacao = historico.find(item => item.id === id);
     if (!confirmacao || !planoTemConteudo(confirmacao.plano)) {
@@ -58,7 +74,7 @@ function salvarHistorico(evento, plano) {
 
 /**
  * Referencias visuais sao transitorias: licencas, URLs e resultados externos
- * nao devem aumentar o localStorage nem reaparecer como se fossem permanentes.
+ * nao devem aumentar o armazenamento da sessao nem reaparecer como se fossem permanentes.
  */
 function prepararPlanoParaHistorico(plano) {
   if (!plano || typeof plano !== 'object' || Array.isArray(plano)) return plano;
@@ -103,7 +119,8 @@ function persistirHistoricoComLimite(storage, historico) {
 function carregarHistorico() {
   try {
     ultimoErroHistorico = null;
-    const data = localStorage.getItem(STORAGE_KEY);
+    if (!contextoHistorico || sessionStorage.getItem('karamu_historico_dono_v2') !== contextoHistorico) return [];
+    const data = sessionStorage.getItem(STORAGE_KEY);
     if (!data) return [];
 
     const historico = JSON.parse(data);
@@ -140,7 +157,7 @@ function deletarEntrada(id) {
     historico = historico.filter(e => e.id !== id);
 
     if (historico.length < original_length) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(historico));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(historico));
       console.log('✅ Entrada deletada:', id);
       return true;
     }
@@ -156,7 +173,7 @@ function deletarEntrada(id) {
  */
 function limparHistorico() {
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(STORAGE_KEY);
     console.log('✅ Histórico completo limpo');
     return true;
   } catch (error) {
@@ -278,6 +295,8 @@ function formatarDataBR(isoString) {
 // Exportar para uso global no navegador
 if (typeof window !== 'undefined') {
   window.storageService = {
+    definirContextoHistorico,
+    temHistoricoLegado,
     salvarHistorico,
     carregarHistorico,
     carregarEntrada,

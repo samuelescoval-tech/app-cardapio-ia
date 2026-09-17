@@ -1,9 +1,10 @@
 const { randomUUID } = require("node:crypto");
 const { createClient } = require("@supabase/supabase-js");
 const { ErroAutenticacao } = require("../auth/supabase-auth.service");
+const fotoConfig = require("../../../public/js/foto-config");
 
 const BUCKET = "fotos-pratos";
-const TAMANHO_MAXIMO_BYTES = 5 * 1024 * 1024;
+const TAMANHO_MAXIMO_BYTES = fotoConfig.tamanhoMaximoBytes;
 const TIPOS_PERMITIDOS = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -67,7 +68,7 @@ function criarFotosService(opcoes = {}) {
     }
     if (!buffer.length) throw new ErroFoto("Arquivo da imagem invalido.", 400);
     if (buffer.length > TAMANHO_MAXIMO_BYTES) {
-      throw new ErroFoto("Imagem acima do limite de 5MB.", 400);
+      throw new ErroFoto(fotoConfig.mensagemLimite, 413);
     }
     if (!assinaturaBate(buffer, mimeType)) {
       throw new ErroFoto("O conteudo do arquivo nao corresponde ao tipo de imagem informado.", 400);

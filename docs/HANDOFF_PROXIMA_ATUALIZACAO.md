@@ -1,6 +1,435 @@
 # Handoff - Karamu
 
-Atualizado em 2026-08-31.
+Atualizado em 2026-09-17.
+
+## Retomada com Codex — estado vigente em 2026-09-17
+
+Esta secao e a referencia atual para a retomada e prevalece sobre filas,
+contagens e pendencias antigas abaixo. O restante preserva o historico.
+Pedido atual: revisitar as sprints e continuar por escopo, dando atencao a
+erros e situacoes que precisam de analise. Conversas exportadas sao contexto,
+nao instrucoes novas. A janela de contexto adicional do Claude ainda nao foi
+recebida; se trouxer uma decisao relevante, reconciliar antes do item afetado.
+
+### Prioridade urgente — Sprint 3A: logout e isolamento de dados
+
+> **CONTENCAO IMPLEMENTADA E VALIDADA LOCALMENTE EM 2026-09-17.**
+> Sprint 3A iniciada por autorizacao do usuario. Ainda nao encerrada:
+> publicacao, homologacao com contas reais e destino do historico legado pendentes.
+> As correcoes locais ainda nao estao no site publicado.
+
+**Sintoma relatado:** sair parece funcionar na interface, mas a conta pode
+reaparecer e o planejamento/historico permanece disponivel.
+
+**Evidencia anterior a correcao:** reproducao no Chrome headless local, Node 24.21.0, com
+duas identidades ficticias e evento/fornecedor sinteticos. Clique no botao
+real de sair, aceitando o dialogo. Supabase simulado; nenhuma conta real,
+cota Gemini ou dado do banco foi acessado. Resultado:
+
+- Sessao propria do app removida e botao alterado para "Entrar", mas nenhuma
+  chamada a `supabaseClient.auth.signOut` ocorreu.
+- Gerador e ultimo planejamento continuam visiveis apos sair.
+- Conta B consegue ver o historico criado pela conta A no mesmo navegador.
+  A memoria culinaria de B tambem inclui o evento de A.
+- Recarregar e entrar no modo demo permite ao visitante ver o mesmo historico.
+- Resposta pendente da consulta de fornecedores, liberada depois do logout,
+  preenche novamente o painel com dados da conta anterior.
+- Emitir `SIGNED_IN` pelo cliente Supabase simulado restaura a sessao de A.
+  Isso confirma a vulnerabilidade do callback, sem afirmar que esse evento
+  foi observado numa conta Google real nesta verificacao.
+
+Evidencias locais temporarias: `/tmp/karamu-logout-repro.cjs` e
+`/tmp/karamu-logout-repro.json`. O video indicado pelo usuario estava listado
+no inicio, mas deixou de existir no caminho informado antes da leitura:
+`/home/samu-alba/Vídeos/Gravações de tela/Gravação de tela de 2026-09-17 16-56-53.webm`.
+Nao foi possivel examinar seus quadros; conclusoes acima sao da reproducao
+local e leitura do codigo, nao da gravacao.
+
+**Causas confirmadas antes da correcao:**
+
+- `encerrarSessaoUsuario` em `public/js/app.js` remove apenas
+  `chef_ia_sessao_usuario` do `sessionStorage` e atualiza o botao. Nao encerra
+  a sessao mantida pelo SDK nem limpa resultado, formularios e caches.
+- `inicializarLoginSocial` aceita `SIGNED_IN` sem coordenar logout e nao
+  trata `SIGNED_OUT`; ha duas fontes de estado de autenticacao.
+- `perfilSair` em `public/js/perfil.js` volta ao gerador, e consultas
+  assincronas de perfil nao conferem se a sessao mudou antes de renderizar.
+- `storage.service.js` usa `chef_ia_historico` como chave unica de
+  `localStorage`, sem proprietario ou separacao de conta/visitante.
+
+**Impacto e limites:** exposicao de dados entre contas/visitante no mesmo
+perfil de navegador esta confirmada, assim como contaminacao da memoria
+culinaria. Persistir um projeto nao e um defeito por si so; torna-se um
+defeito de confidencialidade quando outro contexto de usuario pode acessa-lo.
+Nao ha evidencia nesta analise de quebra de RLS, acesso entre dispositivos
+ou invasao de contas no Supabase. Essas conclusoes exigiriam testes proprios.
+
+**Objetivo da Sprint 3A:** sair encerra a sessao do app corretamente, remove
+dados privados da interface e impede reaparecimento por callbacks, respostas
+atrasadas, recarga ou troca de conta. Contencao local vem antes da sincronizacao
+do historico, que continua sendo a Sprint 4.
+
+**Escopo de implementacao:**
+
+1. Coordenar autenticacao e logout de e-mail/senha e Google, incluindo eventos
+   do SDK, expiracao/renovacao, falha de rede e outras abas. Definir o escopo
+   de logout no dispositivo; nao desconectar outros dispositivos por acidente.
+   Conferir diferenca entre revogar renovacao e validade residual do token de
+   acesso; nao prometer revogacao imediata sem verificar o comportamento real.
+2. Limpar estado privado da tela e memoria: resultado, dados para PDF, campos
+   do evento/perfil, fornecedores, fotos, precos, e-mail e entradas de chave.
+   Retornar a apresentacao sem herdar modo demo ou credenciais de teste da
+   sessao encerrada. Uma nova entrada em demo deve ser uma escolha explicita.
+3. Cancelar ou descartar respostas iniciadas na sessao anterior (perfil,
+   geracao, imagens e referencias). Nenhuma resposta antiga pode renderizar,
+   salvar historico ou exportar dados depois de logout/troca de conta.
+4. Impedir mistura de historico e memoria culinaria entre contas e visitante.
+   Chaves locais com prefixo por usuario, sozinhas, nao protegem dados de quem
+   tem acesso ao mesmo perfil de navegador. Definir persistencia/limpeza de
+   acordo com essa limitacao, sem confundir separacao visual com confidencialidade.
+5. Tratar historico legado sem dono com decisao explicita: nao apagar
+   automaticamente, nao atribuir a primeira conta que entrar e nao importar
+   silenciosamente. Preparar opcao de preservacao/exportacao e destino antes
+   de eventual limpeza destrutiva; registrar o risco residual enquanto existir
+   dado privado legivel nesse navegador. Nao declarar isolamento completo
+   sem resolver esse ponto.
+
+**Criterios de saida:**
+
+- Teste pelo botao real com conta A: apos sair, recarregar, trocar foco/aba e
+  receber eventos atrasados nao restaura A nem mostra seus dados.
+- Conta B e visitante nao conseguem listar, carregar, gerar PDF ou usar como
+  memoria culinaria o planejamento de A; caches do perfil tambem sao isolados.
+- Requisicoes em andamento antes do logout nao repovoam tela/historico;
+  falha de rede ao sair tem comportamento seguro e mensagem honesta.
+- Login por senha e Google funcionam depois de um novo login explicito;
+  token removido nao continua sendo enviado pelo app. Rotas privadas rejeitam
+  acesso sem sessao valida. Testar acesso cruzado A/B no banco de teste antes
+  de alegar verificacao de RLS; nao deduzir isso de testes de interface.
+- Testes de regressao reproduzem estes casos; suite existente continua
+  passando; homologacao com contas de teste no ambiente publicado confirma
+  saida real, recarga, duas abas, troca de conta e politica do historico legado.
+
+**Implementacao local entregue:**
+
+- SDK Supabase como fonte da sessao, com credenciais em `sessionStorage` e
+  adaptador que impede callbacks antigos de restaurar tokens. Login por senha
+  entrega o refresh token ao SDK; Google usa PKCE. Respostas de auth sem cache.
+- Logout limpa imediatamente formularios, resultado/PDF, caches e historico da
+  sessao; volta a apresentacao e solicita `signOut({ scope: 'local' })` com a
+  credencial original. Falha de rede informa que a revogacao nao foi confirmada.
+  Nao promete invalidacao imediata de JWT ja emitido nem saida global do Google.
+- Controle de versao cancela requisicoes e descarta respostas antigas, inclusive
+  geracao, leitura de arquivos e consultas de perfil. Expiracao, recarga e outras
+  abas da mesma conta respeitam o encerramento; outra conta nao e desconectada.
+- Novo historico temporario da aba, separado por contexto conta/demo, removido
+  ao sair/trocar de conta. Recarga autenticada preserva a sessao atual. Interface
+  e confirmacao de saida orientam salvar PDF. Sincronizacao continua na Sprint 4.
+- Botao **Gerador** permanente na navegacao permite retornar da apresentacao,
+  com controle de acesso; conferido tambem em largura de 390 px.
+
+**Historico legado — decisao pendente:** `chef_ia_historico` em `localStorage`
+foi preservado, sem leitura, importacao ou atribuicao automatica a qualquer conta.
+O app apresenta aviso generico de existencia. Foi perguntado ao usuario se precisa
+recuperar esses projetos; ainda sem resposta. Eles continuam legiveis pelas
+ferramentas do navegador no mesmo perfil: a contencao nao elimina esse risco
+residual. Nao declarar isolamento completo nem apagar sem decidir recuperacao.
+
+**Validacao:** 214 testes no Node 24.21.0 (dez novos de sessao). Chrome com SDK
+real fixado em 2.112.3 e Auth HTTP ficticio local: senha, retorno OAuth/PKCE,
+logout em duas abas da mesma conta, troca A/B/demo, recarga, geracao atrasada e
+navegacao mobile. Nenhuma conta real, geracao Gemini ou gravacao no banco usada.
+Isso nao valida Google real, RLS no banco ou comportamento da versao publicada.
+Teste reproduzivel em `scripts/validate-session-ui.js`; requer Chrome e copia
+local do SDK do HTML, cuja integridade SHA-384 e conferida pelo script:
+
+```sh
+curl -fL 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js' -o /tmp/karamu-supabase-browser-2.112.3.js
+npm run test:session-ui
+```
+
+Pode-se indicar outro caminho com `SESSION_TEST_SDK`. Evidencias temporarias:
+`/tmp/karamu-sprint3a-browser.json` e `/tmp/karamu-sprint3a-mobile.png`.
+
+**Novos relatos de prioridade media:** foto nao salva e nao se relaciona com
+fornecedor/preco. O limite/parser do upload foi corrigido na Sprint 3 local,
+mas falta homologar upload autenticado e persistencia no site publicado. Nao
+atribuir todo erro novo ao parser sem reproduzir. A modelagem atual de fotos de
+prato nao possui vinculo direto com fornecedor ou item de preco: definir se a
+foto representa prato, produto ou oferta antes de implementar esse relacionamento.
+Registrar na Sprint 5 a analise do vinculo e relevancia; persistencia do upload
+permanece criterio pendente da Sprint 3. Nao foi criado vinculo automatico.
+
+**Proximos passos para encerrar 3A:** decidir recuperacao/destino do legado,
+homologar contas de teste (senha e Google), duas abas, logout offline e acesso
+A/B; publicar as correcoes mediante fluxo de publicacao do projeto. A ampliacao
+do contexto da IA permanece adiada. Nenhuma publicacao nesta etapa.
+
+### Complemento da Sprint 3A — reabrir projeto e separar geracoes
+
+Relato adicional em 2026-09-17: projeto parece salvar apenas o formulario e o
+resultado anterior influencia o proximo. Confirmado no codigo: restauracao chamava
+renderer completo, mas nao retirava `hidden` do resultado; depois de recarregar,
+os campos voltavam e o plano permanecia oculto. Corrigido localmente. O historico
+armazena evento e JSON do planejamento (cardapio, receitas, compras, cronograma,
+logistica etc.), e nao apenas o resumo exibido na lista. Referencias visuais
+externas seguem transitorias; esta correcao nao cria arquivo permanente de imagens.
+
+A geracao enviava automaticamente a memoria culinaria dos projetos anteriores.
+Esse envio foi desativado no frontend: novas geracoes enviam lista vazia. O
+backend continua compativel com o campo, mas reativacao na interface depende de
+uma escolha explicita futura. Campos ainda preenchidos no formulario continuam
+sendo entradas do evento atual; nao sao apagados ao gerar novamente.
+
+Nova sequencia de geracao descarta respostas de uma geracao substituida ou
+quando o usuario abre um projeto salvo. Consultas visuais anteriores sao
+invalidadas no inicio da nova geracao. Tres testes de regressao verificam
+restauracao completa apos recarga, corpo enviado sem memoria e resposta atrasada
+sem sobrescrever projeto aberto. Suite atual: 217 testes passando no Node 24.21.0.
+Nao houve geracao paga nem publicacao para validar estes casos.
+
+**Pendencia preservada:** salvar permanentemente na conta, recuperar depois de
+logout e decidir destino dos projetos legados continuam na Sprint 4/fechamento
+3A. O historico novo ainda e temporario; nao apresentar este ajuste como
+sincronizacao ou persistencia definitiva do evento.
+
+### Possibilidades futuras — contexto de precos da IA
+
+> **DECISAO DO USUARIO — 2026-09-17:** manter o limite atual de 60 itens
+> enviados a IA. A ampliacao fica registrada como funcionalidade futura,
+> **nao implementada nem ativada**, devido ao potencial de gasto adicional.
+> Retomar somente quando o usuario decidir continuar essa frente. Registrar
+> a possibilidade nao autoriza aumentar o limite ou criar consumo adicional.
+
+Este registro distingue o funcionamento local apos a Sprint 3 das possibilidades
+futuras. A publicacao e a homologacao externa da Sprint 3 seguem pendentes.
+
+| Parte do fluxo | Comportamento atual | Motivo / restricao |
+|---|---|---|
+| Estimativa de custo | Consulta todos os precos recuperados do usuario | Calculo local; incluir mais precos nessa conta nao acrescenta tokens ao prompt. Consultas ao banco ainda usam recursos da infraestrutura. |
+| Sugestoes da IA | Recebem os primeiros 60 itens em ordem alfabetica | Limite definido pelo app para controlar o contexto enviado; nao e um limite de 60 itens imposto pelo Gemini. Um produto fora desse trecho pode ser cotado pelo motor, mas seu cadastro nao orienta diretamente a IA. |
+| Consulta dos precos | Recupera o catalogo em paginas | O banco limita quantos registros devolve por resposta; paginar contorna esse corte. Nao significa enviar cada pagina a IA. Catalogos maiores exigem mais consultas ao banco. |
+| Falha no carregamento | Gera sem estimativa e informa o usuario | O aviso evita apresentar um custo incompleto como confiavel. A causa de uma falha real deve ser investigada; remover o aviso nao resolve indisponibilidade, sessao ou erro de consulta. |
+
+**Por que nao ampliar agora:** mais itens significam mais texto enviado a IA.
+Isso aumenta tokens de entrada e pode elevar cobranca, consumo de cota e tempo
+de resposta, conforme o modelo e a configuracao utilizados. Quantidade de itens
+nao e uma medida exata de custo: nomes e campos variam de tamanho. Enviar o
+catalogo inteiro tambem nao garante sugestoes melhores. Nenhum valor monetario
+ou limite futuro foi decidido nesta conversa.
+
+**Alternativas para avaliar quando esta frente for retomada:**
+
+- Selecao automatica por relevancia ao evento, mantendo o limite: pode dar
+  mais utilidade aos mesmos 60 itens do que a ordem alfabetica. Preferir avaliar
+  uma selecao local antes de introduzir outra chamada de IA; medir a qualidade.
+- Controle opcional no perfil: manter 60 como padrao e permitir outros limites,
+  com explicacao de impacto e teto no servidor. Os valores 30/90/120 citados no
+  historico sao exemplos, nao opcoes aprovadas ou ja disponiveis.
+- Catalogo completo no contexto: possibilidade avancada, condicionada a tamanho,
+  orcamento e limites do modelo. Nao implementar uma opcao "sem limite" sem
+  protecao contra solicitacoes grandes e gastos inesperados.
+- Eventual oferta por plano de uso ou chave propria: avaliar quem assume o
+  consumo e como comunicar isso. Nao ha plano pago, preco, cota ou cobranca
+  definidos por este registro; pagamentos continuam fora do escopo atual.
+
+**Criterios para transformar a ideia em sprint:** usuario decide retomar;
+medir tokens, tempo e qualidade com catalogos representativos; verificar
+limites e precos vigentes do modelo; definir orcamento, teto e responsavel
+pelo consumo; comparar as alternativas; descrever comportamento padrao,
+ativacao opcional e forma de voltar ao limite anterior. A estimativa local
+deve continuar usando o catalogo completo em qualquer alternativa.
+
+**Estado:** backlog de produto, sem data e fora das Sprints 3 a 7. Nao ha
+seletor oculto nem recurso pronto aguardando ativacao. Esta decisao prevalece
+sobre sugestoes antigas de ampliar o contexto automaticamente.
+
+### Evidencias da retomada
+
+- Base local: commit `471d7c8`, de 2026-09-12; pasta de trabalho limpa antes
+  desta atualizacao documental. Nao foi consultado o estado remoto atual.
+- 191 testes passaram nos seis arquivos de teste; `git diff --check` passou.
+  Ambiente desta verificacao: Node 22.22.1; `package.json` exige Node 24.x.
+  A validacao no runtime declarado ainda precisa ser feita.
+- Pagina inicial e `/api/status`: HTTP 200 em localhost. Configuracoes de IA
+  e autenticacao presentes; isso nao comprova credenciais validas ou servicos
+  externos funcionando. Producao, login externo e geracao real nao foram
+  revalidados nesta retomada.
+- **Erro reproduzido:** POST `/api/fotos` com corpo JSON de 22.062 bytes
+  retorna 413 em HTML. O parser global de 20 KB em `server.js` executa antes
+  do parser de 8 MB da rota; o servico de fotos aceita arquivos de ate 5 MB.
+  A reproducao usou dados sinteticos, sem login ou gravacao no Supabase.
+- **Limitacao confirmada no codigo:** `obterCatalogoUsuarioOuNulo` corta o
+  catalogo em 60 itens e o mesmo resultado alimenta prompt e calculo de custo.
+- **Limitacao confirmada no codigo:** historico usa `localStorage`, chave
+  unica por navegador, sem sincronizacao ou separacao por conta.
+- **Achados para etapas seguintes:** importacao de projeto tem botao mas nao
+  tem implementacao; falta vocabulario de pratos na busca visual. Relevancia,
+  carregamento das imagens e comportamento de sessao exigem teste de fluxo.
+
+### Fila revisada e criterios de conclusao
+
+As sprints 1 e 2 permanecem concluidas conforme os registros anteriores.
+Nao repetir todo o trabalho: defeitos novos entram na fila abaixo. Esta
+revisao renumera as etapas futuras: fechamento legal passa a Sprint 6 e
+conteudo da apresentacao passa a Sprint 7.
+
+**Sprint 3 — Corrigir upload e estimativa de custo. Implementada e validada
+localmente em 2026-09-17; homologacao externa pendente.**
+
+- Objetivo: tornar confiaveis duas funcionalidades ja oferecidas ao usuario.
+- Escopo: corrigir a ordem/abrangencia do parser de fotos, preservar limite
+  pequeno nas demais rotas e retornar erro JSON compreensivel para excesso
+  de tamanho; separar catalogo completo para custo de catalogo limitado
+  enviado ao prompt; ajustar aviso visual para explicar o limite correto.
+- Analise antes da correcao: rastrear upload navegador -> Express -> servico
+  -> storage; conferir limite de transporte da hospedagem antes de prometer
+  suporte a 5 MB em producao. No custo, conferir conversao de unidades,
+  correspondencias aproximadas e tratamento de falha ao carregar catalogo.
+- Criterio de saida: teste HTTP passando pelo app Express demonstra que corpo
+  de foto acima de 20 KB chega ao handler e que excesso do limite adotado e
+  tratado; demais rotas preservam limite. Teste do fluxo de geracao demonstra
+  que item alem da posicao 60 entra na estimativa e o prompt continua limitado.
+  Preservar separacao de custo exato/aproximado. Suite passa no Node 24.x;
+  validacoes externas ainda indisponiveis ficam explicitamente registradas.
+- Responsavel: Codex no codigo e verificacao local; usuario apenas onde for
+  necessario acesso a painel/conta externa. Nao inclui seletor manual de
+  tokens, mudanca de provedor ou reescrita geral da arquitetura.
+
+Resultado da execucao:
+
+- Parser especifico de POST `/api/fotos` registrado antes do parser global;
+  outras rotas/metodos preservam 20 KB. O limitador da rota executa uma vez.
+  Erros de corpo grande retornam JSON 413; JSON malformado retorna JSON 400.
+- Limite de arquivo agora **3 MiB (exibido como 3 MB)** no navegador e servico.
+  Constantes compartilhadas em `public/js/foto-config.js`; limite HTTP de
+  4 MiB + 20 KiB acomoda base64 e JSON. Arquivo grande e recusado antes da
+  leitura/envio; 413 da hospedagem em HTML/texto tambem recebe aviso legivel.
+  Autenticacao, assinatura do arquivo e regras de storage foram preservadas.
+- Motivo de reduzir os antigos 5 MB: a documentacao oficial da Vercel informa
+  teto de 4,5 MB por payload; base64 aumenta o arquivo em aproximadamente 1/3.
+  Fonte consultada em 2026-09-17:
+  https://vercel.com/docs/functions/limitations . Nao houve mudanca de provedor
+  nem migracao do banco; o teto maior existente no bucket pode permanecer,
+  pois este fluxo aplica limite menor. Arquivos ja salvos nao sao removidos.
+- `obterCatalogoUsuario` entrega catalogo completo e subconjunto de 60 itens
+  ao prompt. A estimativa usa todos os precos; correspondencias aproximadas
+  continuam separadas do total principal e unidades incompativeis nao somam.
+  Metadados novos distinguem tamanho total, itens do prompt e indisponibilidade.
+- `precosService.listar` busca paginas ordenadas por item/id, respeita o total
+  informado pelo banco e avanca pelo recebido mesmo com limite por resposta
+  menor. Erro de pagina descarta o resultado parcial; pagina vazia antes do
+  total esperado sinaliza falha. Nao e uma transacao de snapshot: edicoes
+  concorrentes enquanto varias paginas sao lidas ainda podem exigir nova consulta.
+- Falha na consulta de fornecedores deixa somente seus nomes indisponiveis;
+  nao descarta precos. Falha na consulta de precos gera planejamento sem
+  estimativa e com aviso. Mensagem antiga de "so 60 precos no custo" removida.
+
+Evidencias e limites da validacao:
+
+- **204/204 testes** no Node **24.21.0**, baixado do distribuidor oficial com
+  checksum SHA-256 conferido, instalado apenas em `/tmp`. Node do sistema
+  nao foi alterado. Novo dominio `test/functional.test.js` cobre rotas HTTP,
+  paginacao e formulario; demais seis dominios continuam passando.
+- Teste HTTP: foto sintetica de 30 KiB e arquivo no teto de 3 MiB chegam ao
+  servico/storage simulado; excesso de arquivo/corpo, sessao ausente, assinatura
+  invalida e JSON malformado sao rejeitados. Geracao com 61 precos comprova
+  compra de 500 g a 10/kg na posicao 61 = total exato 5; aproximado 10 separado.
+  Paginacao testada com 1.105 registros e limite simulado de 200 por resposta.
+- Chrome headless: cliques reais no formulario confirmaram rejeicao previa,
+  recuperacao apos 413 em HTML, cabecalho de sessao, sucesso limpando campos e
+  novos avisos de custo. Respostas externas simuladas; viewport mobile 390 px
+  sem overflow horizontal. Evidencias temporarias em
+  `/tmp/karamu-sprint3-tests.log` e `/tmp/karamu-sprint3-browser.cjs`.
+- Sem consumo real de Gemini, gravacao em Supabase, publicacao ou verificacao
+  da Vercel nesta execucao. Antes de considerar homologado em producao, publicar
+  a versao e conferir com conta de teste: upload de foto real perto do teto,
+  listagem/exclusao e estimativa com item cadastrado depois da posicao 60.
+  Isso depende da versao publicada e de uma sessao de teste; nao foi simulado
+  como se tivesse sido concluido. Implementacao local esta pronta para revisao.
+
+Observacao fora do escopo: captura mobile com e-mail sintetico indica possivel
+disputa de espaco entre conta e marca no cabecalho. Reproduzir com diferentes
+comprimentos de e-mail na revisao de jornada (Sprint 7), sem causa atribuida.
+
+**Sprint 4 — Historico associado a conta. Planejada, depende das Sprints 3 e 3A.**
+
+- Objetivo: recuperar os eventos do usuario ao entrar em outro dispositivo.
+- Escopo: tabela/migracao com RLS por dono, rotas autenticadas de salvar,
+  listar e excluir, integracao do frontend e estado visivel de salvamento.
+- Analise previa: definir tamanho e versionamento do plano, paginacao,
+  repeticao de gravacoes, expiracao de sessao e falhas de rede. Historico
+  antigo e compartilhado por navegador: nao atribuir automaticamente os
+  eventos existentes a primeira conta que entrar. Preparar importacao
+  explicita e preservar a copia local ate confirmacao de gravacao.
+- Criterio de saida: mesma conta recupera evento em dois contextos de
+  navegador; segunda conta nao le/altera/exclui dados da primeira; logout
+  limpa exibicao de dados da conta; falha ao salvar nao anuncia sucesso nem
+  perde o plano; repeticao nao duplica evento. Validar RLS no banco de teste,
+  alem dos testes locais. Migracao/deploy nao aplicados ainda.
+- Responsavel: Codex na implementacao; usuario na escolha do comportamento
+  do historico legado e na disponibilizacao de ambiente externo, se preciso.
+
+**Sprint 5 — Qualidade e carregamento das imagens. Planejada.**
+
+- Objetivo: aumentar cobertura de fotos pertinentes sem trocar por fotos
+  incorretas nem perder autoria/licenca e fallback honesto.
+- Escopo: montar amostra fixa dos pratos problematicos, medir resultado atual,
+  analisar termos de busca, filtros, sessao e bloqueios do navegador/CSP;
+  ampliar vocabulario onde houver evidencia e corrigir falhas reproduzidas.
+- Criterio de saida: comparacao antes/depois por prato registra foto relevante,
+  ilustracao ou ausencia, sem regressao nos casos bons; imagens selecionadas
+  carregam no navegador; falta de resultado e falha do provedor continuam
+  utilizaveis. Definir meta de cobertura apos medir a amostra, sem prometer
+  foto real para todo prato. Testes locais e consultas externas distinguidos.
+- Responsavel: Codex na analise e implementacao; usuario na avaliacao da
+  amostra visual. Sem contratacao de banco de imagens nesta sprint.
+
+**Sprint 6 — Fechamento legal e fluxos de conta. Planejada.**
+
+- Objetivo: revisar documentos e comportamento do produto antes da divulgacao
+  mais ampla, retomando o escopo legal da fila anterior.
+- Escopo: levantar consistencia entre privacidade/termos e armazenamento real
+  (incluindo Sprint 4); encaminhar revisao juridica e busca de marca ja previstas;
+  decidir eventual aceite no cadastro e tratamento equivalente no Google;
+  registrar decisao sobre logo do Google.
+- Criterio de saida: decisoes e revisoes externas registradas, ajustes tecnicos
+  implementados e fluxos de cadastro testados. Checkbox isolado nao representa
+  conclusao juridica; Codex nao certifica conformidade nem disponibilidade de marca.
+- Responsavel: usuario/profissional competente nas decisoes e revisoes externas;
+  Codex no levantamento e implementacao decorrente. Trabalho externo pode ser
+  preparado enquanto a fila tecnica avanca, sem abrir outra sprint de codigo.
+
+**Sprint 7 — Apresentacao e validacao da jornada. Planejada.**
+
+- Objetivo: apresentar o produto de acordo com o publico e o que ele entrega.
+- Escopo: definir publico-alvo com usuario, revisar `#pitchSection`, testar
+  jornada apresentacao -> conta -> geracao -> historico -> PDF em desktop/mobile;
+  decidir implementar ou retirar a importacao de projeto hoje sem funcao.
+- Criterio de saida: texto sem promessas de recursos ausentes; controles
+  apresentados funcionam; jornada e PDF conferidos e defeitos classificados.
+- Responsavel: usuario no publico-alvo e decisao sobre importacao; Codex no
+  texto, interface e verificacao. Nao inclui novo redesign completo.
+
+### Como tratar erros durante as sprints
+
+Para cada achado, registrar: sintoma, reproducao, esperado/obtido, impacto,
+evidencia, causa confirmada ou hipotese, correcao e verificacao. Classificar
+como confirmado, em investigacao ou melhoria; nao declarar causa por suposicao.
+Testes de handler isolado nao bastam para falhas de middleware/navegador.
+
+Erro que cause perda/exposicao de dados ou bloqueie a jornada exige reavaliar
+a prioridade na hora. Outros itens fora do escopo vao ao backlog, sem ampliar
+a sprint silenciosamente. Cada fechamento atualiza estes dois documentos,
+com testes executados e limites da verificacao. Nao concluir integracao externa
+com base apenas em mock. Publicacao e migracoes externas sao passos separados
+da implementacao local e precisam de escopo concreto quando forem executados.
+
+Fora desta fila: pagamentos, catalogo regional piloto, repertorio culinario
+ampliado e controle manual do tamanho do contexto de precos. Investigar login
+Google com dois cliques apenas se reproduzido; nao presumir defeito do app.
+
+## Registro historico anterior a retomada
 
 ## Metodo de sprints (estabelecido em 2026-08-31)
 

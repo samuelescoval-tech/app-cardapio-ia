@@ -60,13 +60,18 @@ so a parte de contas fica desativada. Nunca versionar chaves.
 
 Comandos: npm test e git diff --check.
 
-Os testes estao agrupados em seis dominios em test/: planejamento, validacao do
-plano, integracoes, visual, benchmarks e armazenamento.
+Os testes estao agrupados em oito dominios em test/: planejamento, validacao do
+plano, integracoes, visual, benchmarks, armazenamento e fluxos funcionais
+(HTTP local e formulario), alem de sessao e isolamento. Os testes HTTP usam
+servicos externos simulados. Para o fluxo no Chrome: npm run test:session-ui
+(preparacao do SDK e limites da verificacao descritos no handoff).
 
 ## Limites atuais
 
 - precos reais permanecem A cotar sem catalogo regional rastreavel;
-- historico de eventos gerados usa localStorage (por navegador); contas,
-  fornecedores e fotos ja sao sincronizados via Supabase (Plano 14);
+- historico novo e temporario na aba e removido ao sair/trocar de conta; salve
+  PDF para conservar o resultado. Legado em localStorage e preservado sem leitura
+  automatica, com destino pendente. Sincronizacao do historico e a Sprint 4;
+  contas, fornecedores e fotos usam Supabase (Plano 14);
 - referencias Openverse sao transitorias;
 - pagamentos permanecem adiados (sem decisao de cobranca ainda).
