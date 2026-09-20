@@ -114,7 +114,11 @@ async function main(){
  app.get('/api/status',(req,res)=>res.json({ok:true,demo_access:{required:false},auth:{supabase_url:baseUrl,supabase_anon_key:'anon-teste'},visual_references:{configured:false},recipe_references:{configured:false}}));
  app.post('/api/auth/login',(req,res)=>{const id=String(req.body.email).split('@')[0];res.json({ok:true,email:user(id).email,usuario_id:id,access_token:jwt(id),refresh_token:'refresh-'+id});});
  app.get('/auth/v1/user',(req,res)=>res.json(user(usuario(req))));
- app.get('/auth/v1/authorize',(req,res)=>res.redirect(baseUrl+'/?code=oauth-A'));
+ app.get('/auth/v1/authorize',(req,res)=>{
+  assert.equal(req.query.redirect_to,baseUrl+'/');
+  assert.equal(req.query.prompt,'select_account');
+  res.redirect(req.query.redirect_to+'?code=oauth-A');
+ });
  app.post('/auth/v1/token',(req,res)=>{
   assert.equal(req.query.grant_type,'pkce');
   assert.equal(req.body.auth_code,'oauth-A');assert.ok(req.body.code_verifier);
@@ -176,8 +180,47 @@ async function main(){
   await cdp.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   const mobile=await cdp.evaluate(`({largura:window.innerWidth,conteudo:document.documentElement.scrollWidth,geradorVisivel:document.getElementById('btnIrGerador').getBoundingClientRect().width>0})`);
   assert.equal(mobile.conteudo,mobile.largura);assert.equal(mobile.geradorVisivel,true);
-  fs.writeFileSync('/tmp/karamu-sprint3a-browser.json',JSON.stringify({saida,logouts,mobile},null,2));
   const shot=await cdp.send('Page.captureScreenshot',{format:'png'});fs.writeFileSync('/tmp/karamu-sprint3a-mobile.png',Buffer.from(shot.data,'base64'));
+  await cdp.send('Page.bringToFront');
+  for(const largura of [320,390,1280]) {
+   await cdp.send('Emulation.setDeviceMetricsOverride',{width:largura,height:844,deviceScaleFactor:1,mobile:largura<768});
+   for(const atual of ['btnApresentacao','btnIrGerador']) {
+    await cdp.evaluate(`document.getElementById('${atual}').click()`);
+    await esperar(300);
+    const estado=await cdp.evaluate(`(()=>{
+     const botoes=[...document.querySelectorAll('.section-link')];
+     const ativo=botoes.find(b=>b.getAttribute('aria-current')==='page');
+     const inativo=botoes.find(b=>b!==ativo);
+     const fonte=(b,classe)=>parseFloat(getComputedStyle(b.querySelector(classe)).fontSize);
+     const barra=document.querySelector('.status-bar').getBoundingClientRect();
+     return {ativo:ativo.id,logoAtiva:fonte(ativo,'.section-wordmark'),logoInativa:fonte(inativo,'.section-wordmark'),nomeAtivo:fonte(ativo,'.section-label'),nomeInativo:fonte(inativo,'.section-label'),esquerda:barra.left,direita:barra.right,altura:barra.height,largura:innerWidth,scroll:scrollY};
+    })()`);
+    assert.equal(estado.ativo,atual);
+    assert.ok(estado.logoAtiva>estado.logoInativa,JSON.stringify(estado));
+    assert.ok(estado.nomeAtivo<estado.nomeInativo);
+    assert.ok(estado.esquerda>=0 && estado.direita<=estado.largura);
+    const nav=await cdp.send('Page.captureScreenshot',{format:'png',captureBeyondViewport:true,clip:{x:0,y:estado.scroll,width:largura,height:120,scale:2}});
+    fs.writeFileSync(`/tmp/karamu-nav-${largura}-${atual}.png`,Buffer.from(nav.data,'base64'));
+    if(atual==='btnIrGerador') {
+     await cdp.evaluate("window.scrollTo({top:0,behavior:'instant'});if(document.getElementById('mainHero').classList.contains('collapsed'))toggleHeader();");
+     await esperar(500);
+     for(const recolhido of [true,false]) {
+      const controle=await cdp.evaluate(`(()=>{const b=document.getElementById('btnToggleHeader'),r=b.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,livre:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===b};})()`);
+      assert.ok(controle.livre,`Controle da capa encoberto em ${largura}px`);
+      await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,x:controle.x,y:controle.y});
+      await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,x:controle.x,y:controle.y});
+      await esperar(500);
+      assert.equal(await cdp.evaluate("document.getElementById('mainHero').classList.contains('collapsed')"),recolhido);
+      assert.equal(await cdp.evaluate("document.getElementById('btnToggleHeader').getAttribute('aria-expanded')"),String(!recolhido));
+      if(recolhido) {
+       const capa=await cdp.send('Page.captureScreenshot',{format:'png',clip:{x:0,y:0,width:largura,height:210,scale:2}});
+       fs.writeFileSync(`/tmp/karamu-capa-recolhida-${largura}.png`,Buffer.from(capa.data,'base64'));
+      }
+     }
+    }
+   }
+  }
+  fs.writeFileSync('/tmp/karamu-sprint3a-browser.json',JSON.stringify({saida,logouts,mobile},null,2));
   console.log(JSON.stringify({saida,logouts,mobile},null,2));
  }finally{cdp?.close();cdp2?.close();chrome?.kill('SIGTERM');server.close();server.closeAllConnections();}
 }

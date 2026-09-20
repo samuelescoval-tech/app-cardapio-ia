@@ -23,6 +23,7 @@ function ambiente({ local = armazenamento(), session = armazenamento(), falhaSai
         classList: { add: x => classes.add(x), remove: x => classes.delete(x), contains: x => classes.has(x),
           toggle(x, estado) { const valor = estado === undefined ? !classes.has(x) : estado; if (valor) classes.add(x); else classes.delete(x); return valor; } },
         querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, focus() {},
+        setAttribute(nome,valor) { this[nome]=valor; }, getAttribute(nome) { return this[nome] ?? null; },
         getBoundingClientRect: () => ({right: 900,bottom: 60}) });
     }
     return elementos.get(id);
@@ -267,4 +268,19 @@ test('geracao atrasada nao substitui projeto do historico aberto enquanto aguard
   assert.equal(a.c.window.chefIAUltimoPlano.dados.cardapio[0].nome,'Prato privado A');
   assert.equal(a.c.window.storageService.carregarHistorico().length,1);
   assert.equal(a.elemento('btnGerar').disabled,false);
+});
+
+test('Google solicita escolha da conta e retorno a raiz do ambiente com barra final', async () => {
+  for (const origem of ['http://localhost:3000','https://karamu.example.invalid']) {
+    const a=ambiente();
+    a.c.window.location.origin=origem;
+    let pedido;
+    a.instancias.at(-1).client.auth.signInWithOAuth=async dados=>{pedido=dados;return {error:null};};
+    await a.c.entrarComGoogle();
+    assert.equal(pedido.provider,'google');
+    assert.equal(pedido.options.redirectTo,origem+'/');
+    assert.equal(pedido.options.queryParams.prompt,'select_account');
+    assert.equal(a.session.getItem('karamu_login_oauth_pendente'),'true');
+    assert.equal(a.c.obterSessaoUsuario(),null);
+  }
 });

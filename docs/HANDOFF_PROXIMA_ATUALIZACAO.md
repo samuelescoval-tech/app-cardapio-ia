@@ -1,6 +1,79 @@
 # Handoff - Karamu
 
-Atualizado em 2026-09-17.
+Atualizado em 2026-09-20.
+
+## Navegacao visual solicitada em 2026-09-20
+
+Antes do commit/push, usuario pediu identificacao visual de Apresentacao e
+Gerador: cada botao tem nome acima da logo Karamu. Na secao ativa o nome diminui
+e a logo cresce; na outra acontece o inverso. Implementado no HTML/CSS, com
+`aria-current` atualizado por `switchView`, contorno dourado, foco de teclado
+e respeito a reducao de movimento. Os botoes mantem o espaco ocupado na troca.
+O modal de conta nao muda a secao indicada; abrir o login sem autenticar tambem
+nao marca o Gerador indevidamente.
+
+Validado no Chrome em 320, 390 e 1280 px: ambos os estados, proporcao de logo e
+rotulo e barra dentro da largura disponivel. Suite com 218 testes passando.
+Refinamento pedido na mesma data: barra mais enxuta, cantos de 12 px e botoes
+de 8 px (antes em formato de pilula); altura dos destinos reduzida de 66/62 px
+para 48/46 px em desktop/mobile. Corrigida sobreposicao ao controle da capa:
+no mobile recolhido ha espaco abaixo da barra e acima do formulario. O teste
+Chrome agora verifica `elementFromPoint` e clica por coordenadas para recolher
+e expandir em 320, 390 e 1280 px; confere estado e `aria-expanded`. Passou nos
+dois sentidos, junto aos 218 testes existentes.
+
+Usuario revisou localmente, aprovou o resultado e autorizou explicitamente
+commit e push em 2026-09-20. Entrega inclui este incremento, as correcoes OAuth
+e o commit anterior 86f55b8. As pendencias de homologacao e legado da 3A
+continuam abertas; envio ao GitHub nao comprova deploy concluido.
+
+## Validacao real de 2026-09-20 — retorno Google para o ambiente errado
+
+**Sprint 3A permanece aberta.** A sequencia de capturas do usuario mostra a
+entrada no localhost, retorno OAuth para a Vercel e persistencia dos defeitos
+na versao publicada. A resposta anterior de Codex analisou telas isoladas e
+pediu repeticao indevida do teste; a sequencia deve ser considerada evidencia.
+
+**Causa reproduzida no Supabase real:** `entrarComGoogle` enviava
+`redirectTo: window.location.origin`, sem barra final. O handoff ja registrava
+`http://localhost:3000/**` entre os retornos permitidos. Duas tentativas OAuth
+criadas para diagnostico, canceladas pelo callback com `access_denied`, sem
+login em conta, confirmaram:
+
+| Retorno solicitado | Destino efetivo apos cancelar |
+|---|---|
+| `http://localhost:3000` | `https://app-cardapio-ia-samuel-es-coval.vercel.app/` |
+| `http://localhost:3000/` | `http://localhost:3000/` |
+
+O teste foi feito sem seguir para o Google, sem usar codigos das capturas e
+sem ler eventos, fornecedores ou contas. Nao precisou alterar o painel Supabase.
+A correcao local normaliza o retorno para a raiz com barra final e solicita
+`prompt=select_account`, para o Google apresentar escolha da conta ao iniciar
+login explicito. Restauracao de uma sessao valida na mesma aba continua distinta
+de um novo login; nao foi alterada para pedir conta a cada recarga.
+
+**Lacuna de teste corrigida:** o Auth ficticio retornava sempre ao endereco
+local, ignorando `redirect_to`. Agora verifica o retorno exato com barra final
+e `prompt`, e redireciona usando o valor enviado pelo SDK. Acrescentado teste de
+regressao para localhost e origem HTTPS. A suite passa com 218 testes no Node
+24.21.0; fluxo no Chrome/SDK real com Auth ficticio validado. Isso nao substitui
+o login Google completo com uma conta real.
+
+**Estado de entrega conferido em 2026-09-20:** `origin` aponta para
+`samuelescoval-tech/app-cardapio-ia`. `git ls-remote` confirmou `main` remoto em
+`471d7c8`; commit local `86f55b8` ainda nao enviado. As correcoes nao foram
+publicadas por Codex. A leitura anonima da URL Vercel redirecionou para login da
+Vercel, portanto nao foi possivel comparar seus arquivos com o commit; a tela
+publicada mostrada pelo usuario ainda nao tem o botao Gerador.
+
+Proximo passo: entregar as correcoes ao GitHub/Vercel e conferir o deploy;
+manter pendentes homologacao de conta real e decisao sobre o historico legado.
+Atualizacao posterior: apos revisar a navegacao compacta, o usuario autorizou
+explicitamente commit e push. Conferir o deploy da Vercel depois do envio;
+manter a Sprint 3A aberta ate homologacao real e decisao sobre o legado.
+
+Referencias: [retornos do Supabase](https://supabase.com/docs/guides/auth/redirect-urls)
+e [escolha de conta Google](https://developers.google.com/identity/openid-connect/openid-connect).
 
 ## Retomada com Codex — estado vigente em 2026-09-17
 

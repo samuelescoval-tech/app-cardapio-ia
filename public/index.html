@@ -310,13 +310,19 @@
         </div>
     </div>
 
-    <!-- TAG: barra-status | Marca (volta a apresentacao) + status de conta, nao mais abas paralelas -->
-    <nav class="status-bar" aria-label="Marca e conta">
-        <button type="button" class="nav-btn brand-link wordmark" id="btnApresentacao"><span class="wordmark-mark"><svg class="chef-hat-accent" aria-hidden="true"><use href="#chef-hat-accent"></use></svg>KARAMU</span></button>
-        <button type="button" class="nav-btn" id="btnIrGerador">Gerador</button>
+    <!-- TAG: barra-status | A logo cresce na secao atual; o nome destaca o outro destino. -->
+    <nav class="status-bar" aria-label="Navegação e conta">
+        <button type="button" class="nav-btn section-link" id="btnApresentacao" aria-label="Apresentação" aria-controls="pitchSection" aria-current="page">
+            <span class="section-label">Apresentação</span>
+            <span class="wordmark section-wordmark" aria-hidden="true"><span class="wordmark-mark"><svg class="chef-hat-accent"><use href="#chef-hat-accent"></use></svg>KARAMU</span></span>
+        </button>
+        <button type="button" class="nav-btn section-link" id="btnIrGerador" aria-label="Gerador" aria-controls="appSection" aria-current="false">
+            <span class="section-label">Gerador</span>
+            <span class="wordmark section-wordmark" aria-hidden="true"><span class="wordmark-mark"><svg class="chef-hat-accent"><use href="#chef-hat-accent"></use></svg>KARAMU</span></span>
+        </button>
         <button type="button" class="nav-btn account-status" id="btnConta"><svg class="icon" aria-hidden="true"><use href="#icon-account"></use></svg> Entrar</button>
     </nav>
-    <p id="sessaoAviso" class="glass-panel hidden" role="status" style="position:fixed;top:85px;left:5%;width:90%;z-index:99998;"></p>
+    <p id="sessaoAviso" class="glass-panel hidden" role="status" style="position:fixed;top:86px;left:5%;width:90%;z-index:99998;"></p>
 
     <!-- TAG: hero-dinamico | Capa visual compactavel -->
     <header class="hero" id="mainHero">

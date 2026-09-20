@@ -42,7 +42,7 @@ test("identidade visual Karamu Editorial: sem emoji solto, wordmark e sprite de 
   // Emoji real (fora dos symbols do sprite, que sao SVG, nao emoji) nao deve
   // sobrar em index.html apos a Fase 4 (icones SVG substituindo emoji).
   assert.doesNotMatch(html, /[\u{1F300}-\u{1FAFF}]/u);
-  assert.match(html, /class="nav-btn brand-link wordmark"/);
+  assert.match(html, /class="wordmark section-wordmark"/);
   assert.match(html, /<symbol id="icon-account"/);
 });
 

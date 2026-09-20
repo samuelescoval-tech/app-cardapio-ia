@@ -215,7 +215,12 @@ async function entrarComGoogle() {
     sessionStorage.setItem('karamu_login_inicio', String(Date.now()));
     sessionStorage.setItem('karamu_login_oauth_pendente', 'true');
     const { error } = await client.auth.signInWithOAuth({
-        provider: 'google', options: { redirectTo: window.location.origin }
+        provider: 'google', options: {
+            // A barra final deve corresponder a permissao origem/** no Supabase.
+            // Sem ela, localhost pode cair no Site URL de producao.
+            redirectTo: new URL('/', window.location.origin).href,
+            queryParams: { prompt: 'select_account' }
+        }
     });
     if (error) {
         sessionStorage.removeItem('karamu_login_oauth_pendente');
@@ -559,6 +564,9 @@ function switchView(view) {
     for (const [nome, idSecao] of Object.entries(secoes)) {
         const secao = document.getElementById(idSecao);
         if (secao) secao.classList.toggle('hidden', nome !== view);
+    }
+    for (const [nome, idBotao] of Object.entries({ pitch: 'btnApresentacao', app: 'btnIrGerador' })) {
+        document.getElementById(idBotao)?.setAttribute('aria-current', nome === view ? 'page' : 'false');
     }
 
     // TAG: fix-scroll-duplo | #pitchSection e 100vh com scroll proprio

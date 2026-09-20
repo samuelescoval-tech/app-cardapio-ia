@@ -1,9 +1,25 @@
 # Roadmap atual - Karamu
 
-Atualizado em 2026-09-17.
+Atualizado em 2026-09-20.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
+
+## Validacao em 2026-09-20
+
+Sprint 3A continua aberta. Sequencia real revelou login iniciado no localhost
+retornando a Vercel. Causa reproduzida no Supabase e corrigida localmente:
+barra final no endereco de retorno; solicitacao explicita de escolha da conta
+Google. Teste OAuth fortalecido e suite com 218 testes. GitHub ainda em `471d7c8`,
+commit `86f55b8` somente local no momento do diagnostico. Apos revisar os
+ajustes, usuario autorizou commit e push dos dois incrementos em 2026-09-20.
+Conclusao do deploy e homologacao real ainda precisam ser conferidas.
+Indicador visual de Apresentacao/Gerador implementado a pedido do usuario:
+logo maior e nome menor na secao ativa, proporcoes invertidas na outra.
+Refinado para barra compacta e menos arredondada; controle da capa acessivel
+tambem recolhido. Conferido no Chrome em desktop/mobile e aprovado pelo usuario
+para commit/push.
+Detalhes e limites nas secoes de 2026-09-20 do handoff.
 
 ## Etapa atual — retomada em 2026-09-17
 
