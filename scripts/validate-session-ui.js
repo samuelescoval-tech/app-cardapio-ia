@@ -182,7 +182,7 @@ async function main(){
   assert.equal(mobile.conteudo,mobile.largura);assert.equal(mobile.geradorVisivel,true);
   const shot=await cdp.send('Page.captureScreenshot',{format:'png'});fs.writeFileSync('/tmp/karamu-sprint3a-mobile.png',Buffer.from(shot.data,'base64'));
   await cdp.send('Page.bringToFront');
-  for(const largura of [320,390,1280]) {
+  for(const largura of [894,320,390,768,769,1024,1280]) {
    await cdp.send('Emulation.setDeviceMetricsOverride',{width:largura,height:844,deviceScaleFactor:1,mobile:largura<768});
    for(const atual of ['btnApresentacao','btnIrGerador']) {
     await cdp.evaluate(`document.getElementById('${atual}').click()`);

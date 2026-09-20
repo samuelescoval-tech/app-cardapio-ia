@@ -222,7 +222,8 @@
 .toggle-header{
     position:absolute;
 
-    bottom:20px;
+    /* O formulario avanca 60px sobre a capa no desktop; manter o controle acima. */
+    bottom:72px;
     right:20px;
 
     width:42px;

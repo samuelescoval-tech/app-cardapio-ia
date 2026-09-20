@@ -2,6 +2,23 @@
 
 Atualizado em 2026-09-20.
 
+## Correcao adicional da capa e entrega — 2026-09-20
+
+O usuario aprovou commit/push. Commits `86f55b8` e `0f17772` enviados com sucesso
+para `origin/main` no GitHub. Enquanto o envio ocorria, relatou que o controle
+de expandir/recolher a capa ainda sumia no painel do VS Code. Confirmado com
+clique real em 894 px: o formulario (`z-index:5`, margem superior de -60 px)
+cobria o controle da capa (`bottom:20px`, dentro do stacking context do hero).
+A validacao anterior de 320/390/1280 px nao cobria esse intervalo.
+
+Corrigido `bottom` desktop para 72 px, mantendo o botao acima da sobreposicao
+do formulario; regras mobile preservadas. Teste de navegador falhou antes da
+correcao em 894 px e passou depois, incluindo 320, 390, 768, 769, 894, 1024 e
+1280 px. Cliques reais verificam ambos os sentidos e `aria-expanded`.
+Este ajuste segue em commit adicional no mesmo envio autorizado. Conclusao do
+deploy Vercel ainda nao verificada; homologacao e historico legado continuam
+pendencias da Sprint 3A.
+
 ## Navegacao visual solicitada em 2026-09-20
 
 Antes do commit/push, usuario pediu identificacao visual de Apresentacao e

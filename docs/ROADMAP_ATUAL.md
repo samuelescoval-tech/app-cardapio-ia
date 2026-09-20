@@ -19,6 +19,10 @@ logo maior e nome menor na secao ativa, proporcoes invertidas na outra.
 Refinado para barra compacta e menos arredondada; controle da capa acessivel
 tambem recolhido. Conferido no Chrome em desktop/mobile e aprovado pelo usuario
 para commit/push.
+Commits `86f55b8` e `0f17772` enviados ao GitHub. Relato durante o push revelou
+controle da capa coberto pelo formulario em largura intermediaria: reproduzido
+em 894 px, corrigido e validado com cliques nos dois sentidos em sete larguras.
+Correcao segue como commit adicional autorizado; deploy ainda nao verificado.
 Detalhes e limites nas secoes de 2026-09-20 do handoff.
 
 ## Etapa atual — retomada em 2026-09-17
