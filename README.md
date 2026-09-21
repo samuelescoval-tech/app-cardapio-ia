@@ -34,18 +34,41 @@ Gemini gera o conteudo editorial pelo backend.
 - Hospedagem: Vercel;
 - PDF: jsPDF.
 
+## Navegação pelo repositório
+
+- [Aplicação publicada](https://app-cardapio-ia.vercel.app)
+- [Frontend](public/): páginas, estilos e JavaScript do navegador.
+- [Serviços e regras de planejamento](src/).
+- [Servidor local](server.js) e [entrada da Vercel](api/index.js).
+- [Catálogos e dados de referência](data/).
+- [Migrações do Supabase](supabase/migrations/).
+- [Testes](test/).
+
 ## Documentacao viva
 
 O projeto possui apenas duas fontes de estado:
 
-- Handoff: docs/HANDOFF_PROXIMA_ATUALIZACAO.md
-- Roadmap: docs/ROADMAP_ATUAL.md
+- [Handoff](docs/HANDOFF_PROXIMA_ATUALIZACAO.md)
+- [Roadmap](docs/ROADMAP_ATUAL.md)
 
 O README e somente a porta de entrada. Nao registrar progresso aqui.
 
 ## Executar
 
-Comandos: npm install e npm start.
+Requisito: Node.js 24.x, conforme [package.json](package.json).
+
+```bash
+git clone https://github.com/samuelescoval-tech/app-cardapio-ia.git
+cd app-cardapio-ia
+npm install
+cp .env.example .env
+```
+
+Preencha o `.env` conforme as instruções abaixo e inicie o servidor:
+
+```bash
+npm start
+```
 
 Acesse http://localhost:3000. O status tecnico fica em
 http://localhost:3000/api/status.
@@ -53,12 +76,15 @@ http://localhost:3000/api/status.
 O arquivo .env deve conter GEMINI_API_KEY e pode usar DEMO_ACCESS_KEY para
 proteger testes locais. SUPABASE_URL, SUPABASE_ANON_KEY e
 SUPABASE_SERVICE_ROLE_KEY habilitam login, fornecedores e fotos proprias
-(veja .env.example); sem eles, a geracao de cardapio continua funcionando,
+(veja [.env.example](.env.example)); sem eles, a geracao de cardapio continua funcionando,
 so a parte de contas fica desativada. Nunca versionar chaves.
 
 ## Validar
 
-Comandos: npm test e git diff --check.
+```bash
+npm test
+git diff --check
+```
 
 Os testes estao agrupados em oito dominios em test/: planejamento, validacao do
 plano, integracoes, visual, benchmarks, armazenamento e fluxos funcionais
