@@ -43,6 +43,11 @@ O projeto possui apenas duas fontes de estado:
 
 O README e somente a porta de entrada. Nao registrar progresso aqui.
 
+Orientacao de arquitetura e prioridades tecnicas:
+[Avaliacao da construcao](docs/AVALIACAO_TECNICA.md).
+Fluxo de branches e guia didatico solicitado:
+[Organizacao e aprendizado](docs/FLUXO_DE_TRABALHO.md).
+
 ## Executar
 
 Comandos: npm install e npm start.

@@ -1,9 +1,122 @@
 # Roadmap atual - Karamu
 
-Atualizado em 2026-09-20.
+Atualizado em 2026-10-04.
+
+Usuario confirmou sucesso da migracao 007 no Supabase e informou conclusao
+desta rodada de validacoes. Ferramentas de apoio configuradas: Figma,
+Context7, Playwright e Supabase (somente leitura), com tres skills de design
+instaladas. Detalhes em `MCP_E_SKILLS.md`. Nao ha necessidade identificada de
+adicionar outra ferramenta para o escopo atual. Proxima sprint recomendada:
+Sprint 4, historico duravel por conta, conforme fila existente. Implementacao
+ainda nao iniciada. Nao repetir validacoes ja relatadas.
+
+Fotos: isolamento visual entre contas confirmado pelo usuario. Alinhamento
+e nome obrigatorio corrigidos localmente. Compartilhamento por galeria e link
+solicitado e implementado localmente, com autorizacao do proprietario e uso
+no gerador por nome correspondente. Migracao 007 executada pelo usuario;
+229 testes e Chrome aprovados com dados ficticios. Detalhes no handoff e em
+`COMPARTILHAMENTO_FOTOS.md`. Nenhuma foto automaticamente publicada.
+
+Correcao do fluxo de fornecedores implementada localmente: fornecedores e
+produtos na mesma aba, variedades vinculadas, edicao e recuperacao de produtos
+antigos sem fornecedor. Testes locais e Chrome aprovados. Usuario confirmou
+cadastro, navegacao, persistencia apos novo login e isolamento visual dos
+fornecedores e produtos/precos entre contas, esclarecendo que o relato ja
+incluia os produtos vinculados. Nao repetir esse teste. Isolamento visual das
+fotos confirmado depois; usuario informou encerramento desta rodada de
+validacoes apos aplicar a migracao 007. Nao reabrir a rodada com base em
+pendencias antigas. Ajustes incluidos em commit local autorizado em
+2026-10-04 na branch `feature/fornecedores-produtos`; publicacao remota nao
+executada nesta etapa. Publicacao e testes concluidos sao estados distintos.
+
+Organizacao Git adotada a pedido do usuario: branch por funcionalidade/correcao,
+testes e revisao por Pull Request antes da integracao na main. Trabalho atual
+em `feature/fornecedores-produtos`. Guia de construcao e aprendizado do Karamu
+solicitado como entrega ao final do projeto; escopo em `FLUXO_DE_TRABALHO.md`.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
+
+## Proxima sprint recomendada — Sprint 4
+
+Avaliacao de arquitetura solicitada em 2026-10-04: manter JavaScript,
+HTML/CSS, Express e Supabase, com organizacao incremental por modulos.
+Manutencao recomendada em mudancas separadas: SDK Gemini atual, alinhamento
+Node 24, testes em Pull Requests e contratos de dados. Evidencias, prioridades
+e limites em `AVALIACAO_TECNICA.md`. Recomendacoes ainda nao implementadas;
+nao confundir avaliacao com migracao de linguagem/framework concluida.
+
+Pedido de planejamento em 2026-10-04. Objetivo: salvar eventos e planejamento
+completo na conta, recuperando-os apos logout/novo login e em outro navegador
+ou dispositivo. O armazenamento atual em sessionStorage nao entrega isso.
+
+Escopo ja previsto no handoff: migracao e politicas por proprietario, rotas
+autenticadas de salvar/listar/carregar/excluir e integracao do historico na
+interface. Mostrar gravacao confirmada, tentativa pendente ou falha; preservar
+o plano quando houver erro de rede e evitar duplicacao ao repetir a gravacao.
+Ao sair, limpar dados exibidos no navegador sem apagar eventos salvos na conta.
+Recuperar o plano completo sem chamar novamente a IA e permitir exportar PDF.
+
+Criterios: mesma conta recupera evento em outro contexto de navegador; outra
+conta nao consulta, altera ou exclui esse evento; falha de gravacao nao anuncia
+sucesso nem perde o plano; repeticao nao cria duplicata; PDF funciona depois
+de carregar o projeto. Validar tambem as politicas do banco, alem da interface.
+
+Correcao apos questionamento do usuario em 2026-10-04: implementacao e rodada
+de validacoes de fornecedores/fotos ja realizadas. Nao apresentar esse trabalho
+como algo que o usuario precisa refazer antes da Sprint 4. Depois deste
+esclarecimento, usuario autorizou commit: funcionalidades e testes registrados
+localmente na branch atual; publicacao acompanhada separadamente.
+O tratamento do historico antigo entra no planejamento da Sprint 4, sem
+bloquear sua analise. Preservar registros e nao atribuir automaticamente a
+nenhuma conta; recuperacao/importacao ou descarte ainda exigem decisao.
+
+Login com opcao "Permanecer conectado", qualidade do cardapio infantil,
+diagnostico de geracao recusada e controle de demo continuam registrados como
+frentes separadas; nao incluir automaticamente na persistencia ou considerar
+resolvidos por ela. Revisao visual futura usa Figma/skills e verifica com
+Playwright, respeitando as preferencias em `../AGENTS.md`.
+
+## Homologacao e revisoes registradas — 2026-10-04
+
+Independencia entre dois eventos distintos na mesma sessao validada pelo
+usuario, com PDFs infantil e empresarial analisados. Exportacao observada;
+teste de PDF apos recuperar projeto salvo ainda separado. Pendencias de
+qualidade registradas no handoff: receitas dos doces e alternativa de encomenda,
+variedade de bebidas com redistribuicao de volume, porcoes de bolo versus
+unidades de docinhos, criterios/estado da auditoria e diagnostico da tentativa
+rejeitada. Registradas a pedido do usuario; correcoes ainda nao implementadas.
+
+Logout em duas abas validado pelo usuario: sair em uma encerra a outra sem
+atualizar. Opcao "Permanecer conectado" solicitada para evitar login repetido
+em nova aba; melhoria registrada, ainda nao implementada, preservando a saida
+sincronizada. Fornecedores e produtos/precos homologados no relato posterior
+desta data acima. Fotos isoladas conforme relato posterior; rodada de validacoes
+encerrada pelo usuario apos migracao 007. PDF de projeto recuperado e login por
+senha, se mantido, seguem registrados sem confirmacao individual. Tratamento
+do legado e salvamento duravel entram na Sprint 4. Nao repetir os cenarios ja
+homologados nem inferir novos resultados apenas do encerramento da rodada.
+
+## Evidencia de teste no site publicado — 2026-09-20
+
+Nova sequencia valida restauracao do planejamento na sessao, com os mesmos
+indicadores e sem nova geracao. Historico vazio apos logout e novo login e o
+limite atual: salvamento duravel por conta segue pendente na Sprint 4. Usuario
+confirmou login manual na captura anterior e repetiu o teste offline: saida
+sem internet e permanencia deslogada apos reconexao validadas visualmente nas
+capturas de 16:03 e 16:04. Teste de duas abas permanece separado. Detalhes no handoff.
+
+Sequencia do usuario confirma historico com planejamento na conta A e vazio
+na conta B (estudante). Isolamento visual desse cenario validado; demais itens
+da homologacao e destino do legado continuam pendentes. Sprint 3A aberta.
+
+## Analise durante homologacao — 2026-09-20
+
+Usuario termina testes no site atualizado. Novas frentes apenas analisadas:
+controle de custo da demo (exemplo pronto ou cotas persistentes, IP auxiliar),
+login institucional e aviso de protecao contra senhas vazadas do Supabase Free.
+Possivel Sprint 3B de cotas/acesso depende de decisao; nao iniciada. Nenhuma
+mudanca de comportamento ou contratacao. Detalhes e limitacoes no handoff.
 
 ## Validacao em 2026-09-20
 
@@ -46,8 +159,8 @@ publicacao e homologacao real. Nao declarar isolamento completo. Evidencias, imp
 |---|---|---|
 | 1 | Saude tecnica | Concluida em 2026-08-31 |
 | 2 | Polimento de UX | Concluida em 2026-09-08 |
-| 3 | Corrigir upload de fotos e usar catalogo completo no custo | Implementada e validada localmente; homologacao externa pendente |
-| 3A | Corrigir logout e isolamento local de dados | Contencao local validada; legado e homologacao pendentes |
+| 3 | Corrigir upload de fotos e usar catalogo completo no custo | Implementada; rodada de validacoes encerrada pelo usuario; ajustes atuais ainda locais |
+| 3A | Corrigir logout e isolamento local de dados | Validacoes relatadas concluidas; publicacao dos ajustes atuais separada; tratamento do legado na 4 |
 | 4 | Historico sincronizado e isolado por conta | Planejada; apos 3 e 3A |
 | 5 | Melhorar cobertura e carregamento de imagens | Planejada; apos 4 |
 | 6 | Fechamento legal e fluxos de conta | Planejada; refletir persistencia da 4 |
