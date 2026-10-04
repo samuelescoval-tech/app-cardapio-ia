@@ -22,7 +22,7 @@ function ambiente({ local = armazenamento(), session = armazenamento(), falhaSai
       elementos.set(id, { id, value: '', innerHTML: '', textContent: '', disabled: false, dataset: {},
         classList: { add: x => classes.add(x), remove: x => classes.delete(x), contains: x => classes.has(x),
           toggle(x, estado) { const valor = estado === undefined ? !classes.has(x) : estado; if (valor) classes.add(x); else classes.delete(x); return valor; } },
-        querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, focus() {},
+        querySelectorAll: () => [], addEventListener() {}, removeEventListener() {}, focus() {}, insertBefore() {},
         setAttribute(nome,valor) { this[nome]=valor; }, getAttribute(nome) { return this[nome] ?? null; },
         getBoundingClientRect: () => ({right: 900,bottom: 60}) });
     }

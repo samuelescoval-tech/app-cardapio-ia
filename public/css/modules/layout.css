@@ -306,8 +306,8 @@
 
     z-index:99999;
 
-    width:min(94vw,440px);
-    max-height:min(82vh,660px);
+    width:min(94vw,580px);
+    max-height:calc(100dvh - 160px);
 
     overflow-y:auto;
 

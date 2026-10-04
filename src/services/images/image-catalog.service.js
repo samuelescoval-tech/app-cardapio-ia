@@ -115,8 +115,9 @@ function validarImagem(valor) {
   if (!valor || typeof valor !== "object") throw new Error("Imagem invalida.");
   const slots = new Set(Object.keys(dictionary.slots));
   if (!slots.has(valor.slot)) throw new Error("Slot visual invalido.");
-  if (!new Set(["openverse", "local"]).has(valor.provider)) throw new Error("Provider visual invalido.");
-  if (!new Set([...dictionary.allowed_licenses, "local-fallback", "karamu-original"]).has(valor.license)) throw new Error("Licenca visual nao permitida.");
+  if (!new Set(["openverse", "local", "community"]).has(valor.provider)) throw new Error("Provider visual invalido.");
+  if (!new Set([...dictionary.allowed_licenses, "local-fallback", "karamu-original", "owner-authorized"]).has(valor.license)) throw new Error("Licenca visual nao permitida.");
+  if (valor.provider === 'community' && (valor.license !== 'owner-authorized' || !urlFotoAutorizada(valor.image_url) || !urlFotoAutorizada(valor.thumbnail_url))) throw new Error('Foto autorizada com origem invalida.');
   if (!texto(valor.id) || !texto(valor.image_url) || !texto(valor.thumbnail_url) || !texto(valor.attribution)) {
     throw new Error("Metadados visuais incompletos.");
   }
@@ -129,7 +130,7 @@ function validarImagem(valor) {
   return {
     id: texto(valor.id), target_id: texto(valor.target_id) || null, slot: valor.slot, provider: valor.provider,
     image_url: texto(valor.image_url), thumbnail_url: texto(valor.thumbnail_url),
-    source_url: urlHttps(valor.source_url), creator: texto(valor.creator) || null,
+    source_url: valor.provider === 'community' ? urlFotoAutorizada(valor.image_url) : urlHttps(valor.source_url), creator: texto(valor.creator) || null,
     creator_url: urlHttps(valor.creator_url), license: valor.license,
     license_url: urlHttps(valor.license_url), attribution: texto(valor.attribution),
     alt: texto(valor.alt), tags: normalizarTags(valor.tags), width: numeroOuNull(valor.width), height: numeroOuNull(valor.height),
@@ -195,6 +196,7 @@ function normalizar(valor) { return normalizarTexto(limparTermo(valor, 500)); }
 function texto(valor) { return typeof valor === "string" ? valor.trim() : ""; }
 function urlHttps(valor) { try { const url = new URL(valor); return url.protocol === "https:" ? url.toString() : null; } catch { return null; } }
 function urlLocal(valor) { return typeof valor === "string" && /^\/images\/(?:fallback|library)\/[a-z0-9-]+\.svg$/i.test(valor) ? valor : null; }
+function urlFotoAutorizada(valor) { return typeof valor === 'string' && /^\/api\/fotos-publicas\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/imagem$/i.test(valor) ? valor : null; }
 function numeroOuNull(valor) { const numero = Number(valor); return Number.isFinite(numero) && numero >= 0 ? numero : null; }
 function normalizarTags(valor) {
   return Array.isArray(valor)

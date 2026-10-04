@@ -558,9 +558,28 @@ test("fotosService aceita PNG/JPEG/WEBP reais (assinatura de bytes bate)", async
   const service = criarFotosService({ criarClientePorToken: () => clienteStorageFake({ tabela: { data: registro, error: null } }) });
   const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0, 0, 0]).toString("base64");
   const webp = Buffer.concat([Buffer.from("RIFF"), Buffer.alloc(4), Buffer.from("WEBP")]).toString("base64");
-  await service.criar("tok", "u1", { tipo: "image/png", arquivo: PNG_1X1_BASE64 });
-  await service.criar("tok", "u1", { tipo: "image/jpeg", arquivo: jpeg });
-  await service.criar("tok", "u1", { tipo: "image/webp", arquivo: webp });
+  await service.criar("tok", "u1", { tipo: "image/png", arquivo: PNG_1X1_BASE64, nome_prato: 'Prato teste' });
+  await service.criar("tok", "u1", { tipo: "image/jpeg", arquivo: jpeg, nome_prato: 'Prato teste' });
+  await service.criar("tok", "u1", { tipo: "image/webp", arquivo: webp, nome_prato: 'Prato teste' });
+});
+
+test('fotosService exige nome valido antes de gravar no storage ou banco', async () => {
+  let uploads = 0;
+  const client = clienteStorageFake();
+  client.storage.from = () => ({upload: async () => { uploads++; }});
+  const service = criarFotosService({ criarClientePorToken: () => client });
+  for (const nome of [undefined, null, '', '   ', 123, 'a'.repeat(121)]) {
+    await assert.rejects(() => service.criar('tok', 'u1', {tipo: 'image/png', arquivo: PNG_1X1_BASE64, nome_prato: nome}), error => error instanceof ErroFoto && error.statusCode === 400 && /nome/i.test(error.message));
+  }
+  assert.equal(uploads, 0);
+});
+
+test('fotosService preserva registro quando a URL da imagem nao pode ser assinada', async () => {
+  const registro = {id: 'foto-sem-url', nome_prato: 'Bolo', storage_path: 'u1/foto.png'};
+  const service = criarFotosService({criarClientePorToken: () => clienteStorageFake({tabela: {data: [registro], error: null}, storageSignedUrl: {data: null, error: {message: 'Sem acesso ao arquivo'}}})});
+  const fotos = await service.listar('tok');
+  assert.equal(fotos[0].id, registro.id);
+  assert.equal(fotos[0].url, null);
 });
 
 test("fotosService envia, lista com url assinada e remove com sucesso", async () => {

@@ -1,5 +1,6 @@
 const { construirSolicitacoesImagem, selecionarImagensLocais } = require("./image-catalog.service");
 const { normalizarTexto } = require("../../utils/text-normalize");
+const { validarImagem } = require('./image-catalog.service');
 
 function criarImageSelectionService(opcoes = {}) {
   const openverseService = opcoes.openverseService;
@@ -9,8 +10,20 @@ function criarImageSelectionService(opcoes = {}) {
     const alternativas = {};
     const avisos = [];
     const usados = new Set();
+    let fotosAutorizadas = [];
+    try { fotosAutorizadas = await opcoes.fotoCompartilhamentoService?.listarCatalogo() || []; }
+    catch { avisos.push('As fotos autorizadas não puderam ser consultadas; usando outras fontes.'); }
     for (const solicitacao of solicitacoes) {
       const locais = selecionarImagensLocais(solicitacao);
+      const foto = fotosAutorizadas.find(f => normalizarNomePrato(f.nome_prato) === normalizarNomePrato(solicitacao.nome) && !usados.has(`community-${f.id}`));
+      if (foto) {
+        const url = `/api/fotos-publicas/${foto.id}/imagem`;
+        const imagem = validarImagem({id: `community-${foto.id}`, provider: 'community', license: 'owner-authorized', target_id: solicitacao.target_id, slot: solicitacao.slot, image_url: url, thumbnail_url: url, source_url: url, creator: foto.credito_publico || 'Colaborador Karamu', attribution: `Foto de ${foto.credito_publico || 'Colaborador Karamu'}, com autorização para uso no Karamu.`, alt: foto.nome_prato, match_type: 'dish-family', fallback: false});
+        imagens.push(imagem);
+        usados.add(imagem.id);
+        alternativas[solicitacao.target_id] = locais;
+        continue;
+      }
       const localExata = locais.find(imagem => imagem.match_type === "dish-family" && !usados.has(chaveImagem(imagem)));
       if (localExata) {
         imagens.push(localExata);
@@ -43,14 +56,15 @@ function criarImageSelectionService(opcoes = {}) {
     const locaisTotal = imagens.filter(imagem => imagem.provider === "local").length;
     const cobertura = criarCoberturaVisual(solicitacoes.length, imagens);
     return {
-      version: "1.1.0", provider: locaisTotal === imagens.length ? "local" : "local+openverse", persistence: false,
+      version: "1.2.0", provider: imagens.some(i => i.provider === 'community') ? 'community+library' : locaisTotal === imagens.length ? "local" : "local+openverse", persistence: false,
       context_id: solicitacoes[0]?.context_id || "evento-geral",
       style_id: solicitacoes[0]?.style_id || "sem-modificador", requested_targets: solicitacoes.length,
       images: imagens, alternatives: alternativas, warnings: avisos,
       local_images: locaisTotal,
-      external_images: imagens.length - locaisTotal,
+      external_images: imagens.filter(i => i.provider === 'openverse').length,
+      community_images: imagens.filter(i => i.provider === 'community').length,
       coverage: cobertura,
-      attribution_notice: "A biblioteca Karamu e usada primeiro para familias conhecidas. Referencias externas exigem correspondencia minima; origem e tipo de imagem acompanham cada item."
+      attribution_notice: "Fotos autorizadas por colaboradores são usadas para pratos com o mesmo nome. A biblioteca e as referências externas completam as imagens; origem e tipo acompanham cada item."
     };
   }
   return { selecionarParaEvento };
@@ -68,9 +82,14 @@ function criarCoberturaVisual(solicitados, imagens) {
     local_family: familiaLocal,
     local_category: categoriaLocal,
     external: externas,
+    community: imagens.filter(i => i.provider === 'community').length,
     missing: ausentes,
-    status: ausentes ? "incomplete" : categoriaLocal || externas ? "review" : "controlled"
+    status: ausentes ? "incomplete" : categoriaLocal || externas || imagens.some(i => i.provider === 'community') ? "review" : "controlled"
   };
+}
+
+function normalizarNomePrato(nome) {
+  return normalizarTexto(nome).replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 }
 
 function usarImagemLocalDeCategoria(solicitacao, locais, imagens, alternativas, avisos, usados, motivoExterno = "") {

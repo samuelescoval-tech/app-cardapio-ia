@@ -163,8 +163,9 @@ function criarResumoCoberturaVisual(imagens, solicitados) {
         local_family: familiaLocal,
         local_category: categoriaLocal,
         external: externas,
+        community: imagens.filter(imagem => imagem.provider === 'community').length,
         missing: ausentes,
-        status: ausentes ? "incomplete" : categoriaLocal || externas ? "review" : "controlled"
+        status: ausentes ? "incomplete" : categoriaLocal || externas || imagens.some(i => i.provider === 'community') ? "review" : "controlled"
     };
 }
 
@@ -180,6 +181,7 @@ function renderCoberturaVisual(cobertura, historico = false) {
                 <div><dt>Família local</dt><dd>${escapeHTML(cobertura.local_family)}</dd></div>
                 <div><dt>Categoria</dt><dd>${escapeHTML(cobertura.local_category)}</dd></div>
                 <div><dt>Openverse</dt><dd>${escapeHTML(cobertura.external)}</dd></div>
+                ${cobertura.community ? `<div><dt>Fotos autorizadas</dt><dd>${escapeHTML(cobertura.community)}</dd></div>` : ''}
                 <div><dt>Sem imagem</dt><dd>${escapeHTML(cobertura.missing)}</dd></div>
             </dl>
         </div>
@@ -245,11 +247,12 @@ function imagensLocaisGaleria() {
 
 function normalizarImagemEvento(imagem) {
     if (!imagem || typeof imagem !== "object") return null;
-    const provider = imagem.provider === "openverse" ? "openverse" : imagem.provider === "local" ? "local" : null;
+    const provider = ['openverse', 'local', 'community'].includes(imagem.provider) ? imagem.provider : null;
     if (!provider) return null;
+    if (provider === 'community' && String(imagem.license).toLowerCase() !== 'owner-authorized') return null;
     const imageUrl = urlImagemEventoSegura(imagem.thumbnail_url || imagem.image_url, provider);
     if (!imageUrl) return null;
-    const sourceUrl = provider === "openverse" ? urlExternaHttpsSegura(imagem.source_url) : null;
+    const sourceUrl = provider === 'community' ? imageUrl : provider === "openverse" ? urlExternaHttpsSegura(imagem.source_url) : null;
     if (provider === "openverse" && !sourceUrl) return null;
 
     return {
@@ -270,6 +273,7 @@ function normalizarImagemEvento(imagem) {
 
 function urlImagemEventoSegura(valor, provider) {
     if (typeof valor !== "string") return null;
+    if (provider === 'community') return /^\/api\/fotos-publicas\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/imagem$/i.test(valor) ? valor : null;
     if (provider === "local") {
         return /^\/images\/(?:fallback|library)\/[a-z0-9-]+\.svg$/i.test(valor) ? valor : null;
     }
@@ -302,7 +306,7 @@ function renderImagemEvento(imagem, possuiAlternativas = false, historico = fals
             <figcaption>
                 <small>${escapeHTML(imagem.attribution)}</small>
                 <div class="gallery-credit-line">
-                    <span>${escapeHTML(imagem.creator)} · ${escapeHTML(imagem.license)}</span>
+                    <span>${escapeHTML(imagem.creator)} · ${escapeHTML(imagem.provider === 'community' ? 'Uso autorizado no Karamu' : imagem.license)}</span>
                     ${imagem.source_url ? `<a href="${escapeHTML(imagem.source_url)}" target="_blank" rel="noopener noreferrer">Ver fonte original</a>` : `<span>Recurso local</span>`}
                 </div>
                 <div class="gallery-card-actions" aria-label="Acoes desta referencia visual">
@@ -476,7 +480,7 @@ function aplicarImagensAoCardapio(estado) {
             elemento.alt = "";
         }
         if (credito) credito.textContent = imagem
-            ? `${imagem.creator || "Fonte visual"} · ${imagem.license || "licença informada"}`
+            ? `${imagem.creator || "Fonte visual"} · ${imagem.provider === 'community' ? 'Uso autorizado no Karamu' : imagem.license || "licença informada"}`
             : "Sem fotografia confiável — identificação neutra";
         if (fonte) {
             if (imagem?.source_url) {

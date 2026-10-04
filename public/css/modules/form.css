@@ -733,7 +733,7 @@ body.modal-open{
 
 .perfil-item-grid{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    grid-template-columns:minmax(0,1fr);
     gap:14px;
     margin-bottom:20px;
 }
@@ -742,6 +742,8 @@ body.modal-open{
    ver result.css) — antes tinha um verniz translucido preto proprio, que
    so faz sentido sobre fundo escuro; aqui o painel de perfil e branco. */
 .perfil-item-card{
+    min-width:0;
+    overflow-wrap:anywhere;
     padding:16px;
     display:flex;
     flex-direction:column;
@@ -760,6 +762,31 @@ body.modal-open{
     display:flex;
     gap:8px;
     margin-top:8px;
+    flex-wrap:wrap;
+}
+
+.perfil-panel .form-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:14px;
+}
+
+.perfil-panel .fgroup,
+.perfil-panel .premium-input{min-width:0;}
+.perfil-panel .premium-input{width:100%;}
+.perfil-panel .btn-epic{white-space:normal;}
+.perfil-panel .perfil-cadastro{margin-top:20px;}
+.perfil-cadastro summary{cursor:pointer;font-weight:700;color:var(--ink);margin-bottom:16px;}
+.perfil-produtos-titulo{font-size:1.1rem;margin:20px 0 10px;overflow-wrap:anywhere;}
+.perfil-catalogo-toolbar{margin-bottom:18px;}
+.perfil-catalogo-info:empty{display:none;}
+.perfil-panel .access-modal-error:empty{display:none;}
+#perfilPainelFotos .form-grid{grid-template-columns:minmax(0,1fr);}
+.perfil-foto-compartilhamento label{display:block;margin:12px 0;font-size:.9rem;}
+.perfil-foto-compartilhamento summary{cursor:pointer;font-weight:600;}
+.perfil-foto-compartilhamento .premium-input{margin-top:6px;}
+
+@media(max-width:400px){
+    .perfil-panel .form-grid{grid-template-columns:minmax(0,1fr);}
 }
 
 .perfil-foto-thumb{
