@@ -66,7 +66,12 @@ async function main() {
   await ate(`typeof exibirResultadoLuxo==='function' && document.readyState==='complete'`);
   const pratos=[['Brigadeiros','Sobremesa'],['Beijinhos','Sobremesa'],['Coxinhas','Entrada'],['Arroz branco','Acompanhamento'],['Pudim de leite','Sobremesa'],['Bolo de cenoura','Sobremesa'],['Salada de folhas','Salada']].map(([nome,categoria],i)=>({id:'p'+i,nome,categoria,descricao:'Fixture local de verificacao'}));
   const selecionadas=await criarImageSelectionService().selecionarParaEvento({},pratos);
-  await browser.evaluate(`entrarModoDemo();switchView('app');document.getElementById('resultadoArea').classList.remove('hidden');exibirResultadoLuxo({cardapio:${JSON.stringify(pratos)},receitas:[],lista_compras:[]},10);renderizarGaleriaEvento(${JSON.stringify(selecionadas)});alternarVisualizacaoCardapio('list');document.querySelectorAll('[data-dish-image]').forEach(i=>i.loading='eager');document.getElementById('cardapioVisualizacao').scrollIntoView();`);
+  await browser.evaluate(`entrarModoDemo();switchView('app');document.getElementById('resultadoArea').classList.remove('hidden');exibirResultadoLuxo({cardapio:${JSON.stringify(pratos)},receitas:[],lista_compras:[]},10);renderizarGaleriaEvento(${JSON.stringify(selecionadas)});alternarVisualizacaoCardapio('list');document.getElementById('cardapioVisualizacao').scrollIntoView({block:'start',behavior:'instant'});`);
+  // Manter loading=lazy real: cada card entra no viewport e conclui sua carga.
+  for(let i=0;i<pratos.length;i++) {
+    await browser.evaluate(`document.querySelector('[data-dish-id="p${i}"]').scrollIntoView({block:'center',behavior:'instant'})`);
+    await ate(`document.querySelector('[data-dish-id="p${i}"] [data-dish-image]').naturalWidth>0 && document.querySelector('[data-dish-id="p${i}"] .dish-visual').getAttribute('aria-busy')==='false'`);
+  }
   await ate(`[...document.querySelectorAll('[data-dish-image]')].filter(i=>!i.hidden && i.naturalWidth>0).length===7`);
   assert.equal(await browser.evaluate(`document.querySelectorAll('.dish-image-label').length`),7);
   assert.equal(await browser.evaluate(`document.getElementById('cardapioVisualizacao').getBoundingClientRect().height>0`),true);
@@ -78,7 +83,7 @@ async function main() {
   }
   await browser.send('Emulation.setDeviceMetricsOverride',{width:1280,height:1200,deviceScaleFactor:1,mobile:false});
   const photo={id:'community-teste',provider:'community',target_id:'p0',slot:'sobremesa',license:'owner-authorized',creator:'Chef teste',attribution:'Credito original',alt:'Brigadeiros',image_url:'/api/fotos-publicas/11111111-1111-4111-8111-111111111111/imagem'};
-  await browser.evaluate(`renderizarGaleriaEvento({images:[${JSON.stringify(photo)}],requested_targets:1});document.querySelector('[data-dish-id="p0"]').scrollIntoView();`);
+  await browser.evaluate(`renderizarGaleriaEvento({images:[${JSON.stringify(photo)}],requested_targets:1});document.querySelector('[data-dish-id="p0"]').scrollIntoView({block:'center',behavior:'instant'});`);
   await ate(`document.querySelector('[data-dish-id="p0"] .dish-visual').getAttribute('aria-busy')==='true'`);
   assert.equal(await browser.evaluate(`document.querySelector('[data-dish-id="p0"] .dish-placeholder').hidden`),false);
   for(let i=0;i<100&&!entregarFoto;i++)await esperar(10);
