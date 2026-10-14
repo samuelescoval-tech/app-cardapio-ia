@@ -1,6 +1,389 @@
 # Handoff - Karamu
 
-Atualizado em 2026-09-20.
+Atualizado em 2026-10-04.
+
+## Avaliacao tecnica e commits autorizados — 2026-10-04
+
+Usuario pediu avaliar linguagem/organizacao e autorizou commit do trabalho de
+hoje. Avaliacao salva em `AVALIACAO_TECNICA.md`: manter JavaScript, HTML/CSS,
+Node/Express, Supabase e Vercel; modularizar gradualmente frontend/backend,
+documentar contratos e melhorar automacao. SDK `@google/generative-ai` legado
+confirmado na documentacao oficial; recomendar migracao para `@google/genai`
+em correcao propria, preservando contratos/BYOK. Nao foi feita migracao de
+SDK, linguagem, framework, ambiente global ou reorganizacao ampla nesta etapa.
+
+Verificacao pre-commit: 229 testes passaram no Node 24.21.0; 14 arquivos JS
+passaram por verificacao de sintaxe. Chrome com API ficticia aprovou fornecedor
+e duas variedades, edicao, recarga, vinculacao, erros, exclusao preservando
+produtos, retorno atrasado entre contas e layout 1280/390/320px. Fotos: nome,
+envio/recarga, erros, isolamento e compartilhamento/credito/revogacao passaram.
+Nao consumiu Gemini nem gravou dados no Supabase; nao pediu ao usuario refazer
+a homologacao. `git diff --check` passou.
+
+Commit local das funcionalidades e testes criado na branch
+`feature/fornecedores-produtos`: fornecedores/produtos integrados, fotos com
+nome obrigatorio e compartilhamento autorizado, servico/rotas, pagina de link,
+migracao 007, teste de navegador e testes automatizados. Esta secao atualiza o
+estado de commit; relatos anteriores de "sem commit" sao historicos.
+Documentacao, ferramentas e avaliacao agrupadas em commit separado nesta
+entrega. Pedido atual autorizou commit; publicacao remota nao foi executada.
+Configuracoes/credenciais globais de MCP e ZIPs nao integram os commits.
+
+## Esclarecimento sobre trabalho ja realizado — 2026-10-04
+
+Usuario questionou a apresentacao do fechamento anterior como pendencia.
+Implementacao e rodada de validacoes de fornecedores/fotos ja realizadas,
+com encerramento informado pelo usuario apos migracao 007. Nao pedir que
+refaca essas etapas. A resposta anterior misturou validacoes concluidas com
+publicacao e uma decisao antiga de legado, criando uma barreira indevida
+para planejar a Sprint 4.
+
+Git local conferido nesta resposta ainda mostra os ajustes de fornecedores,
+fotos e compartilhamento sem commit na branch `feature/fornecedores-produtos`.
+Isso confirma o estado local, nao falha dos testes nem necessidade de repetir
+homologacao. Publicacao acompanhada separadamente; nao houve push nesta etapa.
+Tratamento do historico antigo passa para a analise da Sprint 4: preservar,
+nao atribuir automaticamente e nao descartar sem decisao. Analise da proxima
+sprint pode prosseguir. Registros historicos abaixo nao reabrem validacoes.
+
+## Proxima sprint recomendada — 2026-10-04
+
+Usuario pediu conferir se faltam ferramentas uteis e identificar a proxima
+sprint. As conexoes e skills instaladas cobrem o escopo atual; nenhuma nova
+instalacao necessaria. Roadmap e armazenamento atual conferidos: historico
+ainda em sessionStorage. Recomendada Sprint 4 conforme fila existente, para
+persistencia por conta e recuperacao entre sessoes/dispositivos. Escopo e
+criterios resumidos em `ROADMAP_ATUAL.md`; implementacao nao iniciada.
+Rodada anterior encerrada pelo usuario. Publicacao dos ajustes locais segue
+separada; legado sera tratado na analise da Sprint 4, sem reabrir homologacoes.
+Demais frentes de qualidade/demo/login persistente continuam no backlog.
+
+## Playwright, Supabase e skills — 2026-10-04
+
+Usuario autorizou configurar Playwright e Supabase e instalar skills uteis
+dos ZIPs locais. Ambos cadastrados no Codex global, preservando Figma e
+Context7. Playwright: `@playwright/mcp@0.0.83`, Chrome headless e isolado.
+Teste de protocolo MCP: inicializacao, 25 ferramentas, navegacao para o
+Karamu local e fechamento do navegador passaram, sem gravar dados.
+
+Supabase: projeto `wcjncervehoxbtfgovab`, `read_only=true`, recursos
+`database,debugging,docs`; OAuth concluido e cadastro enabled/OAuth.
+Consultas via ferramentas dessa nova conexao ainda nao exercitadas na
+conversa; nao tratar configuracao como auditoria do banco.
+
+Instaladas globalmente `frontend-design` e `web-design-guidelines` dos ZIPs
+selecionados. `ui-ux-pro-max` instalada pelo helper do Skill Installer a partir
+do repositorio original atual: ZIP local tinha orientacoes fixadas em React
+Native. Caminhos de comandos adaptados ao Codex com Skill Creator; scripts
+e dados originais preservados. Tres validacoes de skills passaram; busca de
+foco de teclado em modal retornou resultado pertinente. ZIPs preservados.
+Guia: `MCP_E_SKILLS.md`. Carregar MCPs em nova conversa apos reabrir VS Code;
+skills disponiveis no proximo turno. Nenhuma publicacao ou migracao nesta etapa.
+
+## Retorno do usuario e proxima etapa — 2026-10-04
+
+Apos configurar Figma, usuario pediu explicitamente usar a conexao nas
+etapas futuras de design/UI/UX e rever ideias anteriores. Diretriz duravel
+salva em `../AGENTS.md`. Complementos pesquisados em `FLUXO_DE_TRABALHO.md`;
+nenhum MCP ou skill adicional instalado naquela etapa de recomendacoes.
+Depois, usuario pediu como adicionar Context7: servidor `context7`
+cadastrado no Codex global com `https://mcp.context7.com/mcp/oauth`.
+Login automatico CIMD falhou em redirect_uri; nova tentativa com
+`codex mcp login context7 --oauth-client-registration dcr` confirmou sucesso.
+Guia em `CONTEXT7_MCP.md`. Uso de ferramentas em nova conversa ainda nao
+exercitado. Nao copiar credenciais para o repositorio.
+
+Usuario informou que executou a migracao 007 no Supabase com sucesso e
+considera encerrada esta rodada de validacoes. Consulta somente leitura
+confirmou as quatro novas colunas disponiveis. Nao pedir novamente os testes
+ja relatados. O relato nao discrimina cada cenario de compartilhamento em
+producao; registrar a confirmacao sem inventar evidencias individuais.
+Pendencias de qualidade e funcionalidades futuras continuam no backlog.
+
+Proxima tarefa solicitada: configurar Figma MCP global no Codex para apoiar
+as etapas de UI/UX. Diagnostico: servidor `figma-ux` estava cadastrado com
+`https://figma.com` (site), causando erro na descoberta OAuth. Endereco
+corrigido para `https://mcp.figma.com/mcp`; fluxo OAuth aberto no navegador e
+concluido com `Successfully logged in.`. Cadastro global conferido com
+`codex mcp list`: enabled/OAuth. Token pessoal nao solicitado nem copiado
+para o projeto. Guia em `FIGMA_MCP.md`. Reabrir VS Code/nova conversa para
+carregar a conexao; acesso a um arquivo Figma ainda nao exercitado.
+
+## Fotos — correcoes e compartilhamento autorizado (2026-10-04)
+
+Usuario confirmou que fotos NAO se misturam entre contas, como resultado
+positivo. Isolamento visual de fotos homologado nesse cenario; nao pedir
+repeticao. Relatou desalinhamento dos campos e aceite de foto sem nome.
+Corrigido localmente: campos de foto em coluna alinhada, nome do prato
+obrigatorio na interface e API (vazio/espacos rejeitados antes de gravar).
+Erros de consulta, upload, exclusao e exibicao agora aparecem na interface.
+Fotos antigas sem nome continuam visiveis, mas nao podem ser compartilhadas
+sem novo envio com nome. Nenhuma foto existente renomeada automaticamente.
+
+Usuario pediu compartilhamento por AMBOS os meios, destacando uso da foto
+autorizada como imagem de prato. Implementacao local preparada: cada foto
+tem autorizacoes independentes para galeria publica/planejamentos e link.
+Desligadas por padrao; proprietario marca e confirma, com credito publico
+opcional. Revogacao por desmarcar/salvar. Somente o cliente autenticado com
+RLS altera permissoes; cliente privilegiado restrito ao backend consulta
+autorizacao antes de entregar imagem. E-mail, user_id, storage_path e token
+de link nao integram o catalogo publico. O bucket continua privado.
+
+Gerador prioriza foto autorizada quando nome normalizado corresponde
+exatamente ao nome do prato; nao substitui bolo de chocolate por cenoura.
+Sem foto compativel, preserva biblioteca/Openverse existentes. Credito aparece
+na galeria. Correspondencia de nome nao verifica visualmente o conteudo;
+fotos de colaboradores recebem estado de revisao visual, nao aprovacao
+automatica. Link de foto usa pagina propria. Cada requisicao publica verifica
+consentimento, com no-store; revogar impede novos acessos. Copias ja baixadas
+e referencias antigas assinadas para o proprietario nao sao recolhidas.
+
+Validacao local: 229 testes passaram (Node 22.22.1), incluindo autorizacao,
+recusa de outra conta, permissao por canal, revogacao/novo token, downloads
+negados antes de consentir, correspondencia de prato e HTTP protegido sem
+cache. Chrome com API ficticia validou nome, alinhamento 1280/390/320px,
+envio/recarga, erros, isolamento e controles de compartilhamento/revogacao.
+Nenhum teste criou fotos reais ou autorizacoes no banco do usuario.
+
+Usuario confirmou execucao com sucesso de
+`supabase/migrations/007_compartilhamento_fotos.sql` no SQL Editor.
+A consulta anterior com coluna ausente (42703) precede essa atualizacao.
+Chave do backend local configurada. Passos em `COMPARTILHAMENTO_FOTOS.md`.
+Ainda sem commit/push/PR/publicacao do ajuste. Encerramento da rodada de
+validacoes informado pelo usuario; nao equivale a concluir todo o backlog.
+
+## Homologacao de fornecedores e organizacao autorizada (2026-10-04)
+
+Usuario confirmou no fluxo atual: cadastro de fornecedor funciona, consegue
+navegar entre fornecedores, fornecedor permanece ao sair e autenticar de novo,
+e fornecedor da conta A nao aparece na conta B. Usuario esclareceu depois que
+o relato ja abrangia o teste dos produtos vinculados, precos e unidades apos
+novo login e troca de conta. Registrar cadastro/navegacao, persistencia e
+isolamento visual de fornecedores e produtos/precos como homologados nesse
+cenario real. O pedido de repetir produtos foi erro de interpretacao do agente;
+nao exigir repeticao. Fotos tiveram isolamento visual confirmado depois,
+conforme registro acima; relato nao equivale a
+auditoria completa das politicas do banco.
+Ambiente exato do teste nao especificado no relato; nao atribuir a Vercel.
+
+Adotado a pedido do usuario: novas funcionalidades/correcoes em branches
+proprias, commits claros, testes, revisao por Pull Request e integracao na
+main para publicar. Ajustes atuais e registros locais preservados na branch
+`feature/fornecedores-produtos`; ainda sem commit/push/PR deste trabalho.
+Fluxo e entrega educativa descritos em `FLUXO_DE_TRABALHO.md`.
+
+Usuario pediu guia ao finalizar o projeto para entender como construir o
+Karamu e aprender com o desenvolvimento apoiado por IA. Entrega registrada,
+ainda nao concluida: guia baseado no codigo final, com arquitetura, jornada
+de uma requisicao, frontend/backend/banco, autenticacao e isolamento,
+Git/branches/PR, testes, publicacao e exercicios progressivos. Nas proximas
+etapas, explicar brevemente o motivo das mudancas e como foram verificadas.
+
+Fornecedores e produtos/precos ja homologados acima. Proximos itens de
+homologacao: persistencia de fotos e PDF de projeto recuperado;
+login por senha se mantido e decisao sobre historico legado seguem pendentes.
+Sprint 3A permanece aberta pelas demais pendencias registradas.
+
+## Correcao local — fornecedores e produtos integrados (2026-10-04)
+
+Usuario relatou cadastro fragmentado nas abas do perfil: salva parcialmente,
+mas nao consegue relacionar nem visualizar os produtos depois. Fluxo corrigido
+localmente: uma aba "Fornecedores e produtos", lista de fornecedores com
+contagem, abertura dos produtos de cada fornecedor e cadastro de variedades
+distintas com unidade/preco. Ao salvar fornecedor, abre sua area de produtos;
+ao salvar produto, preserva fornecedor para o proximo cadastro. Edicao de
+fornecedor e produto disponivel. Produtos antigos sem fornecedor podem ser
+vinculados pela edicao, sem duplicacao; excluir fornecedor preserva os produtos
+nessa area, conforme FK existente. Fotos permanecem no fluxo proprio.
+
+Erros de consulta, salvamento e exclusao apresentados na tela; nao simular
+remocao bem-sucedida quando a API recusa. Painel e formularios ajustados para
+evitar corte horizontal em celular e limitar altura ao espaco disponivel.
+Sem alteracao de schema, migracao, API ou configuracao externa.
+
+Validacao: 218 testes passaram em Node 22.22.1 (ambiente local; projeto declara
+Node 24). `node scripts/validate-supplier-ui.js` exercita HTML/JS/CSS reais no
+Chrome com API ficticia: fornecedor com banana prata/nanica, edicao de dados e
+preco, recarga, vinculacao de registro antigo, erro de consulta/exclusao,
+preservacao dos produtos ao remover fornecedor, retorno atrasado apos troca
+de conta e layout em 1280/390/320 px. Nao grava dados no Supabase real.
+
+Ainda sem commit/push deste ajuste. Fornecedores e produtos/precos homologados
+pelo usuario conforme registro atualizado acima; fotos e publicacao do ajuste
+seguem pendentes. Isso nao encerra Sprint 3A nem resolve as pendencias de
+receitas, demo, login persistente ou salvamento duravel de projetos.
+
+## Homologacao — logout em duas abas e permanencia de login (2026-10-04)
+
+Usuario confirmou: ao abrir nova aba precisou autenticar novamente; depois,
+com a mesma conta autenticada nas duas abas, saiu em uma e a outra saiu
+imediatamente, sem atualizar. Logout sincronizado entre abas homologado nesse
+cenario real. E o comportamento esperado, nao uma falha. Nao exigir repeticao.
+
+Login repetido em nova aba decorre do armazenamento atual de autenticacao em
+sessionStorage. Registrar melhoria solicitada: opcao explicita "Permanecer
+conectado", permitindo reutilizar a autenticacao em novas abas e persistir no
+navegador conforme escolha do usuario. Ainda nao implementada. Ao implementar,
+preservar logout sincronizado, limpeza do estado privado, isolamento entre
+contas e bloqueio de retornos atrasados da sessao encerrada. Conferir tambem
+fechar/reabrir navegador, expiracao e troca de conta. Essa opcao nao entrega
+salvamento duravel de projetos, que continua na Sprint 4.
+
+Proximo teste manual: isolamento de fornecedores, fotos e precos entre contas,
+com retorno a conta original para conferir persistencia dos cadastros.
+
+## Homologacao — independencia de eventos e revisoes de qualidade (2026-10-04)
+
+Usuario gerou dois eventos distintos na mesma sessao e enviou os PDFs locais:
+`karamu-aniversario-infnatil-tropical.pdf` e
+`karamu-reuniao-empresarial-formal.pdf`, em Downloads. Relatou expressamente que
+o segundo evento nao recebeu contaminacao do primeiro. PDFs analisados por
+extracao local de texto; nenhum documento enviado a servico externo nem nova
+geracao paga executada nesta analise. Independencia entre eventos homologada
+nesse cenario. Exportacao de PDF observada; nao confirma o teste especifico de
+exportar um projeto depois de carregar seu cartao salvo.
+
+Usuario autorizou registrar as revisoes abaixo e prosseguir com a homologacao.
+Sao pendencias de qualidade, ainda nao implementadas:
+
+1. Doces e receitas: no infantil, bolo, 25 brigadeiros e 25 beijinhos aparecem no
+   cardapio e nas compras, mas foram tratados como comprados prontos. As oito
+   fichas de preparo nao incluem esses doces. Oferecer receitas dimensionadas
+   dos docinhos e apresentar compra/encomenda como alternativa explicita;
+   deixar claro na tela e no PDF quais itens sao preparados ou encomendados.
+2. Variedade de bebidas com quantidade proporcional: infantil trouxe somente
+   agua (3 L), suco de laranja (3 L) e guarana (2 L). Minimo local de tres opcoes
+   satisfez a regra, mas limitou a variedade desejada. Ampliar escolhas coerentes
+   de sucos/refrigerantes mesmo para publico pequeno, redistribuindo o volume
+   previsto entre elas; nao multiplicar volume por acrescentar sabores.
+3. Rendimento de bolo: auditoria somou um bolo inteiro aos 50 docinhos e exibiu
+   51 unidades de sobremesa. Separar unidades de docinhos de porcoes de bolo e
+   conferir cobertura por convidado com unidades compativeis.
+4. Auditoria e nota: 10/10 no infantil representa cumprimento de minimos, mas
+   nao verifica as lacunas acima. Revisar criterios e texto para nao apresentar
+   cobertura minima como completude culinaria. O empresarial mostra 9,2/10 e
+   APROVADO apesar de rendimento alimentar REVISAR (proteinas 0,8 kg frente a
+   referencia de 1,8 kg). Conferir reconhecimento de ingredientes proteicos e
+   adequacao da referencia ao servico antes de concluir falta real; alinhar
+   status final com pendencias relevantes de rendimento.
+5. Rejeicao de geracao: usuario confirmou primeira tentativa recusada e nova
+   tentativa aceita. Captura informa preservacao do ultimo plano valido. Causa
+   exata da rejeicao nao identificada sem registros da requisicao; nao atribuir
+   a doces ou bebidas nem afrouxar validador sem evidencia. Melhorar explicacao
+   acionavel ao usuario quando for retomada a revisao desse fluxo.
+
+Sprint 3A segue aberta. Logout em duas abas validado no relato posterior acima.
+Proximo teste manual: isolamento de fornecedores/fotos/precos entre contas,
+persistencia do upload (Sprint 3), PDF de projeto recuperado e login por senha
+se esse metodo for mantido. Destino do historico legado continua sem decisao;
+salvamento duravel por conta continua na Sprint 4. Nao exigir repeticao da
+independencia, restauracao na sessao ou logout offline ja comprovados.
+
+## Evidencia adicional — restauracao e limite do salvamento (2026-09-20)
+
+Nova sequencia do usuario mostra planejamento de aniversario para 10 pessoas,
+com 14 pratos, 40 itens de compras e equipe de 3. Ao carregar o cartao, o
+resultado reaparece com os mesmos indicadores e o aviso "Nenhuma nova geracao
+foi realizada". Restauracao do resultado na sessao validada visualmente nesse
+cenario; nao se limita ao preenchimento do formulario.
+
+A sequencia tambem mostra saida normal e historico vazio ao entrar novamente.
+Isso corresponde ao armazenamento temporario atual em sessionStorage, removido
+no logout. Nao significa que o requisito original de salvar projetos de forma
+duravel foi entregue: persistencia por conta no Supabase continua na Sprint 4.
+Geracoes novas nao enviam memoria culinaria anterior, conforme codigo; a
+sequencia de um projeto nao basta para homologar independencia entre dois eventos.
+
+No teste sem internet, a interface mostrou limpeza local e aviso de que a saida
+no servidor nao foi confirmada. O usuario esclareceu que a ultima captura
+conectada ocorreu por NOVO LOGIN manual, nao retorno automatico.
+Usuario repetiu o teste: capturas de 16:03 e 16:04 mostram saida com Wi-Fi
+desligado e, depois da reconexao, pagina permanecendo deslogada com botao
+"Entrar". Registrar esse cenario de saida offline e permanencia deslogada apos
+reconexao como homologado visualmente. Nao comprova revogacao remota nem teste
+de duas abas; nao exigir repeticao desse mesmo cenario.
+
+## Evidencia de homologacao — historico entre contas (2026-09-20)
+
+Usuario enviou sequencia de duas capturas do site publicado: na conta A aparece
+um planejamento de aniversario para 10 pessoas, com cartao no historico e
+resultado renderizado abaixo. Na conta B (estudante), aparece "Nenhum
+planejamento salvo nesta sessao", sem o resultado da conta A na area mostrada.
+Registrar como validacao visual positiva do isolamento do historico nesse
+cenario de troca entre contas. Nao exigir repeticao dessa mesma evidencia.
+
+As capturas nao demonstram, por si, restauracao apos recarga, logout em duas
+abas, persistencia de foto ou isolamento de fornecedores/precos no banco.
+Esses itens seguem com o resultado completo dos testes do usuario; nao marcar
+a Sprint 3A inteira concluida. Destino do historico legado continua pendente.
+
+## Analise solicitada durante homologacao — demo e conta institucional (2026-09-20)
+
+Usuario pediu somente analise enquanto termina os testes. Nenhuma alteracao de
+comportamento, configuracao externa, plano pago ou publicacao nesta etapa.
+As capturas mostram a navegacao nova no dominio publico `app-cardapio-ia.vercel.app`,
+escolha de conta Google, alternancia de secoes e fornecedor de teste no perfil.
+Isso confirma entrega visual, mas nao encerra os testes de isolamento, upload,
+logout em duas abas ou persistencia. Aguardar o resultado completo do usuario.
+
+### Controle de custo da demo — proposta, nao implementada
+
+Consulta somente ao status publico confirmou `demo_access.required=true`.
+A senha e um controle de entrada, nao uma cota individual. `limitadorGeracao`
+limita 10 requisicoes/minuto por IP pelo express-rate-limit, usando MemoryStore
+padrao por processo. Nao e um contador persistente/distribuido nem teto de gasto.
+Usuarios autenticados dispensam senha demo e tambem nao possuem cota duravel.
+No codigo atual, remover `DEMO_ACCESS_KEY` ABRE a geracao anonima; nao usar isso
+para desativar demo. Esconder so o botao tambem nao bloqueia chamadas a API.
+
+Opcoes para decisao posterior:
+
+- Menor complexidade para conter gasto anonimo: demo com um planejamento pronto,
+  sem chamar IA; geracao real exige conta. Exemplo nao envolve tokens por visita,
+  mas hospedagem/trafego continuam existindo. Contas reais ainda precisam de cota.
+- Desativar a demo real: exigir autenticacao no backend e ajustar os caminhos de
+  entrada e rotas auxiliares; senha/configuracao ausente nao pode liberar acesso.
+- Manter degustacao com geracao real: contador persistente no banco/Redis,
+  reserva atomica ANTES de chamar IA, idempotencia, tratamento de erro/repeticao,
+  limite global e por conta verificada; IP e cookie apenas como sinais auxiliares.
+  Uma geracao por IP nao equivale a uma por pessoa: universidades/casas compartilham
+  IP, e redes moveis/VPN mudam endereco. Cookies podem ser apagados. Nao propor
+  fingerprint invasivo nem coleta de documento para esta necessidade.
+
+Recomendacao de Codex: exemplo pronto para visitantes e planejar cotas das
+contas antes de ampliar uso. Nova frente de custo/acesso (possivel Sprint 3B),
+sem renumerar nem iniciar automaticamente durante a homologacao da 3A. Regra de
+uma geracao por vida/periodo e contabilizacao de falhas ainda nao decididas.
+
+### Conta de estudante e portal institucional
+
+Implementacao atual: OAuth Google e senha propria do Karamu/Supabase; nao ha
+`signInWithSSO`, SAML ou provedor institucional. E-mail academico por si so nao
+identifica integracao SSO. Sessao Google existente pode evitar nova tela de
+senha/portal; escolha de conta nao exige reautenticacao institucional.
+Redirecionamento de conta Google gerenciada depende das politicas da instituicao.
+Nao foi confirmado qual provedor ou politica a instituicao usa para esta conta;
+nao concluir que a ausencia de portal prova falha de autenticacao. Login por
+senha no Karamu autentica sua conta no app, nao usa a senha institucional.
+
+Integracao direta com portal institucional depende de provedor/protocolo e
+configuracao/acordo com a instituicao. Supabase SAML exige Pro ou superior;
+nao contratar nem implementar apenas pela aparencia do dominio do e-mail.
+
+### Aviso exibido pelo Supabase
+
+Captura do Security Advisor mostra zero erros e um aviso:
+`Leaked Password Protection Disabled`. Significa que a verificacao contra
+senhas conhecidas em vazamentos esta desligada, nao que um vazamento ocorreu
+neste projeto. Documentacao atual disponibiliza o recurso no Pro ou superior;
+o projeto da captura esta no Free. Trata das senhas geridas pelo Supabase,
+nao da senha do Google. Registrar limitacao; nao fazer upgrade automaticamente.
+Zero erros no Advisor nao comprova isolamento de dados entre duas contas.
+
+Fontes: [Supabase: seguranca de senhas](https://supabase.com/docs/guides/auth/password-security),
+[Supabase: SAML](https://supabase.com/docs/guides/auth/enterprise-sso/auth-sso-saml),
+[Google Workspace: SSO](https://knowledge.workspace.google.com/admin/apps/setting-up-sso),
+[express-rate-limit](https://express-rate-limit.mintlify.app/overview).
 
 ## Correcao adicional da capa e entrega — 2026-09-20
 

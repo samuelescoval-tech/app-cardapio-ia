@@ -13,7 +13,7 @@ const vm = require('node:vm');
 // Carrega o app real com fronteiras externas substituidas. Middleware,
 // handlers, validacao de arquivo, prompt e calculo de custo continuam reais.
 // Nenhuma credencial, cota de IA ou banco externo e usada nestes testes.
-function criarAppTeste({ precos = [], falhaPrecos = false, falhaFornecedores = false } = {}) {
+function criarAppTeste({ precos = [], falhaPrecos = false, falhaFornecedores = false, compartilhamento } = {}) {
   const chamadas = { prompts: [], uploads: [] };
   const storage = {
     storage: { from: () => ({ upload: async (caminho, buffer) => {
@@ -37,6 +37,7 @@ function criarAppTeste({ precos = [], falhaPrecos = false, falhaFornecedores = f
       }
     }) };
     if (nome.endsWith('/fotos.service')) return { ...original, criarFotosService: () => criarFotosService({ criarClientePorToken: () => storage }) };
+    if (nome.endsWith('/foto-compartilhamento.service')) return {...original, criarFotoCompartilhamentoService: () => compartilhamento || {status: async () => ({disponivel:false}), listarCatalogo: async () => []}};
     if (nome.endsWith('/precos.service')) return { ...original, criarPrecosService: () => ({ listar: async () => {
       if (falhaPrecos) throw new Error('Banco indisponivel');
       return precos;
@@ -71,6 +72,7 @@ async function iniciar(t, opcoes) {
   t.after(() => new Promise(resolve => { servidor.close(resolve); servidor.closeAllConnections(); }));
   return {
     ...contexto,
+    base: `http://127.0.0.1:${servidor.address().port}`,
     async enviar(rota, body, { token = 'sessao-teste', method = 'POST' } = {}) {
       const resposta = await fetch(`http://127.0.0.1:${servidor.address().port}${rota}`, {
         method,
@@ -88,6 +90,35 @@ function foto(bytes) {
   Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buffer);
   return { tipo: 'image/png', arquivo: `data:image/png;base64,${buffer.toString('base64')}`, nome_prato: 'Teste de tamanho' };
 }
+
+test('rotas de fotos compartilhadas exigem sessao para autorizar e bloqueiam acesso apos revogacao', async t => {
+  let liberada = false;
+  let edicoes = 0;
+  const compartilhamento = {
+    atualizar: async () => {edicoes++; liberada = true; return {id:'foto'};},
+    metadadosLink: async () => {if (!liberada) throw new Error('Revogada'); return {nome_prato:'Bolo', credito:'Chef Ana'};},
+    imagem: async () => {if (!liberada) throw new Error('Revogada'); return {buffer:Buffer.from('imagem'), tipo:'image/png'};}
+  };
+  const c = await iniciar(t, {compartilhamento});
+  const negada = await c.enviar('/api/fotos/foto/compartilhamento', {galeria:true,link:true}, {method:'PUT',token:null});
+  assert.equal(negada.status, 401);
+  assert.equal(edicoes, 0);
+  const aceita = await c.enviar('/api/fotos/foto/compartilhamento', {galeria:true,link:true}, {method:'PUT'});
+  assert.equal(aceita.status, 200);
+  for (const rota of ['/api/fotos-publicas/foto/imagem','/api/fotos-compartilhadas/link/imagem']) {
+    const resposta = await fetch(c.base + rota);
+    assert.equal(resposta.status, 200);
+    assert.match(resposta.headers.get('content-type'), /image\/png/);
+    assert.equal(resposta.headers.get('cache-control'), 'no-store');
+    assert.equal(resposta.headers.get('referrer-policy'), 'no-referrer');
+  }
+  liberada = false;
+  for (const rota of ['/api/fotos-publicas/foto/imagem','/api/fotos-compartilhadas/link/imagem','/api/fotos-compartilhadas/link']) {
+    const resposta = await fetch(c.base + rota);
+    assert.equal(resposta.status, 404);
+    assert.equal(resposta.headers.get('cache-control'), 'no-store');
+  }
+});
 
 test('upload HTTP aceita corpo acima de 20 KB e arquivo no limite de 3 MB', async t => {
   const c = await iniciar(t);
@@ -242,9 +273,10 @@ function perfilTeste(tamanho, resposta) {
   const chamadas = { leituras: 0, envios: [], recargas: 0 };
   const elementos = {
     fotoErro: { textContent: '' },
+    fotoInfo: { textContent: '' },
     fotoArquivo: { files: [{ size: tamanho, type: 'image/png' }], value: 'foto.png' },
     fotoSubmit: { disabled: false },
-    fotoNomePrato: { value: '  Prato teste  ' }
+    fotoNomePrato: { value: '  Prato teste  ', focus() {} }
   };
   const contexto = vm.createContext({
     window: {}, console,
@@ -274,6 +306,18 @@ test('formulario recusa foto grande antes de ler/enviar e mantém arquivo para t
   assert.equal(c.elementos.fotoArquivo.value, 'foto.png');
 });
 
+test('formulario recusa foto sem nome ou com apenas espacos antes de ler/enviar', async () => {
+  for (const nome of ['', '   ']) {
+    const c = perfilTeste(30000);
+    c.elementos.fotoNomePrato.value = nome;
+    await c.contexto.perfilEnviarFoto();
+    assert.match(c.elementos.fotoErro.textContent, /nome do prato/);
+    assert.equal(c.chamadas.leituras, 0);
+    assert.equal(c.chamadas.envios.length, 0);
+    assert.equal(c.elementos.fotoArquivo.value, 'foto.png');
+  }
+});
+
 test('formulario trata 413 da hospedagem sem tentar interpretar HTML como JSON', async () => {
   const c = perfilTeste(30000, { status: 413, ok: false, json() { throw new Error('HTML nao e JSON'); } });
   await c.contexto.perfilEnviarFoto();
@@ -284,7 +328,7 @@ test('formulario trata 413 da hospedagem sem tentar interpretar HTML como JSON',
 });
 
 test('formulario envia sessao e arquivo no limite, e limpa campos somente no sucesso', async () => {
-  const c = perfilTeste(fotoConfig.tamanhoMaximoBytes, { status: 200, ok: true, json: async () => ({ ok: true }) });
+  const c = perfilTeste(fotoConfig.tamanhoMaximoBytes, { status: 200, ok: true, json: async () => ({ ok: true, foto: {id: 'foto-teste'} }) });
   await c.contexto.perfilEnviarFoto();
   assert.equal(c.elementos.fotoErro.textContent, '');
   assert.equal(c.chamadas.envios[0].url, '/api/fotos');
@@ -293,4 +337,5 @@ test('formulario envia sessao e arquivo no limite, e limpa campos somente no suc
   assert.equal(c.elementos.fotoArquivo.value, '');
   assert.equal(c.elementos.fotoSubmit.disabled, false);
   assert.equal(c.chamadas.recargas, 1);
+  assert.match(c.elementos.fotoInfo.textContent, /Prato teste: foto salva/);
 });

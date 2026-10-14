@@ -601,6 +601,7 @@ function posicionarPainelPerfil() {
         painel.style.top = '';
         painel.style.right = '';
         painel.style.left = '';
+        painel.style.maxHeight = '';
         return;
     }
 
@@ -613,6 +614,7 @@ function posicionarPainelPerfil() {
     painel.style.left = '';
     painel.style.right = `${direita}px`;
     painel.style.top = `${rect.bottom + margem}px`;
+    painel.style.maxHeight = `${Math.max(0, window.innerHeight - rect.bottom - margem * 2)}px`;
 }
 
 function handlePerfilKeydown(event) {

@@ -22,6 +22,7 @@ const { avaliarRendimentoAlimentar } = require('./src/services/planning/food-yie
 const { criarSupabaseAuthService, ErroAutenticacao } = require('./src/services/auth/supabase-auth.service');
 const { criarFornecedoresService, ErroFornecedor } = require('./src/services/personalizacao/fornecedores.service');
 const { criarFotosService, ErroFoto } = require('./src/services/personalizacao/fotos.service');
+const { criarFotoCompartilhamentoService } = require('./src/services/personalizacao/foto-compartilhamento.service');
 const fotoConfig = require('./public/js/foto-config');
 const { criarChaveIAService, ErroChaveIA } = require('./src/services/personalizacao/chave-ia.service');
 const { criarPrecosService, ErroPreco } = require('./src/services/personalizacao/precos.service');
@@ -35,7 +36,8 @@ app.set('trust proxy', 1);
 const demoAccessKey = process.env.DEMO_ACCESS_KEY;
 const spoonacularService = criarSpoonacularService();
 const openverseService = criarOpenverseService();
-const imageSelectionService = criarImageSelectionService({ openverseService });
+const fotoCompartilhamentoService = criarFotoCompartilhamentoService();
+const imageSelectionService = criarImageSelectionService({ openverseService, fotoCompartilhamentoService });
 const supabaseAuthService = criarSupabaseAuthService();
 const fornecedoresService = criarFornecedoresService();
 const fotosService = criarFotosService();
@@ -283,7 +285,8 @@ async function listarFotosHandler(req, res) {
         const token = obterToken(req);
         await supabaseAuthService.obterUsuario(token);
         const fotos = await fotosService.listar(token);
-        res.json({ ok: true, fotos });
+        const compartilhamento = await fotoCompartilhamentoService.status(token);
+        res.json({ ok: true, fotos, compartilhamento });
     } catch (error) {
         tratarErroPersonalizacao(error, res, "Nao foi possivel listar as fotos.");
     }
@@ -313,6 +316,34 @@ async function removerFotoHandler(req, res) {
 
 app.get('/api/fotos', limitadorPersonalizacao, listarFotosHandler);
 app.post('/api/fotos', criarFotoHandler);
+app.put('/api/fotos/:id/compartilhamento', limitadorPersonalizacao, async (req, res) => {
+    try {
+        const token = obterToken(req);
+        await supabaseAuthService.obterUsuario(token);
+        const foto = await fotoCompartilhamentoService.atualizar(token, req.params.id, req.body);
+        res.json({ok: true, foto});
+    } catch (error) { tratarErroPersonalizacao(error, res, 'Não foi possível alterar o compartilhamento.'); }
+});
+
+const limitadorFotosPublicas = rateLimit({windowMs: 60 * 1000, limit: 120, standardHeaders: true, legacyHeaders: false});
+app.get('/foto/:token', limitadorFotosPublicas, (req, res) => {
+    res.set({'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer'});
+    res.sendFile(path.join(__dirname, 'public', 'foto-compartilhada.html'));
+});
+app.get('/api/fotos-compartilhadas/:token', limitadorFotosPublicas, async (req, res) => {
+    res.set({'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer'});
+    try { res.json(await fotoCompartilhamentoService.metadadosLink(req.params.token)); }
+    catch { res.status(404).json({ok: false, error: 'Foto indisponível ou autorização revogada.'}); }
+});
+async function entregarFotoPublica(req, res, porLink) {
+    res.set({'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer'});
+    try {
+        const imagem = await fotoCompartilhamentoService.imagem(porLink ? req.params.token : req.params.id, porLink);
+        res.type(imagem.tipo).send(imagem.buffer);
+    } catch { res.status(404).json({ok: false, error: 'Foto indisponível ou autorização revogada.'}); }
+}
+app.get('/api/fotos-publicas/:id/imagem', limitadorFotosPublicas, (req, res) => entregarFotoPublica(req, res, false));
+app.get('/api/fotos-compartilhadas/:token/imagem', limitadorFotosPublicas, (req, res) => entregarFotoPublica(req, res, true));
 app.delete('/api/fotos/:id', limitadorPersonalizacao, removerFotoHandler);
 
 async function obterStatusChaveIAHandler(req, res) {

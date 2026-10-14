@@ -527,20 +527,29 @@
             <p class="field-hint" id="perfilEmailLabel"></p>
 
             <div class="perfil-tabs">
-                <button type="button" class="perfil-tab active" data-perfil-tab="fornecedores">Fornecedores</button>
+                <button type="button" class="perfil-tab active" data-perfil-tab="fornecedores">Fornecedores e produtos</button>
                 <button type="button" class="perfil-tab" data-perfil-tab="fotos">Fotos</button>
-                <button type="button" class="perfil-tab" data-perfil-tab="precos">Preços</button>
             </div>
 
             <!-- FORNECEDORES -->
             <div class="perfil-painel active" id="perfilPainelFornecedores">
+                <p class="access-modal-error" id="catalogoErro" role="alert"></p>
+                <p class="field-hint perfil-catalogo-info" id="perfilCatalogoInfo" role="status" aria-live="polite"></p>
+                <div id="fornecedoresVisaoLista">
+                <p class="field-hint">Abra um fornecedor para ver e cadastrar os produtos que ele fornece.</p>
+                <div class="perfil-item-actions perfil-catalogo-toolbar">
+                    <button type="button" class="btn-secondary btn-small hidden" id="produtosSemFornecedor">Produtos sem fornecedor</button>
+                    <button type="button" class="btn-secondary btn-small" id="precosExportar"><svg class="icon" aria-hidden="true"><use href="#icon-file-export"></use></svg> Exportar catálogo CSV</button>
+                </div>
                 <div id="fornecedoresLista" class="perfil-item-grid"></div>
                 <p class="perfil-vazio hidden" id="fornecedoresVazio">Nenhum fornecedor cadastrado ainda.</p>
-                <h3 class="panel-title" style="font-size:1rem;">Adicionar fornecedor</h3>
+                </div>
+                <details class="perfil-cadastro" id="fornecedorCadastro">
+                <summary id="fornecedorCadastroTitulo">Adicionar fornecedor</summary>
                 <div class="form-grid">
                     <div class="fgroup">
                         <label class="flabel" for="fornecedorNome">Nome</label>
-                        <input type="text" id="fornecedorNome" class="premium-input" maxlength="120" placeholder="Ex: Hortifruti Central">
+                        <input type="text" id="fornecedorNome" class="premium-input" maxlength="120" required placeholder="Ex: Hortifruti Central">
                     </div>
                     <div class="fgroup">
                         <label class="flabel" for="fornecedorCategoria">Categoria</label>
@@ -562,7 +571,11 @@
                     </div>
                 </div>
                 <p class="access-modal-error" id="fornecedorErro" role="alert"></p>
-                <button type="button" class="btn-epic" id="fornecedorSubmit" style="margin-top:14px;">Adicionar Fornecedor</button>
+                <div class="perfil-item-actions">
+                    <button type="button" class="btn-secondary hidden" id="fornecedorCancelar">Cancelar edição</button>
+                    <button type="button" class="btn-epic" id="fornecedorSubmit">Salvar fornecedor e adicionar produtos</button>
+                </div>
+                </details>
             </div>
 
             <!-- FOTOS -->
@@ -572,36 +585,41 @@
                 <h3 class="panel-title" style="font-size:1rem;">Enviar foto</h3>
                 <div class="form-grid">
                     <div class="fgroup">
-                        <label class="flabel" for="fotoNomePrato">Nome do prato (opcional)</label>
-                        <input type="text" id="fotoNomePrato" class="premium-input" maxlength="120" placeholder="Ex: Bolo de cenoura">
+                        <label class="flabel" for="fotoNomePrato">Nome do prato</label>
+                        <input type="text" id="fotoNomePrato" class="premium-input" maxlength="120" required placeholder="Ex: Bolo de cenoura">
                     </div>
                     <div class="fgroup">
-                        <label class="flabel" for="fotoArquivo">Arquivo (JPEG, PNG ou WEBP, até 3 MB)</label>
-                        <input type="file" id="fotoArquivo" class="premium-input" accept="image/jpeg,image/png,image/webp">
+                        <label class="flabel" for="fotoArquivo">Arquivo da foto</label>
+                        <input type="file" id="fotoArquivo" class="premium-input" required aria-describedby="fotoArquivoAjuda" accept="image/jpeg,image/png,image/webp">
+                        <p class="field-hint" id="fotoArquivoAjuda">JPEG, PNG ou WEBP, até 3 MB.</p>
                     </div>
                 </div>
                 <p class="access-modal-error" id="fotoErro" role="alert"></p>
+                <p class="field-hint perfil-catalogo-info" id="fotoInfo" role="status" aria-live="polite"></p>
                 <button type="button" class="btn-epic" id="fotoSubmit" style="margin-top:14px;">Enviar Foto</button>
             </div>
 
             <!-- PRECOS -->
-            <div class="perfil-painel" id="perfilPainelPrecos">
-                <button type="button" class="btn-secondary btn-small" id="precosExportar" style="margin-bottom:14px;"><svg class="icon" aria-hidden="true"><use href="#icon-file-export"></use></svg> Exportar CSV</button>
+            <div class="perfil-produtos hidden" id="perfilPainelPrecos">
+                <button type="button" class="btn-secondary btn-small" id="produtosVoltar">Voltar aos fornecedores</button>
+                <h3 class="perfil-produtos-titulo" id="produtosFornecedorTitulo"></h3>
+                <p class="field-hint" id="produtosFornecedorDados"></p>
                 <div id="precosLista" class="perfil-item-grid"></div>
-                <p class="perfil-vazio hidden" id="precosVazio">Nenhum preço cadastrado ainda.</p>
-                <h3 class="panel-title" style="font-size:1rem;">Adicionar preço</h3>
+                <p class="perfil-vazio hidden" id="precosVazio">Nenhum produto cadastrado neste fornecedor ainda.</p>
+                <h3 class="perfil-produtos-titulo" id="precoFormularioTitulo">Adicionar produto</h3>
+                <p class="field-hint">Cadastre cada variedade separadamente, como banana prata e banana nanica. O fornecedor permanece selecionado ao salvar.</p>
                 <div class="form-grid">
                     <div class="fgroup">
-                        <label class="flabel" for="precoItem">Item</label>
-                        <input type="text" id="precoItem" class="premium-input" maxlength="120" placeholder="Ex: Tomate">
+                        <label class="flabel" for="precoItem">Produto / variedade</label>
+                        <input type="text" id="precoItem" class="premium-input" maxlength="120" required placeholder="Ex: Banana prata">
                     </div>
                     <div class="fgroup">
                         <label class="flabel" for="precoUnidade">Unidade</label>
-                        <input type="text" id="precoUnidade" class="premium-input" maxlength="20" placeholder="Ex: kg, un, L">
+                        <input type="text" id="precoUnidade" class="premium-input" maxlength="20" required placeholder="Ex: kg, un, L">
                     </div>
                     <div class="fgroup">
                         <label class="flabel" for="precoValor">Preço (R$)</label>
-                        <input type="number" id="precoValor" class="premium-input" min="0" step="0.01" placeholder="Ex: 8.50">
+                        <input type="number" id="precoValor" class="premium-input" min="0" step="0.01" required placeholder="Ex: 8,50">
                     </div>
                     <div class="fgroup">
                         <label class="flabel" for="precoCategoria">Categoria</label>
@@ -609,8 +627,8 @@
                             <option value="">Sem categoria</option>
                         </select>
                     </div>
-                    <div class="fgroup">
-                        <label class="flabel" for="precoFornecedor">Fornecedor</label>
+                    <div class="fgroup hidden" id="produtoFornecedorCampo">
+                        <label class="flabel" for="precoFornecedor">Vincular ao fornecedor</label>
                         <select id="precoFornecedor" class="premium-input">
                             <option value="">Sem fornecedor</option>
                         </select>
@@ -621,7 +639,10 @@
                     </div>
                 </div>
                 <p class="access-modal-error" id="precoErro" role="alert"></p>
-                <button type="button" class="btn-epic" id="precoSubmit" style="margin-top:14px;">Adicionar Preço</button>
+                <div class="perfil-item-actions">
+                    <button type="button" class="btn-secondary hidden" id="precoCancelar">Cancelar edição</button>
+                    <button type="button" class="btn-epic" id="precoSubmit">Salvar produto e adicionar outro</button>
+                </div>
             </div>
 
             <details class="perfil-avancado">

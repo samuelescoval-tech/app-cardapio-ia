@@ -74,9 +74,9 @@ function criarFotosService(opcoes = {}) {
       throw new ErroFoto("O conteudo do arquivo nao corresponde ao tipo de imagem informado.", 400);
     }
 
-    const nomePrato = body?.nome_prato !== undefined
-      ? String(body.nome_prato || "").trim().slice(0, 120) || null
-      : null;
+    const nomePrato = typeof body?.nome_prato === 'string' ? body.nome_prato.trim() : '';
+    if (!nomePrato) throw new ErroFoto('Informe o nome do prato antes de enviar a foto.', 400);
+    if (nomePrato.length > 120) throw new ErroFoto('O nome do prato deve ter no maximo 120 caracteres.', 400);
 
     return { buffer, mimeType, extensao, nomePrato };
   }
@@ -114,10 +114,10 @@ function criarFotosService(opcoes = {}) {
     if (error) throw new ErroFoto(error.message, 400);
 
     const comUrl = await Promise.all(data.map(async registro => {
-      const { data: assinada } = await client.storage
+      const { data: assinada, error: erroUrl } = await client.storage
         .from(BUCKET)
         .createSignedUrl(registro.storage_path, 60 * 10);
-      return { ...registro, url: assinada?.signedUrl || null };
+      return { ...registro, url: erroUrl ? null : assinada?.signedUrl || null };
     }));
     return comUrl;
   }
