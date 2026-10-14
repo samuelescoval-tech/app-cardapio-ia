@@ -1,14 +1,15 @@
 # Karamu — refinamento UI/UX e próximas etapas
 
 Registrado em 2026-10-14, após o pedido de revisar o que falta e priorizar UI/UX.
-Esta rodada é de análise e planejamento. Nenhuma interface, regra de conta,
-política de demo ou banco foi alterado por este registro.
+A análise inicial foi seguida por um primeiro lote local de identidade visual e
+correção de rolagem, após a captura enviada pelo usuário. Conta, demo e banco
+continuam fora deste lote. A Sprint 6A permanece em andamento.
 
 ## Ponto de partida
 
 - Sprints 4 e 5 publicadas. Fornecedores/produtos, fotos autorizadas e projetos
-  privados permanecem entregas concluídas. A última entrega registrou 243 testes;
-  a suíte não foi executada novamente nesta revisão de documentação.
+  privados permanecem entregas concluídas. A suíte de 243 testes foi executada
+  novamente após este primeiro lote visual, com todos aprovados.
 - Confirmações anteriores do usuário continuam válidas. Não solicitar novamente
   a mesma rodada de login/logout, isolamento, fornecedores, fotos e projetos/PDF.
 - A migração 008 foi relatada como provavelmente aplicada. Não reaplicar por
@@ -18,12 +19,38 @@ política de demo ou banco foi alterado por este registro.
 - Histórico antigo sem dono continua preservado. Sua recuperação exige decisão
   específica; não deve ser atribuído automaticamente à conta atual.
 
-## Diagnóstico que orienta a primeira entrega
+## Primeiro lote implementado localmente — identidade e apresentação
 
-| Prioridade | Evidência atual | Melhoria planejada |
+A captura do usuário antecipou a apresentação para a Sprint 6A. Corrigida a
+causa da dupla rolagem: painel interno de 100vh com rodapé externo, cujo
+bloqueio era indevidamente compartilhado com login/demo. Agora a página tem
+um único scroll e apenas modais reais bloqueiam o fundo.
+
+Base editorial aplicada em `base.css`, `layout.css`, `form.css` e `pitch.css`:
+títulos em três escalas, corpo 16–17px, rótulos/auxiliares 14px, contraste,
+raios 8/12/16px, sombras discretas e fotos 4:3 sem inclinação. Logo e relação
+visual da seção ativa preservados. CSS compartilhado foi conferido no perfil.
+
+[Guia no Figma](https://www.figma.com/design/GhvrTeIvj1Y92o0G4Jt0Xy?node-id=3-2)
+criado com variáveis, estilos e exemplos editáveis. Regras duráveis em
+[MASTER.md](../design-system/karamu/MASTER.md). Isto é a base comum; protótipos
+completos do Gerador/Projetos/Perfil e demais melhorias abaixo continuam pendentes.
+
+Validação: 243 testes Node 24 aprovados; regressão Chrome em 320/390/768/1280/1920px
+e reflow equivalente a 200% (viewport/DPR), com API fictícia, incluindo fechar login/demo e Escape,
+rodapé, alternância entre seções sem perder campos/capa e bloqueio de modais.
+Fornecedores/fotos conferidos em 320/390/1280px. Capturas separadas em 390/1280px
+com Montserrat e Playfair realmente carregadas e fotos decodificadas; somente
+recursos públicos de fontes/imagens liberados. Não houve login real, IA ou
+alteração no Supabase. Nenhuma homologação antiga solicitada ao usuário.
+Lote local na branch `feature/identidade-visual`, ainda não publicado.
+
+## Diagnóstico inicial e melhorias ainda a completar
+
+| Prioridade | Evidência observada antes deste lote | Situação / próxima melhoria |
 | --- | --- | --- |
-| Alta | `public/css/modules/layout.css:3`: barra fixa sem compensação de rolagem. Em Chrome local, ao posicionar o campo Convidados a 30px do topo, a barra o cobriu parcialmente em 1280, 390 e 320px. | Manter navegação compacta, reservar espaço e garantir que campo, foco e título de destino fiquem visíveis. |
-| Alta | `public/css/modules/form.css:20` e `public/css/modules/base.css:11`: rótulos de cerca de 11,5px, dourado `#b8860b` sobre branco, contraste aproximado 3,25:1. | Aumentar legibilidade e escurecer texto; manter dourado como acento. Rever também exclusão, textos auxiliares e controles pequenos. |
+| Alta | `public/css/modules/layout.css:3`: barra fixa sem compensação de rolagem. Em Chrome local, ao posicionar o campo Convidados a 30px do topo, a barra o cobriu parcialmente em 1280, 390 e 320px. | Compensação de destinos aplicada neste lote. Revisar também foco de teclado e estados dos demais fluxos. |
+| Alta | `public/css/modules/form.css:20` e `public/css/modules/base.css:11`: rótulos de cerca de 11,5px, dourado `#b8860b` sobre branco, contraste aproximado 3,25:1. | Aplicado nos fundamentos, navegação e formulário. Conferir os demais estados do resultado e do perfil no próximo lote. |
 | Alta | `public/js/app.js:627` e `:642`, `public/index.html:527`: perfil abre sem mover foco, fecha sem devolvê-lo; backdrop e semântica de diálogo precisam ser coerentes. Chrome confirmou foco no botão Conta após abrir. | Definir comportamento modal, foco inicial/retorno, Escape, Tab e estado acessível das abas. |
 | Alta | `public/js/app.js:695`: validação inicial de tipo/convidados usa `alert`; requisitos não aparecem claramente junto aos campos. | Marcar campos obrigatórios e exibir erro com orientação perto do campo, levando o foco ao primeiro erro. Validar limites antes de enviar; preservar validação no servidor. |
 | Alta | `public/index.html:494`, `public/js/app.js:1311`: botão Importar projeto Chef abre arquivo, mas a importação não existe. | Retirar a ação sem efeito do fluxo principal. Importação real, se retomada, terá escopo e validação próprios. Não apagar arquivos antigos. |
@@ -31,7 +58,9 @@ política de demo ou banco foi alterado por este registro.
 | Média | `public/css/modules/layout.css:300`: catálogo no painel de perfil de até 580px; `public/index.html:501`: projetos entre formulário e resultado. | Prototipar acesso mais claro a projetos e um espaço confortável para fornecedor/produtos/fotos. Isso é oportunidade de organização, não prova de falha de salvamento. |
 | Média | `public/index.html:678` em diante: apresentação longa e textos sobre geração de imagens, envio de e-mail, aprendizado individual e painel administrativo sem os respectivos fluxos encontrados nesta inspeção. | Encurtar apresentação, destacar a próxima ação e conferir cada promessa contra o código antes de publicá-la. |
 
-Inspeção no Chrome com cópia local e dados fictícios, destinos HTTPS bloqueados.
+As evidências desta tabela são da inspeção inicial, anterior ao lote acima;
+as referências de linha correspondem àquela revisão. Inspeção no Chrome com
+cópia local e dados fictícios, destinos HTTPS bloqueados.
 Não houve login real, gravação em conta, chamada Gemini, Supabase ou Openverse.
 Sem transbordamento horizontal nas três larguras inspecionadas. Capturas usam
 fontes alternativas porque os recursos externos foram bloqueados; não representam
@@ -49,12 +78,12 @@ A Sprint 6 foi desdobrada para antecipar UI/UX funcional sem perder as pendênci
 de conta e comunicação. A qualidade do planejamento ganha uma entrega explícita.
 As letras abaixo são etapas; cada etapa pode ter mais de um PR pequeno.
 
-### 6A — uso diário e refinamento visual (próxima entrega)
+### 6A — identidade, apresentação e uso diário (em andamento)
 
-1. Prototipar no Figma Gerador/resultado, Projetos e Perfil em desktop e celular.
-   Primeira tela: Gerador, incluindo estados vazio, inválido, gerando e concluído.
-   Conexão `figma-ux` autenticada e consultada nesta revisão; nenhum novo frame
-   ou protótipo foi criado. Acesso de edição será verificado ao usar o arquivo.
+1. Base visual e correção da apresentação implementadas neste primeiro lote.
+   Usar o guia Figma criado para prototipar Gerador/resultado, Projetos e Perfil
+   em desktop e celular. Próxima tela: Gerador, incluindo estados vazio, inválido,
+   gerando e concluído. Acesso de edição Figma confirmado nesta rodada.
 2. Preservar creme, preto, dourado, logo e identidade editorial. Simplificar
    sombras, espaços e bordas; preferir cantos menos arredondados. Manter logo
    maior/texto menor na seção ativa e a relação inversa na outra seção.

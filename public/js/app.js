@@ -259,7 +259,7 @@ function solicitarDemoAccessKey() {
     return new Promise(resolve => {
         const finalizar = valor => {
             modal.classList.add('hidden');
-            document.body.classList.remove('modal-open');
+            sincronizarBloqueioRolagem();
             modal.removeEventListener('keydown', handleKeydown);
             submit.onclick = null;
             cancel.onclick = null;
@@ -297,8 +297,8 @@ function solicitarDemoAccessKey() {
             error.textContent = "";
         };
 
-        document.body.classList.add('modal-open');
         modal.classList.remove('hidden');
+        sincronizarBloqueioRolagem();
         modal.addEventListener('keydown', handleKeydown);
         requestAnimationFrame(() => input.focus());
     });
@@ -441,7 +441,7 @@ function abrirModalConta() {
 
     const fechar = () => {
         modal.classList.add('hidden');
-        document.body.classList.remove('modal-open');
+        sincronizarBloqueioRolagem();
         modal.removeEventListener('keydown', handleKeydown);
     };
 
@@ -504,8 +504,8 @@ function abrirModalConta() {
         atualizarTextoModalAuth();
     };
 
-    document.body.classList.add('modal-open');
     modal.classList.remove('hidden');
+    sincronizarBloqueioRolagem();
     modal.addEventListener('keydown', handleKeydown);
     requestAnimationFrame(() => email.focus());
 }
@@ -560,9 +560,18 @@ setInterval(() => {
 // status, sem concorrer visualmente com o gerador. O perfil NAO faz parte
 // dessa troca de secoes: e um painel sobreposto (ver abrirPainelPerfil),
 // entao trocar de view so precisa fechar o painel se estiver aberto.
+function sincronizarBloqueioRolagem() {
+    const modalAberto = ['authModal', 'demoAccessModal'].some(id => {
+        const modal = document.getElementById(id);
+        return modal && !modal.classList.contains('hidden');
+    });
+    document.body.classList.toggle('modal-open', modalAberto);
+}
+
 function switchView(view) {
     if (view === 'app' && !obterSessaoUsuario() && !modoDemoAtivo()) { abrirModalConta(); return; }
     const secoes = { app: 'appSection', pitch: 'pitchSection' };
+    const mudouSecao = document.getElementById(secoes[view])?.classList.contains('hidden');
 
     for (const [nome, idSecao] of Object.entries(secoes)) {
         const secao = document.getElementById(idSecao);
@@ -572,20 +581,12 @@ function switchView(view) {
         document.getElementById(idBotao)?.setAttribute('aria-current', nome === view ? 'page' : 'false');
     }
 
-    // TAG: fix-scroll-duplo | #pitchSection e 100vh com scroll proprio
-    // (carrossel de slides), mas fica dentro do fluxo normal da pagina,
-    // logo depois do .hero — que nunca era escondido pelo switchView.
-    // hero + pitchSection juntos passavam da altura da tela, entao a
-    // pagina externa TAMBEM precisava rolar, gerando duas areas de scroll
-    // simultaneas (achado real, confirmado via scrollHeight/clientHeight
-    // ao vivo, Sprint 1 - Saude tecnica, 2026-08-31). Escondendo o hero
-    // (redundante durante a apresentacao, que ja tem sua propria abertura)
-    // e travando o scroll externo (reaproveita body.modal-open, mesmo
-    // mecanismo ja usado nos modais de login/demo), pitchSection passa a
-    // ocupar exatamente a tela, sem disputa de scroll.
+    // Apresentacao e Gerador usam a rolagem do documento. Somente um
+    // modal visivel pode bloquea-la; fechar login/demo nao altera a secao.
     const hero = document.getElementById('mainHero');
     if (hero) hero.classList.toggle('hidden', view === 'pitch');
-    document.body.classList.toggle('modal-open', view === 'pitch');
+    sincronizarBloqueioRolagem();
+    if (mudouSecao) window.scrollTo?.({ top: 0, left: 0, behavior: 'instant' });
 
     if (view === 'pitch') atualizarPitchCta();
     fecharPainelPerfil();

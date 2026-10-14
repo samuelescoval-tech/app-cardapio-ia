@@ -12,11 +12,17 @@ Nao repetir testes confirmados nem tratar estas entregas como ainda sem push.
 Sprint 5 concluida e publicada em 2026-10-14 pelo PR 4, com 243 testes, Chrome
 e CodeQL aprovados. Vercel confirmou sucesso e sete recursos do site real
 coincidiram com a versao integrada. Replanejamento solicitado em 2026-10-14:
-**proxima entrega: Sprint 6A — refinamento UI/UX funcional**, seguida de 6B
+**em andamento: Sprint 6A — identidade e refinamento UI/UX funcional**, seguida de 6B
 (conta, demo e explicacoes publicas) e 6C (qualidade dos eventos). Sprint 7
-reune apresentacao e jornada final. Plano e evidencias em
+reune narrativa final da apresentacao, interacao de entrada e jornada final. Plano e evidencias em
 [PLANO_UI_UX_E_PROXIMAS_ETAPAS.md](PLANO_UI_UX_E_PROXIMAS_ETAPAS.md).
-Analise e planejamento registrados; refinamento ainda nao implementado.
+Primeiro lote implementado localmente na branch `feature/identidade-visual`:
+rolagem unica, escala tipografica, contraste, espacamento e imagens proporcionais.
+243 testes aprovados, Chrome em cinco larguras e reflow equivalente a 200% (viewport/DPR); fontes/fotos
+reais conferidas em capturas separadas. Guia editavel criado no Figma, com regras
+em [MASTER.md](../design-system/karamu/MASTER.md). Ainda nao publicado.
+Proximo: estados e hierarquia do Gerador, depois Projetos e Perfil.
+Este lote nao encerra a Sprint 6A nem as pendencias de conta/demo e qualidade.
 Fotos autorizadas podem alimentar imagens dos pratos;
 manter a identificacao honesta quando nao houver correspondencia exata.
 Ferramentas de apoio ja configuradas: Figma, Context7, Playwright e Supabase
