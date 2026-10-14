@@ -2,6 +2,39 @@
 
 Atualizado em 2026-10-14.
 
+## Próxima entrega definida — UI/UX funcional, 2026-10-14
+
+Após a Sprint 5, usuário pediu revisar pendências, definir próximas etapas e
+priorizar refinamento UI/UX. Plano salvo em
+[PLANO_UI_UX_E_PROXIMAS_ETAPAS.md](PLANO_UI_UX_E_PROXIMAS_ETAPAS.md).
+Esta seção e a abertura do roadmap prevalecem sobre a ordem histórica abaixo.
+
+Sequência: 6A UI/UX do Gerador, Projetos e Perfil; 6B conta/demo e explicações
+públicas; 6C qualidade dos eventos; 7 apresentação e preparação para lançamento.
+Primeira entrega prevista: protótipo Figma do Gerador em desktop/celular, estados
+e hierarquia de ações, seguido da implementação incremental. Manter identidade,
+nav compacta/logo ativo, capa acessível, fornecedores integrados e fotos privadas
+por padrão. Entrada interativa vista de cima continua para a apresentação.
+
+Inspeção atual confirmou botão de importação sem implementação, rótulos pequenos
+com contraste insuficiente, foco do perfil sem entrada/retorno e mensagens antigas
+sobre projetos no logout/privacidade. Chrome local em 1280/390/320: sem overflow
+horizontal nas telas inspecionadas; barra fixa cobre parcialmente campo levado ao
+topo; perfil abre mantendo foco no botão Conta. Carga de dados do perfil substituída
+por função vazia e HTTPS bloqueado, sem serviços reais; fontes externas não carregam.
+Detalhes, limites e evidências no plano. Não apresentar como homologação completa.
+
+Skills UI UX Pro Max e Web Design Guidelines usadas. Conexão figma-ux respondeu
+a whoami; nenhum frame ou protótipo novo criado. Capacidade de edição será
+conferida ao trabalhar no arquivo. Nenhuma mudança no app, SQL ou configuração
+real foi feita; esta rodada registra diagnóstico e planejamento.
+
+A recomendação de demo com exemplo pronto ainda é proposta. Não remover a
+variável DEMO_ACCESS_KEY para tentar desligar o demo: hoje sua ausência libera
+o acesso na verificação do backend. Tratar política e limites em 6B.
+Preservar validações já confirmadas; não reaplicar migração 008 por padrão.
+Guia didático final e destino do legado sem dono continuam pendentes separados.
+
 ## Fechamento publicado — Sprint 5, 2026-10-14
 
 Sprint 5 integrada e publicada pelo PR 4:
