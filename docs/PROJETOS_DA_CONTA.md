@@ -3,7 +3,8 @@
 Implementacao local preparada em 2026-10-07. Em 2026-10-14, usuario esclareceu
 que os testes de salvar/retornar, carregar/PDF e isolamento entre contas ja
 foram feitos. Validacoes funcionais concluidas por relato; nao repetir. Usuario
-acredita ter aplicado a migracao 008; nao exigir reaplicacao por padrao. Estado de commit/integracao/publicacao acompanhado no roadmap e no handoff.
+acredita ter aplicado a migracao 008; nao exigir reaplicacao por padrao. Codigo integrado pelo PR 2 e publicacao confirmada em 2026-10-14. Evidencias
+e limites da confirmacao no roadmap e no handoff.
 
 Ao gerar com uma conta, o Karamu guarda uma copia completa do evento e do
 planejamento. A interface diferencia "Salvando", "Salvo na conta" e "Pendente".
