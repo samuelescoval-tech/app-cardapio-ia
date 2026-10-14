@@ -7,6 +7,16 @@ const { spawn } = require('node:child_process');
 const express = require('express');
 
 const raiz = path.resolve(__dirname, '..');
+// Documento de teste com o corpo real e somente os scripts do perfil.
+// Leitura unica antes de atender HTTP; nao sanitizar HTML com regexp.
+const paginaOriginal = fs.readFileSync(path.join(raiz, 'public/index.html'), 'utf8');
+const inicioCorpo = paginaOriginal.indexOf('<body>');
+assert.ok(inicioCorpo >= 0, 'Pagina possui body');
+const paginaTeste = '<!DOCTYPE html><html lang="pt-br"><head><meta charset="UTF-8">' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+    '<link rel="stylesheet" href="/css/style.css"></head>' +
+    paginaOriginal.slice(inicioCorpo).replace('</body>',
+        '<script src="/js/sessao.service.js"></script><script src="/js/foto-config.js"></script><script src="/bootstrap.js"></script><script src="/js/perfil.js"></script><script src="/start.js"></script></body>');
 const port = 35000 + process.pid % 500;
 const debugPort = 9800 + process.pid % 300;
 const base = `http://127.0.0.1:${port}`;
@@ -60,9 +70,7 @@ async function main() {
     let rejeitarFotos = false;
     let enviosFoto = 0;
     const catalogo = req => catalogos[req.headers.authorization?.replace('Bearer ', '')] || catalogos.B;
-    app.get('/', (req, res) => res.type('html').send(fs.readFileSync(path.join(raiz, 'public/index.html'), 'utf8')
-        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace('</body>', '<script src="/js/sessao.service.js"></script><script src="/js/foto-config.js"></script><script src="/bootstrap.js"></script><script src="/js/perfil.js"></script><script src="/start.js"></script></body>')));
+    app.get('/', (req, res) => res.type('html').send(paginaTeste));
     app.get('/bootstrap.js', (req, res) => res.type('js').send(`
         const controleTeste = criarControleSessao();
         controleTeste.definir({ usuarioId: 'A', email: 'A@example.invalid', accessToken: 'A' });
