@@ -2,6 +2,52 @@
 
 Atualizado em 2026-10-14.
 
+## Sprint 5 — implementada e validada localmente, 2026-10-14
+
+Usuario autorizou iniciar e perguntou se precisava fazer algo. Implementada
+na branch feature/cobertura-imagens, partindo da main atualizada da Sprint 4.
+Nenhuma migracao ou nova credencial necessaria; nao pedir repeticao dos testes
+funcionais anteriores. Publicacao acompanhada separadamente abaixo/por PR.
+
+- Correspondencia local compara palavras completas: aveia nao vira ave/frango,
+  aguardente nao vira agua, chuva nao vira uva. Familias especificas precedem
+  categoria generica. Arroz/risoto deixaram de usar o desenho de massa.
+- Cinco SVGs originais: brigadeiro, beijinho, coxinha, arroz e pudim. Sete novas
+  entradas de familia incluem bolo e salada de folhas (assets existentes).
+  Amostra fixa de sete pratos: seis antes caindo em categoria agora resolvem
+  familia; arroz permanece familia com ilustracao apropriada. Sao ilustracoes,
+  nao fotografias exatas de cada receita. Desenhos inspecionados no Chrome.
+- Fotos da galeria autorizada continuam restritas por nome. Plurais controlados
+  aceitos; sabores/recheios nao removidos. Link-only nao entra no catalogo.
+  Reuso de ilustracao da mesma familia permitido, evitando busca externa
+  desnecessaria para outra variante. Fotografias externas nao duplicadas.
+- No maximo tres buscas paralelas e prazo global de 12s, incluindo catalogo;
+  consulta a fotos autorizadas ate 2s. Falhas retornam alternativas locais.
+  Openverse recebe cancelamento, cobre tambem leitura do JSON e isola cache
+  por slot. Ordem e deduplicacao independem da ordem de conclusao das buscas.
+- Carregamento por imagem com aria-busy, placeholder e espaco reservado.
+  Imagem lazy permanece no layout; display:none impediria a requisicao.
+  Foto autorizada ganha rotulo proprio. Falha usa fila de alternativas sem
+  ressuscitar URLs quebradas, atualiza metadata/credito/fonte e termina em
+  contingencia/identificacao neutra. Erros de elementos antigos ignorados.
+  Atualizacao de card conserva foco, sem renderizar a galeria inteira.
+
+243 testes passaram no Node 24.21.0. Novos casos em imagens-sprint5.test.js:
+familias, falsos positivos, plurais sem confundir sabores, ordem/dedup,
+concorrencia, abort/prazo, catalogo travado e cancelamento do corpo/cache.
+Chrome com API ficticia em validate-images-ui.js: sete familias, gerador
+visivel, carregamento anunciado, foto lenta/autorizada, revogada com credito
+corrigido, erro tardio, duas alternativas quebradas, contingencia sem ciclo,
+fonte antiga removida e layout 1280/390/320. Inspecionadas capturas desktop e
+mobile. Testes nao acessam conta real, Supabase, Openverse ou Gemini.
+Logs /tmp/karamu-sprint5-tests.log e /tmp/karamu-sprint5-browser.log.
+
+Skill UI UX Pro Max aplicada com busca ux "image loading error feedback":
+indicador acessivel, layout estavel e recuperacao visivel. Sem redesign amplo,
+novo Figma ou migracao de linguagem. Biblioteca usa SVG original, nao imagegen.
+Guia em IMAGENS_DO_CARDAPIO.md. Receita/conteudo infantil, falhas de geracao,
+demo, login persistente e entrada interativa permanecem tarefas separadas.
+
 ## Fechamento publicado — Sprint 4, 2026-10-14
 
 Usuario pediu "vamos seguir" apos confirmar os testes ja realizados. Fechamento

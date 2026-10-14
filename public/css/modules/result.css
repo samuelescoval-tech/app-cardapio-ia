@@ -812,6 +812,10 @@
     text-align:center;
 }
 
+/* A imagem lazy precisa ocupar espaco enquanto carrega; hidden impediria a busca. */
+.dish-visual[aria-busy="true"] img{ opacity:0; }
+.dish-visual[aria-busy="true"] .dish-placeholder{ position:absolute; inset:0; }
+
 .dish-placeholder[hidden],
 .dish-image-label[hidden],
 .dish-scrim[hidden],

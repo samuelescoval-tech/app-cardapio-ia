@@ -43,9 +43,11 @@ function criarFotoCompartilhamentoService(opcoes = {}) {
     return data;
   }
 
-  async function listarCatalogo() {
+  async function listarCatalogo({signal} = {}) {
     if (!admin) return [];
-    const {data, error} = await admin.from('fotos_pratos').select('id,nome_prato,credito_publico').eq('compartilhada_catalogo', true).order('created_at', {ascending: false}).limit(200);
+    let consulta = admin.from('fotos_pratos').select('id,nome_prato,credito_publico').eq('compartilhada_catalogo', true).order('created_at', {ascending: false}).limit(200);
+    if (signal && consulta.abortSignal) consulta = consulta.abortSignal(signal);
+    const {data, error} = await consulta;
     // Instalacao anterior sem migracao continua usando a biblioteca existente.
     if (error) return [];
     return (data || []).map(foto => ({id: foto.id, nome_prato: foto.nome_prato, credito_publico: foto.credito_publico || 'Colaborador Karamu'}));

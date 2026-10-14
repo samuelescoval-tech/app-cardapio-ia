@@ -3,71 +3,82 @@ const { normalizarTexto } = require("../../utils/text-normalize");
 const { validarImagem } = require('./image-catalog.service');
 
 function criarImageSelectionService(opcoes = {}) {
-  const openverseService = opcoes.openverseService;
+  const concorrencia = Math.min(3, Math.max(1, Math.floor(Number(opcoes.concorrencia) || 3)));
+  const tempoMaxMs = Math.max(1, Math.min(15000, Number(opcoes.tempoMaxMs) || 12000));
   async function selecionarParaEvento(evento, pratos = []) {
     const solicitacoes = construirSolicitacoesImagem(evento, pratos);
-    const imagens = [];
-    const alternativas = {};
-    const avisos = [];
-    const usados = new Set();
+    const fim = Date.now() + tempoMaxMs;
+    const imagens = [], alternativas = {}, avisos = [], usados = new Set();
     let fotosAutorizadas = [];
-    try { fotosAutorizadas = await opcoes.fotoCompartilhamentoService?.listarCatalogo() || []; }
-    catch { avisos.push('As fotos autorizadas não puderam ser consultadas; usando outras fontes.'); }
-    for (const solicitacao of solicitacoes) {
+    try {
+      if (opcoes.fotoCompartilhamentoService) fotosAutorizadas = await comPrazo(
+        signal => opcoes.fotoCompartilhamentoService.listarCatalogo({signal}), Math.min(2000, tempoMaxMs));
+    } catch { avisos.push('As fotos autorizadas não puderam ser consultadas; usando outras fontes.'); }
+    const preparados = solicitacoes.map(solicitacao => {
       const locais = selecionarImagensLocais(solicitacao);
-      const foto = fotosAutorizadas.find(f => normalizarNomePrato(f.nome_prato) === normalizarNomePrato(solicitacao.nome) && !usados.has(`community-${f.id}`));
+      const foto = fotosAutorizadas.find(f => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(f.id) && normalizarNomePrato(f.nome_prato) === normalizarNomePrato(solicitacao.nome));
+      const local = locais.find(i => i.match_type === 'dish-family' && !usados.has(chaveImagem(i))) || locais.find(i => i.match_type === 'dish-family');
+      let escolhida = local;
       if (foto) {
         const url = `/api/fotos-publicas/${foto.id}/imagem`;
-        const imagem = validarImagem({id: `community-${foto.id}`, provider: 'community', license: 'owner-authorized', target_id: solicitacao.target_id, slot: solicitacao.slot, image_url: url, thumbnail_url: url, source_url: url, creator: foto.credito_publico || 'Colaborador Karamu', attribution: `Foto de ${foto.credito_publico || 'Colaborador Karamu'}, com autorização para uso no Karamu.`, alt: foto.nome_prato, match_type: 'dish-family', fallback: false});
-        imagens.push(imagem);
-        usados.add(imagem.id);
-        alternativas[solicitacao.target_id] = locais;
+        escolhida = validarImagem({id: `community-${foto.id}`, provider: 'community', license: 'owner-authorized', target_id: solicitacao.target_id, slot: solicitacao.slot, image_url: url, thumbnail_url: url, source_url: url, creator: foto.credito_publico || 'Colaborador Karamu', attribution: `Foto de ${foto.credito_publico || 'Colaborador Karamu'}, com autorização para uso no Karamu.`, alt: foto.nome_prato, match_type: 'dish-family', fallback: false});
+      }
+      if (escolhida) usados.add(chaveImagem(escolhida));
+      return {solicitacao, locais, escolhida, resultado: null, erro: ''};
+    });
+    // A busca pode terminar fora de ordem; selecao/deduplicacao respeita o cardapio.
+    const pendentes = preparados.filter(p => !p.escolhida);
+    let proximo = 0;
+    await Promise.all(Array.from({length: Math.min(concorrencia, pendentes.length)}, async () => {
+      while (proximo < pendentes.length) {
+        const p = pendentes[proximo++];
+        const restante = fim - Date.now();
+        try {
+          if (restante <= 0) throw new Error('O prazo das imagens externas terminou');
+          if (!opcoes.openverseService) throw new Error('Busca externa indisponível');
+          p.resultado = await comPrazo(signal => opcoes.openverseService.buscar(p.solicitacao, {signal}), restante);
+        } catch (error) { p.erro = error.message; }
+      }
+    }));
+    for (const p of preparados) {
+      const {solicitacao, locais} = p;
+      if (p.escolhida) {
+        imagens.push(p.escolhida);
+        alternativas[solicitacao.target_id] = locais.filter(i => i.id !== p.escolhida.id);
         continue;
       }
-      const localExata = locais.find(imagem => imagem.match_type === "dish-family" && !usados.has(chaveImagem(imagem)));
-      if (localExata) {
-        imagens.push(localExata);
-        usados.add(chaveImagem(localExata));
-        alternativas[solicitacao.target_id] = locais.filter(imagem => imagem.id !== localExata.id);
-        continue;
-      }
-      try {
-        const resultado = await openverseService.buscar(solicitacao);
-        const candidatos = resultado.images
-          .filter(imagem => !usados.has(chaveImagem(imagem)))
-          .map(imagem => ({ ...imagem, target_id: solicitacao.target_id, relevance_score: pontuarRelevancia(imagem, solicitacao) }))
-          .filter(imagem => imagem.relevance_score >= 1 && temAncoraVisual(imagem, solicitacao))
-          .sort((a, b) => b.relevance_score - a.relevance_score);
-        const escolhida = candidatos[0];
-        if (escolhida) {
-          imagens.push(escolhida);
-          usados.add(chaveImagem(escolhida));
-          alternativas[solicitacao.target_id] = [
-            ...candidatos.slice(1, 3).filter(imagem => !usados.has(chaveImagem(imagem))),
-            ...locais.slice(0, 1)
-          ];
-        } else {
-          usarImagemLocalDeCategoria(solicitacao, locais, imagens, alternativas, avisos, usados);
-        }
-      } catch (error) {
-        usarImagemLocalDeCategoria(solicitacao, locais, imagens, alternativas, avisos, usados, error.message);
-      }
+      const candidatos = (p.resultado?.images || [])
+        .filter(i => !usados.has(chaveImagem(i)))
+        .map(i => ({...i, target_id: solicitacao.target_id, relevance_score: pontuarRelevancia(i, solicitacao)}))
+        .filter(i => i.relevance_score >= 1 && temAncoraVisual(i, solicitacao))
+        .sort((a,b) => b.relevance_score - a.relevance_score);
+      const escolhida = candidatos[0];
+      if (escolhida) {
+        imagens.push(escolhida); usados.add(chaveImagem(escolhida));
+        alternativas[solicitacao.target_id] = [...candidatos.slice(1,3).filter(i => !usados.has(chaveImagem(i))), ...locais];
+      } else usarImagemLocalDeCategoria(solicitacao, locais, imagens, alternativas, avisos, usados, p.erro);
     }
-    const locaisTotal = imagens.filter(imagem => imagem.provider === "local").length;
-    const cobertura = criarCoberturaVisual(solicitacoes.length, imagens);
+    const locaisTotal = imagens.filter(i => i.provider === 'local').length;
     return {
-      version: "1.2.0", provider: imagens.some(i => i.provider === 'community') ? 'community+library' : locaisTotal === imagens.length ? "local" : "local+openverse", persistence: false,
-      context_id: solicitacoes[0]?.context_id || "evento-geral",
-      style_id: solicitacoes[0]?.style_id || "sem-modificador", requested_targets: solicitacoes.length,
+      version: '1.3.0', provider: imagens.some(i => i.provider === 'community') ? 'community+library' : locaisTotal === imagens.length ? 'local' : 'local+openverse', persistence: false,
+      context_id: solicitacoes[0]?.context_id || 'evento-geral', style_id: solicitacoes[0]?.style_id || 'sem-modificador', requested_targets: solicitacoes.length,
       images: imagens, alternatives: alternativas, warnings: avisos,
-      local_images: locaisTotal,
-      external_images: imagens.filter(i => i.provider === 'openverse').length,
-      community_images: imagens.filter(i => i.provider === 'community').length,
-      coverage: cobertura,
-      attribution_notice: "Fotos autorizadas por colaboradores são usadas para pratos com o mesmo nome. A biblioteca e as referências externas completam as imagens; origem e tipo acompanham cada item."
+      local_images: locaisTotal, external_images: imagens.filter(i => i.provider === 'openverse').length,
+      community_images: imagens.filter(i => i.provider === 'community').length, coverage: criarCoberturaVisual(solicitacoes.length, imagens),
+      attribution_notice: 'Fotos autorizadas são usadas para nomes equivalentes do mesmo prato. Ilustrações de família podem se repetir; origem e tipo acompanham cada item.'
     };
   }
-  return { selecionarParaEvento };
+  return {selecionarParaEvento};
+}
+
+async function comPrazo(operacao, ms) {
+  const controller = new AbortController();
+  let timer;
+  const expiracao = new Promise((resolve, reject) => {
+    timer = setTimeout(() => { controller.abort(); reject(new Error('O prazo da consulta visual terminou')); }, ms);
+  });
+  try { return await Promise.race([Promise.resolve().then(() => operacao(controller.signal)), expiracao]); }
+  finally { clearTimeout(timer); }
 }
 
 function criarCoberturaVisual(solicitados, imagens) {
@@ -89,7 +100,8 @@ function criarCoberturaVisual(solicitados, imagens) {
 }
 
 function normalizarNomePrato(nome) {
-  return normalizarTexto(nome).replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const equivalentes = {brigadeiros:'brigadeiro',beijinhos:'beijinho',coxinhas:'coxinha',bolos:'bolo',pudins:'pudim',sucos:'suco',sanduiches:'sanduiche',tortas:'torta'};
+  return normalizarTexto(nome).replace(/[^\p{L}\p{N}]+/gu, ' ').trim().split(/\s+/).map(p => equivalentes[p] || p).join(' ');
 }
 
 function usarImagemLocalDeCategoria(solicitacao, locais, imagens, alternativas, avisos, usados, motivoExterno = "") {

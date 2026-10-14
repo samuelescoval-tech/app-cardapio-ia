@@ -99,8 +99,9 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     const resumo = document.getElementById("eventGallerySummary");
     if (!secao || !conteudo || !controles || !contador) return;
 
-    const imagensBase = normalizarArray(resultado?.images).map(normalizarImagemEvento).filter(Boolean);
-    const alternativasBase = normalizarAlternativasGaleria(resultado?.alternatives);
+    const falhas = new Set(normalizarArray(resultado?.failed_urls));
+    const imagensBase = normalizarArray(resultado?.images).map(normalizarImagemEvento).filter(i => i && !falhas.has(i.image_url));
+    const alternativasBase = Object.fromEntries(Object.entries(normalizarAlternativasGaleria(resultado?.alternatives)).map(([alvo, fila]) => [alvo, fila.filter(i => !falhas.has(i.image_url))]));
     const historico = Boolean(opcoes.historico);
     const preferencias = historico
         ? { images: imagensBase, alternatives: alternativasBase }
@@ -112,6 +113,7 @@ function renderizarGaleriaEvento(resultado, opcoes = {}) {
     window.chefIAGaleriaEstado = {
         images: imagens,
         alternatives: alternativas,
+        failed_urls: [...falhas],
         warnings: normalizarArray(resultado?.warnings),
         attribution_notice: resultado?.attribution_notice || "",
         coverage: cobertura,
@@ -156,7 +158,7 @@ function criarResumoCoberturaVisual(imagens, solicitados) {
     const familiaLocal = imagens.filter(imagem => imagem.provider === "local" && imagem.match_type === "dish-family").length;
     const categoriaLocal = imagens.filter(imagem => imagem.provider === "local" && imagem.match_type === "category").length;
     const externas = imagens.filter(imagem => imagem.provider === "openverse").length;
-    const ausentes = Math.max(0, totalSolicitado - imagens.length);
+    const ausentes = Math.max(0, totalSolicitado - imagens.filter(i => !i.fallback).length);
     return {
         requested: totalSolicitado,
         displayed: imagens.length,
@@ -296,7 +298,7 @@ function renderImagemEvento(imagem, possuiAlternativas = false, historico = fals
     const alvo = alvoImagemGaleria(imagem);
     return `
         <figure class="event-gallery-card ${imagem.provider === "local" ? "gallery-card-local" : ""}" data-gallery-key="${escapeHTML(alvo)}">
-            <div class="gallery-image-frame">
+            <div class="gallery-image-frame" aria-busy="true">
                 <img src="${escapeHTML(imagem.image_url)}" data-gallery-fallback="${escapeHTML(fallbackUrl)}" alt="${escapeHTML(imagem.alt)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
                 <span>${escapeHTML(rotuloSlotGaleria(imagem.slot))}</span>
                 <div class="dish-scrim">
@@ -436,13 +438,52 @@ function rotuloSlotGaleria(slot) {
     })[slot] || "Evento";
 }
 
+function recuperarImagemGaleria(alvo, urlFalha) {
+    const estado = window.chefIAGaleriaEstado;
+    const indice = estado?.images.findIndex(i => alvoImagemGaleria(i) === alvo) ?? -1;
+    if (indice < 0 || estado.images[indice].image_url !== urlFalha) return false;
+    const atual = estado.images[indice];
+    const falhas = new Set(estado.failed_urls || []); falhas.add(urlFalha);
+    const usadas = new Set(estado.images.filter((i, pos) => pos !== indice).map(i => i.image_url));
+    const fila = normalizarArray(estado.alternatives?.[alvo]).filter(i => !falhas.has(i.image_url) && (i.provider === 'local' || !usadas.has(i.image_url)));
+    let proxima = fila.length ? {...fila.shift(), target_id: atual.target_id, slot: atual.slot} : null;
+    if (!proxima) proxima = normalizarImagemEvento({id: `contingencia-${alvo}`, target_id: atual.target_id,
+        slot: atual.slot, provider: 'local', license: 'local-fallback', image_url: fallbackGaleriaPorSlot(atual.slot),
+        attribution: 'Ilustração de contingência do Karamu; a imagem anterior está indisponível.',
+        creator: 'Karamu', alt: 'Identificação ilustrativa da categoria', match_type: 'fallback', fallback: true});
+    estado.failed_urls = [...falhas];
+    estado.images[indice] = proxima;
+    estado.alternatives[alvo] = fila;
+    estado.coverage = criarResumoCoberturaVisual(estado.images, estado.coverage?.requested);
+    const cartao = [...document.querySelectorAll('[data-gallery-key]')].find(c => c.dataset.galleryKey === alvo);
+    if (cartao) {
+        const acaoFocada = cartao.contains(document.activeElement) ? document.activeElement?.dataset.action : null;
+        cartao.outerHTML = renderImagemEvento(proxima, fila.length > 0, estado.opcoes?.historico);
+        const novo = [...document.querySelectorAll('[data-gallery-key]')].find(c => c.dataset.galleryKey === alvo);
+        if (acaoFocada) [...novo.querySelectorAll('[data-action]')].find(b => b.dataset.action === acaoFocada)?.focus({preventScroll: true});
+    }
+    const cobertura = document.querySelector('#eventGalleryContent .gallery-coverage');
+    if (cobertura) cobertura.outerHTML = renderCoberturaVisual(estado.coverage, estado.opcoes?.historico);
+    ativarFallbackImagensGaleria(); aplicarImagensAoCardapio(estado);
+    return true;
+}
+
 function ativarFallbackImagensGaleria() {
-    document.querySelectorAll("#eventGalleryVisualizacao img[data-gallery-fallback]").forEach(imagem => {
+    document.querySelectorAll('#eventGalleryVisualizacao img[data-gallery-fallback]').forEach(imagem => {
+        if (imagem.dataset.cargaAtivada === 'true') return;
+        imagem.dataset.cargaAtivada = 'true';
+        const frame = imagem.closest('.gallery-image-frame');
+        const terminar = () => frame?.setAttribute('aria-busy', 'false');
+        imagem.addEventListener('load', terminar);
         imagem.addEventListener("error", () => {
+            if (!imagem.isConnected) return;
+            terminar();
+            const atual = imagem.getAttribute('src');
             const fallback = imagem.dataset.galleryFallback;
-            if (fallback && imagem.getAttribute("src") !== fallback) imagem.setAttribute("src", fallback);
-            imagem.closest(".event-gallery-card")?.classList.add("gallery-card-local");
-        }, { once: true });
+            if (atual === fallback) { imagem.hidden = true; imagem.removeAttribute('src'); return; }
+            recuperarImagemGaleria(imagem.closest('[data-gallery-key]')?.dataset.galleryKey, atual);
+        });
+        if (imagem.complete) terminar();
     });
 }
 
@@ -452,13 +493,20 @@ function aplicarImagensAoCardapio(estado) {
         .map(imagem => [imagem.target_id, imagem]));
     document.querySelectorAll("[data-dish-id]").forEach(cartao => {
         const imagem = porPrato.get(cartao.dataset.dishId) || null;
-        const elemento = cartao.querySelector("img[data-dish-image]");
+        let elemento = cartao.querySelector("img[data-dish-image]");
         const placeholder = cartao.querySelector(".dish-placeholder");
         const selo = cartao.querySelector(".dish-image-label");
         const scrim = cartao.querySelector(".dish-scrim");
         const credito = cartao.querySelector(".dish-image-credit span");
         const fonte = cartao.querySelector(".dish-image-credit a");
         if (!elemento) return;
+        if (imagem && elemento.getAttribute('src') !== imagem.image_url) {
+            const novo = elemento.cloneNode(false);
+            novo.removeAttribute('src'); delete novo.dataset.fallbackAtivado;
+            elemento.replaceWith(novo); elemento = novo;
+        }
+        ativarCargaImagemCardapio(elemento);
+        elemento.closest('.dish-visual')?.setAttribute('aria-busy', 'false');
 
         elemento.hidden = !imagem;
         if (placeholder) placeholder.hidden = Boolean(imagem);
@@ -471,10 +519,10 @@ function aplicarImagensAoCardapio(estado) {
             elemento.src = imagem.image_url;
             elemento.alt = imagem.provider === "local"
                 ? `Ilustração aplicada a ${cartao.dataset.dishName || "item do cardápio"}: ${imagem.alt || "categoria visual"}`
-                : `Fotografia externa relacionada a ${cartao.dataset.dishName || "item do cardápio"}: ${imagem.alt || "referência visual"}`;
+                : `${imagem.provider === "community" ? "Foto autorizada" : "Fotografia externa"} relacionada a ${cartao.dataset.dishName || "item do cardápio"}: ${imagem.alt || "referência visual"}`;
             if (selo) selo.textContent = imagem.provider === "local"
                 ? imagem.match_type === "category" ? "Imagem de categoria" : "Ilustração da família"
-                : "Referência externa";
+                : imagem.provider === "community" ? "Foto autorizada" : "Referência externa";
         } else {
             elemento.removeAttribute("src");
             elemento.alt = "";
@@ -491,28 +539,50 @@ function aplicarImagensAoCardapio(estado) {
                 fonte.hidden = true;
             }
         }
+        if (imagem && !(elemento.complete && elemento.naturalWidth > 0)) {
+            elemento.hidden = false;
+            if (placeholder) placeholder.hidden = false;
+            if (selo) selo.hidden = true;
+            if (scrim) scrim.hidden = true;
+            if (credito) credito.textContent = 'Carregando imagem...';
+            elemento.closest('.dish-visual')?.setAttribute('aria-busy', 'true');
+        }
     });
     ativarFallbackImagensCardapio();
 }
 
-function ativarFallbackImagensCardapio() {
-    document.querySelectorAll("img[data-dish-image]").forEach(imagem => {
-        if (imagem.dataset.fallbackAtivado === "true") return;
-        imagem.dataset.fallbackAtivado = "true";
-        imagem.addEventListener("error", () => {
-            imagem.hidden = true;
-            imagem.removeAttribute("src");
-            const cartao = imagem.closest(".dish-card-rich");
-            const placeholder = cartao?.querySelector(".dish-placeholder");
-            if (placeholder) placeholder.hidden = false;
-            const selo = cartao?.querySelector(".dish-image-label");
-            if (selo) selo.hidden = true;
-            const scrim = cartao?.querySelector(".dish-scrim");
-            if (scrim) scrim.hidden = true;
-            const credito = cartao?.querySelector(".dish-image-credit span");
-            if (credito) credito.textContent = "Sem fotografia confiável — identificação neutra";
-        });
+function ativarCargaImagemCardapio(imagem) {
+    if (imagem.dataset.fallbackAtivado === 'true') return;
+    imagem.dataset.fallbackAtivado = 'true';
+    const cartao = imagem.closest('[data-dish-id]');
+    imagem.addEventListener('load', () => {
+        if (!imagem.isConnected) return;
+        const atual = window.chefIAGaleriaEstado?.images.find(i => i.target_id === cartao.dataset.dishId);
+        if (!atual || atual.image_url !== imagem.getAttribute('src')) return;
+        imagem.hidden = false;
+        cartao.querySelector('.dish-visual')?.setAttribute('aria-busy', 'false');
+        cartao.querySelector('.dish-placeholder').hidden = true;
+        cartao.querySelector('.dish-image-label').hidden = false;
+        cartao.querySelector('.dish-scrim').hidden = false;
+        cartao.querySelector('.dish-image-credit span').textContent = `${atual.creator || 'Fonte visual'} · ${atual.provider === 'community' ? 'Uso autorizado no Karamu' : atual.license || 'licença informada'}`;
     });
+    imagem.addEventListener("error", () => {
+        if (!imagem.isConnected) return;
+        const atual = imagem.getAttribute('src');
+        if (atual && recuperarImagemGaleria(cartao.dataset.dishId, atual)) return;
+        imagem.hidden = true; imagem.removeAttribute('src');
+        cartao.querySelector('.dish-visual')?.setAttribute('aria-busy', 'false');
+        cartao.querySelector('.dish-placeholder').hidden = false;
+        cartao.querySelector('.dish-image-label').hidden = true;
+        cartao.querySelector('.dish-scrim').hidden = true;
+        cartao.querySelector('.dish-image-credit span').textContent = 'Sem fotografia confiável — identificação neutra';
+        const fonte = cartao.querySelector('.dish-image-credit a');
+        if (fonte) {fonte.hidden = true; fonte.removeAttribute('href');}
+    });
+}
+
+function ativarFallbackImagensCardapio() {
+    document.querySelectorAll('img[data-dish-image]').forEach(ativarCargaImagemCardapio);
 }
 
 function alternarVisualizacaoGaleria(modo) {

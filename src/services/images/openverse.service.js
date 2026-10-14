@@ -20,11 +20,12 @@ function criarOpenverseService(opcoes = {}) {
     return { configured: typeof fetchImpl === "function", provider: "openverse", authentication: "anonymous", allowed_licenses: ["cc0", "by"], color_policy: "reject-monochrome-and-archival", daily_search_limit: limiteDiario, searches_remaining: Math.max(0, limiteDiario - consultas), cache_ttl_hours: cacheMs / 3600000 };
   }
 
-  async function buscar(solicitacao) {
+  async function buscar(solicitacao, { signal } = {}) {
     if (typeof fetchImpl !== "function") throw new OpenverseError("Cliente HTTP indisponivel.", 500);
     const query = validarQuery(solicitacao?.query);
     const slot = solicitacao?.slot;
-    const chave = `${query}|${solicitacao?.orientation || ""}`;
+    if (signal?.aborted) throw new OpenverseError('Consulta visual cancelada.', 504);
+    const chave = `${query}|${solicitacao?.orientation || ""}|${slot || ""}`;
     const itemCache = cache.get(chave);
     if (itemCache && relogio() - itemCache.criado_em < cacheMs) return { ...itemCache.valor, cached: true };
     atualizarDia();
@@ -41,14 +42,15 @@ function criarOpenverseService(opcoes = {}) {
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
-    let response;
+    let response, data;
     try {
-      response = await fetchImpl(url, { headers: { Accept: "application/json", "User-Agent": "ChefIAStudio/1.0" }, signal: controller.signal });
+      response = await fetchImpl(url, { headers: { Accept: "application/json", "User-Agent": "ChefIAStudio/1.0" }, signal: signal ? AbortSignal.any([controller.signal, signal]) : controller.signal });
+      if (!response.ok) throw new OpenverseError(response.status === 429 ? "Cota anonima do Openverse indisponivel." : "Openverse nao retornou imagens validas.", response.status === 429 ? 429 : 502);
+      data = await response.json().catch(error => { if (error.name === 'AbortError') throw error; return {}; });
     } catch (error) {
+      if (error instanceof OpenverseError) throw error;
       throw new OpenverseError(error?.name === "AbortError" ? "Openverse demorou demais para responder." : "Nao foi possivel consultar o Openverse.", error?.name === "AbortError" ? 504 : 502);
     } finally { clearTimeout(timeout); }
-    if (!response.ok) throw new OpenverseError(response.status === 429 ? "Cota anonima do Openverse indisponivel." : "Openverse nao retornou imagens validas.", response.status === 429 ? 429 : 502);
-    const data = await response.json().catch(() => ({}));
     const resultados = Array.isArray(data.results) ? data.results : [];
     const imagens = resultados.map(item => normalizarResultado(item, slot)).filter(Boolean).slice(0, 4);
     const valor = { provider: "openverse", query, images: imagens, result_count: Number(data.result_count) || resultados.length, rejected_count: resultados.length - imagens.length, cached: false, searches_remaining: Math.max(0, limiteDiario - consultas) };

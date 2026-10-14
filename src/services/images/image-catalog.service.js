@@ -82,8 +82,8 @@ function selecionarImagensLocais(solicitacao) {
   return localLibrary.entries
     .filter(item => item.slots.includes(solicitacao?.slot))
     .map(item => {
-      const correspondencias = item.match_terms.filter(termo => nome.includes(normalizar(termo)));
-      const score = correspondencias.length ? 10 + correspondencias.length : item.default ? 1 : 0;
+      const correspondencias = item.match_terms.filter(termo => contemTermoVisual(nome, termo));
+      const score = correspondencias.length ? (item.match_mode === 'dish-family' ? 100 : 10) + correspondencias.length : item.default ? 1 : 0;
       if (!score) return null;
       const matchType = item.match_mode === "dish-family" && correspondencias.length ? "dish-family" : "category";
       return validarImagem({
@@ -109,6 +109,11 @@ function selecionarImagensLocais(solicitacao) {
     })
     .filter(Boolean)
     .sort((a, b) => b.relevance_score - a.relevance_score);
+}
+
+function contemTermoVisual(nome, termo) {
+  const palavras = valor => normalizar(valor).replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  return ` ${palavras(nome)} `.includes(` ${palavras(termo)} `);
 }
 
 function validarImagem(valor) {

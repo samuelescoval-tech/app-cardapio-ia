@@ -9,8 +9,8 @@ HTML/JS novos e API de projetos recusou acesso sem sessao. Migracao 008 relatada
 como provavelmente aplicada; sem auditoria independente do Supabase nesta sessao.
 Nao repetir testes confirmados nem tratar estas entregas como ainda sem push.
 
-Proxima sprint: **Sprint 5 — melhorar cobertura e carregamento de imagens**,
-conforme fila existente. Fotos autorizadas podem alimentar imagens dos pratos;
+Sprint atual: **Sprint 5 — cobertura e carregamento de imagens**, implementada
+e validada localmente em 2026-10-14; integracao/publicacao acompanhadas no handoff. Fotos autorizadas podem alimentar imagens dos pratos;
 manter a identificacao honesta quando nao houver correspondencia exata.
 Ferramentas de apoio ja configuradas: Figma, Context7, Playwright e Supabase
 (somente leitura), com skills de design. Nao ha necessidade identificada de
@@ -43,6 +43,17 @@ solicitado como entrega ao final do projeto; escopo em `FLUXO_DE_TRABALHO.md`.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
+
+## Sprint 5 — cobertura e carregamento de imagens
+
+Correspondencia por palavras completas, sete novas entradas de familia e
+cinco ilustracoes SVG originais. Fotografias autorizadas aceitam plurais
+controlados sem misturar sabores. Buscas com concorrencia/prazo limitados;
+recuperacao de erros atualiza imagem e credito, preserva carregamento lazy
+e termina em identificacao neutra se necessario. 243 testes e Chrome com API
+ficticia passaram; nenhuma migracao, credencial ou homologacao anterior
+solicitada ao usuario. Guia IMAGENS_DO_CARDAPIO.md. Design amplo e qualidade
+do cardapio infantil continuam registrados como frentes distintas.
 
 ## Sprint 4 — implementada em 2026-10-07, publicada em 2026-10-14
 
@@ -203,7 +214,7 @@ publicacao e homologacao real. Nao declarar isolamento completo. Evidencias, imp
 | 3 | Corrigir upload de fotos e usar catalogo completo no custo | Validacoes encerradas pelo usuario; ajustes integrados/publicados em 2026-10-14 |
 | 3A | Corrigir logout e isolamento local de dados | Validacoes relatadas concluidas; ajustes publicados; historico sem dono preservado, decisao separada |
 | 4 | Historico sincronizado e isolado por conta | Testes funcionais confirmados pelo usuario; codigo integrado/publicado em 2026-10-14; migracao relatada como provavelmente aplicada |
-| 5 | Melhorar cobertura e carregamento de imagens | Proxima sprint; implementar sobre a main atualizada |
+| 5 | Melhorar cobertura e carregamento de imagens | Implementada e validada localmente em 2026-10-14; integracao/publicacao em andamento |
 | 6 | Fechamento legal e fluxos de conta | Planejada; refletir persistencia da 4 |
 | 7 | Apresentacao e validacao da jornada completa | Planejada; apos etapas anteriores |
 
