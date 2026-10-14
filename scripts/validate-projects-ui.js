@@ -4,7 +4,12 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {spawn} = require('node:child_process');
 const express = require('express');
+const {rateLimit} = require('express-rate-limit');
 const raiz = path.resolve(__dirname,'..');
+// HTML confiavel do repositorio carregado uma vez. URLs externas sao bloqueadas
+// pelo Chrome; nao remover scripts do documento com expressao regular.
+const paginaTeste = fs.readFileSync(path.join(raiz,'public/index.html'),'utf8')
+  .replace('</head>','<script defer src="/test-jspdf.js"></script><script defer src="/teste-iniciar.js"></script></head>');
 const esperar = ms => new Promise(r=>setTimeout(r,ms));
 class Browser {
     constructor(url) { this.url = url; this.id = 0; this.pendentes = new Map(); }
@@ -40,16 +45,16 @@ class Browser {
 }
 
 async function main() {
-  const app=express(); app.use(express.json({limit:'1mb'}));
+  const app=express();
+  app.use(rateLimit({windowMs:60000,limit:2000}));
+  app.use(express.json({limit:'1mb'}));
   const banco={A:new Map(),B:new Map()};
   let geracoes=0, falharGravacao=false, perderConfirmacao=false, falharExclusao=false, falharCarga=false;
   const plano={cardapio:[{nome:'Bolo tropical',categoria:'Sobremesa',quantidade:'1',unidade:'un',ingredientes:[]}],
     receitas:[{nome:'Bolo tropical',ingredientes:[{item:'Farinha',quantidade:1,unidade:'kg'}],preparo_passos:['Assar','Servir']}],
     lista_compras:[{item:'Farinha',quantidade:1,unidade:'kg',setor:'Mercearia'}],cronograma:[{horario:'14:00',atividade:'Servir bolo'}],resumo_chef:'Evento infantil independente'};
   const dono=req=>req.get('authorization')?.replace('Bearer ','');
-  app.get('/',(req,res)=>res.type('html').send(fs.readFileSync(path.join(raiz,'public/index.html'),'utf8')
-    .replace(/<script\b[^>]*src="https:[^>]*>[\s\S]*?<\/script>/gi,'')
-    .replace('</head>','<script defer src="/test-jspdf.js"></script><script defer src="/teste-iniciar.js"></script></head>')));
+  app.get('/',(req,res)=>res.type('html').send(paginaTeste));
   app.get('/test-jspdf.js',(req,res)=>res.sendFile(path.join(process.env.KARAMU_TEST_PG_DIR || '/tmp/karamu-db-test','node_modules/jspdf/dist/jspdf.umd.min.js')));
   app.get('/teste-iniciar.js',(req,res)=>res.type('js').send(`
     window.confirm=()=>true;
