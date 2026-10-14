@@ -2,7 +2,32 @@
 
 Atualizado em 2026-10-14.
 
-## Sprint 5 — implementada e validada localmente, 2026-10-14
+## Fechamento publicado — Sprint 5, 2026-10-14
+
+Sprint 5 integrada e publicada pelo PR 4:
+https://github.com/samuelescoval-tech/app-cardapio-ia/pull/4 (merged).
+243 testes locais e Chrome com API ficticia passaram; a verificacao final
+manteve loading=lazy real e rolou cada card ate entrar no viewport, sem forcar
+eager. CodeQL e Vercel aprovaram a revisao final antes do merge. Main local
+sincronizada com GitHub. Nao tratar implementacao, commit ou push desta
+entrega como pendentes; nenhum teste anterior solicitado novamente.
+
+Publicacao confirmada pelo status Vercel SUCCESS da main e sete GETs ao site
+https://app-cardapio-ia.vercel.app: render.js, result.css e os cinco SVGs novos
+retornaram 200 e conteudo igual ao codigo integrado. Deploy:
+https://vercel.com/samuel-es-coval/app-cardapio-ia/4qtxyV2T3ZJH6JgSFParY7YMYaHW
+Nenhuma migracao, credencial nova, gravacao de conta real, geracao Gemini ou
+consulta real ao Openverse foi necessaria. Nao e uma auditoria completa de
+fotos/contas em producao. Ilustracoes continuam identificadas como familia,
+sem prometer fotografia exata de todas as receitas.
+
+Proxima frente da fila: Sprint 6 (fluxos de conta e fechamento legal), com
+login persistente e politica de demo a planejar; qualidade do cardapio
+infantil e diagnostico de geracao recusada permanecem pendencias separadas.
+Revisao ampla de design/Figma e entrada interativa tambem seguem registradas.
+Nao reiniciar sprints/validacoes concluidas apenas por ler secoes antigas.
+
+## Registro de implementacao — Sprint 5, 2026-10-14
 
 Usuario autorizou iniciar e perguntou se precisava fazer algo. Implementada
 na branch feature/cobertura-imagens, partindo da main atualizada da Sprint 4.

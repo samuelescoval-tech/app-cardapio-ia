@@ -1,5 +1,7 @@
 # Imagens do cardapio — Sprint 5
 
+Entrega integrada pelo PR 4 e publicacao confirmada em 2026-10-14.
+
 O Karamu usa fotos autorizadas pelo proprietario, ilustracoes da biblioteca
 local e referencias externas. Os rotulos distinguem essas fontes: uma
 ilustracao da familia nao comprova a aparencia exata da receita gerada.
