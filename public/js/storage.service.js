@@ -168,6 +168,20 @@ function deletarEntrada(id) {
   }
 }
 
+/** Atualiza somente metadados de sincronizacao de um projeto desta sessao. */
+function atualizarEntrada(id, mudancas) {
+  try {
+    const historico = carregarHistorico();
+    const entrada = historico.find(e => e.id === id);
+    if (!entrada) return false;
+    for (const campo of ['remoto_id', 'estado_conta', 'erro_conta']) {
+      if (Object.hasOwn(mudancas, campo)) entrada[campo] = mudancas[campo];
+    }
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(historico));
+    return true;
+  } catch { return false; }
+}
+
 /**
  * Limpar todo o histórico (cuidado!)
  */
@@ -301,6 +315,7 @@ if (typeof window !== 'undefined') {
     carregarHistorico,
     carregarEntrada,
     deletarEntrada,
+    atualizarEntrada,
     limparHistorico,
     criarMemoriaCulinaria,
     persistirHistoricoComLimite,

@@ -43,6 +43,8 @@ const fornecedoresService = criarFornecedoresService();
 const fotosService = criarFotosService();
 const chaveIAService = criarChaveIAService();
 const precosService = criarPrecosService();
+const { criarProjetosService } = require('./src/services/projetos/projetos.service');
+const { criarRotasProjetos } = require('./src/routes/projetos.routes');
 
 // Cabecalhos de seguranca (Plano 15, auditoria). style="" inline ainda e
 // usado em varios lugares, entao style-src precisa de 'unsafe-inline';
@@ -103,6 +105,7 @@ const limitadorPersonalizacao = rateLimit({
 // Registrar o parser especifico antes do global. Express pula o segundo
 // parser quando o corpo ja foi lido; a excecao vale so para POST /api/fotos.
 app.post('/api/fotos', limitadorPersonalizacao, express.json({ limit: fotoConfig.corpoMaximoBytes }));
+app.use('/api/projetos', criarRotasProjetos({ authService: supabaseAuthService, projetosService: criarProjetosService(), limitador: limitadorPersonalizacao }));
 app.use(express.json({ limit: '20kb' }));
 
 app.use((error, req, res, next) => {

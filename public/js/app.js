@@ -55,6 +55,7 @@ function limparEstadoPrivado(sessao) {
     const botao = document.getElementById('btnGerar');
     if (botao) { botao.disabled = false; botao.innerHTML = `${icon('generate')} CALCULAR + GERAR PLANEJAMENTO COMPLETO`; }
     fecharPainelPerfil();
+    window.projetosConta?.definirDono(sessao?.usuarioId || null);
     renderizarHistorico();
 }
 
@@ -338,7 +339,9 @@ function headersComSessao(comJson = true) {
 function salvarSessaoUsuario(sessao) {
     if (!sessao?.usuarioId || !sessao.accessToken) return;
     sessionStorage.removeItem('chef_ia_modo_demo_ativo');
+    const mudouDono = controleSessao.obter()?.usuarioId !== sessao.usuarioId;
     controleSessao.definir(sessao);
+    if (mudouDono) void window.projetosConta?.listar();
     clearTimeout(timerExpiracao);
     if (sessao.expiraEm) timerExpiracao = setTimeout(() => {
         if (!obterSessaoUsuario()) void encerrarSessaoUsuario();
@@ -813,7 +816,9 @@ async function gerarTudo() {
         // TAG: integracao-historico | FASE 1
         // Salvar evento + plano no histórico
         if (window.storageService) {
-            const historicoId = window.storageService.salvarHistorico(evento, dadosIA);
+            const historicoId = window.projetosConta?.ativa()
+                ? window.projetosConta.registrar(evento, dadosIA)
+                : window.storageService.salvarHistorico(evento, dadosIA);
             renderizarHistorico();
             if (!historicoId) {
                 resultadoArea.insertAdjacentHTML('afterbegin', `
@@ -979,13 +984,25 @@ function renderizarHistorico() {
     const container = document.getElementById('historico-container');
     if (!container || !window.storageService) return;
 
-    const historico = window.storageService.carregarHistorico();
+    const conta = window.projetosConta?.ativa();
+    const estadoConta = conta ? window.projetosConta.estado() : null;
+    const historico = estadoConta ? estadoConta.entradas : window.storageService.carregarHistorico();
+    const descricao = document.getElementById('historicoDescricao');
+    if (descricao) descricao.textContent = conta
+        ? 'Projetos confirmados como salvos permanecem na sua conta ao sair. Projetos pendentes ficam somente nesta sessão; tente salvar novamente ou baixe o PDF antes de sair.'
+        : 'Histórico temporário desta sessão. Salve o PDF antes de sair do modo demo.';
+    const status = document.getElementById('historicoContaStatus');
+    if (status) status.textContent = estadoConta?.erro || (estadoConta?.carregando ? 'Consultando seus projetos...' : '');
+    const atualizar = document.getElementById('historicoAtualizar');
+    atualizar?.classList.toggle('hidden', !conta);
+    if (atualizar) atualizar.disabled = Boolean(estadoConta?.carregando);
+    document.getElementById('historicoMais')?.classList.toggle('hidden', !conta || estadoConta.proximo === null || estadoConta.carregando);
     const erroHistorico = window.storageService.obterUltimoErroHistorico?.();
 
     if (historico.length === 0) {
         container.innerHTML = erroHistorico
             ? `<p class="historico-vazio">${escapeHTML(erroHistorico)} Os dados existentes não foram apagados.</p>`
-            : '<p class="historico-vazio">Nenhum planejamento salvo nesta sessão.</p>';
+            : `<p class="historico-vazio">${conta ? 'Nenhum projeto carregado. Use Atualizar projetos para consultar sua conta.' : 'Nenhum planejamento salvo nesta sessão.'}</p>`;
         return;
     }
 
@@ -995,13 +1012,15 @@ function renderizarHistorico() {
                 <div class="historico-card-title">${escapeHTML(entrada.tipo)}</div>
             </div>
             <div class="historico-card-meta">
-                <span>${icon("users")} ${entrada.pessoas} pessoas</span>
+                <span>${icon("users")} ${escapeHTML(entrada.pessoas)} pessoas</span>
                 <span>${icon("clock")} ${window.storageService.formatarDataBR(entrada.data_criacao)}</span>
             </div>
             <div class="historico-card-resumo">
                 ${escapeHTML(entrada.resumo)}
+                ${conta ? `<p class="field-hint">${entrada.estado_conta === 'salvo' ? 'Salvo na conta' : entrada.estado_conta === 'salvando' ? 'Salvando na conta...' : 'Pendente — ainda não confirmado na conta.'}</p>${entrada.erro_conta ? `<p class="field-hint">${escapeHTML(entrada.erro_conta)}</p>` : ''}` : ''}
                 ${entrada.plano_valido ? '' : '<br><strong>Geração incompleta — mantida apenas para diagnóstico.</strong>'}
             </div>
+            ${conta && entrada.estado_conta === 'pendente' ? `<button type="button" class="btn-secondary btn-small" data-action="tentar-salvar" data-id="${escapeHTML(entrada.id)}">Tentar salvar na conta</button>` : ''}
             <div class="historico-card-acoes">
                 <button type="button" class="historico-btn-carregar" ${entrada.plano_valido ? `data-action="carregar-historico" data-id="${escapeHTML(entrada.id)}"` : 'disabled'}>
                     ${entrada.plano_valido ? `${icon("folder")} Carregar` : `${icon("warning")} Incompleto`}
@@ -1017,10 +1036,30 @@ function renderizarHistorico() {
 /**
  * Carregar uma entrada do histórico e preencher o formulário
  */
+function interromperGeracaoParaHistorico() {
+    const sequencia = ++sequenciaGeracao;
+    const btnGerar = document.getElementById('btnGerar');
+    if (btnGerar) {
+        btnGerar.disabled = false;
+        btnGerar.innerHTML = `${icon("generate")} CALCULAR + GERAR PLANEJAMENTO COMPLETO`;
+    }
+    return sequencia;
+}
+
 function carregarDoHistorico(id) {
+    if (window.projetosConta?.ativa()) {
+        const contexto = capturarContextoSessao();
+        const sequencia = interromperGeracaoParaHistorico();
+        return window.projetosConta.carregar(id).then(entrada => {
+            if (contextoSessaoAtual(contexto) && sequencia === sequenciaGeracao) restaurarEntradaHistorico(entrada, id);
+        }).catch(error => { if (contextoSessaoAtual(contexto) && sequencia === sequenciaGeracao && error.name !== 'AbortError') mostrarAvisoHistorico(error.message); });
+    }
+    return restaurarEntradaHistorico(window.storageService?.carregarEntrada(id), id);
+}
+
+function restaurarEntradaHistorico(entrada, id) {
     if (!window.storageService) return;
 
-    const entrada = window.storageService.carregarEntrada(id);
     if (!entrada) {
         alert('❌ Planejamento não encontrado');
         return;
@@ -1032,12 +1071,7 @@ function carregarDoHistorico(id) {
     }
 
     // Abrir um salvo invalida geracoes que ainda possam chegar nesta sessao.
-    sequenciaGeracao++;
-    const btnGerar = document.getElementById('btnGerar');
-    if (btnGerar) {
-        btnGerar.disabled = false;
-        btnGerar.innerHTML = `${icon("generate")} CALCULAR + GERAR PLANEJAMENTO COMPLETO`;
-    }
+    interromperGeracaoParaHistorico();
     window.chefIALastResponseMeta = null;
     window.chefIALastCulinaryMemoryCount = 0;
     // Preencher formulário
@@ -1113,6 +1147,11 @@ function definirValorCampo(id, valor) {
 /**
  * Deletar uma entrada do histórico
  */
+function mostrarAvisoHistorico(mensagem) {
+    const status = document.getElementById('historicoContaStatus');
+    if (status) status.textContent = mensagem;
+}
+
 function deletarDoHistorico(id) {
     if (!window.storageService) return;
 
@@ -1120,6 +1159,12 @@ function deletarDoHistorico(id) {
         return;
     }
 
+    if (window.projetosConta?.ativa()) {
+        const contexto = capturarContextoSessao();
+        return window.projetosConta.remover(id).catch(error => {
+            if (contextoSessaoAtual(contexto) && error.name !== 'AbortError') mostrarAvisoHistorico(error.message);
+        });
+    }
     if (window.storageService.deletarEntrada(id)) {
         renderizarHistorico();
         console.log('✅ Deletado');
@@ -1132,10 +1177,17 @@ function deletarDoHistorico(id) {
 function limparHistoricoUI() {
     if (!window.storageService) return;
 
-    if (!confirm('⚠️ Isso vai deletar TODOS os planejamentos salvos. Tem certeza?')) {
+    const naConta = window.projetosConta?.ativa();
+    if (!confirm(naConta ? 'Isso vai excluir TODOS os seus projetos salvos na conta e as pendências desta sessão. Tem certeza?' : 'Isso vai excluir os planejamentos desta sessão. Tem certeza?')) {
         return;
     }
 
+    if (naConta) {
+        const contexto = capturarContextoSessao();
+        return window.projetosConta.limpar().catch(error => {
+            if (contextoSessaoAtual(contexto) && error.name !== 'AbortError') mostrarAvisoHistorico(error.message);
+        });
+    }
     if (window.storageService.limparHistorico()) {
         renderizarHistorico();
     }
@@ -1148,6 +1200,7 @@ document.getElementById('historico-container')?.addEventListener('click', event 
     const alvo = event.target.closest('[data-action]');
     if (!alvo) return;
     const id = alvo.dataset.id;
+    if (alvo.dataset.action === 'tentar-salvar') void window.projetosConta?.tentarSalvar(id);
     if (alvo.dataset.action === 'carregar-historico') carregarDoHistorico(id);
     if (alvo.dataset.action === 'deletar-historico') deletarDoHistorico(id);
 });
@@ -1287,3 +1340,14 @@ document.addEventListener('DOMContentLoaded', function() {
         renderizarHistorico();
     }, 500);
 });
+
+// Sprint 4: o modulo mantem a sincronizacao fora do estado de geracao.
+if (typeof criarProjetosConta === 'function') {
+    window.projetosConta = criarProjetosConta({
+        storage: window.storageService, sessao: obterSessaoUsuario,
+        capturar: capturarContextoSessao, atual: contextoSessaoAtual,
+        requisitar: fetchDaSessao, headers: headersComSessao, aoMudar: renderizarHistorico
+    });
+    document.getElementById('historicoAtualizar')?.addEventListener('click', () => void window.projetosConta.listar());
+    document.getElementById('historicoMais')?.addEventListener('click', () => void window.projetosConta.listar({ mais: true }));
+}
