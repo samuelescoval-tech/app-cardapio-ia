@@ -1,8 +1,71 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "creator": "Karamu",
   "license": "karamu-original",
   "entries": [
+    {
+      "id": "sobremesa-brigadeiro",
+      "path": "/images/library/dessert-brigadeiro.svg",
+      "title": "Brigadeiro",
+      "alt": "Ilustracao da familia: brigadeiro",
+      "slots": ["sobremesa"],
+      "match_terms": ["brigadeiro", "brigadeiros"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "sobremesa-beijinho",
+      "path": "/images/library/dessert-beijinho.svg",
+      "title": "Beijinho",
+      "alt": "Ilustracao da familia: beijinho",
+      "slots": ["sobremesa"],
+      "match_terms": ["beijinho", "beijinhos"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "entrada-coxinha",
+      "path": "/images/library/appetizer-coxinha.svg",
+      "title": "Coxinha",
+      "alt": "Ilustracao da familia: coxinha",
+      "slots": ["entrada"],
+      "match_terms": ["coxinha", "coxinhas"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "acompanhamento-arroz",
+      "path": "/images/library/side-rice.svg",
+      "title": "Arroz ou risoto",
+      "alt": "Ilustracao da familia: arroz ou risoto",
+      "slots": ["principal", "acompanhamento"],
+      "match_terms": ["arroz", "risoto"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "sobremesa-pudim",
+      "path": "/images/library/dessert-pudding.svg",
+      "title": "Pudim",
+      "alt": "Ilustracao da familia: pudim",
+      "slots": ["sobremesa"],
+      "match_terms": ["pudim", "pudins"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "sobremesa-bolo",
+      "path": "/images/library/dessert.svg",
+      "title": "Bolo",
+      "alt": "Ilustracao da familia: bolo",
+      "slots": ["sobremesa"],
+      "match_terms": ["bolo", "bolos"],
+      "match_mode": "dish-family"
+    },
+    {
+      "id": "salada-folhas",
+      "path": "/images/library/side-salad.svg",
+      "title": "Salada de folhas",
+      "alt": "Ilustracao da familia: salada de folhas",
+      "slots": ["salada"],
+      "match_terms": ["salada de folhas", "salada verde"],
+      "match_mode": "dish-family"
+    },
     {
       "id": "entrada-ilustrada",
       "path": "/images/library/appetizer.svg",
@@ -88,10 +151,10 @@
     {
       "id": "principal-massa",
       "path": "/images/library/main-pasta.svg",
-      "title": "Massa ou risoto",
+      "title": "Massa",
       "alt": "Ilustracao de massa empratada com molho e ervas",
       "slots": ["principal", "acompanhamento"],
-      "match_terms": ["massa", "macarrao", "penne", "ravioli", "lasanha", "nhoque", "risoto", "arroz"],
+      "match_terms": ["massa", "macarrao", "penne", "ravioli", "lasanha", "nhoque"],
       "match_mode": "dish-family"
     },
     {

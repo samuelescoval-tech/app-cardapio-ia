@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700" role="img" aria-labelledby="t d">
+<title id="t">Pudim ilustrado</title><desc id="d">Pudim em anel com cobertura de caramelo sobre prato</desc>
+<defs><radialGradient id="b"><stop stop-color="#423328"/><stop offset="1" stop-color="#18151d"/></radialGradient><filter id="s"><feDropShadow dy="18" stdDeviation="18" flood-opacity=".4"/></filter></defs>
+<rect width="1200" height="700" fill="url(#b)"/><ellipse cx="600" cy="475" rx="370" ry="150" fill="#f7f0e5" stroke="#c89a2b" stroke-width="12" filter="url(#s)"/>
+<path d="M385 445l60-170h310l60 170q-215 140-430 0" fill="#e3b96b" stroke="#b98946" stroke-width="8"/><ellipse cx="600" cy="280" rx="158" ry="68" fill="#a45e2b"/><ellipse cx="600" cy="280" rx="62" ry="29" fill="#29201a"/><path d="M398 439q200 110 404 0" fill="none" stroke="#a45e2b" stroke-width="22"/>
+</svg>
