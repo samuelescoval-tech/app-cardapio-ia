@@ -28,6 +28,7 @@
     <!-- TAG: chef-modulos | ordem obrigatoria: storage -> feedback visual -> utils -> render -> app -->
     <script defer src="js/storage.service.js"></script>
     <script defer src="js/sessao.service.js"></script>
+    <script defer src="js/projetos.service.js"></script>
     <script defer src="js/visual-feedback.service.js"></script>
     <script defer src="js/utils.js"></script>
     <script defer src="js/render.js"></script>
@@ -497,10 +498,10 @@
             <button type="button" class="btn-epic" id="btnGerar"><svg class="icon" aria-hidden="true"><use href="#icon-generate"></use></svg> CALCULAR + GERAR PLANEJAMENTO COMPLETO</button>
         </section>
 
-        <!-- TAG: historico-ui | FASE 1: Histórico Local -->
+        <!-- TAG: historico-ui | Projetos privados da conta e pendencias da sessao -->
         <section class="glass-panel historico-section" id="historicoSection">
             <div class="historico-header">
-                <h2 class="panel-title"><span><svg class="icon" aria-hidden="true"><use href="#icon-clipboard"></use></svg></span> Seus Planejamentos Recentes</h2>
+                <h2 class="panel-title"><span><svg class="icon" aria-hidden="true"><use href="#icon-clipboard"></use></svg></span> Seus Planejamentos</h2>
                 <button id="limpar-historico-btn" class="btn-secondary btn-small">
                     <svg class="icon" aria-hidden="true"><use href="#icon-trash"></use></svg> Limpar Tudo
                 </button>
@@ -509,7 +510,10 @@
             <div id="historico-container" class="historico-container">
                 <p class="historico-vazio">Nenhum planejamento salvo ainda</p>
             </div>
-            <p class="field-hint">Histórico temporário desta sessão. Ao sair da conta, estes projetos são removidos deste histórico. Salve o PDF antes de sair. A sincronização com a conta ainda não está disponível.</p>
+            <p id="historicoContaStatus" class="field-hint" role="status" aria-live="polite"></p>
+            <button type="button" id="historicoAtualizar" class="btn-secondary btn-small hidden">Atualizar projetos</button>
+            <button type="button" id="historicoMais" class="btn-secondary btn-small hidden">Mostrar mais projetos</button>
+            <p id="historicoDescricao" class="field-hint">Histórico temporário desta sessão. Ao sair da conta, estes projetos são removidos deste histórico. Salve o PDF antes de sair. A sincronização com a conta ainda não está disponível.</p>
             <p id="historicoLegadoAviso" class="field-hint hidden">Há projetos antigos neste navegador sem identificação de conta. Eles foram preservados, mas não são exibidos ou usados automaticamente. A recuperação precisa ser definida pelo responsável por esses projetos.</p>
         </section>
 

@@ -1,6 +1,6 @@
 # Roadmap atual - Karamu
 
-Atualizado em 2026-10-04.
+Atualizado em 2026-10-14.
 
 Usuario confirmou sucesso da migracao 007 no Supabase e informou conclusao
 desta rodada de validacoes. Ferramentas de apoio configuradas: Figma,
@@ -8,7 +8,12 @@ Context7, Playwright e Supabase (somente leitura), com tres skills de design
 instaladas. Detalhes em `MCP_E_SKILLS.md`. Nao ha necessidade identificada de
 adicionar outra ferramenta para o escopo atual. Proxima sprint recomendada:
 Sprint 4, historico duravel por conta, conforme fila existente. Implementacao
-ainda nao iniciada. Nao repetir validacoes ja relatadas.
+local preparada em 2026-10-07. Em 2026-10-14, usuario informou acreditar que
+ja aplicou a migracao 008 e esclareceu que os testes de salvamento/retorno,
+carregar/PDF e isolamento entre contas ja foram feitos. Validacoes funcionais
+registradas como concluidas por relato; nao repetir. Proximo passo: fechamento
+e publicacao do codigo. Migracao/politicas nao auditadas independentemente
+nesta sessao; nao pedir reaplicacao do SQL por padrao.
 
 Fotos: isolamento visual entre contas confirmado pelo usuario. Alinhamento
 e nome obrigatorio corrigidos localmente. Compartilhamento por galeria e link
@@ -31,13 +36,32 @@ executada nesta etapa. Publicacao e testes concluidos sao estados distintos.
 
 Organizacao Git adotada a pedido do usuario: branch por funcionalidade/correcao,
 testes e revisao por Pull Request antes da integracao na main. Trabalho atual
-em `feature/fornecedores-produtos`. Guia de construcao e aprendizado do Karamu
+em `feature/historico-conta`, criada sobre as entregas locais anteriores
+para preservar suas dependencias. Guia de construcao e aprendizado do Karamu
 solicitado como entrega ao final do projeto; escopo em `FLUXO_DE_TRABALHO.md`.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
 
-## Proxima sprint recomendada — Sprint 4
+## Sprint 4 — implementacao local em 2026-10-07
+
+Projetos privados da conta: migracao `008_projetos.sql`, snapshots versionados
+com evento/plano completos, listagem paginada, recuperacao e exclusao por dono.
+Interface mostra salvando/salvo/pendente e permite repetir a mesma gravacao
+sem criar duplicata. Recuperacao nao gera IA nem recalcula o projeto; PDF
+usa o resultado salvo. Logout limpa a tela/sessao e preserva projetos da conta.
+Demo continua temporaria. Legado sem dono continua preservado sem importacao
+ou descarte automaticos; decisao sobre recuperacao permanece separada.
+
+Validacao local: testes de API/sincronizacao, politicas SQL em PostgreSQL WASM
+descartavel e Chrome com API ficticia, incluindo PDF real e outra aba sem cache.
+Em 2026-10-14, usuario confirmou que os testes funcionais solicitados ja foram
+feitos; registrar como concluidos por relato. Nao repetir a rodada. Proximo
+passo: revisao/integracao/publicacao. Nenhuma alteracao feita pelo agente
+no Supabase/Vercel nesta retomada. Instrucoes em `PROJETOS_DA_CONTA.md`.
+A ideia futura de design permanece registrada abaixo, sem implementacao.
+
+## Escopo e criterios — Sprint 4
 
 Avaliacao de arquitetura solicitada em 2026-10-04: manter JavaScript,
 HTML/CSS, Express e Supabase, com organizacao incremental por modulos.
@@ -76,6 +100,22 @@ diagnostico de geracao recusada e controle de demo continuam registrados como
 frentes separadas; nao incluir automaticamente na persistencia ou considerar
 resolvidos por ela. Revisao visual futura usa Figma/skills e verifica com
 Playwright, respeitando as preferencias em `../AGENTS.md`.
+
+## Ideia futura de design — entrada interativa vista de cima
+
+Registrada a pedido do usuario em 2026-10-04. Referencia:
+https://www.facebook.com/share/r/1Db88TTsWx/ (reel de Abhay Tiwari sobre site
+de ramen com interacao 3D pela rolagem). Explorar para a Apresentacao do
+Karamu uma cena gastronomica/mesa vista de cima, com elementos que entram
+ou se movimentam conforme a rolagem. Mesa, pratos, talheres, bebidas e
+decoracao sao uma proposta de adaptacao a explorar, nao composicao final.
+
+Retomar na etapa futura de design/UI/UX com Figma e ideias anteriores;
+prototipar depois no navegador. Preservar acesso imediato ao Gerador,
+desempenho no celular e preferencia por movimento reduzido. Avaliar imagens
+em camadas ou sequencia de imagens antes de optar por uma cena 3D completa;
+nao exige troca de linguagem. Ideia registrada, ainda nao implementada nem
+priorizada em sprint. Usuario informou que retomara a sprint atual depois.
 
 ## Homologacao e revisoes registradas — 2026-10-04
 
@@ -161,7 +201,7 @@ publicacao e homologacao real. Nao declarar isolamento completo. Evidencias, imp
 | 2 | Polimento de UX | Concluida em 2026-09-08 |
 | 3 | Corrigir upload de fotos e usar catalogo completo no custo | Implementada; rodada de validacoes encerrada pelo usuario; ajustes atuais ainda locais |
 | 3A | Corrigir logout e isolamento local de dados | Validacoes relatadas concluidas; publicacao dos ajustes atuais separada; tratamento do legado na 4 |
-| 4 | Historico sincronizado e isolado por conta | Planejada; apos 3 e 3A |
+| 4 | Historico sincronizado e isolado por conta | Implementada; testes funcionais concluidos por relato do usuario; migracao relatada como provavelmente aplicada; fechamento/publicacao pendentes |
 | 5 | Melhorar cobertura e carregamento de imagens | Planejada; apos 4 |
 | 6 | Fechamento legal e fluxos de conta | Planejada; refletir persistencia da 4 |
 | 7 | Apresentacao e validacao da jornada completa | Planejada; apos etapas anteriores |

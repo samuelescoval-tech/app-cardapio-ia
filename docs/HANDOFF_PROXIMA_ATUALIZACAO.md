@@ -1,6 +1,120 @@
 # Handoff - Karamu
 
-Atualizado em 2026-10-04.
+Atualizado em 2026-10-14.
+
+## Fechamento em andamento — 2026-10-14
+
+Apos corrigir os registros, usuario pediu "vamos seguir". Retomado fechamento,
+integracao e publicacao conforme fluxo Git e autorizacoes da conversa; nao
+pedir repeticao dos testes funcionais confirmados. Suite automatizada passou:
+237 testes, zero falhas, no Node 24.21.0. Log de fechamento:
+`/tmp/karamu-sprint4-fechamento-tests.log`. Diff sem erros de espaco.
+Fetch encontrou apenas atualizacao remota do README; preservar suas instrucoes
+e navegacao ao integrar. Fornecedores/fotos ainda em commits locais anteriores,
+e a Sprint 4 depende dessas entregas. Publicar pela ordem de dependencias,
+com PRs e merges na main; confirmar GitHub/Vercel antes de declarar publicado.
+Nenhuma migracao reaplicada nem registro pessoal criado/apagado nesta retomada.
+
+## Estado atual corrigido — 2026-10-14
+
+Usuario esclareceu que os testes listados pelo agente ja foram feitos. Registrar
+como validacoes funcionais concluidas por relato do usuario: gerar/salvar na
+conta, sair e entrar novamente com projeto preservado, carregar/PDF com receitas
+e compras, e isolamento visual entre contas. Nao pedir repeticao destes testes.
+O acompanhamento anterior ainda os listava como pendentes; isso foi erro de
+registro do agente e esta correcao substitui aquelas pendencias. Nao inventar
+data original, ambiente exato ou evidencia independente para os testes relatados.
+
+Migracao 008: usuario informou acreditar que ja executou. Nao exigir reaplicacao
+por padrao. Tentativa independente de leitura REST nesta sessao nao conseguiu
+conectar; isso nao invalida as validacoes relatadas e nao e um erro observado
+no produto. Nao afirmar auditoria independente das politicas de producao.
+Outros cenarios de falha/retry/exclusao e SQL possuem evidencias locais
+registradas abaixo; nao atribuir confirmacao manual de cada um ao usuario.
+
+Estado Git: branch feature/historico-conta; implementacao da Sprint 4 ainda
+sem commit/push. Commits locais anteriores de fornecedores/fotos preservados.
+Proximo passo e fechamento do codigo/revisao/integracao/publicacao, conforme
+autorizacao vigente, e depois proxima sprint. Homologacao funcional relatada
+e publicacao sao estados distintos. Historico sem dono permanece preservado;
+recuperacao/importacao ou descarte ainda exigem decisao. Secoes antigas abaixo
+sao registros historicos; pendencias ja corrigidas nao devem ser reabertas.
+
+## Sprint 4 — projetos da conta, implementacao local em 2026-10-07
+
+Usuario pediu continuar e perguntou onde paramos. Retomada da Sprint 4 sobre
+fornecedores/fotos ja implementados e homologados; nao reabrir esses testes.
+Branch `feature/historico-conta` criada sobre a branch anterior, pois entregas
+locais anteriores ainda nao foram integradas na main. Preservadas tambem as
+alteracoes documentais da ideia da entrada interativa, registradas em 04/10.
+
+- `src/services/projetos/projetos.service.js`: snapshot com versao 1, UUID,
+  evento validado e resultado completo sem referencias visuais transitorias.
+  Cliente anon + token da conta, filtro explicito por dono e politicas SQL;
+  nenhuma service-role. Upsert por `(user_id,id)` preserva data e evita
+  duplicacao ao repetir a gravacao. Recuperacao nao chama IA nem recalcula.
+- `src/routes/projetos.routes.js`: Router com autenticacao, limitador comum,
+  no-store e parser de 1 MiB somente para PUT de projetos, antes do parser
+  global de 20 KB. GET paginado retorna resumos; GET por UUID traz snapshot;
+  DELETE individual e total somente da conta autenticada.
+- `public/js/projetos.service.js`: sincronizacao independente do bootstrap,
+  confirmacao/pending/retry, pagina de 20, protecao de respostas tardias,
+  UUID reutilizado apos recarga e confirmacao perdida. Pendencia local
+  mascara o mesmo UUID na listagem para evitar cards duplicados.
+- `storage.service.js` preserva historico temporario e adiciona metadados de
+  sincronizacao. Salvamento local pode falhar por quota: manter plano na tela
+  e pendencia em memoria enquanto a aba estiver aberta. Pendencias nao sao
+  permanentes e podem ser perdidas ao sair; mensagem orienta retry/PDF.
+- Interface atual reaproveitada, com estados e botoes de atualizar/mais/retry.
+  "Limpar Tudo" agora confirma explicitamente exclusao dos projetos da conta.
+  Demo continua temporaria. `chef_ia_historico` legado nao lido/importado/apagado.
+
+Validacao: 237 testes passaram na suite completa, incluindo testes novos de transporte/sincronizacao; migracao
+real aplicada duas vezes em PostgreSQL WASM descartavel (PGlite 0.5.8) com
+roles anon/authenticated e auth.uid local equivalente. Dono grava/carrega;
+outra conta nao le/edita/exclui/atribui dono; retry nao duplica; UUID igual
+em contas distintas nao sobrescreve; exclusao de usuario em cascata. Isso
+valida SQL localmente, nao confirma migracao aplicada no Supabase real.
+
+Chrome + API ficticia passou: geracao/salvamento, logout preservando banco,
+troca de conta, recarga, outra aba sem cache, recuperacao de receitas/compras/
+cronograma sem nova IA, PDF real com jsPDF 2.5.1 (mesma versao do app), confirmacao perdida
+com retry sem duplicar, erro de exclusao preservando dados, limpeza e layout
+1280/390/320px. Dependencias auxiliares instaladas apenas em `/tmp/karamu-db-test`;
+nenhuma dependencia nova no package.json. Logs: `/tmp/karamu-sprint4-tests.log`,
+`/tmp/karamu-sprint4-rls.log`, `/tmp/karamu-sprint4-browser.log`.
+
+Estado deste registro em 07/10: migracao e validacao real ainda pendentes.
+Atualizacao em 14/10 acima: usuario relatou conclusao dos testes funcionais
+e acredita ter aplicado a migracao; nao repetir. Publicacao continua separada. Consultas paginadas usam
+offset/ordem por data+UUID; nao sao snapshot transacional quando outros
+clientes alteram a lista simultaneamente. Atualizar reinicia a paginacao.
+Guia e passos especificos em `PROJETOS_DA_CONTA.md`. Sem consumo Gemini,
+gravacao no Supabase, commit novo ou push nesta retomada. Nao declarar a sprint
+homologada/publicada. Decisao do historico legado permanece registrada.
+
+## Referencia de entrada interativa — 2026-10-04
+
+Usuario adiou a retomada da sprint e pediu registrar uma ideia antiga de
+interacao de entrada no Karamu, com vista de cima. Link original:
+https://www.facebook.com/share/r/1Db88TTsWx/; destino publico observado:
+https://www.facebook.com/reel/2815403808840961. Foi possivel visualizar
+quadros do video em navegador isolado, fechando o aviso de login, sem
+autenticar. Referencia de Abhay Tiwari: site de ramen com cena gastronomica
+em movimento e transicao entre secoes, apresentado como interacao 3D pela
+rolagem. A tecnologia interna do site nao foi verificada.
+
+Adaptacao proposta: cena gastronomica/mesa vista de cima na Apresentacao,
+com pratos, talheres, bebidas e decoracao entrando ou se movimentando pela
+rolagem, integrando logo e acesso ao gerador. Composicao, assets e mecanismo
+de interacao ainda a definir com o usuario na etapa de design; usar Figma
+e rever ideias anteriores, depois prototipo no navegador. Considerar imagens
+em camadas/sequencia ligada a rolagem como alternativa ao 3D completo,
+mantendo acesso imediato ao Gerador, versao leve para celular e movimento
+reduzido. Viavel na estrutura atual, sem migracao de linguagem.
+
+Usuario pediu explicitamente salvar a ideia para nao esquecer. Registro
+tambem no roadmap; nenhuma implementacao, nova sprint ou publicacao iniciada.
 
 ## Avaliacao tecnica e commits autorizados — 2026-10-04
 
