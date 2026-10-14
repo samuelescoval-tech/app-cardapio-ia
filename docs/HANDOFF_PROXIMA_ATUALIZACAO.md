@@ -2,7 +2,47 @@
 
 Atualizado em 2026-10-14.
 
-## Fechamento em andamento — 2026-10-14
+## Fechamento publicado — Sprint 4, 2026-10-14
+
+Usuario pediu "vamos seguir" apos confirmar os testes ja realizados. Fechamento
+concluido: commits enviados, dependencias integradas e Sprint 4 publicada pela
+main. PR de fornecedores/fotos: https://github.com/samuelescoval-tech/app-cardapio-ia/pull/1
+(merged). PR de projetos: https://github.com/samuelescoval-tech/app-cardapio-ia/pull/2
+(merged). Preservada a atualizacao remota do README. Main local sincronizada.
+Nao tratar commit/push dessas entregas como pendentes em retomadas futuras.
+
+Validacao de fechamento: 237 testes automatizados passaram no Node 24.21.0.
+CodeQL encontrou alertas nos scripts de teste (leitura de arquivo em handler
+sem limite e filtragem HTML por regexp). Corrigidos antes dos merges: pagina
+do perfil preparada antes de atender HTTP; pagina dos projetos preservada,
+URLs externas bloqueadas no Chrome, servidor ficticio com rate limiting.
+Chrome aprovou novamente ambos os scripts corrigidos; nenhum teste manual
+solicitado ao usuario, nenhuma chamada Gemini ou gravacao Supabase realizada.
+CodeQL e Vercel passaram nos dois PRs apos as correcoes.
+
+Publicacao confirmada: status Vercel SUCCESS da main e consulta ao site real
+https://app-cardapio-ia.vercel.app. HTML e arquivos /js/projetos.service.js e
+/js/app.js retornaram HTTP 200 e conteudo igual ao codigo integrado. GET
+/api/projetos sem sessao retornou 401 com Cache-Control no-store. Deploy:
+https://vercel.com/samuel-es-coval/app-cardapio-ia/3rWGvnB4Ab7R7W7ADSAePUFtKqGd
+Isso confirma publicacao do codigo e exigencia de login; nao e uma auditoria
+independente do banco nem um novo teste autenticado de producao.
+
+Testes funcionais de projetos ja concluidos por relato do usuario; nao repetir.
+Migracao 008 relatada como provavelmente aplicada. Nao reaplicar nem apagar
+historico sem dono por padrao. Proxima sprint conforme fila: Sprint 5, cobertura
+e carregamento das imagens, mantendo reutilizacao de fotos autorizadas,
+identificacao honesta de correspondencia e acesso ao gerador. Design amplo,
+entrada interativa, login persistente, demo e qualidade do cardapio infantil
+continuam nas frentes registradas; nao afirmar que a Sprint 4 resolveu tudo.
+
+Logs adicionais do fechamento: /tmp/karamu-fornecedores-codeql.log e
+/tmp/karamu-projetos-codeql.log. Dependencia PDF temporaria reinstalada somente
+em /tmp/karamu-db-test; nenhuma dependencia do aplicativo alterada. GitHub
+informou cinco avisos moderados de dependencias da main; analisar em manutencao
+propria, sem confundir esses avisos com os alertas CodeQL corrigidos nesta entrega.
+
+## Registro anterior: fechamento em andamento — 2026-10-14
 
 Apos corrigir os registros, usuario pediu "vamos seguir". Retomado fechamento,
 integracao e publicacao conforme fluxo Git e autorizacoes da conversa; nao
@@ -15,7 +55,7 @@ e a Sprint 4 depende dessas entregas. Publicar pela ordem de dependencias,
 com PRs e merges na main; confirmar GitHub/Vercel antes de declarar publicado.
 Nenhuma migracao reaplicada nem registro pessoal criado/apagado nesta retomada.
 
-## Estado atual corrigido — 2026-10-14
+## Correcao de registro anterior — 2026-10-14
 
 Usuario esclareceu que os testes listados pelo agente ja foram feitos. Registrar
 como validacoes funcionais concluidas por relato do usuario: gerar/salvar na

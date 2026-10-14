@@ -23,7 +23,9 @@ locais existentes. Nao repetir pedidos de autorizacao ja concedida na sessao.
 Primeira branch: `feature/fornecedores-produtos`, com o ajuste integrado do
 perfil e os registros de homologacao acumulados. Commit local de funcionalidades
 e testes criado por autorizacao do usuario em 2026-10-04, com documentacao e
-avaliacao tecnica agrupadas separadamente. Push/PR/integracao ainda nao feitos.
+avaliacao tecnica agrupadas separadamente. Atualizacao em 2026-10-14: entrega
+integrada pelo PR 1, seguida da Sprint 4 pelo PR 2. Codigo publicado na Vercel;
+main local sincronizada. A proxima funcionalidade parte da main atualizada.
 
 ## Design e ferramentas
 

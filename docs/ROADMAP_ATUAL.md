@@ -2,18 +2,20 @@
 
 Atualizado em 2026-10-14.
 
-Usuario confirmou sucesso da migracao 007 no Supabase e informou conclusao
-desta rodada de validacoes. Ferramentas de apoio configuradas: Figma,
-Context7, Playwright e Supabase (somente leitura), com tres skills de design
-instaladas. Detalhes em `MCP_E_SKILLS.md`. Nao ha necessidade identificada de
-adicionar outra ferramenta para o escopo atual. Proxima sprint recomendada:
-Sprint 4, historico duravel por conta, conforme fila existente. Implementacao
-local preparada em 2026-10-07. Em 2026-10-14, usuario informou acreditar que
-ja aplicou a migracao 008 e esclareceu que os testes de salvamento/retorno,
-carregar/PDF e isolamento entre contas ja foram feitos. Validacoes funcionais
-registradas como concluidas por relato; nao repetir. Proximo passo: fechamento
-e publicacao do codigo. Migracao/politicas nao auditadas independentemente
-nesta sessao; nao pedir reaplicacao do SQL por padrao.
+Sprint 4 encerrada funcionalmente conforme testes confirmados pelo usuario e
+codigo integrado/publicado em 2026-10-14. Fornecedores/fotos e projetos da conta
+chegaram a main pelos PRs 1 e 2. Vercel confirmou sucesso; site real entregou
+HTML/JS novos e API de projetos recusou acesso sem sessao. Migracao 008 relatada
+como provavelmente aplicada; sem auditoria independente do Supabase nesta sessao.
+Nao repetir testes confirmados nem tratar estas entregas como ainda sem push.
+
+Proxima sprint: **Sprint 5 — melhorar cobertura e carregamento de imagens**,
+conforme fila existente. Fotos autorizadas podem alimentar imagens dos pratos;
+manter a identificacao honesta quando nao houver correspondencia exata.
+Ferramentas de apoio ja configuradas: Figma, Context7, Playwright e Supabase
+(somente leitura), com skills de design. Nao ha necessidade identificada de
+adicionar outra ferramenta para o escopo atual. Detalhes em `MCP_E_SKILLS.md`.
+Estado atual nesta abertura prevalece sobre relatos historicos abaixo.
 
 Fotos: isolamento visual entre contas confirmado pelo usuario. Alinhamento
 e nome obrigatorio corrigidos localmente. Compartilhamento por galeria e link
@@ -30,20 +32,19 @@ fornecedores e produtos/precos entre contas, esclarecendo que o relato ja
 incluia os produtos vinculados. Nao repetir esse teste. Isolamento visual das
 fotos confirmado depois; usuario informou encerramento desta rodada de
 validacoes apos aplicar a migracao 007. Nao reabrir a rodada com base em
-pendencias antigas. Ajustes incluidos em commit local autorizado em
-2026-10-04 na branch `feature/fornecedores-produtos`; publicacao remota nao
-executada nesta etapa. Publicacao e testes concluidos sao estados distintos.
+pendencias antigas. Ajustes registrados na branch `feature/fornecedores-produtos` em 2026-10-04
+e integrados/publicados pelo PR 1 em 2026-10-14. Publicacao e testes concluidos sao estados distintos.
 
 Organizacao Git adotada a pedido do usuario: branch por funcionalidade/correcao,
-testes e revisao por Pull Request antes da integracao na main. Trabalho atual
-em `feature/historico-conta`, criada sobre as entregas locais anteriores
-para preservar suas dependencias. Guia de construcao e aprendizado do Karamu
+testes e revisao por Pull Request antes da integracao na main. Sprint 4 desenvolvida em `feature/historico-conta`, criada sobre as entregas
+anteriores para preservar dependencias; ambas integradas na main pelos PRs.
+Novas funcionalidades partem da main atualizada. Guia de construcao e aprendizado do Karamu
 solicitado como entrega ao final do projeto; escopo em `FLUXO_DE_TRABALHO.md`.
 
 Este arquivo registra etapas. Detalhes tecnicos e falhas atuais ficam somente
 no handoff.
 
-## Sprint 4 — implementacao local em 2026-10-07
+## Sprint 4 — implementada em 2026-10-07, publicada em 2026-10-14
 
 Projetos privados da conta: migracao `008_projetos.sql`, snapshots versionados
 com evento/plano completos, listagem paginada, recuperacao e exclusao por dono.
@@ -57,8 +58,8 @@ Validacao local: testes de API/sincronizacao, politicas SQL em PostgreSQL WASM
 descartavel e Chrome com API ficticia, incluindo PDF real e outra aba sem cache.
 Em 2026-10-14, usuario confirmou que os testes funcionais solicitados ja foram
 feitos; registrar como concluidos por relato. Nao repetir a rodada. Proximo
-passo: revisao/integracao/publicacao. Nenhuma alteracao feita pelo agente
-no Supabase/Vercel nesta retomada. Instrucoes em `PROJETOS_DA_CONTA.md`.
+passo de fechamento concluido: PRs integrados e publicacao da Vercel confirmada.
+Nenhuma migracao reaplicada ou registro pessoal alterado pelo agente. Instrucoes em `PROJETOS_DA_CONTA.md`.
 A ideia futura de design permanece registrada abaixo, sem implementacao.
 
 ## Escopo e criterios — Sprint 4
@@ -199,10 +200,10 @@ publicacao e homologacao real. Nao declarar isolamento completo. Evidencias, imp
 |---|---|---|
 | 1 | Saude tecnica | Concluida em 2026-08-31 |
 | 2 | Polimento de UX | Concluida em 2026-09-08 |
-| 3 | Corrigir upload de fotos e usar catalogo completo no custo | Implementada; rodada de validacoes encerrada pelo usuario; ajustes atuais ainda locais |
-| 3A | Corrigir logout e isolamento local de dados | Validacoes relatadas concluidas; publicacao dos ajustes atuais separada; tratamento do legado na 4 |
-| 4 | Historico sincronizado e isolado por conta | Implementada; testes funcionais concluidos por relato do usuario; migracao relatada como provavelmente aplicada; fechamento/publicacao pendentes |
-| 5 | Melhorar cobertura e carregamento de imagens | Planejada; apos 4 |
+| 3 | Corrigir upload de fotos e usar catalogo completo no custo | Validacoes encerradas pelo usuario; ajustes integrados/publicados em 2026-10-14 |
+| 3A | Corrigir logout e isolamento local de dados | Validacoes relatadas concluidas; ajustes publicados; historico sem dono preservado, decisao separada |
+| 4 | Historico sincronizado e isolado por conta | Testes funcionais confirmados pelo usuario; codigo integrado/publicado em 2026-10-14; migracao relatada como provavelmente aplicada |
+| 5 | Melhorar cobertura e carregamento de imagens | Proxima sprint; implementar sobre a main atualizada |
 | 6 | Fechamento legal e fluxos de conta | Planejada; refletir persistencia da 4 |
 | 7 | Apresentacao e validacao da jornada completa | Planejada; apos etapas anteriores |
 
