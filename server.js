@@ -123,8 +123,17 @@ app.use((error, req, res, next) => {
     next(error);
 });
 
+// Limita leituras estaticas sem restringir as rotas de API ao mesmo teto.
+const limitadorEstatico = rateLimit({
+    windowMs: 60 * 1000,
+    limit: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { ok: false, error: "Muitas solicitacoes seguidas. Aguarde um minuto e tente novamente." }
+});
+
 // Serve os arquivos estáticos da pasta public/
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(limitadorEstatico, express.static(path.join(__dirname, 'public')));
 
 app.get('/api/status', (req, res) => {
     res.json({
@@ -684,7 +693,7 @@ async function buscarImagensEventoHandler(req, res) {
 app.post('/api/imagens-evento', limitadorPersonalizacao, buscarImagensEventoHandler);
 
 // Força a abertura do index.html na rota principal
-app.get('/', (req, res) => {
+app.get('/', limitadorEstatico, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
