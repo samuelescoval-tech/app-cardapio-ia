@@ -33,7 +33,7 @@
   },
   "overrides": {
     "body-parser": "^2.4.0",
-    "qs": "^6.15.3"
+    "qs": "^6.17.1"
   },
   "directories": {
     "doc": "docs"
