@@ -36,7 +36,7 @@ function ambiente({ local = armazenamento(), session = armazenamento(), falhaSai
     setTimeout(fn, ms) { const id = randomUUID(); timers.set(id, { fn, ms }); return id; },
     clearTimeout(id) { timers.delete(id); },
     requestAnimationFrame: fn => fn(),
-    icon: () => '', escapeHTML: s => String(s), confirm: () => true,
+    confirm: () => true,
     fetch: async () => { throw new Error('Requisicao inesperada'); },
     document: { querySelectorAll: () => [], getElementById: elemento, body: elemento('body'),
       addEventListener() {}, removeEventListener() {}, querySelector: () => null },
@@ -63,7 +63,7 @@ function ambiente({ local = armazenamento(), session = armazenamento(), falhaSai
       } }
     }
   });
-  for (const nome of ['storage.service.js','sessao.service.js','app.js','foto-config.js','perfil.js']) {
+  for (const nome of ['utils.js','storage.service.js','sessao.service.js','app.js','foto-config.js','perfil.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js', nome), 'utf8'), contexto);
   }
   contexto.inicializarLoginSocial('https://projeto.supabase.co', 'chave-publica-teste');
@@ -253,6 +253,23 @@ test('nova geracao nao envia memoria do evento anterior e salva resultado indepe
   assert.equal(a.c.window.chefIAUltimoPlano.dados,novo);
   assert.equal(a.c.window.storageService.carregarHistorico().length,2);
   assert.equal(a.c.window.storageService.carregarEntrada(anterior).plano.cardapio[0].nome,'Prato privado A');
+});
+
+test('loading da geracao escapa valores do DOM antes de interpretar HTML', async () => {
+  const a = ambiente(); a.entrar('A'); prepararGeracao(a);
+  const marcador = '<img src=x onerror=alert(1)>';
+  a.elemento('pessoas').value = `10 ${marcador}`;
+  a.c.document.querySelector = seletor => seletor === 'input[name="estilo"]:checked' ? { value: marcador } : null;
+  let liberar;
+  a.c.fetch = () => new Promise(resolve => { liberar = resolve; });
+  const geracao = a.c.gerarTudo();
+  for (let i = 0; i < 10 && !liberar; i++) await Promise.resolve();
+  assert.ok(liberar);
+  const html = a.elemento('resultadoArea').innerHTML;
+  assert.equal(html.includes(marcador), false);
+  assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
+  liberar({ok:true,status:200,json:async()=>({ok:true,plano:{cardapio:[],receitas:[]}})});
+  await geracao;
 });
 
 test('geracao atrasada nao substitui projeto do historico aberto enquanto aguardava', async () => {

@@ -749,7 +749,7 @@ async function gerarTudo() {
             <div class="glass-panel" style="text-align:center; border-top: 4px solid var(--gold);">
                 <span class="gallery-loading-visual" aria-hidden="true" style="display:inline-block; margin-bottom:12px;"></span>
                 <p><strong>O Karamu está arquitetando seu evento...</strong></p>
-                <p style="font-size:0.8rem; opacity:0.7;">Calculando logística para ${pessoas} convidados (${estilo}). Pode levar de 15 a 40 segundos.</p>
+                <p style="font-size:0.8rem; opacity:0.7;">Calculando logística para ${escapeHTML(pessoas)} convidados (${escapeHTML(estilo)}). Pode levar de 15 a 40 segundos.</p>
             </div>
         `;
 

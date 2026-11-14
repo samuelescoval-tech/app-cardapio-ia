@@ -85,6 +85,15 @@ async function iniciar(t, opcoes) {
   };
 }
 
+test('pagina inicial e arquivos estaticos passam pelo limitador de leitura', async t => {
+  const c = await iniciar(t);
+  for (const rota of ['/', '/js/app.js']) {
+    const resposta = await fetch(c.base + rota);
+    assert.equal(resposta.status, 200);
+    assert.equal(resposta.headers.get('ratelimit-limit'), '300');
+  }
+});
+
 function foto(bytes) {
   const buffer = Buffer.alloc(bytes);
   Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buffer);
