@@ -36,26 +36,44 @@ criado com variáveis, estilos e exemplos editáveis. Regras duráveis em
 [MASTER.md](../design-system/karamu/MASTER.md). Isto é a base comum; protótipos
 completos do Gerador/Projetos/Perfil e demais melhorias abaixo continuam pendentes.
 
-Validação: 243 testes Node 24 aprovados; regressão Chrome em 320/390/768/1280/1920px
-e reflow equivalente a 200% (viewport/DPR), com API fictícia, incluindo fechar login/demo e Escape,
-rodapé, alternância entre seções sem perder campos/capa e bloqueio de modais.
-Fornecedores/fotos conferidos em 320/390/1280px. Capturas separadas em 390/1280px
-com Montserrat e Playfair realmente carregadas e fotos decodificadas; somente
-recursos públicos de fontes/imagens liberados. Não houve login real, IA ou
-alteração no Supabase. Nenhuma homologação antiga solicitada ao usuário.
-Lote local na branch `feature/identidade-visual`, ainda não publicado.
+Validação do primeiro lote: 243 testes Node 24 aprovados; regressão Chrome em
+320/390/768/1280/1920px e reflow equivalente a 200% (viewport/DPR), com API fictícia,
+incluindo fechar login/demo e Escape, rodapé, alternância entre seções sem perder
+campos/capa e bloqueio de modais. Fornecedores/fotos conferidos em 320/390/1280px.
+Capturas separadas em 390/1280px com Montserrat e Playfair realmente carregadas e
+fotos decodificadas; somente recursos públicos de fontes/imagens liberados. Não houve
+login real, IA ou alteração no Supabase. Nenhuma homologação antiga solicitada ao
+usuário. Os lotes locais estão na branch `feature/gerador-ux`, ainda não publicados.
+
+## Segundo lote implementado localmente — Gerador e resultado
+
+O cabeçalho do Gerador ganhou introdução e atalho para projetos. O resultado agora
+fica imediatamente após o formulário, antes do histórico. Tipo e convidados exibem
+erros junto aos campos, com `aria-invalid`, `role="alert"` e foco no primeiro erro;
+convidados exige inteiro entre 1 e 5000 e não usa mais `alert`. Os erros limpam ao
+corrigir ou limpar a sessão, e a lista de sugestões não cobre a mensagem.
+
+O estado de geração tem spinner, texto legível, botão desabilitado e rolagem até o
+resultado. O cabeçalho concluído usa os tokens editoriais de tipografia, cor, raio
+e sombra. Foram preservadas as correções de XSS e rolagem e o comportamento homologado.
+
+Validação final: 246 testes Node 24 aprovados; `validate-presentation-ui.js` em
+320/390/768/1280/1920px e reflow equivalente a 200%, incluindo erros inline, sugestões,
+rolagem única, modais, capa e navegação. Estados vazio/inválido em 1280px e inválido,
+gerando/concluído em 390px e 1280px inspecionados com dados fictícios, sem IA, login
+ou Supabase reais; sem transbordamento horizontal. `git diff --check` aprovado.
 
 ## Diagnóstico inicial e melhorias ainda a completar
 
 | Prioridade | Evidência observada antes deste lote | Situação / próxima melhoria |
 | --- | --- | --- |
 | Alta | `public/css/modules/layout.css:3`: barra fixa sem compensação de rolagem. Em Chrome local, ao posicionar o campo Convidados a 30px do topo, a barra o cobriu parcialmente em 1280, 390 e 320px. | Compensação de destinos aplicada neste lote. Revisar também foco de teclado e estados dos demais fluxos. |
-| Alta | `public/css/modules/form.css:20` e `public/css/modules/base.css:11`: rótulos de cerca de 11,5px, dourado `#b8860b` sobre branco, contraste aproximado 3,25:1. | Aplicado nos fundamentos, navegação e formulário. Conferir os demais estados do resultado e do perfil no próximo lote. |
+| Alta | `public/css/modules/form.css:20` e `public/css/modules/base.css:11`: rótulos de cerca de 11,5px, dourado `#b8860b` sobre branco, contraste aproximado 3,25:1. | Aplicado nos fundamentos, navegação, formulário e cabeçalho do resultado. Conferir os demais estados do perfil no próximo lote. |
 | Alta | `public/js/app.js:627` e `:642`, `public/index.html:527`: perfil abre sem mover foco, fecha sem devolvê-lo; backdrop e semântica de diálogo precisam ser coerentes. Chrome confirmou foco no botão Conta após abrir. | Definir comportamento modal, foco inicial/retorno, Escape, Tab e estado acessível das abas. |
-| Alta | `public/js/app.js:695`: validação inicial de tipo/convidados usa `alert`; requisitos não aparecem claramente junto aos campos. | Marcar campos obrigatórios e exibir erro com orientação perto do campo, levando o foco ao primeiro erro. Validar limites antes de enviar; preservar validação no servidor. |
+| Alta | `public/js/app.js:695`: validação inicial de tipo/convidados usa `alert`; requisitos não aparecem claramente junto aos campos. | Implementado localmente: campos obrigatórios, erros inline acessíveis, foco no primeiro erro e inteiro de 1 a 5000 antes do envio. Validação no servidor preservada. |
 | Alta | `public/index.html:494`, `public/js/app.js:1311`: botão Importar projeto Chef abre arquivo, mas a importação não existe. | Retirar a ação sem efeito do fluxo principal. Importação real, se retomada, terá escopo e validação próprios. Não apagar arquivos antigos. |
 | Alta | `public/js/perfil.js:601`: saída ainda recomenda salvar PDF por histórico temporário; `public/privacidade.html:49–50` descreve histórico/memória antigos. | Avisos de saída e ajuda devem distinguir projeto confirmado na conta, gravação pendente e demo. Atualizar explicações públicas conforme o funcionamento efetivo. |
-| Média | `public/css/modules/layout.css:300`: catálogo no painel de perfil de até 580px; `public/index.html:501`: projetos entre formulário e resultado. | Prototipar acesso mais claro a projetos e um espaço confortável para fornecedor/produtos/fotos. Isso é oportunidade de organização, não prova de falha de salvamento. |
+| Média | `public/css/modules/layout.css:300`: catálogo no painel de perfil de até 580px; `public/index.html:501`: projetos entre formulário e resultado. | Resultado agora vem antes dos projetos e há atalho no cabeçalho do Gerador. Resta prototipar um espaço confortável para fornecedor/produtos/fotos. Isso é oportunidade de organização, não prova de falha de salvamento. |
 | Média | `public/index.html:678` em diante: apresentação longa e textos sobre geração de imagens, envio de e-mail, aprendizado individual e painel administrativo sem os respectivos fluxos encontrados nesta inspeção. | Encurtar apresentação, destacar a próxima ação e conferir cada promessa contra o código antes de publicá-la. |
 
 As evidências desta tabela são da inspeção inicial, anterior ao lote acima;
@@ -80,28 +98,31 @@ As letras abaixo são etapas; cada etapa pode ter mais de um PR pequeno.
 
 ### 6A — identidade, apresentação e uso diário (em andamento)
 
-1. Base visual e correção da apresentação implementadas neste primeiro lote.
-   Usar o guia Figma criado para prototipar Gerador/resultado, Projetos e Perfil
-   em desktop e celular. Próxima tela: Gerador, incluindo estados vazio, inválido,
-   gerando e concluído. Acesso de edição Figma confirmado nesta rodada.
+1. Base visual, correção da apresentação e segundo lote do Gerador implementados
+   localmente, incluindo estados vazio, inválido, gerando e concluído. Os protótipos
+   de Gerador/resultado, Projetos e Perfil em desktop e celular continuam pendentes
+   no Figma; a conexão está autenticada, mas precisa de um arquivo aberto/carregado.
 2. Preservar creme, preto, dourado, logo e identidade editorial. Simplificar
    sombras, espaços e bordas; preferir cantos menos arredondados. Manter logo
    maior/texto menor na seção ativa e a relação inversa na outra seção.
-3. No Gerador, agrupar informações essenciais, manter opções avançadas recolhíveis
-   e aproximar a ação Gerar do resultado. Dar acesso visível aos projetos sem
-   precisar percorrer todo o formulário ou ampliar excessivamente a barra.
+3. No Gerador, o acesso a projetos e a proximidade entre ação e resultado foram
+   implementados localmente. Manter opções avançadas recolhíveis e revisar o acesso
+   sem percorrer todo o formulário ou ampliar excessivamente a barra.
 4. No Perfil, preservar fornecedor e seus produtos/variedades no mesmo fluxo;
    explorar painel mais amplo no desktop e área confortável no celular.
    Fotos continuam com nome obrigatório, privadas por padrão e compartilhamento
    explícito por galeria/link. Indicar o alcance da autorização e sua revogação.
-5. Implementar contraste, foco, erros junto aos campos, mensagens de salvamento,
-   ações com rótulos claros e retirada do botão de importação sem efeito.
-   Manter expandir/recolher capa sempre acessível.
+5. Contraste e erros junto aos campos do Gerador foram implementados localmente.
+   Restam foco do perfil, mensagens de salvamento, demais ações com rótulos claros
+   e retirada do botão de importação sem efeito. Manter expandir/recolher capa
+   sempre acessível.
 
 Aceite: navegação e foco visíveis; leitura confortável; estados e ações claros;
 fluxos novos verificados em 320, 390, 768 e 1280px, zoom de 200%, teclado e
-movimento reduzido. Testes de regressão pertinentes serão executados pelo agente;
-o usuário revisa o novo visual, sem refazer homologações antigas.
+movimento reduzido. O lote do Gerador passou nessas verificações; a Sprint 6A não
+está concluída enquanto Projetos/Perfil e os protótipos permanecerem pendentes.
+Testes de regressão pertinentes serão executados pelo agente; o usuário revisa o
+novo visual, sem refazer homologações antigas.
 
 ### 6B — conta, demo e explicações coerentes
 

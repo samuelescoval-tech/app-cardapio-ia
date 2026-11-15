@@ -84,8 +84,13 @@ ideia para depois de estabilizar os fluxos, com acesso imediato ao Gerador,
 alternativa estática e suporte a movimento reduzido. Referências recuperadas
 dos registros anteriores, sem nova auditoria dos sites nesta rodada.
 
-Este primeiro lote alcança apresentação e fundamentos de navegação/formulários.
-Ainda faltam protótipos de estados do Gerador/resultado, organização dos Projetos
-e Perfil, foco do perfil, erros próximos aos campos, textos e hierarquia de ações.
-Não marcar essas pendências como resolvidas apenas por compartilhar variáveis.
+Os dois lotes locais alcançam apresentação, fundamentos de navegação/formulários
+e os estados vazio, inválido, gerando e concluído do Gerador. Os erros de tipo e
+convidados agora aparecem junto aos campos; o resultado vem antes dos projetos,
+que também têm um atalho no cabeçalho do Gerador. O cabeçalho do resultado usa
+a mesma tipografia, cores, raios e sombras discretas desta direção.
+
+Ainda faltam os protótipos no Figma, a organização dos Projetos e Perfil, o foco
+do perfil, textos e a hierarquia de ações restantes. Não marcar essas pendências
+como resolvidas apenas por compartilhar variáveis ou concluir o lote do Gerador.
 Próximas etapas em `docs/PLANO_UI_UX_E_PROXIMAS_ETAPAS.md`.

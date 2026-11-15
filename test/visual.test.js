@@ -445,6 +445,9 @@ test('formulario principal associa rotulos aos campos e anuncia resultados', () 
     assert.match(app, /getElementById\('btnConta'\)\?\.addEventListener\('click', abrirModalConta\)/);
     assert.match(html, /id="resultadoArea" class="hidden" aria-live="polite"/);
     assert.match(html, /class="style-grid" role="radiogroup"/);
+    assert.ok(html.indexOf('id="resultadoArea"') < html.indexOf('id="historicoSection"'), 'resultado deve seguir imediatamente o Gerador');
+    assert.match(html, /aria-describedby="tipoHint tipoError"/);
+    assert.match(html, /aria-describedby="pessoasError"/);
 });
 
 test('layout mobile reduz a primeira dobra e preserva alvos de toque', () => {

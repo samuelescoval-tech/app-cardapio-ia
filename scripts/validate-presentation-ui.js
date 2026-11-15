@@ -175,6 +175,18 @@ async function main() {
             await browser.evaluate(`window.scrollTo({ top: 1400, behavior: 'instant' }); entrarModoDemo(); switchView('app');`);
             await quadro();
             assert.equal(await browser.evaluate('window.scrollY'), 0, contexto + ': inicio do gerador deslocado');
+            await browser.evaluate('gerarTudo()');
+            assert.equal(await browser.evaluate(`document.getElementById('tipoError').textContent`), 'Informe o tipo de evento.');
+            assert.equal(await browser.evaluate(`document.getElementById('pessoasError').textContent`), 'Informe o número de convidados.');
+            assert.equal(await browser.evaluate(`document.getElementById('tipo').getAttribute('aria-invalid')`), 'true');
+            assert.equal(await browser.evaluate(`document.getElementById('tipoListbox').classList.contains('hidden')`), true, contexto + ': sugestoes cobriram o erro');
+            await browser.evaluate(`['tipo', 'pessoas'].forEach(id => {
+                const campo = document.getElementById(id);
+                campo.value = id === 'tipo' ? 'Evento preservado' : '12';
+                campo.dispatchEvent(new Event('input', { bubbles: true }));
+            })`);
+            assert.equal(await browser.evaluate(`document.getElementById('tipoError').textContent`), '');
+            assert.equal(await browser.evaluate(`document.getElementById('pessoasError').textContent`), '');
             await botaoCapaAcessivel(contexto + '-capa-expandida');
             await browser.evaluate(`document.getElementById('tipo').value = 'Evento preservado'; document.getElementById('pessoas').value = '12'; document.getElementById('btnToggleHeader').click();`);
             await quadro();

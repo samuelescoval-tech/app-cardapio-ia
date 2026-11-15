@@ -36,7 +36,7 @@ function ambiente({ local = armazenamento(), session = armazenamento(), falhaSai
     setTimeout(fn, ms) { const id = randomUUID(); timers.set(id, { fn, ms }); return id; },
     clearTimeout(id) { timers.delete(id); },
     requestAnimationFrame: fn => fn(),
-    icon: () => '', escapeHTML: s => String(s), confirm: () => true,
+    confirm: () => true,
     fetch: async () => { throw new Error('Requisicao inesperada'); },
     document: { querySelectorAll: () => [], getElementById: elemento, body: elemento('body'),
       addEventListener() {}, removeEventListener() {}, querySelector: () => null },
@@ -63,7 +63,7 @@ function ambiente({ local = armazenamento(), session = armazenamento(), falhaSai
       } }
     }
   });
-  for (const nome of ['storage.service.js','sessao.service.js','app.js','foto-config.js','perfil.js']) {
+  for (const nome of ['utils.js','storage.service.js','sessao.service.js','app.js','foto-config.js','perfil.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js', nome), 'utf8'), contexto);
   }
   contexto.inicializarLoginSocial('https://projeto.supabase.co', 'chave-publica-teste');
@@ -253,6 +253,41 @@ test('nova geracao nao envia memoria do evento anterior e salva resultado indepe
   assert.equal(a.c.window.chefIAUltimoPlano.dados,novo);
   assert.equal(a.c.window.storageService.carregarHistorico().length,2);
   assert.equal(a.c.window.storageService.carregarEntrada(anterior).plano.cardapio[0].nome,'Prato privado A');
+});
+
+test('geracao invalida apresenta erros nos campos sem chamar a API', async () => {
+  const a = ambiente(); a.entrar('A');
+  await a.c.gerarTudo();
+  assert.equal(a.elemento('tipoError').textContent,'Informe o tipo de evento.');
+  assert.equal(a.elemento('pessoasError').textContent,'Informe o número de convidados.');
+  assert.equal(a.elemento('tipo').getAttribute('aria-invalid'),'true');
+  assert.equal(a.elemento('tipo').getAttribute('aria-expanded'),'false');
+  assert.equal(a.elemento('tipoListbox').classList.contains('hidden'),true);
+  assert.equal(a.elemento('resultadoArea').classList.contains('hidden'),true);
+
+  a.elemento('tipo').value = 'Jantar';
+  a.elemento('pessoas').value = '0';
+  await a.c.gerarTudo();
+  assert.equal(a.elemento('tipoError').textContent,'');
+  assert.equal(a.elemento('pessoasError').textContent,'Use uma quantidade inteira entre 1 e 5000.');
+  assert.equal(a.elemento('pessoas').getAttribute('aria-invalid'),'true');
+});
+
+test('loading da geracao escapa valores do DOM antes de interpretar HTML', async () => {
+  const a = ambiente(); a.entrar('A'); prepararGeracao(a);
+  const marcador = '<img src=x onerror=alert(1)>';
+  a.elemento('pessoas').value = '10';
+  a.c.document.querySelector = seletor => seletor === 'input[name="estilo"]:checked' ? { value: marcador } : null;
+  let liberar;
+  a.c.fetch = () => new Promise(resolve => { liberar = resolve; });
+  const geracao = a.c.gerarTudo();
+  for (let i = 0; i < 10 && !liberar; i++) await Promise.resolve();
+  assert.ok(liberar);
+  const html = a.elemento('resultadoArea').innerHTML;
+  assert.equal(html.includes(marcador), false);
+  assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt;'));
+  liberar({ok:true,status:200,json:async()=>({ok:true,plano:{cardapio:[],receitas:[]}})});
+  await geracao;
 });
 
 test('geracao atrasada nao substitui projeto do historico aberto enquanto aguardava', async () => {

@@ -50,6 +50,7 @@ function limparEstadoPrivado(sessao) {
         else campo.value = '';
     });
     document.querySelectorAll('#formCard select, #perfilSection select').forEach(campo => { campo.selectedIndex = 0; });
+    for (const id of ['tipo', 'pessoas']) definirErroCampo(id);
     document.querySelectorAll('#perfilSection .access-modal-error').forEach(el => { el.textContent = ''; });
     window.chefIAPerfil?.limpar();
     const botao = document.getElementById('btnGerar');
@@ -658,6 +659,35 @@ function toggleHeader() {
     button?.setAttribute('aria-label', collapsed ? 'Expandir capa' : 'Recolher capa');
 }
 
+function definirErroCampo(id, mensagem = "") {
+    const campo = document.getElementById(id);
+    const erro = document.getElementById(`${id}Error`);
+    if (campo) campo.setAttribute('aria-invalid', String(Boolean(mensagem)));
+    if (erro) erro.textContent = mensagem;
+}
+
+function validarCamposGeracao(tipo, pessoas) {
+    const quantidade = Number(pessoas);
+    const erroTipo = tipo.trim() ? "" : "Informe o tipo de evento.";
+    const erroPessoas = !pessoas
+        ? "Informe o número de convidados."
+        : !Number.isInteger(quantidade) || quantidade < 1 || quantidade > 5000
+            ? "Use uma quantidade inteira entre 1 e 5000."
+            : "";
+    definirErroCampo('tipo', erroTipo);
+    definirErroCampo('pessoas', erroPessoas);
+    const primeiroInvalido = erroTipo ? 'tipo' : erroPessoas ? 'pessoas' : null;
+    if (primeiroInvalido) {
+        const campo = document.getElementById(primeiroInvalido);
+        campo?.focus();
+        if (primeiroInvalido === 'tipo') {
+            document.getElementById('tipoListbox')?.classList.add('hidden');
+            campo?.setAttribute('aria-expanded', 'false');
+        }
+    }
+    return !primeiroInvalido;
+}
+
 /* TAG: fluxo-principal-ia */
 async function gerarTudo() {
     const contextoSessao = capturarContextoSessao();
@@ -693,10 +723,7 @@ async function gerarTudo() {
         ? resultadoArea.innerHTML
         : "";
 
-    if (!tipo || !pessoas) {
-        alert("Por favor, informe o tipo de evento e a quantidade de pessoas.");
-        return;
-    }
+    if (!validarCamposGeracao(tipo, pessoas)) return;
 
     const evento = {
         tipo,
@@ -747,12 +774,13 @@ async function gerarTudo() {
         resultadoArea.classList.remove('hidden');
         resultadoArea.dataset.planoValido = "false";
         resultadoArea.innerHTML = `
-            <div class="glass-panel" style="text-align:center; border-top: 4px solid var(--gold);">
-                <span class="gallery-loading-visual" aria-hidden="true" style="display:inline-block; margin-bottom:12px;"></span>
+            <div class="glass-panel generation-state" aria-busy="true">
+                <span class="gallery-loading-visual" aria-hidden="true"></span>
                 <p><strong>O Karamu está arquitetando seu evento...</strong></p>
-                <p style="font-size:0.8rem; opacity:0.7;">Calculando logística para ${pessoas} convidados (${estilo}). Pode levar de 15 a 40 segundos.</p>
+                <p class="generation-state-detail">Calculando logística para ${escapeHTML(pessoas)} convidados (${escapeHTML(estilo)}). Pode levar de 15 a 40 segundos.</p>
             </div>
         `;
+        resultadoArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         const headers = headersComSessao();
         if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
@@ -1308,6 +1336,9 @@ function ligarBotoesEstaticos() {
     document.getElementById('perfilBackdrop')?.addEventListener('click', fecharPainelPerfil);
     document.getElementById('perfilFechar')?.addEventListener('click', fecharPainelPerfil);
     inicializarComboTipoEvento();
+    for (const id of ['tipo', 'pessoas']) {
+        document.getElementById(id)?.addEventListener('input', () => definirErroCampo(id));
+    }
 
     document.getElementById('btnImportarProjeto')?.addEventListener('click', () => {
         document.getElementById('importChef')?.click();

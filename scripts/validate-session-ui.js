@@ -100,11 +100,11 @@ function esperar(ms) {
 // Integra o SDK real fixado no HTML com um Auth HTTP local ficticio.
 // Nunca usa credenciais, Gemini ou Supabase reais.
 async function main(){
- const assert=require('node:assert/strict');const express=require('express');const crypto=require('node:crypto');
+ const assert=require('node:assert/strict');const express=require('express');const crypto=require('node:crypto');const {rateLimit}=require('express-rate-limit');
  const sdkPath=process.env.SESSION_TEST_SDK || '/tmp/karamu-supabase-browser-2.112.3.js';
  const sdk=fs.readFileSync(sdkPath);
  assert.equal(crypto.createHash('sha384').update(sdk).digest('base64'),'qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg');
- const app=express();app.use(express.json());const logouts=[];const pendentes=[];
+ const app=express();app.use(rateLimit({windowMs:60_000,limit:1000,standardHeaders:true,legacyHeaders:false}));app.use(express.json());const logouts=[];const pendentes=[];
  let adiarGeracao=false;
  const user=id=>({id,email:id+'@example.invalid',aud:'authenticated',role:'authenticated',app_metadata:{},user_metadata:{},identities:[]});
  const jwt=id=>[Buffer.from(JSON.stringify({alg:'HS256',typ:'JWT'})).toString('base64url'),Buffer.from(JSON.stringify({sub:id,exp:Math.floor(Date.now()/1000)+3600,aud:'authenticated',session_id:'s-'+id})).toString('base64url'),'assinatura-ficticia'].join('.');
@@ -117,7 +117,7 @@ async function main(){
  app.get('/auth/v1/authorize',(req,res)=>{
   assert.equal(req.query.redirect_to,baseUrl+'/');
   assert.equal(req.query.prompt,'select_account');
-  res.redirect(req.query.redirect_to+'?code=oauth-A');
+  res.redirect(baseUrl+'/?code=oauth-A');
  });
  app.post('/auth/v1/token',(req,res)=>{
   assert.equal(req.query.grant_type,'pkce');

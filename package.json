@@ -32,8 +32,8 @@
     "helmet": "^8.3.0"
   },
   "overrides": {
-    "body-parser": "^2.3.0",
-    "qs": "^6.15.3"
+    "body-parser": "^2.4.0",
+    "qs": "^6.17.1"
   },
   "directories": {
     "doc": "docs"

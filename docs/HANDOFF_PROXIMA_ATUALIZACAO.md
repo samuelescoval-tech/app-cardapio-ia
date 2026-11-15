@@ -1,6 +1,54 @@
 # Handoff - Karamu
 
-Atualizado em 2026-10-14.
+Atualizado em 2026-11-15.
+
+## Segundo lote local da Sprint 6A — Gerador e resultado
+
+A branch `feature/gerador-ux` recebeu merge limpo de `origin/main`
+(`a2d8faa`), mantido sem commit, preservando o primeiro lote visual (`879c351`)
+e as correções de segurança já publicadas. Não houve push nem publicação deste
+segundo lote. `prototipos/` permanece não versionado e fora do trabalho.
+
+No Gerador, o cabeçalho ganhou introdução e atalho para projetos; o resultado
+fica antes do histórico. Tipo e convidados têm erros inline acessíveis, foco no
+primeiro erro e limpeza ao corrigir; convidados aceita inteiro de 1 a 5000, sem
+`alert`. A sugestão de tipo não cobre o erro. Geração tem spinner, texto e botão
+desabilitado; o resultado concluído segue os tokens editoriais.
+
+Validação final: 246 testes aprovados no Node 24.21.0; regressão Chrome em
+320/390/768/1280/1920px e reflow equivalente a 200%, incluindo estados vazio,
+inválido, gerando e concluído. Dados fictícios, sem login, IA ou Supabase real.
+`git diff --check` passou. Figma continua pendente: MCP autenticado, mas sem
+arquivo aberto/carregado na aba ativa. Sprint 6A segue em andamento com
+Projetos/Perfil e protótipos.
+
+Preferência registrada pelo usuário para ajuste futuro: a barra de rolagem
+vertical não deve ficar sempre visível; deve aparecer durante a interação com
+o mouse. Avaliar sem prejudicar rolagem por teclado, celular ou acessibilidade.
+Não entrou neste lote.
+
+## Correção local dos alertas CodeQL — 2026-11-14
+
+Usuário relatou que o login Google voltou a funcionar normalmente. O agente
+confirmou antes que `/api/status` tinha auth configurada e que o botão abria o
+Google com retorno à raiz; nenhuma alteração de autenticação foi necessária.
+
+Quatro alertas abertos foram corrigidos localmente, sem novas dependências:
+`public/js/app.js` agora escapa pessoas/estilo no HTML de carregamento (XSS);
+`server.js` limita página/arquivos estáticos a 300 leituras/minuto por IP;
+o Auth fictício de `validate-session-ui.js` tem limite de 1000/minuto e o
+redirecionamento OAuth usa destino local fixo após validar a requisição.
+Os dois últimos alertas afetavam somente o servidor de testes em 127.0.0.1.
+
+Validação: 245 testes aprovados no Node 24.21.0, incluindo regressões de XSS e
+cabeçalho do limitador; `test:session-ui` passou no Chrome com SDK fixado e
+Auth fictício. `git diff --check` passou. Nenhuma conta real, IA ou escrita no
+Supabase usado. Correções isoladas na branch `fix/codeql-alerts`, commit
+`56cdbab`, enviada ao GitHub sem incluir o protótipo ou os commits visuais da
+6A. PR 6 integrado pelo usuário em 2026-11-14; merge `3115303`. CodeQL da main
+aprovado e consulta não retornou alertas abertos. Produção confirmada: página
+200, `RateLimit-Limit: 300` e correção XSS presente, sem erros no console.
+O lote visual local foi preservado intacto.
 
 ## Sprint 6A em andamento — identidade visual e rolagem, 2026-10-14
 
