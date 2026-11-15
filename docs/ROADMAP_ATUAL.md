@@ -11,8 +11,19 @@ Nao repetir testes confirmados nem tratar estas entregas como ainda sem push.
 
 Sprint 5 concluida e publicada em 2026-10-14 pelo PR 4, com 243 testes, Chrome
 e CodeQL aprovados. Vercel confirmou sucesso e sete recursos do site real
-coincidiram com a versao integrada. Proxima frente: **Sprint 6 — fluxos de
-conta e fechamento legal**, a planejar com as pendencias ja registradas. Fotos autorizadas podem alimentar imagens dos pratos;
+coincidiram com a versao integrada. Replanejamento solicitado em 2026-10-14:
+**em andamento: Sprint 6A — identidade e refinamento UI/UX funcional**, seguida de 6B
+(conta, demo e explicacoes publicas) e 6C (qualidade dos eventos). Sprint 7
+reune narrativa final da apresentacao, interacao de entrada e jornada final. Plano e evidencias em
+[PLANO_UI_UX_E_PROXIMAS_ETAPAS.md](PLANO_UI_UX_E_PROXIMAS_ETAPAS.md).
+Primeiro lote implementado localmente na branch `feature/identidade-visual`:
+rolagem unica, escala tipografica, contraste, espacamento e imagens proporcionais.
+243 testes aprovados, Chrome em cinco larguras e reflow equivalente a 200% (viewport/DPR); fontes/fotos
+reais conferidas em capturas separadas. Guia editavel criado no Figma, com regras
+em [MASTER.md](../design-system/karamu/MASTER.md). Ainda nao publicado.
+Proximo: estados e hierarquia do Gerador, depois Projetos e Perfil.
+Este lote nao encerra a Sprint 6A nem as pendencias de conta/demo e qualidade.
+Fotos autorizadas podem alimentar imagens dos pratos;
 manter a identificacao honesta quando nao houver correspondencia exata.
 Ferramentas de apoio ja configuradas: Figma, Context7, Playwright e Supabase
 (somente leitura), com skills de design. Nao ha necessidade identificada de
@@ -218,7 +229,9 @@ publicacao e homologacao real. Nao declarar isolamento completo. Evidencias, imp
 | 3A | Corrigir logout e isolamento local de dados | Validacoes relatadas concluidas; ajustes publicados; historico sem dono preservado, decisao separada |
 | 4 | Historico sincronizado e isolado por conta | Testes funcionais confirmados pelo usuario; codigo integrado/publicado em 2026-10-14; migracao relatada como provavelmente aplicada |
 | 5 | Melhorar cobertura e carregamento de imagens | Concluida e publicada em 2026-10-14 pelo PR 4 |
-| 6 | Fechamento legal e fluxos de conta | Proxima frente; planejar login persistente/demo e refletir persistencia da 4 |
+| 6A | UI/UX funcional: Gerador, Projetos e Perfil | Proxima entrega; diagnostico registrado, prototipo Figma e implementacao pendentes |
+| 6B | Conta, demo e explicacoes publicas | Apos 6A; login persistente, politica de demo e textos coerentes com o produto |
+| 6C | Qualidade dos eventos gerados | Doces, bebidas, quantidades e diagnostico de recusa; entrega propria |
 | 7 | Apresentacao e validacao da jornada completa | Planejada; apos etapas anteriores |
 
 Relatos adicionais: upload/persistencia de fotos segue na homologacao da Sprint 3;

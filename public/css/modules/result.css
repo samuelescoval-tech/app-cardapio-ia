@@ -17,24 +17,26 @@
     align-items:center;
     gap:18px;
     flex-wrap:wrap;
-    background:linear-gradient(135deg,#121212,#222234);
+    background:var(--black-soft);
     border:1px solid rgba(212,175,55,.28);
-    border-radius:22px;
-    padding:24px 28px;
+    border-radius:var(--radius-lg);
+    padding:24px;
     margin-bottom:18px;
     box-shadow:var(--shadow);
 }
 
 .result-header h2{
-    color:#fff;
-    font-family:'Playfair Display',serif;
-    font-size:1.8rem;
+    color:var(--text);
+    font-family:var(--font-display);
+    font-size:var(--text-panel);
+    line-height:1.2;
     margin-bottom:4px;
 }
 
 .result-header p{
-    color:rgba(255,255,255,.62);
-    font-size:.88rem;
+    color:var(--text-soft);
+    font-size:var(--text-caption);
+    line-height:1.5;
 }
 
 .result-header h2,

@@ -255,10 +255,28 @@ test('nova geracao nao envia memoria do evento anterior e salva resultado indepe
   assert.equal(a.c.window.storageService.carregarEntrada(anterior).plano.cardapio[0].nome,'Prato privado A');
 });
 
+test('geracao invalida apresenta erros nos campos sem chamar a API', async () => {
+  const a = ambiente(); a.entrar('A');
+  await a.c.gerarTudo();
+  assert.equal(a.elemento('tipoError').textContent,'Informe o tipo de evento.');
+  assert.equal(a.elemento('pessoasError').textContent,'Informe o número de convidados.');
+  assert.equal(a.elemento('tipo').getAttribute('aria-invalid'),'true');
+  assert.equal(a.elemento('tipo').getAttribute('aria-expanded'),'false');
+  assert.equal(a.elemento('tipoListbox').classList.contains('hidden'),true);
+  assert.equal(a.elemento('resultadoArea').classList.contains('hidden'),true);
+
+  a.elemento('tipo').value = 'Jantar';
+  a.elemento('pessoas').value = '0';
+  await a.c.gerarTudo();
+  assert.equal(a.elemento('tipoError').textContent,'');
+  assert.equal(a.elemento('pessoasError').textContent,'Use uma quantidade inteira entre 1 e 5000.');
+  assert.equal(a.elemento('pessoas').getAttribute('aria-invalid'),'true');
+});
+
 test('loading da geracao escapa valores do DOM antes de interpretar HTML', async () => {
   const a = ambiente(); a.entrar('A'); prepararGeracao(a);
   const marcador = '<img src=x onerror=alert(1)>';
-  a.elemento('pessoas').value = `10 ${marcador}`;
+  a.elemento('pessoas').value = '10';
   a.c.document.querySelector = seletor => seletor === 'input[name="estilo"]:checked' ? { value: marcador } : null;
   let liberar;
   a.c.fetch = () => new Promise(resolve => { liberar = resolve; });

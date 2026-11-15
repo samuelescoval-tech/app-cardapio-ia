@@ -1,6 +1,112 @@
 # Handoff - Karamu
 
-Atualizado em 2026-10-14.
+Atualizado em 2026-11-15.
+
+## Segundo lote local da Sprint 6A — Gerador e resultado
+
+A branch `feature/gerador-ux` recebeu merge limpo de `origin/main`
+(`a2d8faa`), mantido sem commit, preservando o primeiro lote visual (`879c351`)
+e as correções de segurança já publicadas. Não houve push nem publicação deste
+segundo lote. `prototipos/` permanece não versionado e fora do trabalho.
+
+No Gerador, o cabeçalho ganhou introdução e atalho para projetos; o resultado
+fica antes do histórico. Tipo e convidados têm erros inline acessíveis, foco no
+primeiro erro e limpeza ao corrigir; convidados aceita inteiro de 1 a 5000, sem
+`alert`. A sugestão de tipo não cobre o erro. Geração tem spinner, texto e botão
+desabilitado; o resultado concluído segue os tokens editoriais.
+
+Validação final: 246 testes aprovados no Node 24.21.0; regressão Chrome em
+320/390/768/1280/1920px e reflow equivalente a 200%, incluindo estados vazio,
+inválido, gerando e concluído. Dados fictícios, sem login, IA ou Supabase real.
+`git diff --check` passou. Figma continua pendente: MCP autenticado, mas sem
+arquivo aberto/carregado na aba ativa. Sprint 6A segue em andamento com
+Projetos/Perfil e protótipos.
+
+Preferência registrada pelo usuário para ajuste futuro: a barra de rolagem
+vertical não deve ficar sempre visível; deve aparecer durante a interação com
+o mouse. Avaliar sem prejudicar rolagem por teclado, celular ou acessibilidade.
+Não entrou neste lote.
+
+## Correção local dos alertas CodeQL — 2026-11-14
+
+Usuário relatou que o login Google voltou a funcionar normalmente. O agente
+confirmou antes que `/api/status` tinha auth configurada e que o botão abria o
+Google com retorno à raiz; nenhuma alteração de autenticação foi necessária.
+
+Quatro alertas abertos foram corrigidos localmente, sem novas dependências:
+`public/js/app.js` agora escapa pessoas/estilo no HTML de carregamento (XSS);
+`server.js` limita página/arquivos estáticos a 300 leituras/minuto por IP;
+o Auth fictício de `validate-session-ui.js` tem limite de 1000/minuto e o
+redirecionamento OAuth usa destino local fixo após validar a requisição.
+Os dois últimos alertas afetavam somente o servidor de testes em 127.0.0.1.
+
+Validação: 245 testes aprovados no Node 24.21.0, incluindo regressões de XSS e
+cabeçalho do limitador; `test:session-ui` passou no Chrome com SDK fixado e
+Auth fictício. `git diff --check` passou. Nenhuma conta real, IA ou escrita no
+Supabase usado. Correções isoladas na branch `fix/codeql-alerts`, commit
+`56cdbab`, enviada ao GitHub sem incluir o protótipo ou os commits visuais da
+6A. PR 6 integrado pelo usuário em 2026-11-14; merge `3115303`. CodeQL da main
+aprovado e consulta não retornou alertas abertos. Produção confirmada: página
+200, `RateLimit-Limit: 300` e correção XSS presente, sem erros no console.
+O lote visual local foi preservado intacto.
+
+## Sprint 6A em andamento — identidade visual e rolagem, 2026-10-14
+
+Usuário apontou dupla barra e fontes desproporcionais na apresentação e pediu
+uma identidade comum baseada nas ideias antigas. Primeiro lote implementado
+localmente em `feature/identidade-visual`, derivada da branch local de planejamento
+`docs/plano-refinamento-ux`. Ainda não publicado; não confundir com Sprints 4/5,
+já entregues na produção. Esta seção prevalece sobre o planejamento histórico.
+
+- Causa reproduzida: `#pitchSection` tinha scroll próprio de 100vh e o rodapé
+  fora dele gerava altura adicional. Login/demo removiam `modal-open`, liberando
+  o segundo scroll. `switchView` agora usa scroll do documento; bloqueio depende
+  de modais reais visíveis. Troca de seção volta ao topo e preserva campos/capa.
+- CSS: escala capa 36–56px, seção 28–40px, painel 26–32px, corpo 16/17px,
+  apoio/rótulos 14px. Playfair/Montserrat preservadas. Creme/preto/dourado,
+  títulos sem brilho, raios 8/12/16px, sombras moderadas, fotos 4:3 sem perspectiva
+  e texto antes da imagem no celular. Navegação mantém inversão logo/palavra.
+- Capa recolhida oculta marca/subtítulo redundantes; margem do destino do
+  formulário preserva todo o controle de expandir abaixo da navegação.
+- `--gold-ink` separa texto dourado legível do gradiente de botão legado.
+  Pares de contraste conferidos; não declarar auditoria de acessibilidade total.
+- Guia Figma criado e inspecionado, não apenas conexão autenticada:
+  https://www.figma.com/design/GhvrTeIvj1Y92o0G4Jt0Xy?node-id=3-2
+  24 variáveis primitivas + 24 semânticas, oito estilos de texto e uma sombra;
+  textos editáveis e auto layout. Não é protótipo completo dos fluxos.
+- Regras em `design-system/karamu/MASTER.md`. Preservar logo e referências
+  antigas; entrada vista de cima continua futura, sem layout aprovado presumido.
+
+Validação: suíte Node 24 com 243 testes aprovados, sem alterar testes antigos.
+Novo `node scripts/validate-presentation-ui.js`: Chrome isolado, API fictícia,
+320/390/768/1280/1920px e reflow equivalente a 200% (viewport/DPR); rolagem/rodapé, fechar/Escape login/demo,
+modais simultâneos, troca de seções, preservação de formulário/capa, perfil e
+limpeza local. Controle da capa com geometria mínima de 44px e hit-test no
+centro/quatro cantos, expandido, recolhido e após navegar ao formulário. `validate-supplier-ui.js` passou em 1280/390/320px. Testes offline
+usam fallback de fontes, portanto foi feita uma conferência visual separada:
+Montserrat 400/600/700/800 e Playfair700 carregadas, fotos visíveis decodificadas,
+1280/390px em capa, desafio e formulário. Somente localhost/Google Fonts/Unsplash
+permitidos nessa conferência; nenhuma conta real, IA ou Supabase acessados.
+A emulação de 200% usa viewport reduzido e DPR2; não substitui zoom nativo
+em todos os navegadores.
+
+Evidências temporárias: `/tmp/karamu-identidade-tests.log`,
+`/tmp/karamu-presentation-ui.log`, `/tmp/karamu-visual-real.json`,
+`/tmp/karamu-visual-real-{capa|desafio|formulario}-{1280|390}.png`;
+ledger Figma `/tmp/design-system-state-karamu-20261014.json`.
+Guia persistente e resumo acima sobrevivem à limpeza desses arquivos.
+
+Próximo lote: protótipos/estados do Gerador e resultado; depois Projetos e Perfil.
+Ainda pendentes: foco inicial/retorno e semântica do perfil, erro junto aos campos,
+importação Chef sem implementação, revisão da narrativa e textos antigos sobre
+projetos no logout/privacidade. Não marcar estes itens concluídos pelos ajustes CSS.
+Plano: `docs/PLANO_UI_UX_E_PROXIMAS_ETAPAS.md` — 6A identidade/uso diário,
+6B conta/demo/explicações, 6C qualidade dos eventos, 7 narrativa final e lançamento.
+
+A proposta de demo com exemplo pronto ainda não foi aplicada. Não remover
+`DEMO_ACCESS_KEY` para desligar demo: sua ausência atualmente libera o acesso.
+Preservar validações já confirmadas; não repetir migração 008. Guia didático
+final e destino do legado sem dono permanecem entregas separadas.
 
 ## Fechamento publicado — Sprint 5, 2026-10-14
 

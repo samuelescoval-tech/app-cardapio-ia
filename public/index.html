@@ -342,20 +342,26 @@
     <!-- TAG: app-gerador | Formulario principal do evento -->
     <main class="app-container hidden" id="appSection">
         <section class="glass-panel" id="formCard">
-            <h2 class="panel-title"><span><svg class="icon" aria-hidden="true"><use href="#icon-edit"></use></svg></span> Detalhes do Evento</h2>
+            <div class="generator-heading">
+                <h2 class="panel-title"><span><svg class="icon" aria-hidden="true"><use href="#icon-edit"></use></svg></span> Detalhes do Evento</h2>
+                <a class="btn-secondary btn-small" href="#historicoSection"><svg class="icon" aria-hidden="true"><use href="#icon-clipboard"></use></svg> Seus planejamentos</a>
+            </div>
+            <p class="generator-intro">Comece pelo tipo de evento e pelo número de convidados. Os demais detalhes ajudam a personalizar o planejamento.</p>
             
             <div class="form-grid">
                 <div class="fgroup">
                     <label class="flabel" for="tipo">Tipo de Evento</label>
                     <div class="combo" id="tipoCombo">
-                        <input type="text" id="tipo" class="premium-input" minlength="2" maxlength="80" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="tipoListbox" aria-autocomplete="list" aria-describedby="tipoHint" placeholder="Ex: Aniversário de debutante">
+                        <input type="text" id="tipo" class="premium-input" minlength="2" maxlength="80" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="tipoListbox" aria-autocomplete="list" aria-describedby="tipoHint tipoError" aria-invalid="false" placeholder="Ex: Aniversário de debutante">
                         <ul class="combo-listbox hidden" id="tipoListbox" role="listbox" aria-label="Sugestões de tipo de evento"></ul>
                     </div>
                     <small class="field-hint" id="tipoHint">Escolha uma sugestão ou escreva livremente outro evento.</small>
+                    <small class="field-error" id="tipoError" role="alert"></small>
                 </div>
                 <div class="fgroup">
                     <label class="flabel" for="pessoas">Convidados</label>
-                    <input type="number" id="pessoas" class="premium-input" min="1" max="5000" placeholder="Total">
+                    <input type="number" id="pessoas" class="premium-input" min="1" max="5000" aria-describedby="pessoasError" aria-invalid="false" placeholder="Total">
+                    <small class="field-error" id="pessoasError" role="alert"></small>
                 </div>
                 <div class="fgroup">
                     <label class="flabel" for="criancas">Crianças (até 12 anos)</label>
@@ -498,6 +504,9 @@
             <button type="button" class="btn-epic" id="btnGerar"><svg class="icon" aria-hidden="true"><use href="#icon-generate"></use></svg> CALCULAR + GERAR PLANEJAMENTO COMPLETO</button>
         </section>
 
+        <!-- TAG: resultado-ia | O resultado fica imediatamente apos a acao Gerar -->
+        <div id="resultadoArea" class="hidden" aria-live="polite"></div>
+
         <!-- TAG: historico-ui | Projetos privados da conta e pendencias da sessao -->
         <section class="glass-panel historico-section" id="historicoSection">
             <div class="historico-header">
@@ -516,9 +525,6 @@
             <p id="historicoDescricao" class="field-hint">Histórico temporário desta sessão. Ao sair da conta, estes projetos são removidos deste histórico. Salve o PDF antes de sair. A sincronização com a conta ainda não está disponível.</p>
             <p id="historicoLegadoAviso" class="field-hint hidden">Há projetos antigos neste navegador sem identificação de conta. Eles foram preservados, mas não são exibidos ou usados automaticamente. A recuperação precisa ser definida pelo responsável por esses projetos.</p>
         </section>
-
-        <!-- TAG: resultado-ia | Area preenchida por render.js -->
-        <div id="resultadoArea" class="hidden" aria-live="polite"></div>
     </main>
 
     <!-- TAG: perfil-usuario | Fornecedores, fotos, chave de IA e precos proprios -->

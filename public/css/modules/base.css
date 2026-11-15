@@ -9,6 +9,7 @@
 :root{
     --gold:#d4af37;
     --gold-dark:#b8860b;
+    --gold-ink:#805f13;
 
     --black:#121212;
     --black-soft:#1a1a1a;
@@ -17,16 +18,34 @@
     --white:#ffffff;
 
     --text:#f5efe6;
-    --text-soft:rgba(255,255,255,.72);
+    --text-soft:#c7c0b5;
+
+    /* Escala editorial compartilhada entre apresentacao e ferramenta. */
+    --font-body:'Montserrat',sans-serif;
+    --font-display:'Playfair Display',serif;
+    --text-caption:.875rem;
+    --text-body:1rem;
+    --text-lead:1.0625rem;
+    --text-panel:clamp(1.625rem,2.5vw,2rem);
+    --text-section:clamp(1.75rem,3vw,2.5rem);
+    --text-display:clamp(2.25rem,4.2vw,3.5rem);
+    --space-1:4px;
+    --space-2:8px;
+    --space-3:12px;
+    --space-4:16px;
+    --space-6:24px;
+    --space-8:32px;
+    --space-12:48px;
+    --space-16:64px;
 
     --shadow:
-        0 25px 60px rgba(0,0,0,.15);
+        0 8px 28px rgba(36,31,24,.07);
 
     --shadow-gold:
-        0 12px 35px rgba(184,134,11,.30);
+        0 4px 14px rgba(128,95,19,.14);
 
     --transition:
-        all .45s cubic-bezier(.4,0,.2,1);
+        background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
 
     /* Identidade "Karamu Editorial" — hierarquia de texto neutro-quente */
     --ink-strong:#241f18;
@@ -40,10 +59,10 @@
     --sand:#e9dfc7;
 
     /* Escala de raio (valores ja usados hoje, so nao tokenizados) */
-    --radius-sm:10px;
-    --radius-md:14px;
-    --radius-lg:20px;
-    --radius-xl:28px;
+    --radius-sm:8px;
+    --radius-md:12px;
+    --radius-lg:16px;
+    --radius-xl:16px;
     --radius-pill:999px;
 
     /* Cores semanticas de status (uso restrito a significado real, nunca decorativo) */
@@ -70,16 +89,22 @@
 
 html{
     scroll-behavior:smooth;
+    scroll-padding-top:104px;
 }
 
 body{
-    font-family:'Montserrat',sans-serif;
+    font-family:var(--font-body);
+    font-size:var(--text-body);
     background:var(--bg);
     color:var(--black);
 
     overflow-x:hidden;
 
-    line-height:1.6;
+    line-height:1.65;
+}
+
+button, input, select, textarea{
+    font-family:inherit;
 }
 
 /* ───────── UTIL ───────── */
