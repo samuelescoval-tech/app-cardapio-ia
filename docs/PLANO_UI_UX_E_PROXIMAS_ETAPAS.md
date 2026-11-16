@@ -1,9 +1,8 @@
 # Karamu — refinamento UI/UX e próximas etapas
 
-Registrado em 2026-10-14 e atualizado em 2026-11-16. A entrega do Gerador da
-Sprint 6A está commitada/enviada na branch `feature/gerador-ux`, sem integração
-à `main`. A Sprint 6B está implementada e em revisão local na branch
-`feature/conta-demo`; Projetos/Perfil e novos protótipos Figma continuam pendentes.
+Registrado em 2026-10-14 e atualizado em 2026-11-16. As Sprints 6A e 6B foram
+concluídas e publicadas pelos PRs 11 e 12. Projetos/Perfil, novos protótipos Figma,
+imagens e a animação de entrada continuam na revisão visual posterior e Sprint 7.
 
 ## Ponto de partida
 
@@ -119,12 +118,12 @@ As letras abaixo são etapas; cada etapa pode ter mais de um PR pequeno.
 
 Aceite: navegação e foco visíveis; leitura confortável; estados e ações claros;
 fluxos novos verificados em 320, 390, 768 e 1280px, zoom de 200%, teclado e
-movimento reduzido. O lote do Gerador passou nessas verificações; a Sprint 6A não
-está concluída enquanto Projetos/Perfil e os protótipos permanecerem pendentes.
+movimento reduzido. A entrega 6A foi concluída/publicada pelo PR 11. Projetos/Perfil
+e novos protótipos ficam para a revisão visual posterior, sem reabrir esta entrega.
 Testes de regressão pertinentes serão executados pelo agente; o usuário revisa o
 novo visual, sem refazer homologações antigas.
 
-### 6B — conta, demo e explicações coerentes (em revisão local)
+### 6B — conta, demo e explicações coerentes (concluída e publicada)
 
 - "Permanecer conectado" foi implementado como opt-in. A sessão temporária não
   aparece em nova aba; a opção persistente restaura a conta, e o logout sincronizado
@@ -140,8 +139,8 @@ Validação: 252 testes no Node 24.21.0; apresentação em cinco larguras e refl
 de 200%; sessão no Chrome com SDK Supabase real/Auth fictício; galeria desktop e
 mobile; recarga real do exemplo em 390px sem overflow. Não houve conta real, IA,
 escrita no Supabase ou revisão Figma. O E2E autenticado real não foi executado.
-Não há SQL nem configuração externa nova a executar. Commit/push continuam pendentes
-de autorização; a próxima etapa planejada é a 6C.
+PR 12 integrado, CodeQL/Vercel aprovados e arquivos/política conferidos em produção.
+Não há SQL nem configuração externa nova a executar. A próxima etapa é a 6C.
 
 ### 6C — qualidade dos eventos gerados
 
