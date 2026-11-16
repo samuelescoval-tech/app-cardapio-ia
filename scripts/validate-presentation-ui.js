@@ -157,25 +157,19 @@ async function main() {
             await escape();
             assert.equal(await browser.evaluate(`document.getElementById('authModal').classList.contains('hidden')`), true);
             await rolagemUnica(contexto + '-login-escape');
-            for (const acao of ['cancelar', 'fechar', 'escape']) {
-                await browser.evaluate('void solicitarDemoAccessKey()');
-                await modalBloqueado('demoAccessModal');
-                if (acao === 'escape') await escape();
-                else await browser.evaluate(`document.getElementById('${acao === 'cancelar' ? 'demoAccessCancel' : 'demoAccessClose'}').click()`);
-                assert.equal(await browser.evaluate(`document.getElementById('demoAccessModal').classList.contains('hidden')`), true);
-                await rolagemUnica(contexto + '-demo-' + acao);
-            }
-            // Mesmo com dois modais visiveis, fechar um nao desbloqueia o outro.
-            await browser.evaluate('abrirModalConta(); void solicitarDemoAccessKey()');
-            await modalBloqueado('demoAccessModal');
-            await browser.evaluate(`document.getElementById('demoAccessCancel').click()`);
-            assert.equal(await browser.evaluate(`getComputedStyle(document.body).overflowY`), 'hidden');
+            await browser.evaluate(`window.scrollTo({ top: 1400, behavior: 'instant' }); entrarModoDemo();`);
+            await quadro();
+            assert.equal(await browser.evaluate(`Boolean(document.getElementById('demoEntrarConta'))`), true, contexto + ': exemplo ficticio ausente');
+            assert.equal(await browser.evaluate(`document.getElementById('demoAccessModal')`), null, contexto + ': modal de senha demo ainda existe');
+            assert.equal(await browser.evaluate(`window.chefIAUltimoPlano?.dados?.cardapio?.length > 0`), true);
+            await browser.evaluate(`document.getElementById('demoEntrarConta').click()`);
+            await modalBloqueado('authModal');
             await browser.evaluate(`document.getElementById('authModalClose').click()`);
-            await rolagemUnica(contexto + '-modais-sobrepostos');
-            await browser.evaluate(`window.scrollTo({ top: 1400, behavior: 'instant' }); entrarModoDemo(); switchView('app');`);
+            await rolagemUnica(contexto + '-exemplo-entrar-fechar');
+            await browser.evaluate(`switchView('pitch'); window.scrollTo({ top: 1400, behavior: 'instant' }); switchView('app');`);
             await quadro();
             assert.equal(await browser.evaluate('window.scrollY'), 0, contexto + ': inicio do gerador deslocado');
-            await browser.evaluate('gerarTudo()');
+            await browser.evaluate(`document.getElementById('tipo').value = ''; document.getElementById('pessoas').value = ''; gerarTudo()`);
             assert.equal(await browser.evaluate(`document.getElementById('tipoError').textContent`), 'Informe o tipo de evento.');
             assert.equal(await browser.evaluate(`document.getElementById('pessoasError').textContent`), 'Informe o número de convidados.');
             assert.equal(await browser.evaluate(`document.getElementById('tipo').getAttribute('aria-invalid')`), 'true');
@@ -221,17 +215,27 @@ async function main() {
             fs.writeFileSync(path.join(os.tmpdir(), `karamu-apresentacao-${width}-${zoom * 100}.png`), Buffer.from((await browser.send('Page.captureScreenshot', { format: 'png' })).data, 'base64'));
             console.log('PASS', contexto);
         }
-        console.log('PASS: rolagem unica, rodape acessivel, login/demo fechar e Escape, bloqueio de modais, ida/volta sem perder formulario/capa, controle da capa inteiro acessivel, perfil e limpeza local; Chrome isolado, cinco larguras e reflow de 200% por viewport/DPR.');
+        console.log('PASS: rolagem unica, rodape acessivel, login e exemplo ficticio sem senha, ida/volta sem perder formulario/capa, controle da capa inteiro acessivel, perfil e limpeza local; Chrome isolado, cinco larguras e reflow de 200% por viewport/DPR.');
     } finally {
         browser?.socket?.close();
-        if (chrome && chrome.exitCode === null) {
+        if (chrome && chrome.exitCode === null && chrome.signalCode === null) {
             const terminou = new Promise(resolve => chrome.once('exit', resolve));
             chrome.kill('SIGTERM');
             await Promise.race([terminou, esperar(2000)]);
+            if (chrome.exitCode === null && chrome.signalCode === null) {
+                chrome.kill('SIGKILL');
+                await terminou;
+            }
         }
         server.closeAllConnections();
         await new Promise(resolve => server.close(resolve));
-        fs.rmSync(perfil, { recursive: true, force: true });
+        for (let tentativa = 0; tentativa < 20; tentativa++) {
+            try { fs.rmSync(perfil, { recursive: true, force: true }); break; }
+            catch (error) {
+                if (!['ENOTEMPTY', 'EBUSY'].includes(error.code) || tentativa === 19) throw error;
+                await esperar(100);
+            }
+        }
     }
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

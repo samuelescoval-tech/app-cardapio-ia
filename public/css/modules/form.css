@@ -523,6 +523,28 @@ body.modal-open{
     scroll-margin-top:104px;
 }
 
+.session-preference{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    margin:4px 0 16px;
+    color:var(--ink);
+    font-size:var(--text-caption);
+    line-height:1.5;
+}
+
+.session-preference input{
+    width:20px;
+    height:20px;
+    margin:1px 0 0;
+    flex:0 0 auto;
+}
+
+.session-preference small{
+    display:block;
+    color:var(--ink-soft);
+}
+
 @media (max-width:620px){
     .generator-heading .btn-secondary{
         width:100%;

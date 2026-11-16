@@ -111,7 +111,7 @@ async function main(){
  const usuario=req=>{try{return JSON.parse(Buffer.from((req.headers.authorization||'').split('.')[1],'base64url')).sub;}catch{return null;}};
  app.get('/',(req,res)=>res.type('html').send(fs.readFileSync('public/index.html','utf8').replace('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js','/sdk-teste.js')));
  app.get('/sdk-teste.js',(req,res)=>res.type('js').send(sdk));
- app.get('/api/status',(req,res)=>res.json({ok:true,demo_access:{required:false},auth:{supabase_url:baseUrl,supabase_anon_key:'anon-teste'},visual_references:{configured:false},recipe_references:{configured:false}}));
+ app.get('/api/status',(req,res)=>res.json({ok:true,demo:{example_available:true,ai_requires_account:true},auth:{supabase_url:baseUrl,supabase_anon_key:'anon-teste'},visual_references:{configured:false},recipe_references:{configured:false}}));
  app.post('/api/auth/login',(req,res)=>{const id=String(req.body.email).split('@')[0];res.json({ok:true,email:user(id).email,usuario_id:id,access_token:jwt(id),refresh_token:'refresh-'+id});});
  app.get('/auth/v1/user',(req,res)=>res.json(user(usuario(req))));
  app.get('/auth/v1/authorize',(req,res)=>{
@@ -132,8 +132,8 @@ async function main(){
  app.use(express.static('public'));
  const server=app.listen(port,'127.0.0.1');let chrome,cdp,cdp2;
  const avaliarAte=async(c,expr)=>{for(let i=0;i<100;i++){if(await c.evaluate(expr))return;await esperar(50);}throw new Error('Timeout: '+expr);};
- const entrar=async(c,id)=>{
-  await c.evaluate(`(()=>{abrirModalConta();document.getElementById('authEmailInput').value='${id}@example.invalid';document.getElementById('authSenhaInput').value='senha-ficticia';document.getElementById('authModalSubmit').click();})()`);
+ const entrar=async(c,id,permanecer=false)=>{
+  await c.evaluate(`(()=>{abrirModalConta();document.getElementById('authEmailInput').value='${id}@example.invalid';document.getElementById('authSenhaInput').value='senha-ficticia';document.getElementById('authPermanecerConectado').checked=${permanecer};document.getElementById('authModalSubmit').click();})()`);
   await avaliarAte(c,`obterSessaoUsuario()?.usuarioId === '${id}'`);
  };
  try{
@@ -147,11 +147,14 @@ async function main(){
   // Recarregar durante sessao valida preserva trabalho da mesma conta.
   await cdp.send('Page.reload',{ignoreCache:true});await esperar(300);await aguardarDocumento(cdp);await avaliarAte(cdp,"obterSessaoUsuario()?.usuarioId === 'A'");
   assert.equal(await cdp.evaluate('window.storageService.carregarHistorico().length'),1);
-  // Segunda aba: mesmo login, armazenamento de sessao independente.
+  // Segunda aba sem opt-in: a sessao temporaria nao e compartilhada.
   const target=await cdp.send('Target.createTarget',{url:baseUrl});
   const pages=await fetch(`http://127.0.0.1:${debugPort}/json/list`).then(r=>r.json());
   cdp2=new CdpClient(pages.find(x=>x.id===target.targetId).webSocketDebuggerUrl);await cdp2.connect();await aguardarDocumento(cdp2);
-  await avaliarAte(cdp2,"typeof supabaseClient?.auth?.setSession === 'function'");await entrar(cdp2,'A');
+  await avaliarAte(cdp2,"typeof supabaseClient?.auth?.setSession === 'function'");
+  assert.equal(await cdp2.evaluate("obterSessaoUsuario()"),null);
+  assert.equal(await cdp2.evaluate("localStorage.getItem('karamu_auth_v2')"),null);
+  await entrar(cdp2,'A');
   // Geracao em voo antes do logout.
   adiarGeracao=true;
   await cdp.evaluate(`(()=>{document.getElementById('tipo').value='Resposta tardia';document.getElementById('pessoas').value='10';window.__geracao=gerarTudo();})()`);
@@ -165,6 +168,19 @@ async function main(){
   const saida=await cdp.evaluate(`({sessao:obterSessaoUsuario(),plano:window.chefIAUltimoPlano||null,historico:window.storageService.carregarHistorico().length,resultado:document.getElementById('resultadoArea').innerHTML,appOculto:document.getElementById('appSection').classList.contains('hidden'),aviso:document.getElementById('sessaoAviso').textContent,token:headersComSessao().Authorization||null})`);
   assert.equal(saida.sessao,null);assert.equal(saida.plano,null);assert.equal(saida.historico,0);assert.equal(saida.resultado,'');assert.equal(saida.token,null);assert.equal(saida.appOculto,true);
   assert.equal(logouts.filter(x=>x.id==='A'&&x.scope==='local').length,2);
+  // Com opt-in, uma nova aba real restaura a mesma sessao compartilhada.
+  await entrar(cdp,'A',true);
+  assert.ok(await cdp.evaluate("localStorage.getItem('karamu_auth_v2')"));
+  cdp2.close();await cdp.send('Target.closeTarget',{targetId:target.targetId});
+  const targetPersistente=await cdp.send('Target.createTarget',{url:baseUrl});
+  const pagesPersistente=await fetch(`http://127.0.0.1:${debugPort}/json/list`).then(r=>r.json());
+  cdp2=new CdpClient(pagesPersistente.find(x=>x.id===targetPersistente.targetId).webSocketDebuggerUrl);await cdp2.connect();await aguardarDocumento(cdp2);
+  await avaliarAte(cdp2,"obterSessaoUsuario()?.usuarioId === 'A'");
+  assert.equal(await cdp2.evaluate("sessionStorage.getItem('karamu_auth_v2')"),null);
+  await cdp2.evaluate('encerrarSessaoUsuario()');
+  await avaliarAte(cdp,"obterSessaoUsuario()===null && saidaEmCurso===null");
+  await avaliarAte(cdp2,"obterSessaoUsuario()===null && saidaEmCurso===null");
+  assert.equal(await cdp.evaluate("localStorage.getItem('karamu_auth_v2')"),null);
   await entrar(cdp,'B');assert.equal(await cdp.evaluate('window.storageService.carregarHistorico().length'),0);
   await cdp.evaluate("document.getElementById('btnApresentacao').click(); document.getElementById('btnIrGerador').click();");
   assert.equal(await cdp.evaluate("document.getElementById('appSection').classList.contains('hidden')"),false);
@@ -172,6 +188,7 @@ async function main(){
   await cdp.send('Page.reload',{ignoreCache:true});await esperar(300);await aguardarDocumento(cdp);
   await cdp.evaluate('entrarModoDemo();renderizarHistorico();');
   assert.equal(await cdp.evaluate('window.storageService.carregarHistorico().length'),0);
+  assert.equal(await cdp.evaluate("Boolean(document.getElementById('demoEntrarConta'))"),true);
   await avaliarAte(cdp,"typeof supabaseClient?.auth?.signInWithOAuth === 'function'");
   await cdp.evaluate("abrirModalConta();document.getElementById('authGoogleButton').click();");
   await esperar(400);await aguardarDocumento(cdp);await avaliarAte(cdp,"obterSessaoUsuario()?.usuarioId === 'A'");
@@ -205,8 +222,9 @@ async function main(){
      await cdp.evaluate("window.scrollTo({top:0,behavior:'instant'});if(document.getElementById('mainHero').classList.contains('collapsed'))toggleHeader();");
      await esperar(500);
      for(const recolhido of [true,false]) {
-      const controle=await cdp.evaluate(`(()=>{const b=document.getElementById('btnToggleHeader'),r=b.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,livre:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===b};})()`);
-      assert.ok(controle.livre,`Controle da capa encoberto em ${largura}px`);
+      const controle=await cdp.evaluate(`(()=>{const b=document.getElementById('btnToggleHeader'),r=b.getBoundingClientRect(),alvo=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {x:r.x+r.width/2,y:r.y+r.height/2,livre:b.contains(alvo),alvo:alvo?.outerHTML?.slice(0,300),rect:{x:r.x,y:r.y,width:r.width,height:r.height},scrollY};})()`);
+      if(!controle.livre){const falha=await cdp.send('Page.captureScreenshot',{format:'png'});fs.writeFileSync(`/tmp/karamu-capa-encoberta-${largura}.png`,Buffer.from(falha.data,'base64'));}
+      assert.ok(controle.livre,`Controle da capa encoberto em ${largura}px: ${JSON.stringify(controle)}`);
       await cdp.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,x:controle.x,y:controle.y});
       await cdp.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,x:controle.x,y:controle.y});
       await esperar(500);

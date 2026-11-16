@@ -475,6 +475,18 @@ test('navegacao sequencial (apresentacao -> login/demo -> gerador) atualiza seco
     assert.match(app, /button\?\.setAttribute\('aria-expanded', String\(!collapsed\)\)/);
 });
 
+test('exemplo local nao exige senha e login oferece persistencia opcional', () => {
+    const html = ler('public/index.html');
+    const app = ler('public/js/app.js');
+
+    assert.ok(html.indexOf('src="js/demo.service.js"') < html.indexOf('src="js/render.js"'));
+    assert.match(html, /id="authPermanecerConectado"/);
+    assert.doesNotMatch(html, /id="demoAccessModal"/);
+    assert.match(app, /window\.karamuDemo\?\.criarExemploDemonstracao\(\)/);
+    assert.match(app, /Entre na conta para gerar um planejamento personalizado com IA/);
+    assert.doesNotMatch(app, /solicitarDemoAccessKey|x-demo-access-key/);
+});
+
 test('restauracao de historico normaliza o sentinela antigo de formatoServico apos o rename para Karamu', () => {
     const app = ler('public/js/app.js');
     // Regressao: historico salvo no localStorage antes do rename (2026-08-06)

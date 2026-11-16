@@ -63,12 +63,21 @@ function ambiente({ local = armazenamento(), session = armazenamento(), falhaSai
       } }
     }
   });
-  for (const nome of ['utils.js','storage.service.js','sessao.service.js','app.js','foto-config.js','perfil.js']) {
+  for (const nome of ['utils.js','storage.service.js','sessao.service.js','demo.service.js','app.js','foto-config.js','perfil.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../public/js', nome), 'utf8'), contexto);
   }
+  contexto.exibirResultadoLuxo = (dados, pessoas, eventoAtual) => {
+    contexto.window.chefIAUltimoPlano = { dados, pessoas, evento: eventoAtual };
+    elemento('resultadoArea').innerHTML = JSON.stringify(dados);
+  };
+  contexto.renderizarGaleriaEventoFallback = () => {};
+  elemento('resultadoArea').insertAdjacentHTML = (posicao, html) => {
+    if (posicao === 'afterbegin') elemento('resultadoArea').innerHTML = html + elemento('resultadoArea').innerHTML;
+  };
+  elemento('resultadoArea').scrollIntoView = () => {};
   contexto.inicializarLoginSocial('https://projeto.supabase.co', 'chave-publica-teste');
   function entrar(id) {
-    session.setItem('karamu_login_inicio', String(Date.now()+1));
+    contexto.armazenamentoAutenticacao().setItem('karamu_login_inicio', String(Date.now()+1));
     contexto.prepararClienteAuth();
     const instancia = instancias.at(-1);
     const sessao = sessaoSDK(id);
@@ -318,4 +327,64 @@ test('Google solicita escolha da conta e retorno a raiz do ambiente com barra fi
     assert.equal(a.session.getItem('karamu_login_oauth_pendente'),'true');
     assert.equal(a.c.obterSessaoUsuario(),null);
   }
+});
+
+test('exemplo ficticio renderiza sem fetch e geracao valida sem conta abre login', async () => {
+  const a = ambiente();
+  let chamadas = 0;
+  a.c.fetch = async () => { chamadas++; throw new Error('Nao deveria consultar a API'); };
+  a.c.entrarModoDemo();
+  assert.equal(a.c.modoDemoAtivo(), true);
+  assert.equal(a.c.window.chefIAUltimoPlano.dados.cardapio.length, 5);
+  assert.match(a.elemento('resultadoArea').innerHTML, /Planejamento fictício para explorar/);
+  assert.equal(chamadas, 0);
+
+  a.elemento('tipo').value = 'Jantar personalizado';
+  a.elemento('pessoas').value = '12';
+  await a.c.gerarTudo();
+  assert.equal(a.elemento('authModal').classList.contains('hidden'), false);
+  assert.match(a.elemento('authModalInfo').textContent, /Entre na conta/);
+  assert.equal(chamadas, 0);
+});
+
+test('sessao temporaria por padrao nao aparece em uma nova aba', () => {
+  const local = armazenamento();
+  const a = ambiente({ local });
+  a.entrar('A');
+  assert.equal(a.local.getItem('karamu_auth_v2'), null);
+  assert.ok(a.session.getItem('karamu_auth_v2'));
+
+  const b = ambiente({ local });
+  assert.equal(b.c.obterSessaoUsuario(), null);
+  assert.equal(b.local.getItem('karamu_auth_v2'), null);
+});
+
+test('opt-in permanecer conectado restaura nova aba e logout remove persistencia', async () => {
+  const local = armazenamento();
+  const a = ambiente({ local });
+  a.c.fetch = async () => ({ ok: true, status: 200, json: async () => ({
+    ok: true, email: 'A@example.invalid', access_token: 'A', refresh_token: 'refresh-A'
+  }) });
+  a.c.abrirModalConta();
+  a.elemento('authEmailInput').value = 'A@example.invalid';
+  a.elemento('authSenhaInput').value = 'senha-ficticia';
+  a.elemento('authPermanecerConectado').checked = true;
+  await a.elemento('authModalSubmit').onclick();
+  assert.equal(a.c.obterSessaoUsuario()?.usuarioId, 'A');
+  assert.equal(a.local.getItem('karamu_permanecer_conectado'), 'true');
+  assert.ok(a.local.getItem('karamu_auth_v2'));
+  assert.equal(a.session.getItem('karamu_auth_v2'), null);
+
+  const b = ambiente({ local });
+  b.instancias[0].callbacks[0]('INITIAL_SESSION', sessaoSDK('A'));
+  assert.equal(b.c.obterSessaoUsuario()?.usuarioId, 'A');
+  assert.equal(b.c.armazenamentoAutenticacao(), b.local);
+
+  await a.c.encerrarSessaoUsuario();
+  assert.equal(a.local.getItem('karamu_auth_v2'), null);
+  assert.equal(a.local.getItem('karamu_login_inicio'), null);
+  assert.equal(a.local.getItem('karamu_permanecer_conectado'), 'true');
+  b.listeners.storage({ key: 'karamu_saida_A' });
+  await b.c.encerrarSessaoUsuario({ notificar: false });
+  assert.equal(b.c.obterSessaoUsuario(), null);
 });

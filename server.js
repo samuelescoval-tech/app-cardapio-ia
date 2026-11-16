@@ -33,7 +33,6 @@ const app = express();
 // atras do proxy da Vercel (1 hop); sem isso ele usaria sempre o IP do
 // proxy e todo mundo cairia no mesmo balde de limite.
 app.set('trust proxy', 1);
-const demoAccessKey = process.env.DEMO_ACCESS_KEY;
 const spoonacularService = criarSpoonacularService();
 const openverseService = criarOpenverseService();
 const fotoCompartilhamentoService = criarFotoCompartilhamentoService();
@@ -92,8 +91,7 @@ const limitadorGeracao = rateLimit({
 
 // Fornecedores e fotos nao chamam nenhuma IA/API externa (so Supabase), mas
 // sem isso um usuario autenticado podia escrever sem nenhum limite e estourar
-// a cota gratuita de banco/storage do Supabase (Plano 15, revisao apos remover
-// o gate de DEMO_ACCESS_KEY dessas rotas).
+// a cota gratuita de banco/storage do Supabase.
 const limitadorPersonalizacao = rateLimit({
     windowMs: 60 * 1000,
     limit: 30,
@@ -139,8 +137,9 @@ app.get('/api/status', (req, res) => {
     res.json({
         ok: true,
         ai: getGeminiStatus(),
-        demo_access: {
-            required: Boolean(demoAccessKey)
+        demo: {
+            example_available: true,
+            ai_requires_account: true
         },
         planning: {
             motor_local: true,
@@ -523,28 +522,22 @@ async function obterCatalogoUsuario(token) {
 
 async function gerarCardapioHandler(req, res) {
     try {
-        // A senha demo protege o uso da chave Gemini COMPARTILHADA, nao o acesso
-        // ao app em si. Dois casos dispensam ela: usuario com a propria chave
-        // Gemini configurada (Plano 16, item 2, nao consome a cota compartilhada)
-        // e usuario com sessao real (login por e-mail/senha ou Google, decisao
-        // do usuario em 2026-08-31 apos login social ir pra producao — cadastro
-        // real vira a protecao contra abuso, a senha demo fica so pra quem testa
-        // sem conta). Token verificado uma unica vez; chave-ia e catalogo sao
-        // buscados em paralelo a partir dele (antes eram 2 chamadas serializadas
-        // ao Supabase Auth).
+        const evento = validarEvento(req.body.evento);
+        // IA real somente com conta. O exemplo sem login e inteiramente local.
+        // O token e verificado uma vez; chave propria e catalogo usam esse dono.
         const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
+        if (!tokenAutenticado) {
+            return res.status(401).json({
+                ok: false,
+                error: "Entre na conta para gerar um planejamento com IA."
+            });
+        }
         const [chaveIAUsuario, catalogoUsuario] = await Promise.all([
             obterChaveIAUsuarioOuNulo(tokenAutenticado),
             obterCatalogoUsuario(tokenAutenticado)
         ]);
-        if (!chaveIAUsuario && !tokenAutenticado && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({
-                ok: false,
-                error: "Senha de teste inválida ou ausente."
-            });
-        }
 
-        const evento = validarEvento(req.body.evento);
+
         console.log('📨 Evento recebido:', evento.tipo, `| ${evento.pessoas} pessoas`);
 
         const diretrizCulinaria = obterDiretrizCulinaria(evento);
@@ -638,10 +631,10 @@ app.post('/gerar-cardapio', limitadorGeracao, gerarCardapioHandler);
 async function buscarReferenciasHandler(req, res) {
     try {
         const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
-        if (!tokenAutenticado && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
+        if (!tokenAutenticado) {
             return res.status(401).json({
                 ok: false,
-                error: "Senha de teste inválida ou ausente."
+                error: "Entre na conta para consultar referências externas."
             });
         }
 
@@ -667,11 +660,11 @@ app.post('/api/referencias-receitas', limitadorPersonalizacao, buscarReferencias
 
 async function buscarImagensEventoHandler(req, res) {
     try {
-        const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
-        if (!tokenAutenticado && demoAccessKey && req.get('x-demo-access-key') !== demoAccessKey) {
-            return res.status(401).json({ ok: false, error: "Senha de teste invalida ou ausente." });
-        }
         const evento = validarEvento(req.body?.evento);
+        const tokenAutenticado = await obterTokenAutenticadoOuNulo(req);
+        if (!tokenAutenticado) {
+            return res.status(401).json({ ok: false, error: "Entre na conta para consultar imagens externas." });
+        }
         const pratos = Array.isArray(req.body?.pratos)
             ? req.body.pratos.slice(0, 20).map((item, indice) => ({
                 id: String(item?.id || `prato-${indice + 1}`).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80),

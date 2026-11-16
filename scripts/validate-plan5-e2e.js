@@ -250,11 +250,15 @@ async function main() {
       .catch(() => cdp.send("Page.setDownloadBehavior", { behavior: "allow", downloadPath: downloadDir }));
     await aguardarDocumento(cdp);
 
-    const demoKey = process.env.DEMO_ACCESS_KEY || "";
+    const accessToken = process.env.KARAMU_TEST_ACCESS_TOKEN || "";
+    const refreshToken = process.env.KARAMU_TEST_REFRESH_TOKEN || "";
+    if (!accessToken || !refreshToken) {
+      throw new Error('Defina KARAMU_TEST_ACCESS_TOKEN e KARAMU_TEST_REFRESH_TOKEN de uma conta descartavel de teste. A geracao com IA nao aceita mais acesso anonimo.');
+    }
     const seedScenario = scenarios[0];
     await cdp.evaluate(`(async () => {
-      sessionStorage.setItem('chef_ia_demo_access_key', ${JSON.stringify(demoKey)});
       localStorage.removeItem('chef_ia_historico');
+      sessionStorage.removeItem('chef_ia_modo_demo_ativo');
       if (${JSON.stringify(seedMemory)}) {
         const s = ${JSON.stringify(seedScenario)};
         localStorage.setItem('chef_ia_historico', JSON.stringify([{
@@ -270,8 +274,16 @@ async function main() {
           ] }
         }]));
       }
-      await inicializarAcessoDemo();
-      return { jspdf: Boolean(window.jspdf?.jsPDF) };
+      await inicializarConfiguracao();
+      loginPermitido = true;
+      armazenamentoAutenticacao().setItem('karamu_login_inicio', String(Date.now()));
+      const resultado = await supabaseClient.auth.setSession({
+        access_token: ${JSON.stringify(accessToken)},
+        refresh_token: ${JSON.stringify(refreshToken)}
+      });
+      loginPermitido = false;
+      if (resultado.error) throw resultado.error;
+      return { jspdf: Boolean(window.jspdf?.jsPDF), autenticado: Boolean(obterSessaoUsuario()) };
     })()`);
 
     const summary = [];
