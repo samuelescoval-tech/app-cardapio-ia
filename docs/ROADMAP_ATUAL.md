@@ -2,30 +2,25 @@
 
 Atualizado em 2026-11-16.
 
-**Em revisao local: Sprint 6B — conta, demonstracao e explicacoes coerentes**,
-na branch `feature/conta-demo`, criada sobre a entrega da 6A (`671b411`). A 6A
-do Gerador esta commitada e enviada em `origin/feature/gerador-ux`; 6A e 6B nao
-foram integradas a `main` nem publicadas na producao. Projetos/Perfil e novos
-prototipos Figma continuam fora dessa entrega.
+**Sprints 6A e 6B concluidas e publicadas em 2026-11-16.** A 6A foi integrada
+pelo PR 11 (`d014444`) e a 6B pelo PR 12 (`994af3c`). CodeQL e Vercel passaram;
+a producao entregou os arquivos novos e recusou geracao sem conta com HTTP 401.
+Projetos/Perfil, novos prototipos Figma e demais refinamentos visuais ficam para
+revisao posterior, sem reabrir estas entregas.
 
-A 6B substitui a senha demo por um jantar ficticio pronto, sem IA nem conta.
+A 6B substituiu a senha demo por um jantar ficticio pronto, sem IA nem conta.
 Geracao personalizada, imagens e referencias externas exigem conta tambem no
-backend. "Permanecer conectado" e opcional: usa armazenamento persistente somente
-com consentimento; o padrao continua limitado a aba. Logout limpa credenciais,
-sincroniza abas e preserva o isolamento entre contas. Privacidade, termos, ajuda
-e saida foram alinhados ao comportamento real; revisao juridica nao foi feita.
+backend. "Permanecer conectado" e opcional; o padrao continua limitado a aba.
+Logout, isolamento, privacidade, termos e mensagens foram preservados/alinhados.
+Revisao juridica e E2E autenticado real nao foram feitos; nenhuma migracao foi
+necessaria. Validacao local: 252 testes Node 24 e roteiros Chrome aprovados.
 
-Validacao local: 252 testes aprovados no Node 24.21.0; apresentacao, galeria e
-sessao com SDK Supabase real e Auth ficticio passaram no Chrome, incluindo
-recarga, nova aba, logout e controles responsivos. Nenhuma conta real, IA ou
-gravacao no Supabase foi usada. O E2E autenticado real nao foi executado por
-exigir credenciais de uma conta descartavel. Nao ha migracao nesta entrega.
-Figma nao foi revisado nesta etapa. Commit/push da 6B ainda nao autorizados.
-
-Sprints 4 e 5 continuam concluidas/publicadas; nao repetir suas homologacoes.
-Proxima frente apos a entrega da 6B: 6C, qualidade dos eventos. Sprint 7 reune
-narrativa final, interacao de entrada e jornada completa. Plano e evidencias em
+**Proxima frente: Sprint 6C — qualidade dos eventos.** Sprint 7 reune narrativa
+final, imagens, entrada interativa com animacao ajustada a referencia anterior
+e jornada completa. O exemplo simplificado foi aceito por agora; ausencia de
+imagens nele e demais pontos visuais permanecem registrados. Plano e evidencias em
 [PLANO_UI_UX_E_PROXIMAS_ETAPAS.md](PLANO_UI_UX_E_PROXIMAS_ETAPAS.md).
+Sprints anteriores continuam concluidas; nao repetir suas homologacoes.
 Estado atual nesta abertura prevalece sobre relatos historicos abaixo.
 
 Fotos: isolamento visual entre contas confirmado pelo usuario. Alinhamento
@@ -227,8 +222,8 @@ publicacao e homologacao real. Nao declarar isolamento completo. Evidencias, imp
 | 3A | Corrigir logout e isolamento local de dados | Validacoes relatadas concluidas; ajustes publicados; historico sem dono preservado, decisao separada |
 | 4 | Historico sincronizado e isolado por conta | Testes funcionais confirmados pelo usuario; codigo integrado/publicado em 2026-10-14; migracao relatada como provavelmente aplicada |
 | 5 | Melhorar cobertura e carregamento de imagens | Concluida e publicada em 2026-10-14 pelo PR 4 |
-| 6A | UI/UX funcional: Gerador, Projetos e Perfil | Gerador commitado/enviado em `feature/gerador-ux`; Projetos/Perfil e novos prototipos pendentes; sem merge na main |
-| 6B | Conta, demo e explicacoes publicas | Implementada e validada localmente em `feature/conta-demo`; revisao/entrega pendente, sem commit/push |
+| 6A | UI/UX funcional: Gerador, Projetos e Perfil | Entrega concluida/publicada pelo PR 11; Projetos/Perfil e novos prototipos ficam para revisao visual posterior |
+| 6B | Conta, demo e explicacoes publicas | Concluida/publicada pelo PR 12; E2E autenticado real nao executado |
 | 6C | Qualidade dos eventos gerados | Doces, bebidas, quantidades e diagnostico de recusa; entrega propria |
 | 7 | Apresentacao e validacao da jornada completa | Planejada; apos etapas anteriores |
 

@@ -2,11 +2,17 @@
 
 Atualizado em 2026-11-16.
 
-## Sprint 6B em revisão local — conta, demonstração e explicações
+## Sprints 6A e 6B concluídas e publicadas — 2026-11-16
 
-Branch `feature/conta-demo`, criada sobre `671b411` (6A do Gerador). Não houve
-commit nem push da 6B; produção e `origin/main` não receberam 6A/6B. `prototipos/`
-permanece não versionado e fora da entrega.
+6A integrada pelo PR 11, merge `d014444`; 6B integrada pelo PR 12, merge
+`994af3c`. CodeQL passou nos PRs e na main; Vercel passou. Produção conferida:
+HTML contém Gerador 6A, exemplo e opção de permanência; `demo.service.js` e
+`/api/status` entregam a política nova; geração válida sem conta retorna 401,
+sem IA. Nenhuma conta real ou escrita no Supabase foi usada. `prototipos/`
+permanece não versionado e fora da entrega. Não reabrir commit/push/publicação.
+
+A 6B foi desenvolvida em `feature/conta-demo` sobre `671b411` (6A do Gerador),
+com commit `1912b3e`. O escopo implementado segue registrado abaixo.
 
 - Novo `public/js/demo.service.js`: jantar fictício completo para 20 pessoas.
   O visitante explora o exemplo sem senha, IA ou conta; geração personalizada,
