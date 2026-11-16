@@ -25,10 +25,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.3/dist/umd/supabase.js"
         integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg"
         crossorigin="anonymous"></script>
-    <!-- TAG: chef-modulos | ordem obrigatoria: storage -> feedback visual -> utils -> render -> app -->
+    <!-- TAG: chef-modulos | ordem obrigatoria: storage -> dados demo -> feedback visual -> utils -> render -> app -->
     <script defer src="js/storage.service.js"></script>
     <script defer src="js/sessao.service.js"></script>
     <script defer src="js/projetos.service.js"></script>
+    <script defer src="js/demo.service.js"></script>
     <script defer src="js/visual-feedback.service.js"></script>
     <script defer src="js/utils.js"></script>
     <script defer src="js/render.js"></script>
@@ -266,25 +267,6 @@
         </symbol>
     </svg>
 
-    <!-- TAG: acesso-demo-modal | Senha temporaria para teste controlado -->
-    <div class="access-modal hidden" id="demoAccessModal" role="dialog" aria-modal="true" aria-labelledby="demoAccessTitle">
-        <div class="access-modal-card">
-            <button type="button" class="btn-icon btn-round" id="demoAccessClose" aria-label="Fechar">X</button>
-            <span class="flabel">Acesso demo</span>
-            <h2 id="demoAccessTitle">Teste protegido do Karamu</h2>
-            <p>Informe a senha temporaria para gerar o planejamento. Ela fica salva apenas nesta sessao do navegador.</p>
-
-            <label class="flabel" for="demoAccessInput">Senha temporaria</label>
-            <input type="password" id="demoAccessInput" class="premium-input" autocomplete="current-password" placeholder="Digite a senha de teste">
-            <p class="access-modal-error" id="demoAccessError" role="alert"></p>
-
-            <div class="access-modal-actions">
-                <button type="button" class="btn-secondary" id="demoAccessCancel">Cancelar</button>
-                <button type="button" class="btn-epic" id="demoAccessSubmit">Continuar</button>
-            </div>
-        </div>
-    </div>
-
     <!-- TAG: auth-modal | Cadastro e login via Supabase -->
     <div class="access-modal hidden" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
         <div class="access-modal-card">
@@ -301,6 +283,10 @@
 
             <label class="flabel" for="authSenhaInput">Senha</label>
             <input type="password" id="authSenhaInput" class="premium-input" autocomplete="current-password" placeholder="Minimo 6 caracteres">
+            <label class="session-preference" for="authPermanecerConectado">
+                <input type="checkbox" id="authPermanecerConectado">
+                <span>Permanecer conectado<small>Reabre sua conta em novas abas e visitas. Use somente em um dispositivo confiável.</small></span>
+            </label>
             <p class="access-modal-error" id="authModalError" role="alert"></p>
             <p class="access-modal-error" id="authModalInfo" role="status" style="color: var(--gold, #c89a2b);"></p>
 
@@ -522,7 +508,7 @@
             <p id="historicoContaStatus" class="field-hint" role="status" aria-live="polite"></p>
             <button type="button" id="historicoAtualizar" class="btn-secondary btn-small hidden">Atualizar projetos</button>
             <button type="button" id="historicoMais" class="btn-secondary btn-small hidden">Mostrar mais projetos</button>
-            <p id="historicoDescricao" class="field-hint">Histórico temporário desta sessão. Ao sair da conta, estes projetos são removidos deste histórico. Salve o PDF antes de sair. A sincronização com a conta ainda não está disponível.</p>
+            <p id="historicoDescricao" class="field-hint">Entre na conta para salvar e recuperar projetos. O exemplo fictício não é salvo; pendências locais devem ser exportadas em PDF antes de sair.</p>
             <p id="historicoLegadoAviso" class="field-hint hidden">Há projetos antigos neste navegador sem identificação de conta. Eles foram preservados, mas não são exibidos ou usados automaticamente. A recuperação precisa ser definida pelo responsável por esses projetos.</p>
         </section>
     </main>

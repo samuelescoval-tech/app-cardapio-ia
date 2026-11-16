@@ -205,7 +205,7 @@ test("remove URLs sem HTTPS e nunca devolve referencia sem fonte", async () => {
 {
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { gerarCardapioHandler, buscarImagensEventoHandler } = require("../server");
+const { gerarCardapioHandler, buscarReferenciasHandler, buscarImagensEventoHandler } = require("../server");
 
 function respostaFake() {
   return {
@@ -223,12 +223,7 @@ function respostaFake() {
 }
 
 function requisicaoFake(body) {
-  return {
-    body,
-    get(nome) {
-      return nome.toLowerCase() === "x-demo-access-key" ? (process.env.DEMO_ACCESS_KEY || undefined) : undefined;
-    }
-  };
+  return { body, get() { return undefined; } };
 }
 
 test("POST /gerar-cardapio rejeita evento invalido antes de chamar a IA", async () => {
@@ -262,6 +257,21 @@ test("POST /api/imagens-evento valida o evento antes de consultar fontes externa
   assert.equal(response.statusCode, 400);
   assert.equal(response.body.campo, "pessoas");
 });
+
+test("geracao, imagens e referencias validas exigem uma conta autenticada", async () => {
+  const evento = { tipo: "Jantar", pessoas: 20 };
+  const casos = [
+    [gerarCardapioHandler, { evento }],
+    [buscarImagensEventoHandler, { evento, pratos: [] }],
+    [buscarReferenciasHandler, { query: "arroz" }]
+  ];
+  for (const [handler, body] of casos) {
+    const response = respostaFake();
+    await handler(requisicaoFake(body), response);
+    assert.equal(response.statusCode, 401);
+    assert.equal(response.body.ok, false);
+  }
+});
 }
 
 // -----------------------------------------------------------------------------
@@ -289,7 +299,7 @@ function respostaFake() {
 }
 
 function requisicaoFake(body, headers = {}) {
-  const cabecalhos = { "x-demo-access-key": process.env.DEMO_ACCESS_KEY || undefined, ...headers };
+  const cabecalhos = { ...headers };
   return {
     body,
     get(nome) {
@@ -414,7 +424,7 @@ function respostaFake() {
 }
 
 function requisicaoFake(body, headers = {}, params = {}) {
-  const cabecalhos = { "x-demo-access-key": process.env.DEMO_ACCESS_KEY || undefined, ...headers };
+  const cabecalhos = { ...headers };
   return { body, params, get(nome) { return cabecalhos[nome.toLowerCase()]; } };
 }
 
@@ -499,7 +509,7 @@ function respostaFake() {
 }
 
 function requisicaoFake(body, headers = {}, params = {}) {
-  const cabecalhos = { "x-demo-access-key": process.env.DEMO_ACCESS_KEY || undefined, ...headers };
+  const cabecalhos = { ...headers };
   return { body, params, get(nome) { return cabecalhos[nome.toLowerCase()]; } };
 }
 

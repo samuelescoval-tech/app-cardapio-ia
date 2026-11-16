@@ -181,6 +181,14 @@ function catalogoGrande() {
   ];
 }
 
+test('geracao HTTP valida sem conta retorna 401 e nao envia prompt a IA', async t => {
+  const c = await iniciar(t);
+  const r = await c.enviar('/gerar-cardapio', { evento: { tipo: 'Jantar', pessoas: 20 } }, { token: null });
+  assert.equal(r.status, 401);
+  assert.equal(r.body.ok, false);
+  assert.equal(c.chamadas.prompts.length, 0);
+});
+
 test('geracao HTTP usa preco depois do item 60 no custo, limitando so o prompt', async t => {
   const c = await iniciar(t, { precos: catalogoGrande() });
   const r = await c.enviar('/gerar-cardapio', { evento: { tipo: 'Almoco', pessoas: 10 } });

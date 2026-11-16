@@ -1,6 +1,42 @@
 # Handoff - Karamu
 
-Atualizado em 2026-11-15.
+Atualizado em 2026-11-16.
+
+## Sprint 6B em revisão local — conta, demonstração e explicações
+
+Branch `feature/conta-demo`, criada sobre `671b411` (6A do Gerador). Não houve
+commit nem push da 6B; produção e `origin/main` não receberam 6A/6B. `prototipos/`
+permanece não versionado e fora da entrega.
+
+- Novo `public/js/demo.service.js`: jantar fictício completo para 20 pessoas.
+  O visitante explora o exemplo sem senha, IA ou conta; geração personalizada,
+  imagens e referências externas exigem autenticação também no backend.
+- "Permanecer conectado" é opt-in: usa `localStorage` somente quando marcado;
+  o padrão permanece em `sessionStorage`. Logout limpa credenciais persistentes,
+  sincroniza abas e preserva o isolamento entre contas.
+- Textos de saída, histórico, README, privacidade e termos foram alinhados.
+  Os documentos públicos explicam persistência, projetos, exemplo sem IA e
+  compartilhamento de fotos; não houve revisão jurídica.
+- Testes e roteiros de apresentação/sessão/galeria foram adaptados. O E2E real
+  agora exige tokens de conta descartável e não foi executado. Nenhuma migração
+  ou configuração externa nova é necessária para o exemplo e a autenticação.
+
+Verificações concluídas: 252/252 testes no Node 24.21.0; apresentação em
+320/390/768/1280/1920px e reflow equivalente a 200%; sessão com SDK Supabase
+2.112.3 real e Auth fictício, cobrindo sessão temporária, opt-in persistente em
+nova aba, logout sincronizado, limpeza e Google fictício; galeria desktop/mobile;
+recarga real do exemplo em 390px sem overflow. O CTA do exemplo abre o login com
+a opção de permanência e fecha normalmente. Nenhuma conta real, IA ou escrita no
+Supabase foi usada. Figma não foi revisado nesta etapa; não declarar essa revisão
+concluída.
+
+Revisão do usuário em 16/11: exemplo considerado simplificado, mas aceito por
+agora; staging, commit e push da 6B autorizados. Continuam registradas pendências
+visuais e ausência de imagens dos pratos no exemplo, que usa identificação neutra
+por decisão desta entrega. A entrada interativa com animação não foi abandonada:
+deve ser retomada e ajustada em relação à referência anterior na etapa própria,
+sem tratá-la como concluída. Próximo passo após a entrega: Sprint 6C; narrativa,
+imagens e animação final continuam na sequência planejada.
 
 ## Segundo lote local da Sprint 6A — Gerador e resultado
 

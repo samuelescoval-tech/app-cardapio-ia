@@ -1,9 +1,9 @@
 # Karamu — refinamento UI/UX e próximas etapas
 
-Registrado em 2026-10-14, após o pedido de revisar o que falta e priorizar UI/UX.
-A análise inicial foi seguida por um primeiro lote local de identidade visual e
-correção de rolagem, após a captura enviada pelo usuário. Conta, demo e banco
-continuam fora deste lote. A Sprint 6A permanece em andamento.
+Registrado em 2026-10-14 e atualizado em 2026-11-16. A entrega do Gerador da
+Sprint 6A está commitada/enviada na branch `feature/gerador-ux`, sem integração
+à `main`. A Sprint 6B está implementada e em revisão local na branch
+`feature/conta-demo`; Projetos/Perfil e novos protótipos Figma continuam pendentes.
 
 ## Ponto de partida
 
@@ -124,26 +124,24 @@ está concluída enquanto Projetos/Perfil e os protótipos permanecerem pendente
 Testes de regressão pertinentes serão executados pelo agente; o usuário revisa o
 novo visual, sem refazer homologações antigas.
 
-### 6B — conta, demo e explicações coerentes
+### 6B — conta, demo e explicações coerentes (em revisão local)
 
-- Implementar opção explícita Permanecer conectado. Preservar saída sincronizada
-  entre abas, isolamento entre contas e limpeza da interface ao sair.
-- Definir o acesso de demonstração. Recomendação: exemplo pronto explorável,
-  com IA real mediante conta. É uma proposta, ainda não uma mudança aprovada ou
-  aplicada. Caso se mantenha IA anônima, exigir cota persistente e verificada no
-  servidor; IP é sinal auxiliar, não identidade de pessoa nem garantia de uso único.
-- O backend atual só exige a chave demo quando `DEMO_ACCESS_KEY` está definida
-  (`server.js:531`); remover essa variável não desativa o acesso. O limitador de
-  10/minuto não equivale a uma franquia persistente por visitante.
-- Corrigir privacidade, termos, mensagens de saída e ajuda: projetos duráveis,
-  ausência de memória automática entre eventos e uso autorizado de fotos.
-  Revisar retenção, exclusão e contato de suporte conforme os fluxos efetivos.
+- "Permanecer conectado" foi implementado como opt-in. A sessão temporária não
+  aparece em nova aba; a opção persistente restaura a conta, e o logout sincronizado
+  remove as credenciais e os dados privados da interface.
+- A senha demo foi substituída por um planejamento fictício pronto, sem IA nem
+  conta. Geração personalizada, imagens e referências externas exigem autenticação
+  no frontend e no backend; `DEMO_ACCESS_KEY` saiu do fluxo e do exemplo de configuração.
+- Privacidade, termos, mensagens de saída e ajuda agora descrevem projetos salvos,
+  persistência opcional, exemplo sem IA e compartilhamento autorizado de fotos.
   Coerência técnica do texto não equivale a revisão jurídica concluída.
 
-Aceite: preferência de sessão respeitada, logout consistente, demo conforme a
-política definida e mensagens que descrevem o comportamento real. Configuração
-ou migração, se necessária, será indicada para essa entrega; não há SQL a executar
-para o planejamento atual.
+Validação: 252 testes no Node 24.21.0; apresentação em cinco larguras e reflow
+de 200%; sessão no Chrome com SDK Supabase real/Auth fictício; galeria desktop e
+mobile; recarga real do exemplo em 390px sem overflow. Não houve conta real, IA,
+escrita no Supabase ou revisão Figma. O E2E autenticado real não foi executado.
+Não há SQL nem configuração externa nova a executar. Commit/push continuam pendentes
+de autorização; a próxima etapa planejada é a 6C.
 
 ### 6C — qualidade dos eventos gerados
 

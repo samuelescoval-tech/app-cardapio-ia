@@ -24,7 +24,7 @@
     <main class="policy-doc">
         <section class="glass-panel">
             <h1>Política de Privacidade</h1>
-            <p class="policy-updated">Última atualização: 31 de agosto de 2026</p>
+            <p class="policy-updated">Última atualização: 15 de novembro de 2026</p>
 
             <p>
                 Esta política explica quais dados o Karamu coleta, para que servem,
@@ -45,9 +45,9 @@
             <ul>
                 <li><strong>Dados de cadastro e login</strong>: e-mail e senha (se você criar conta por e-mail), ou nome, e-mail e foto de perfil fornecidos pelo Google (se você entrar com login social).</li>
                 <li><strong>Dados de personalização, salvos na sua conta</strong>: fornecedores que você cadastra (nome, categoria, telefone, endereço, observações), fotos de pratos que você envia, preços próprios que você cadastra, e sua chave de API do Gemini caso opte por usar uma própria em vez da compartilhada pelo app (guardada de forma cifrada, nunca em texto puro).</li>
-                <li><strong>Dados dos eventos que você planeja</strong>: as informações que você preenche no formulário (tipo de evento, número de convidados, restrições alimentares, orçamento, observações) são enviadas para gerar o planejamento com inteligência artificial.</li>
-                <li><strong>Dados da sessão no navegador</strong>: credenciais e histórico temporário da aba, removidos dessa sessão ao sair da conta. Salve o PDF para conservar seu planejamento. Históricos de versões anteriores permanecem no dispositivo, sem leitura automática, até a definição de sua recuperação ou remoção.</li>
-                <li><strong>Memória de eventos anteriores</strong>: nomes de pratos e informações de tipo, refeição e tema do histórico ativo podem ser enviados ao servidor e à IA para evitar repetições.</li>
+                <li><strong>Dados dos eventos que você planeja</strong>: as informações que você preenche no formulário (tipo de evento, número de convidados, restrições alimentares, orçamento, observações) são enviadas para gerar o planejamento com inteligência artificial. Quando você salva um projeto, o planejamento também fica associado à sua conta para recuperação posterior.</li>
+                <li><strong>Dados da sessão no navegador</strong>: por padrão, as credenciais ficam somente na sessão da aba. Se você marcar "Permanecer conectado", elas podem permanecer neste navegador até você sair da conta ou apagar os dados do site. Projetos salvos ficam na conta; alterações ainda não salvas podem ficar temporariamente no dispositivo.</li>
+                <li><strong>Planejamento de exemplo</strong>: a demonstração sem conta usa um evento fictício já pronto, não envia seus dados à IA e não cria um projeto na conta.</li>
             </ul>
             <p>
                 O Karamu não usa cookies de rastreamento nem ferramentas de
@@ -58,6 +58,7 @@
             <ul>
                 <li>Autenticar você e manter sua conta segura;</li>
                 <li>Gerar o planejamento do seu evento (cardápio, lista de compras, custos estimados), usando também os fornecedores e preços que você cadastrou, quando aplicável;</li>
+                <li>Salvar e recuperar os projetos que você escolher guardar na sua conta;</li>
                 <li>Buscar imagens de referência para os pratos sugeridos em bancos de imagens públicos;</li>
                 <li>Corrigir problemas técnicos e melhorar o funcionamento do app.</li>
             </ul>
@@ -78,6 +79,7 @@
                 <li>Senhas são gerenciadas pelo Supabase Auth e nunca ficam salvas em texto puro;</li>
                 <li>Sua chave própria de IA (quando cadastrada) é cifrada em repouso (AES-256-GCM) antes de ser salva;</li>
                 <li>O banco de dados usa controle de acesso por linha (Row Level Security): cada conta só consegue ler ou alterar os próprios dados, nunca os de outro usuário;</li>
+                <li>Fotos de pratos são privadas por padrão e só podem ser compartilhadas quando você autoriza;</li>
                 <li>Toda comunicação entre seu navegador e o Karamu é feita por HTTPS.</li>
             </ul>
 
@@ -86,7 +88,7 @@
             <ul>
                 <li>Confirmar se tratamos algum dado seu e acessar esses dados;</li>
                 <li>Corrigir dados incompletos, inexatos ou desatualizados;</li>
-                <li>Pedir a exclusão de fornecedores, fotos, preços ou da sua chave de IA — isso já pode ser feito diretamente na tela "Meu Perfil" do app;</li>
+                <li>Excluir projetos, fornecedores, fotos, preços ou sua chave de IA diretamente no app;</li>
                 <li>Pedir a exclusão completa da sua conta e de todos os dados associados;</li>
                 <li>Pedir a portabilidade dos seus dados para outro serviço;</li>
                 <li>Revogar o consentimento dado anteriormente.</li>
@@ -99,9 +101,11 @@
 
             <h2>7. Por quanto tempo guardamos seus dados</h2>
             <p>
-                Mantemos seus dados enquanto sua conta existir. Se você excluir um
-                item (fornecedor, foto, preço, chave de IA) ou a conta inteira, os
-                dados correspondentes são removidos dos nossos sistemas.
+                Mantemos os dados da conta e os projetos salvos enquanto sua conta
+                existir ou até você excluí-los. Credenciais temporárias acompanham a
+                sessão da aba; com "Permanecer conectado", permanecem no navegador
+                até a saída da conta ou a limpeza dos dados do site. Pendências
+                locais podem ser removidas ao limpar esses dados.
             </p>
 
             <h2>8. Menores de idade</h2>

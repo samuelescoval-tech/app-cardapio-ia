@@ -39,6 +39,24 @@
     line-height:1.5;
 }
 
+.demo-example-note{
+    margin-bottom:16px;
+    border-top:4px solid var(--gold);
+}
+
+.demo-example-note strong{
+    display:block;
+    margin-bottom:8px;
+    color:var(--ink-strong);
+    font-family:var(--font-display);
+    font-size:var(--text-panel);
+}
+
+.demo-example-note p{
+    margin-bottom:16px;
+    color:var(--ink-soft);
+}
+
 .result-header h2,
 .result-header p,
 .result-section,

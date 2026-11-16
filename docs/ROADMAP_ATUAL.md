@@ -1,33 +1,31 @@
 # Roadmap atual - Karamu
 
-Atualizado em 2026-10-14.
+Atualizado em 2026-11-16.
 
-Sprint 4 encerrada funcionalmente conforme testes confirmados pelo usuario e
-codigo integrado/publicado em 2026-10-14. Fornecedores/fotos e projetos da conta
-chegaram a main pelos PRs 1 e 2. Vercel confirmou sucesso; site real entregou
-HTML/JS novos e API de projetos recusou acesso sem sessao. Migracao 008 relatada
-como provavelmente aplicada; sem auditoria independente do Supabase nesta sessao.
-Nao repetir testes confirmados nem tratar estas entregas como ainda sem push.
+**Em revisao local: Sprint 6B — conta, demonstracao e explicacoes coerentes**,
+na branch `feature/conta-demo`, criada sobre a entrega da 6A (`671b411`). A 6A
+do Gerador esta commitada e enviada em `origin/feature/gerador-ux`; 6A e 6B nao
+foram integradas a `main` nem publicadas na producao. Projetos/Perfil e novos
+prototipos Figma continuam fora dessa entrega.
 
-Sprint 5 concluida e publicada em 2026-10-14 pelo PR 4, com 243 testes, Chrome
-e CodeQL aprovados. Vercel confirmou sucesso e sete recursos do site real
-coincidiram com a versao integrada. Replanejamento solicitado em 2026-10-14:
-**em andamento: Sprint 6A — identidade e refinamento UI/UX funcional**, seguida de 6B
-(conta, demo e explicacoes publicas) e 6C (qualidade dos eventos). Sprint 7
-reune narrativa final da apresentacao, interacao de entrada e jornada final. Plano e evidencias em
+A 6B substitui a senha demo por um jantar ficticio pronto, sem IA nem conta.
+Geracao personalizada, imagens e referencias externas exigem conta tambem no
+backend. "Permanecer conectado" e opcional: usa armazenamento persistente somente
+com consentimento; o padrao continua limitado a aba. Logout limpa credenciais,
+sincroniza abas e preserva o isolamento entre contas. Privacidade, termos, ajuda
+e saida foram alinhados ao comportamento real; revisao juridica nao foi feita.
+
+Validacao local: 252 testes aprovados no Node 24.21.0; apresentacao, galeria e
+sessao com SDK Supabase real e Auth ficticio passaram no Chrome, incluindo
+recarga, nova aba, logout e controles responsivos. Nenhuma conta real, IA ou
+gravacao no Supabase foi usada. O E2E autenticado real nao foi executado por
+exigir credenciais de uma conta descartavel. Nao ha migracao nesta entrega.
+Figma nao foi revisado nesta etapa. Commit/push da 6B ainda nao autorizados.
+
+Sprints 4 e 5 continuam concluidas/publicadas; nao repetir suas homologacoes.
+Proxima frente apos a entrega da 6B: 6C, qualidade dos eventos. Sprint 7 reune
+narrativa final, interacao de entrada e jornada completa. Plano e evidencias em
 [PLANO_UI_UX_E_PROXIMAS_ETAPAS.md](PLANO_UI_UX_E_PROXIMAS_ETAPAS.md).
-Primeiro lote implementado localmente na branch `feature/identidade-visual`:
-rolagem unica, escala tipografica, contraste, espacamento e imagens proporcionais.
-243 testes aprovados, Chrome em cinco larguras e reflow equivalente a 200% (viewport/DPR); fontes/fotos
-reais conferidas em capturas separadas. Guia editavel criado no Figma, com regras
-em [MASTER.md](../design-system/karamu/MASTER.md). Ainda nao publicado.
-Proximo: estados e hierarquia do Gerador, depois Projetos e Perfil.
-Este lote nao encerra a Sprint 6A nem as pendencias de conta/demo e qualidade.
-Fotos autorizadas podem alimentar imagens dos pratos;
-manter a identificacao honesta quando nao houver correspondencia exata.
-Ferramentas de apoio ja configuradas: Figma, Context7, Playwright e Supabase
-(somente leitura), com skills de design. Nao ha necessidade identificada de
-adicionar outra ferramenta para o escopo atual. Detalhes em `MCP_E_SKILLS.md`.
 Estado atual nesta abertura prevalece sobre relatos historicos abaixo.
 
 Fotos: isolamento visual entre contas confirmado pelo usuario. Alinhamento
@@ -229,8 +227,8 @@ publicacao e homologacao real. Nao declarar isolamento completo. Evidencias, imp
 | 3A | Corrigir logout e isolamento local de dados | Validacoes relatadas concluidas; ajustes publicados; historico sem dono preservado, decisao separada |
 | 4 | Historico sincronizado e isolado por conta | Testes funcionais confirmados pelo usuario; codigo integrado/publicado em 2026-10-14; migracao relatada como provavelmente aplicada |
 | 5 | Melhorar cobertura e carregamento de imagens | Concluida e publicada em 2026-10-14 pelo PR 4 |
-| 6A | UI/UX funcional: Gerador, Projetos e Perfil | Proxima entrega; diagnostico registrado, prototipo Figma e implementacao pendentes |
-| 6B | Conta, demo e explicacoes publicas | Apos 6A; login persistente, politica de demo e textos coerentes com o produto |
+| 6A | UI/UX funcional: Gerador, Projetos e Perfil | Gerador commitado/enviado em `feature/gerador-ux`; Projetos/Perfil e novos prototipos pendentes; sem merge na main |
+| 6B | Conta, demo e explicacoes publicas | Implementada e validada localmente em `feature/conta-demo`; revisao/entrega pendente, sem commit/push |
 | 6C | Qualidade dos eventos gerados | Doces, bebidas, quantidades e diagnostico de recusa; entrega propria |
 | 7 | Apresentacao e validacao da jornada completa | Planejada; apos etapas anteriores |
 

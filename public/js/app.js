@@ -9,8 +9,6 @@
 /* TAG: estado-slideshow */
 let curSlide = 0;
 const slides = document.querySelectorAll('.slide');
-let demoAccessRequired = false;
-let demoAccessMessage = "";
 let sequenciaConsultaVisual = 0;
 let sequenciaGeracao = 0;
 window.chefIARecipeReferencesAvailable = false;
@@ -23,10 +21,48 @@ let saidaEmCurso = null;
 let loginPermitido = false;
 let timerExpiracao = null;
 const AUTH_STORAGE = 'karamu_auth_v2';
+const AUTH_PREFERENCE = 'karamu_permanecer_conectado';
 const controleSessao = criarControleSessao({ aoTrocar: limparEstadoPrivado });
 const capturarContextoSessao = () => controleSessao.capturar();
 const contextoSessaoAtual = contexto => controleSessao.atual(contexto);
 const fetchDaSessao = (url, opcoes, contexto) => controleSessao.requisitar(url, opcoes, contexto);
+
+function permanecerConectadoAtivo() {
+    try { return localStorage.getItem(AUTH_PREFERENCE) === 'true'; }
+    catch { return false; }
+}
+
+function armazenamentoAutenticacao() {
+    return permanecerConectadoAtivo() ? localStorage : sessionStorage;
+}
+
+function definirPreferenciaPermanencia(permanecer) {
+    const anterior = permanecerConectadoAtivo();
+    try {
+        if (permanecer) localStorage.setItem(AUTH_PREFERENCE, 'true');
+        else {
+            localStorage.removeItem(AUTH_PREFERENCE);
+            localStorage.removeItem(AUTH_STORAGE);
+            localStorage.removeItem('karamu_login_inicio');
+        }
+    } catch { /* Sem localStorage, a sessao continua limitada a aba. */ }
+    if (anterior !== permanecer) descartarClienteAuth();
+}
+
+function removerCredencialPersistente(usuarioId) {
+    try {
+        const bruto = localStorage.getItem(AUTH_STORAGE);
+        if (!bruto) return;
+        const dono = JSON.parse(bruto)?.user?.id;
+        if (!usuarioId || dono === usuarioId) {
+            localStorage.removeItem(AUTH_STORAGE);
+            localStorage.removeItem('karamu_login_inicio');
+        }
+    } catch {
+        localStorage.removeItem(AUTH_STORAGE);
+        localStorage.removeItem('karamu_login_inicio');
+    }
+}
 
 function mostrarAvisoSessao(mensagem = '') {
     const aviso = document.getElementById('sessaoAviso');
@@ -70,15 +106,18 @@ function descartarClienteAuth() {
 }
 
 function limparSessaoLocal() {
+    const usuarioId = controleSessao.obter()?.usuarioId;
     loginPermitido = false;
     sessionStorage.removeItem('chef_ia_sessao_usuario');
     sessionStorage.removeItem('chef_ia_modo_demo_ativo');
     sessionStorage.removeItem('chef_ia_demo_access_key');
     sessionStorage.removeItem('karamu_login_oauth_pendente');
+    sessionStorage.removeItem('karamu_login_inicio');
     for (let i = sessionStorage.length - 1; i >= 0; i--) {
         const chave = sessionStorage.key(i);
         if (chave?.startsWith(AUTH_STORAGE)) sessionStorage.removeItem(chave);
     }
+    removerCredencialPersistente(usuarioId);
     controleSessao.definir(null, true);
     atualizarBotaoConta();
     document.getElementById('authModal')?.classList.add('hidden');
@@ -87,22 +126,22 @@ function limparSessaoLocal() {
 
 function sessaoFoiEncerrada(usuarioId) {
     try {
-        return Number(localStorage.getItem(`karamu_saida_${usuarioId}`) || 0) >= Number(sessionStorage.getItem('karamu_login_inicio') || 0);
+        return Number(localStorage.getItem(`karamu_saida_${usuarioId}`) || 0) >= Number(armazenamentoAutenticacao().getItem('karamu_login_inicio') || 0);
     } catch { return true; } // sem armazenamento confiavel, exige novo login
 }
 
 function prepararClienteAuth() {
     if (supabaseClient) return supabaseClient;
     if (!configuracaoAuth || !window.supabase?.createClient) return null;
-    // Canal exclusivo por instancia evita que SIGNED_IN em outra aba troque
-    // a conta desta aba. O adaptador persiste somente na sessionStorage.
+    // O canal exclusivo impede troca automatica de conta entre abas. A opcao
+    // explicita de permanencia compartilha a sessao; caso contrario, usa a aba.
     const chaveInstancia = `karamu-${crypto.randomUUID()}`;
-    const registro = { ativa: true, client: null, subscription: null };
+    const registro = { ativa: true, client: null, subscription: null, storage: armazenamentoAutenticacao() };
     const chavePersistida = chave => chave.replace(chaveInstancia, AUTH_STORAGE);
     const storage = {
-        getItem: chave => registro.ativa ? sessionStorage.getItem(chavePersistida(chave)) : (chave === chaveInstancia ? registro.sessaoEncerramento || null : null),
-        setItem: (chave, valor) => { if (registro.ativa) sessionStorage.setItem(chavePersistida(chave), valor); },
-        removeItem: chave => { if (registro.ativa) sessionStorage.removeItem(chavePersistida(chave)); }
+        getItem: chave => registro.ativa ? registro.storage.getItem(chavePersistida(chave)) : (chave === chaveInstancia ? registro.sessaoEncerramento || null : null),
+        setItem: (chave, valor) => { if (registro.ativa) registro.storage.setItem(chavePersistida(chave), valor); },
+        removeItem: chave => { if (registro.ativa) registro.storage.removeItem(chavePersistida(chave)); }
     };
     const client = window.supabase.createClient(configuracaoAuth.url, configuracaoAuth.anonKey, {
         auth: { storage, storageKey: chaveInstancia, persistSession: true, autoRefreshToken: true, flowType: 'pkce' }
@@ -147,7 +186,7 @@ async function encerrarSessaoUsuario({ notificar = true } = {}) {
     const sessao = controleSessao.obter();
     const client = supabaseClient;
     const registro = authAtiva;
-    if (registro) registro.sessaoEncerramento = sessionStorage.getItem(AUTH_STORAGE);
+    if (registro) registro.sessaoEncerramento = registro.storage.getItem(AUTH_STORAGE);
     if (notificar && sessao?.usuarioId) {
         try { localStorage.setItem(`karamu_saida_${sessao.usuarioId}`, String(Date.now())); }
         catch { /* A limpeza desta aba deve ocorrer mesmo sem armazenamento entre abas. */ }
@@ -182,16 +221,15 @@ window.addEventListener('pageshow', () => {
 });
 
 
-async function inicializarAcessoDemo() {
+async function inicializarConfiguracao() {
     try {
         const response = await fetch('/api/status');
         const status = await response.json();
-        demoAccessRequired = Boolean(status.demo_access?.required);
         window.chefIARecipeReferencesAvailable = Boolean(status.recipe_references?.configured);
         window.chefIAVisualReferencesAvailable = Boolean(status.visual_references?.configured);
         inicializarLoginSocial(status.auth?.supabase_url, status.auth?.supabase_anon_key);
     } catch (error) {
-        console.warn('Não foi possível verificar acesso demo:', error.message);
+        console.warn('Não foi possível verificar a configuração de acesso:', error.message);
     }
 }
 
@@ -202,19 +240,24 @@ function inicializarLoginSocial(supabaseUrl, supabaseAnonKey) {
     if (!supabaseUrl || !supabaseAnonKey) return;
     configuracaoAuth = { url: supabaseUrl, anonKey: supabaseAnonKey };
     // A versao antiga mantinha sessao Google no localStorage. Nao reutilizar
-    // credenciais persistentes sem nova entrada explicita apos a migracao.
+    // credenciais antigas sem uma preferencia explicita de permanencia.
     const antiga = `sb-${new URL(supabaseUrl).hostname.split('.')[0]}-auth-token`;
     localStorage.removeItem(antiga);
     localStorage.removeItem(`${antiga}-code-verifier`);
+    if (!permanecerConectadoAtivo()) {
+        localStorage.removeItem(AUTH_STORAGE);
+        localStorage.removeItem('karamu_login_inicio');
+    }
     sessionStorage.removeItem('chef_ia_sessao_usuario');
     prepararClienteAuth();
 }
 
 async function entrarComGoogle() {
     if (saidaEmCurso) return;
+    definirPreferenciaPermanencia(Boolean(document.getElementById('authPermanecerConectado')?.checked));
     const client = prepararClienteAuth();
     if (!client) return;
-    sessionStorage.setItem('karamu_login_inicio', String(Date.now()));
+    armazenamentoAutenticacao().setItem('karamu_login_inicio', String(Date.now()));
     sessionStorage.setItem('karamu_login_oauth_pendente', 'true');
     const { error } = await client.auth.signInWithOAuth({
         provider: 'google', options: {
@@ -230,86 +273,6 @@ async function entrarComGoogle() {
     }
 }
 
-async function obterDemoAccessKey() {
-    if (!demoAccessRequired) return null;
-    // Usuario com sessao real (e-mail/senha ou Google) dispensa a senha demo
-    // (decisao do usuario em 2026-08-31, espelha o bypass feito no servidor
-    // em gerarCardapioHandler/buscarReferenciasHandler/buscarImagensEventoHandler).
-    if (obterSessaoUsuario()) return null;
-
-    const key = sessionStorage.getItem('chef_ia_demo_access_key');
-    if (!key) {
-        return solicitarDemoAccessKey();
-    }
-
-    return key.trim();
-}
-
-function solicitarDemoAccessKey() {
-    const modal = document.getElementById('demoAccessModal');
-    const input = document.getElementById('demoAccessInput');
-    const error = document.getElementById('demoAccessError');
-    const submit = document.getElementById('demoAccessSubmit');
-    const cancel = document.getElementById('demoAccessCancel');
-    const close = document.getElementById('demoAccessClose');
-
-    if (!modal || !input || !error || !submit || !cancel || !close) {
-        return Promise.resolve(null);
-    }
-
-    return new Promise(resolve => {
-        const finalizar = valor => {
-            modal.classList.add('hidden');
-            sincronizarBloqueioRolagem();
-            modal.removeEventListener('keydown', handleKeydown);
-            submit.onclick = null;
-            cancel.onclick = null;
-            close.onclick = null;
-            input.oninput = null;
-            resolve(valor);
-        };
-
-        const confirmar = () => {
-            const key = input.value.trim();
-            if (!key) {
-                error.textContent = "Informe a senha temporaria para continuar.";
-                input.focus();
-                return;
-            }
-
-            sessionStorage.setItem('chef_ia_demo_access_key', key);
-            demoAccessMessage = "";
-            finalizar(key);
-        };
-
-        const cancelar = () => finalizar(null);
-
-        function handleKeydown(event) {
-            if (event.key === "Escape") cancelar();
-            if (event.key === "Enter") confirmar();
-        }
-
-        input.value = "";
-        error.textContent = demoAccessMessage;
-        submit.onclick = confirmar;
-        cancel.onclick = cancelar;
-        close.onclick = cancelar;
-        input.oninput = () => {
-            error.textContent = "";
-        };
-
-        modal.classList.remove('hidden');
-        sincronizarBloqueioRolagem();
-        modal.addEventListener('keydown', handleKeydown);
-        requestAnimationFrame(() => input.focus());
-    });
-}
-
-function limparDemoAccessKey(message = "") {
-    sessionStorage.removeItem('chef_ia_demo_access_key');
-    demoAccessMessage = message;
-}
-
 /* TAG: autenticacao-usuario | Plano 14 - cadastro e login via Supabase */
 let authModoCadastro = false;
 
@@ -319,17 +282,7 @@ function obterSessaoUsuario() {
     return sessao;
 }
 
-// TAG: bug-header-sessao-ausente | /gerar-cardapio, /api/imagens-evento e
-// /api/referencias-receitas nunca mandavam Authorization: Bearer <token> —
-// so perfil.js fazia isso certinho (perfilHeaders()). Resultado real:
-// obterTokenAutenticadoOuNulo() no servidor sempre via o usuario como
-// anonimo nessas 3 rotas, entao o bypass "logado dispensa a senha demo"
-// (2026-08-31) nunca chegava a valer pra elas. O gerador principal so
-// parecia funcionar pra quem ja tinha chave Gemini propria configurada
-// (bypass antigo, sem relacao com sessao) — imagens/receitas nao tem
-// esse bypass alternativo, entao sempre caiam em 401 "senha invalida",
-// que o front trata como "nenhuma fotografia confiavel encontrada".
-// Achado ao vivo testando um evento real (Toy Story), 2026-09-07.
+// Geracao, imagens e referencias externas sempre enviam a sessao da conta.
 function headersComSessao(comJson = true) {
     const headers = comJson ? { "Content-Type": "application/json" } : {};
     const sessao = obterSessaoUsuario();
@@ -351,11 +304,31 @@ function salvarSessaoUsuario(sessao) {
     atualizarBotaoConta();
 }
 
-// Visitante que escolhe testar sem criar conta (senha demo compartilhada,
-// ver obterDemoAccessKey). Nao e uma sessao de verdade, mas conta como
-// "ja passou da apresentacao" para nao repetir o gate a cada reload.
+// O exemplo e uma apresentacao local, nao uma sessao autenticada nem uma geracao.
 function modoDemoAtivo() {
     return sessionStorage.getItem('chef_ia_modo_demo_ativo') === 'true';
+}
+
+function exibirExemploDemonstracao() {
+    const exemplo = window.karamuDemo?.criarExemploDemonstracao();
+    const area = document.getElementById('resultadoArea');
+    if (!exemplo || !area) return;
+    exibirResultadoLuxo(exemplo.plano, exemplo.evento.pessoas, exemplo.evento);
+    area.classList.remove('hidden');
+    area.dataset.planoValido = 'true';
+    renderizarGaleriaEventoFallback('O exemplo usa identificação visual neutra e não consulta bancos de imagens.');
+    area.insertAdjacentHTML('afterbegin', `
+        <div class="glass-panel demo-example-note" role="status">
+            <strong>Planejamento fictício para explorar</strong>
+            <p>Este exemplo não usa IA nem consome créditos. Entre na conta para gerar um evento personalizado e salvar seus projetos.</p>
+            <button type="button" class="btn-epic btn-compact" id="demoEntrarConta">Entrar para gerar meu evento</button>
+        </div>
+    `);
+    document.getElementById('demoEntrarConta')?.addEventListener('click', abrirModalConta);
+    for (const [id, valor] of [['tipo', exemplo.evento.tipo], ['pessoas', exemplo.evento.pessoas]]) {
+        const campo = document.getElementById(id);
+        if (campo && !campo.value) campo.value = valor;
+    }
 }
 
 function entrarModoDemo() {
@@ -367,6 +340,8 @@ function entrarModoDemo() {
     sessionStorage.setItem('chef_ia_modo_demo_ativo', 'true');
     atualizarBotaoConta();
     switchView('app');
+    exibirExemploDemonstracao();
+    document.getElementById('resultadoArea')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function atualizarBotaoConta() {
@@ -377,15 +352,13 @@ function atualizarBotaoConta() {
     if (sessao) {
         botao.innerHTML = `${icon("account")} ${escapeHTML(sessao.email)}`;
     } else if (modoDemoAtivo()) {
-        botao.innerHTML = `${icon("account")} Modo demo · Criar conta`;
+        botao.innerHTML = `${icon("account")} Exemplo · Entrar`;
     } else {
         botao.innerHTML = `${icon("account")} Entrar`;
     }
 }
 
-// Preenche o CTA no fim da apresentacao: quem ja tem sessao ou ja escolheu
-// o modo demo vai direto pro gerador; quem esta chegando agora escolhe
-// entre criar conta/entrar ou testar sem conta.
+// O CTA oferece conta para IA real ou um exemplo local sem consumo de IA.
 function atualizarPitchCta() {
     const area = document.getElementById('pitchCtaArea');
     if (!area) return;
@@ -394,7 +367,7 @@ function atualizarPitchCta() {
     } else {
         area.innerHTML = `
             <button type="button" class="btn-epic btn-wide" data-action="abrir-conta">CRIAR CONTA / ENTRAR</button>
-            <button type="button" class="btn-secondary btn-wide" data-action="modo-demo">TESTAR COM SENHA DEMO</button>
+            <button type="button" class="btn-secondary btn-wide" data-action="modo-demo">VER PLANEJAMENTO DE EXEMPLO</button>
         `;
     }
 }
@@ -429,6 +402,7 @@ function abrirModalConta() {
     const modal = document.getElementById('authModal');
     const email = document.getElementById('authEmailInput');
     const senha = document.getElementById('authSenhaInput');
+    const permanecer = document.getElementById('authPermanecerConectado');
     const erro = document.getElementById('authModalError');
     const info = document.getElementById('authModalInfo');
     const submit = document.getElementById('authModalSubmit');
@@ -437,6 +411,7 @@ function abrirModalConta() {
 
     email.value = "";
     senha.value = "";
+    permanecer.checked = permanecerConectadoAtivo();
     erro.textContent = "";
     info.textContent = "";
 
@@ -448,6 +423,7 @@ function abrirModalConta() {
 
     async function enviar() {
         if (submit.disabled || saidaEmCurso) return;
+        definirPreferenciaPermanencia(permanecer.checked);
         const client = prepararClienteAuth();
         if (!client) { erro.textContent = 'O login está indisponível. Aguarde ou recarregue a página.'; return; }
         const contexto = capturarContextoSessao();
@@ -470,7 +446,7 @@ function abrirModalConta() {
             }
             if (!dados.access_token || !dados.refresh_token) throw new Error('Sessão incompleta. Entre novamente.');
             loginPermitido = true;
-            sessionStorage.setItem('karamu_login_inicio', String(Date.now()));
+            armazenamentoAutenticacao().setItem('karamu_login_inicio', String(Date.now()));
             const { error } = await client.auth.setSession({ access_token: dados.access_token, refresh_token: dados.refresh_token });
             if (!registro.ativa || authAtiva !== registro) return;
             if (error) throw error;
@@ -562,10 +538,8 @@ setInterval(() => {
 // dessa troca de secoes: e um painel sobreposto (ver abrirPainelPerfil),
 // entao trocar de view so precisa fechar o painel se estiver aberto.
 function sincronizarBloqueioRolagem() {
-    const modalAberto = ['authModal', 'demoAccessModal'].some(id => {
-        const modal = document.getElementById(id);
-        return modal && !modal.classList.contains('hidden');
-    });
+    const modal = document.getElementById('authModal');
+    const modalAberto = Boolean(modal && !modal.classList.contains('hidden'));
     document.body.classList.toggle('modal-open', modalAberto);
 }
 
@@ -724,6 +698,12 @@ async function gerarTudo() {
         : "";
 
     if (!validarCamposGeracao(tipo, pessoas)) return;
+    if (!obterSessaoUsuario()) {
+        abrirModalConta();
+        const info = document.getElementById('authModalInfo');
+        if (info) info.textContent = 'Entre na conta para gerar um planejamento personalizado com IA. O exemplo continua disponível sem login.';
+        return;
+    }
 
     const evento = {
         tipo,
@@ -749,20 +729,6 @@ async function gerarTudo() {
     };
 
     try {
-        const demoAccessKey = await obterDemoAccessKey();
-        if (!geracaoAtual()) return;
-        // TAG: bug-bloqueio-mesmo-logado | demoAccessRequired reflete so a
-        // config do SERVIDOR (DEMO_ACCESS_KEY existe), independente de
-        // sessao — continua true mesmo pra quem esta logado. Desde o fix
-        // "logado dispensa a senha demo" (2026-08-31), obterDemoAccessKey()
-        // corretamente devolve null nesse caso, mas essa checagem nao tinha
-        // sido atualizada e bloqueava a geracao mesmo assim, achado testando
-        // ao vivo (usuario logado continuava vendo "demo esta protegida").
-        if (demoAccessRequired && !demoAccessKey && !obterSessaoUsuario()) {
-            exibirErroResultado(resultadoArea, "A demo esta protegida. Informe a senha temporaria para gerar o planejamento.");
-            return;
-        }
-
         cancelarConsultaVisualPendente();
         delete window.chefIAHistoricoCarregadoId;
 
@@ -783,7 +749,6 @@ async function gerarTudo() {
         resultadoArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         const headers = headersComSessao();
-        if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
 
         // 2. Chamada ao Servidor (Back-end)
         // Cada evento e independente; nao enviar memoria de projetos anteriores.
@@ -799,9 +764,7 @@ async function gerarTudo() {
         window.chefIALastResponseMeta = resposta.meta || null;
 
         if (response.status === 401) {
-            demoAccessRequired = true;
-            limparDemoAccessKey("Senha temporaria invalida. Confira a senha e tente novamente.");
-            throw new Error("Senha temporária inválida. Tente gerar novamente e informe a senha correta.");
+            throw new Error(resposta.error || "Sua sessão expirou. Entre novamente para gerar.");
         }
 
         if (!response.ok) {
@@ -859,7 +822,7 @@ async function gerarTudo() {
         }
 
         // Referencias visuais sao transitorias e nao bloqueiam historico ou PDF.
-        void carregarImagensEvento(evento, dadosIA.cardapio || [], demoAccessKey);
+        void carregarImagensEvento(evento, dadosIA.cardapio || []);
 
     } catch (error) {
         if (!geracaoAtual() || error.name === 'AbortError') return;
@@ -872,30 +835,28 @@ async function gerarTudo() {
     }
 }
 
-async function carregarImagensEvento(evento, pratos = [], demoAccessKey = null) {
+async function carregarImagensEvento(evento, pratos = []) {
     const contextoSessao = capturarContextoSessao();
     const sequencia = ++sequenciaConsultaVisual;
+    if (!obterSessaoUsuario()) {
+        renderizarGaleriaEventoFallback('Entre na conta para consultar imagens externas.');
+        return;
+    }
     if (window.chefIAVisualReferencesAvailable === false) {
         renderizarGaleriaEventoFallback("A consulta visual externa nao esta configurada.");
         return;
     }
 
     try {
-        const headers = headersComSessao();
-        if (demoAccessKey) headers["x-demo-access-key"] = demoAccessKey;
         const response = await fetchDaSessao("/api/imagens-evento", {
             method: "POST",
-            headers,
+            headers: headersComSessao(),
             body: JSON.stringify({ evento, pratos })
         }, contextoSessao);
         const resultado = await response.json().catch(error => { if (error.name === 'AbortError') throw error; return {}; });
         if (!contextoSessaoAtual(contextoSessao)) return;
         if (sequencia !== sequenciaConsultaVisual) return;
 
-        if (response.status === 401) {
-            demoAccessRequired = true;
-            limparDemoAccessKey("Senha temporaria invalida.");
-        }
         if (!response.ok || resultado.ok === false) {
             throw new Error(resultado.error || "Consulta visual indisponivel.");
         }
@@ -924,36 +885,24 @@ async function buscarReferenciasExternas() {
         resultado.innerHTML = '<p class="reference-message">Informe uma busca entre 2 e 80 caracteres.</p>';
         return;
     }
+    if (!obterSessaoUsuario()) {
+        resultado.innerHTML = '<p class="reference-message">Entre na conta para consultar referências externas.</p>';
+        return;
+    }
 
     try {
-        const demoAccessKey = await obterDemoAccessKey();
-        if (!contextoSessaoAtual(contextoSessao)) return;
-        // Mesmo raciocinio da checagem em gerarTudo(): demoAccessRequired
-        // reflete config do servidor, nao sessao — usuario logado tem
-        // demoAccessKey null por design, nao deve ser bloqueado aqui.
-        if (demoAccessRequired && !demoAccessKey && !obterSessaoUsuario()) {
-            resultado.innerHTML = '<p class="reference-message">Informe a senha temporária para consultar referências.</p>';
-            return;
-        }
-
         botao.disabled = true;
         botao.textContent = 'Consultando...';
         resultado.innerHTML = '<p class="reference-message">Busca transitória em andamento. Nenhum conteúdo será salvo.</p>';
 
-        const headers = headersComSessao();
-        if (demoAccessKey) headers['x-demo-access-key'] = demoAccessKey;
         const response = await fetchDaSessao('/api/referencias-receitas', {
             method: 'POST',
-            headers,
+            headers: headersComSessao(),
             body: JSON.stringify({ query })
         }, contextoSessao);
         const data = await response.json().catch(error => { if (error.name === 'AbortError') throw error; return {}; });
         if (!contextoSessaoAtual(contextoSessao)) return;
 
-        if (response.status === 401) {
-            demoAccessRequired = true;
-            limparDemoAccessKey('Senha temporária inválida.');
-        }
         if (!response.ok || data.ok === false) {
             throw new Error(data.error || 'Consulta externa indisponível.');
         }
@@ -1358,13 +1307,15 @@ function ligarBotoesEstaticos() {
 /* TAG: init-historico | Chamar ao carregar página */
 document.addEventListener('DOMContentLoaded', function() {
     ligarBotoesEstaticos();
-    inicializarAcessoDemo();
+    inicializarConfiguracao();
     atualizarBotaoConta();
-    // Quem ja tem sessao ou ja escolheu o modo demo cai direto no gerador;
-    // visitante novo ve a apresentacao primeiro (Plano 16, item 7).
+    // Quem ja tem sessao ou escolheu o exemplo cai direto no gerador.
     switchView(obterSessaoUsuario() || modoDemoAtivo() ? 'app' : 'pitch');
 
-    if (modoDemoAtivo() && !obterSessaoUsuario()) window.storageService?.definirContextoHistorico('demo');
+    if (modoDemoAtivo() && !obterSessaoUsuario()) {
+        window.storageService?.definirContextoHistorico('demo');
+        exibirExemploDemonstracao();
+    }
     document.getElementById('historicoLegadoAviso')?.classList.toggle('hidden', !window.storageService?.temHistoricoLegado());
 
     // Renderizar histórico ao carregar

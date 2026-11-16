@@ -64,7 +64,7 @@ async function main() {
   fs.mkdirSync(profileDir, { recursive: true });
   const server = spawn(process.execPath, ["server.js"], {
     cwd: process.cwd(),
-    env: { ...process.env, PORT: String(port), DEMO_ACCESS_KEY: "" },
+    env: { ...process.env, PORT: String(port) },
     stdio: ["ignore", "ignore", "ignore"]
   });
   let chrome;
@@ -105,6 +105,9 @@ async function main() {
         lista_compras: [{ item: 'Ingrediente', quantidade: '1 kg', setor: 'Hortifruti' }],
         receitas: [], cronograma: [], utensilios: [], local: [], layout: [], equipe_obs: []
       };
+      sessionStorage.setItem('chef_ia_modo_demo_ativo', 'true');
+      window.storageService.definirContextoHistorico('demo');
+      switchView('app');
       document.getElementById('resultadoArea').classList.remove('hidden');
       exibirResultadoLuxo(dados, 80, { tipo: 'Evento corporativo', estilo: 'Premium' });
       const imagensLocais = imagensLocaisGaleria();
@@ -146,6 +149,12 @@ async function main() {
       return recolhidoPorPadrao;
     })()`);
     if (!fontesRecolhidas) throw new Error("painel de fontes nao ficou recolhido por padrao");
+    await cdp.evaluate(`document.querySelector('.menu-item-card')?.scrollIntoView({ block: 'center' }); true`);
+    for (let tentativa = 0; tentativa < 60; tentativa += 1) {
+      const imagensProntas = await cdp.evaluate(`Array.from(document.querySelectorAll('.menu-item-card .dish-placeholder')).every(item => item.hidden)`);
+      if (imagensProntas) break;
+      await esperar(100);
+    }
 
     const desktop = await coletarMetricas(cdp);
     assertMetricas(desktop, "desktop");
@@ -238,7 +247,7 @@ async function main() {
     })()`);
     if (!historico.id || historico.carregadoId !== historico.id || historico.chamadasGeracao !== 0 ||
         historico.cardapioPreservado !== 3 || !historico.receitaPreservada || !historico.banner.includes('Nenhuma nova')) {
-      throw new Error("historico nao preservou o planejamento ou iniciou nova geracao");
+      throw new Error(`historico nao preservou o planejamento ou iniciou nova geracao: ${JSON.stringify(historico)}`);
     }
 
     const pdf = await cdp.evaluate(`(() => {
@@ -305,7 +314,7 @@ function assertMetricas(metricas, nome) {
   if (metricas.creditLines !== metricas.cards) throw new Error(`${nome}: creditos incompletos`);
   if (metricas.brokenImages !== 0) throw new Error(`${nome}: ${metricas.brokenImages} imagem(ns) quebrada(s)`);
   if (metricas.dishCards !== 3 || metricas.dishImages !== 3) throw new Error(`${nome}: estrutura visual ausente nos 3 itens individuais do cardapio`);
-  if (metricas.visibleDishImages !== 3 || metricas.dishPlaceholders !== 0) throw new Error(`${nome}: biblioteca local nao foi aplicada aos 3 itens do cardapio`);
+  if (metricas.visibleDishImages !== 3 || metricas.dishPlaceholders !== 0) throw new Error(`${nome}: biblioteca local nao foi aplicada aos 3 itens do cardapio: ${JSON.stringify(metricas)}`);
   if (metricas.coverageItems !== 4 || !metricas.coverageText.includes("Família local")) throw new Error(`${nome}: resumo de cobertura visual ausente`);
   if (metricas.brokenDishImages !== 0) throw new Error(`${nome}: ${metricas.brokenDishImages} imagem(ns) de prato quebrada(s)`);
 }

@@ -598,7 +598,7 @@ function perfilLigarEventosUmaVez() {
     document.getElementById("precosExportar").onclick = perfilExportarPrecosCSV;
     document.getElementById("precoSubmit").onclick = perfilCriarPreco;
     document.getElementById("perfilSair").onclick = () => {
-        if (confirm("Sair da conta? O histórico temporário desta sessão será removido. Salve o PDF antes de sair.")) void encerrarSessaoUsuario();
+        if (confirm("Sair da conta? Projetos salvos permanecem na conta. Pendências e dados desta sessão serão removidos deste navegador; baixe o PDF do que ainda não foi salvo.")) void encerrarSessaoUsuario();
     };
 }
 

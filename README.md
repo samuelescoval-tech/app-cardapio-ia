@@ -78,11 +78,12 @@ npm start
 Acesse http://localhost:3000. O status tecnico fica em
 http://localhost:3000/api/status.
 
-O arquivo .env deve conter GEMINI_API_KEY e pode usar DEMO_ACCESS_KEY para
-proteger testes locais. SUPABASE_URL, SUPABASE_ANON_KEY e
+O arquivo .env deve conter GEMINI_API_KEY. SUPABASE_URL, SUPABASE_ANON_KEY e
 SUPABASE_SERVICE_ROLE_KEY habilitam login, fornecedores e fotos proprias
-(veja [.env.example](.env.example)); sem eles, a geracao de cardapio continua funcionando,
-so a parte de contas fica desativada. Nunca versionar chaves.
+(veja [.env.example](.env.example)). A geracao com IA exige uma conta; sem login,
+o visitante pode explorar somente o planejamento ficticio local, sem consumir IA.
+Sem essas variaveis do Supabase, a parte de contas e a geracao ficam desativadas.
+Nunca versionar chaves.
 
 ## Validar
 
